@@ -1,3 +1,9 @@
 {
-  "run_list": ["ruby"]
+  "isolated": {
+    "dir": "/opt/vagrant",
+    "lib_dir": "/opt/vagrant/lib",
+    "include_dir": "/opt/vagrant/include"
+  },
+
+  "run_list": ["init", "ruby"]
 }
