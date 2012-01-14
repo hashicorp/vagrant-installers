@@ -5,5 +5,5 @@
     "include_dir": "/opt/vagrant/include"
   },
 
-  "run_list": ["init", "ruby"]
+  "run_list": ["init", "libyaml", "ruby"]
 }
