@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-echo here > /tmp/foo
-
 # Create the symlink so that `vagrant` is available on the
 # PATH.
 ln -Fs $2/bin/vagrant /usr/bin/vagrant
