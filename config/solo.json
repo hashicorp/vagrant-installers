@@ -1,11 +1,4 @@
 {
-  "isolated": {
-    "dir": "/opt/vagrant",
-    "bin_dir": "/opt/vagrant/bin",
-    "lib_dir": "/opt/vagrant/lib",
-    "include_dir": "/opt/vagrant/include"
-  },
-
   "vagrant": {
     "gem_name": "/Users/mitchellh/code/personal/ruby/vagrant/pkg/vagrant-0.9.0.dev.gem"
   },

@@ -1,6 +1,6 @@
 def action_compile
   # Setup the variables used for configuring compilation
-  config_flags = ["--prefix=#{node[:isolated][:dir]}"] + new_resource.config_flags
+  config_flags = ["--prefix=#{node[:installer][:staging_dir]}"] + new_resource.config_flags
   directory = new_resource.directory || new_resource.file.gsub(".tar.gz", "")
   env_vars  = cflags
 
