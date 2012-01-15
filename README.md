@@ -9,14 +9,17 @@ environment already ready to run.
 stable installers. Use at your own risk. This will create stable installers
 very soon.
 
-## How it works
+## Building an Installer
 
-First, you must be on the **target system** you'd like to create an
-installer for. For example, to build a Mac OS X installer, you must
-have a Mac OS X computer to run the generator.
+### Mac
 
-Next, install Ruby, Chef, and Rake. Finally, run:
+#### Prerequisites
 
-    rake
+* [Chef](http://opscode.com/chef)
+* [XCode](http://developer.apple.com/xcode/) (for PackageMaker)
 
-The resulting installer will appear in the `dist` directory.
+#### Build
+
+    sudo rake
+
+The resulting `pkg` will appear in the `dist` directory.
