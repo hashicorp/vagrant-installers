@@ -1,6 +1,6 @@
 # Create the directory to hold our output
 directory node[:installer][:output_dir] do
-  mode 0755
+  mode 0777
 end
 
 # Build the package
