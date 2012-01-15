@@ -1,6 +1,7 @@
 {
   "isolated": {
     "dir": "/opt/vagrant",
+    "bin_dir": "/opt/vagrant/bin",
     "lib_dir": "/opt/vagrant/lib",
     "include_dir": "/opt/vagrant/include"
   },

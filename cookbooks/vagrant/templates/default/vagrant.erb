@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Export gem paths so that we use the isolated version of
+# Vagrant.
+export GEM_PATH=<%= node[:isolated][:dir] %>/gems
+export GEM_HOME=${GEM_PATH}
+
+# Call the actual Vagrant bin with our arguments
+<%= node[:isolated][:dir] %>/gems/bin/vagrant $@

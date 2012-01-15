@@ -9,3 +9,7 @@ execute "vagrant-gem" do
   command  "#{node[:isolated][:dir]}/bin/gem install #{package_name} --no-ri --no-rdoc"
   environment env_vars
 end
+
+template "#{node[:isolated][:bin_dir]}/vagrant" do
+  mode 0755
+end
