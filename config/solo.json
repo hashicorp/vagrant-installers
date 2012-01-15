@@ -5,5 +5,9 @@
     "include_dir": "/opt/vagrant/include"
   },
 
-  "run_list": ["init", "libyaml", "ruby"]
+  "vagrant": {
+    "gem_name": "/Users/mitchellh/code/personal/ruby/vagrant/pkg/vagrant-0.9.0.dev.gem"
+  },
+
+  "run_list": ["init", "libyaml", "ruby", "vagrant"]
 }

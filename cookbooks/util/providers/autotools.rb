@@ -2,10 +2,7 @@ def action_compile
   # Setup the variables used for configuring compilation
   config_flags = ["--prefix=#{node[:isolated][:dir]}"] + new_resource.config_flags
   directory = new_resource.directory || new_resource.file.gsub(".tar.gz", "")
-  env_vars = {
-    "LDFLAGS" => "-R#{node[:isolated][:lib_dir]} -L#{node[:isolated][:lib_dir]} -I#{node[:isolated][:include_dir]}",
-    "CLFAGS"  => "-I#{node[:isolated][:include_dir]} -L#{node[:isolated][:lib_dir]}"
-  }
+  env_vars  = cflags
 
   new_resource.environment.each do |key, value|
     env_vars[key] = "" if !env_vars[key]
