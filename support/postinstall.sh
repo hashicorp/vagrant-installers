@@ -1,5 +1,5 @@
 #!/bin/sh
 
-rm /usr/bin/vagrant
-ln -s $2/bin/vagrant /usr/bin/vagrant
+echo $2 > /tmp/foo
+ln -Fs $2/bin/vagrant /usr/bin/vagrant
 exit 0
