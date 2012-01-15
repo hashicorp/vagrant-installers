@@ -1,3 +1,8 @@
+# Make sure the file cache exists.
+directory Chef::Config[:file_cache_path] do
+  mode 0755
+end
+
 # Create the directories which will store our staging environment
 # that we use to package the installer.
 ["", "bin", "include", "gems", "lib"].each do |subdir|
