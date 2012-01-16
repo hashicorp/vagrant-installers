@@ -16,10 +16,11 @@ very soon.
 #### Prerequisites
 
 * [Chef](http://opscode.com/chef)
+* [Git](http://git-scm.com/)
 * [XCode](http://developer.apple.com/xcode/) (for PackageMaker)
 
 #### Build
 
     sudo rake
 
-The resulting `pkg` will appear in the `dist` directory.
+The resulting `dmg` will appear in the `dist` directory.
