@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
-# Variables
-SOURCE=/Users/mitchellh/code/personal/ruby/vagrant-installers/dist
-TITLE=Vagrant
-SIZE=102400
-TEMP_PATH=pack.temp.dmg
-FINAL_PATH=vagrant.dmg
-
-INSTALLER_NAME=Vagrant.pkg
-BG_FILENAME=background.png
+# Variables:
+# * TITLE - Title of the DMG that appears in the sidebar when it is
+#   mounted as well as the Finder window title.
+# * SOURCE - The directory to create the DMG from.
+# * SIZE - The size (in KB) of the temporary DMG. Must be larger than the
+#   final DMG.
+# * TEMP_PATH - Path to store the temporary DMG.
+# * FINAL_PATH - Path to store the final DMG.
+# * INSTALLER_NAME - Name of the installer file (pkg).
+# * BG_FILENAME - Filename of the background image in the ".background"
+#   directory
 
 # Create the temporary DMG
 hdiutil create -srcfolder "${SOURCE}" -volname "${TITLE}" -fs HFS+ \
