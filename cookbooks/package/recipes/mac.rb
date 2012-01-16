@@ -1,7 +1,8 @@
 # Delete then create the directory to store our output so it is
 # always empty.
 directory node[:package][:output_dir] do
-  action :delete
+  recursive true
+  action   :delete
 end
 
 directory node[:package][:output_dir] do
