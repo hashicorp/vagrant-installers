@@ -1,6 +1,5 @@
 # Make the path Windows-style if we're on Windows
-package_name = node[:vagrant][:gem_name]
-package_name = package_name.gsub("/", "\\")
+package_name = node[:vagrant][:gem_path].gsub("/", "\\")
 
 # Make the environment paths windows style as well
 env_vars["GEM_HOME"] = env_vars["GEM_HOME"].gsub("/", "\\")
