@@ -1,3 +1,5 @@
+package_name = node[:vagrant][:gem_name]
+
 env_vars = cflags.merge({
   "GEM_HOME" => "#{embedded_dir}/gems",
   "GEM_PATH" => "#{embedded_dir}/gems"

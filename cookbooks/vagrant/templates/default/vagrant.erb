@@ -1,9 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+# Get the directory where this script is
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Export gem paths so that we use the isolated version of
 # Vagrant.
-export GEM_PATH=<%= embedded_dir %>/gems
+export GEM_PATH=${DIR}/../embedded/gems
 export GEM_HOME=${GEM_PATH}
 
 # Call the actual Vagrant bin with our arguments
-<%= embedded_dir %>/gems/bin/vagrant $@
+${GEM_PATH}/bin/vagrant $@
