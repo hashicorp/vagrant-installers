@@ -34,7 +34,8 @@ echo '
            set icon size of theViewOptions to 72
            set background picture of theViewOptions to file ".background:'${BG_FILENAME}'"
            delay 5
-           set position of item "'${INSTALLER_NAME}'" of container window to {375, 50}
+           set position of item "'${INSTALLER_NAME}'" of container window to {375, 60}
+           set position of item "uninstall.tool" of container window to {375, 220}
            update without registering applications
            delay 5
      end tell
