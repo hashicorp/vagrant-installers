@@ -1,6 +1,5 @@
 # Delete then create the directory to store our output so it is
 # always empty.
-=begin
 directory node[:package][:output_dir] do
   action :delete
 end
@@ -17,7 +16,6 @@ end
 execute "mac-pkg" do
   command "#{node[:package][:packagemaker][:path]} -v -d #{node[:package][:packagemaker][:pmdoc]} -o #{node[:package][:output_dir]}/Vagrant.pkg"
 end
-=end
 
 #----------------------------------------------------------------------
 # Uninstall Script
