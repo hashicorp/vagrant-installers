@@ -1,6 +1,14 @@
-# Create the directory to hold our output
+# Delete then create the directory to store our output so it is
+# always empty.
 directory node[:package][:output_dir] do
-  mode 0777
+  recursive true
+  action   :delete
+end
+
+directory node[:package][:output_dir] do
+  mode      0777
+  recursive true
+  action    :create
 end
 
 if platform?("mac_os_x")

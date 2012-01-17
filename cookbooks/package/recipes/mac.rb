@@ -1,16 +1,3 @@
-# Delete then create the directory to store our output so it is
-# always empty.
-directory node[:package][:output_dir] do
-  recursive true
-  action   :delete
-end
-
-directory node[:package][:output_dir] do
-  mode      0755
-  recursive true
-  action    :create
-end
-
 #----------------------------------------------------------------------
 # PKG
 #----------------------------------------------------------------------
