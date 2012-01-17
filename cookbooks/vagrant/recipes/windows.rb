@@ -1,10 +1,6 @@
 # Make the path Windows-style if we're on Windows
 package_name = node[:vagrant][:gem_path].gsub("/", "\\")
 
-# Make the environment paths windows style as well
-env_vars["GEM_HOME"] = env_vars["GEM_HOME"].gsub("/", "\\")
-env_vars["GEM_PATH"] = env_vars["GEM_PATH"].gsub("/", "\\")
-
 gem_package package_name do
   version "> 0"
   gem_binary "#{embedded_dir}/bin/gem"
