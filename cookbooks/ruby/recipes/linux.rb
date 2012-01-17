@@ -5,5 +5,6 @@ util_autotools "ruby" do
                 "--disable-install-doc",
                 "--enable-shared",
                 "--with-arch=x86_64,i386",
-                "--with-opt-dir=#{embedded_dir}"]
+                "--with-opt-dir=#{embedded_dir}",
+                "--enable-load-relative"]
 end

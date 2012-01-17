@@ -7,8 +7,7 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-# Export gem paths so that we use the isolated version of
-# Vagrant.
+# Export gem paths so that we use the isolated gems.
 export GEM_PATH=${DIR}/../embedded/gems
 export GEM_HOME=${GEM_PATH}
 
