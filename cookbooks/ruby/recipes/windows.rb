@@ -1,7 +1,7 @@
 include_recipe "7-zip"
 
 # The directory where we will expand Ruby
-expand_dir = node[:installer][:staging_dir]
+expand_dir = embedded_dir
 
 # Get the file cache path with Windows-style paths
 file_cache_path = ::File.expand_path(Chef::Config[:file_cache_path])

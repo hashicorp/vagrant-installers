@@ -5,5 +5,5 @@ util_autotools "ruby" do
                 "--disable-install-doc",
                 "--enable-shared",
                 "--with-arch=x86_64,i386",
-                "--with-opt-dir=#{node[:installer][:staging_dir]}"]
+                "--with-opt-dir=#{embedded_dir}"]
 end

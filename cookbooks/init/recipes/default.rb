@@ -5,8 +5,8 @@ end
 
 # Create the directories which will store our staging environment
 # that we use to package the installer.
-["", "bin", "include", "gems", "lib"].each do |subdir|
-  directory File.join(node[:installer][:staging_dir], subdir) do
+["", "bin", "embedded"].each do |subdir|
+  directory ::File.join(node[:installer][:staging_dir], subdir) do
     mode  0755
     recursive true
   end

@@ -2,8 +2,8 @@
 
 # Export gem paths so that we use the isolated version of
 # Vagrant.
-export GEM_PATH=<%= node[:installer][:staging_dir] %>/gems
+export GEM_PATH=<%= embedded_dir %>/gems
 export GEM_HOME=${GEM_PATH}
 
 # Call the actual Vagrant bin with our arguments
-<%= node[:installer][:staging_dir] %>/gems/bin/vagrant $@
+<%= embedded_dir %>/gems/bin/vagrant $@

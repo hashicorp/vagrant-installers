@@ -1,8 +1,8 @@
 # Returns a hash of the proper CFLAGS/LDFLAGS for compiling
 def cflags
   flags = {
-    "LDFLAGS" => "-R#{node[:installer][:staging_dir]}/lib -L#{node[:installer][:staging_dir]}/lib -I#{node[:installer][:staging_dir]}/include",
-    "CLFAGS"  => "-I#{node[:installer][:staging_dir]}/include -L#{node[:installer][:staging_dir]}/lib"
+    "LDFLAGS" => "-R#{embedded_dir}/lib -L#{embedded_dir}/lib -I#{embedded_dir}/include",
+    "CLFAGS"  => "-I#{embedded_dir}/include -L#{embedded_dir}/lib"
   }
 
   if platform?("windows")
