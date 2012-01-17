@@ -1,6 +1,6 @@
 {
   "vagrant": {
-    "gem_name": "/Users/mitchellh/code/personal/ruby/vagrant/pkg/vagrant-0.9.0.dev.gem"
+    "gem_name": "C:/Users/Mitchell/code/personal/vagrant/pkg/vagrant-0.9.0.dev.gem"
   },
 
   "run_list": ["installer"]
