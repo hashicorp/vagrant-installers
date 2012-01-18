@@ -1,6 +1,6 @@
 env_vars = {
   "CFLAGS" => "-arch i386 -arch x86_64",
-  "LDFLAGS" => "-arch i386 -arch x86_64"
+  "LDFLAGS" => "-arch i386 -arch x86_64 -Wl,-install_name,@rpath/libyaml.dylib"
 }
 
 util_autotools "libyaml" do
