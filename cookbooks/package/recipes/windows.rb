@@ -1,11 +1,35 @@
 include_recipe "wix"
 
 # The directory where we will build up the package
-pkg_dir  = node[:package][:output_dir]
-dist_dir = node[:package][:output_dir]
+pkg_dir    = node[:package][:output_dir]
+assets_dir = ::File.join(pkg_dir, "assets")
+dist_dir   = node[:package][:output_dir]
+
+# Store the directories as part of our run state
+node.run_state[:package_pkg_dir]    = pkg_dir
+node.run_state[:package_assets_dir] = assets_dir
+node.run_state[:package_dist_dir]   = dist_dir
 
 # The component group name for the files
 files_component_group = "VagrantDir"
+
+# Create the directory to store our assets
+directory assets_dir do
+  mode   0755
+  action :create
+end
+
+# Copy the assets into the assets directory
+ruby_block "copy-windows-assets" do
+  block do
+    # Glob all the files in the windows support directory
+    source = ::File.join(node[:package][:support_dir],
+                         "windows", "*")
+    source = Dir.glob(source)
+
+    ::FileUtils.cp_r(source, node.run_state[:package_assets_dir])
+  end
+end
 
 # Localization strings for the installer
 wxl_path = ::File.join(pkg_dir, "vagrant-en-us.wxl")
@@ -28,7 +52,8 @@ template ::File.join(pkg_dir, "vagrant-main.wxs") do
   mode   0755
   variables(
     :wxi_path => wxi_path,
-    :files_component_group => files_component_group
+    :files_component_group => files_component_group,
+    :assets_dir => assets_dir
   )
 end
 

@@ -1,8 +1,19 @@
 # Delete then create the directory to store our output so it is
 # always empty.
-directory node[:package][:output_dir] do
-  recursive true
-  action   :delete
+if ::File.directory?(node[:package][:output_dir])
+  directory node[:package][:output_dir] do
+    recursive true
+    action   :delete
+  end
+
+  # For some reason Windows has some issues with
+  # race conditions of deleting a folder then really
+  # quickly recreating it. Just sleep.
+  ruby_block "sleep-delay" do
+    block do
+      sleep 1
+    end
+  end
 end
 
 directory node[:package][:output_dir] do
