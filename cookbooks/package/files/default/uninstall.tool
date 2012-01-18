@@ -26,7 +26,7 @@ function append() {
 #----------------------------------------------------------------------
 # Collect the directories and files to remove
 my_files=()
-append my_files "/Application/Vagrant"
+append my_files "/Applications/Vagrant"
 append my_files "/usr/bin/vagrant"
 
 # Print the files and directories that are to be removed and verify
