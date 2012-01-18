@@ -5,6 +5,7 @@
 
   <!-- The main product -->
   <Product Id="*"
+           Language="!(loc.LANG)"
            Name="!(loc.ProductName) v$(var.DisplayVersionNumber)"
            Version="$(var.VersionNumber)"
            Manufacturer="!(loc.ManufacturerName)"
@@ -51,7 +52,7 @@
               Title="!(loc.ProductName)"
               Level="1">
        <ComponentGroupRef Id="<%= @files_component_group %>" />
-       <ComponentRef Id="VagrantBin">
+       <ComponentRef Id="VagrantBin" />
      </Feature>
   </Product>
 </Wix>

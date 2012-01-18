@@ -29,6 +29,11 @@ ruby_block "copy-built-gem" do
 
     # Copy it over
     FileUtils.cp(built_gem_path, node[:vagrant][:gem_path])
+
+    # Set the version on our node so we can use it later
+    gem_name = ::File.basename(built_gem_path, ".gem")
+    version  = gem_name.split("-").last
+    node[:vagrant][:version] = version.gsub(".dev", "")
   end
 end
 

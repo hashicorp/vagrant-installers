@@ -45,3 +45,34 @@ dir \"#{node[:installer][:staging_dir]}\" ^
 -out #{pkg_dir}\\vagrant-files.wxs
   EOH
 end
+
+# Compile the installer. This step generates wixobj files
+# which should be ready to link.
+windows_batch "compile vagrant" do
+  code <<-EOH
+#{node[:wix][:home]}\\candle.exe ^
+-nologo ^
+-I#{pkg_dir} ^
+-dVagrantSourceDir=\"#{node[:installer][:staging_dir]}\" ^
+-out #{pkg_dir}\\ ^
+#{pkg_dir}\\vagrant-files.wxs ^
+#{pkg_dir}\\vagrant-main.wxs
+  EOH
+end
+
+# Link the installer, generate an MSI
+=begin
+windows_batch "link vagrant" do
+  code <<-EOH
+#{node[:wix][:home]}\\light.exe ^
+-nologo ^
+-ext WixUIExtension ^
+-cultures:en-us -loc #{pkg_dir}\\vagrant-en-us.wxl ^
+-out #{dist_dir} ^
+#{pkg_dir}\\vagrant-files.wixobj ^
+#{pkg_dir}\\vagrant-main.wixobj
+  EOH
+
+  returns [0, 204]
+end
+=end
