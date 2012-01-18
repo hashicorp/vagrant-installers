@@ -1,19 +1,38 @@
 #!/usr/bin/env bash
 
+#----------------------------------------------------------------------
+# Functions
+#----------------------------------------------------------------------
+# Exits the script with the given exit code after waiting
+# for a keypress.
+#
+# @param [Integer] $1 exit code.
 function key_exit() {
     echo "Press any key to exit."
     read
     exit $1
 }
 
-# Collect the directories and files to remove
-my_files=""
-my_files="$my_files /Applications/vagrant"
-my_files="$my_files /usr/bin/vagrant"
+# Appends a value to an array.
+#
+# @param [String] $1 Name of the variable to modify
+# @param [String] $2 Value to append
+function append() {
+    eval $1[\${#$1[*]}]=$2
+}
 
-# Print the files that will be removed
+#----------------------------------------------------------------------
+# Script
+#----------------------------------------------------------------------
+# Collect the directories and files to remove
+my_files=()
+append my_files "/Application/Vagrant"
+append my_files "/usr/bin/vagrant"
+
+# Print the files and directories that are to be removed and verify
+# with the user that that is what he/she really wants to do.
 echo "The following files and directories will be removed:"
-for file in $my_files; do
+for file in "${my_files[@]}"; do
     echo "    $file"
 done
 
@@ -25,20 +44,28 @@ if [ "$my_answer" != "Yes" ]; then
     key_exit 2
 fi
 
+# Initiate the actual uninstall, which requires admin privileges.
 echo "The uninstallation process requires administrative privileges"
 echo "because some of the installed files cannot be removed by a"
-echo "normal user. You may be prompted for your password now..."
+echo "normal user. You may now be prompted for a password..."
 echo ""
 
-/usr/bin/sudo -p "Please enter %u's password:" /bin/rm -Rf $my_files
-exit_status=$?
+# Use AppleScript so we can use a graphical `sudo` prompt.
+# This way, people can enter the username they wish to use
+# for sudo, and it is more Apple-like.
+osascript -e "do shell script \"/bin/rm -Rf ${my_files[*]}\" with administrator privileges"
 
-if [ "$exit_status" -ne 0 ]; then
-    echo "An error coccurred during the uninstall process. (exit: ${exit_status})"
-    echo ""
-    echo "The uninstall failed. Try again."
-    key_exit 1
-fi
+# Verify that the uninstall succeeded by checking whether every file
+# we meant to remove is actually removed.
+for file in "${my_files[@]}"; do
+    if [ -e "${file}" ]; then
+        echo "An error must have occurred since a file that was supposed to be"
+        echo "removed still exists: ${file}"
+        echo ""
+        echo "Please try again."
+        key_exit 1
+    fi
+done
 
 echo "Successfully uninstalled Vagrant."
 echo "Done."

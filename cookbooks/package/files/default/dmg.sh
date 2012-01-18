@@ -32,7 +32,7 @@ echo '
            set theViewOptions to the icon view options of container window
            set arrangement of theViewOptions to not arranged
            set icon size of theViewOptions to 72
-           set background picture of theViewOptions to file ".background:'${BG_FILENAME}'"
+           set background picture of theViewOptions to file ".support:'${BG_FILENAME}'"
            delay 5
            set position of item "'${INSTALLER_NAME}'" of container window to {385, 60}
            set position of item "uninstall.tool" of container window to {385, 220}

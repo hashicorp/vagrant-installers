@@ -17,13 +17,13 @@ end
 #----------------------------------------------------------------------
 # DMG
 #----------------------------------------------------------------------
-# Copy in the background image to the output
-background_directory = ::File.join(node[:package][:output_dir], ".background")
-directory background_directory do
+# Build a support directory
+support_directory = ::File.join(node[:package][:output_dir], ".support")
+directory support_directory do
   mode 0755
 end
 
-cookbook_file ::File.join(background_directory, "background.png") do
+cookbook_file ::File.join(support_directory, "background.png") do
   source "background.png"
   mode   0644
 end
