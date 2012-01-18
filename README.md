@@ -8,7 +8,7 @@ environment already ready to run.
 **Current status:** Highly experimental. This doesn't yet generate
 stable installers. Use at your own risk. This will create stable installers
 very soon.
-
+n
 ## How it Works (Technically)
 
 The general steps are given below. Note that for specific platforms,
@@ -42,3 +42,18 @@ there may be more steps involved but the basic idea is the same:
     sudo rake
 
 The resulting `dmg` will appear in the `dist` directory.
+
+### Windows
+
+#### Prerequisites
+
+* [Chef](http://opscode.com/chef)
+* [Git](http://git-scm.com/)
+
+#### Build
+
+In an administrator console:
+
+    rake
+
+The resulting `msi` will appear in the `dist` directory.
