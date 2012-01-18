@@ -1,7 +1,8 @@
 include_recipe "wix"
 
 # The directory where we will build up the package
-pkg_dir = node[:package][:output_dir]
+pkg_dir  = node[:package][:output_dir]
+dist_dir = node[:package][:output_dir]
 
 # The component group name for the files
 files_component_group = "VagrantDir"
@@ -61,18 +62,16 @@ windows_batch "compile vagrant" do
 end
 
 # Link the installer, generate an MSI
-=begin
 windows_batch "link vagrant" do
   code <<-EOH
 #{node[:wix][:home]}\\light.exe ^
 -nologo ^
 -ext WixUIExtension ^
 -cultures:en-us -loc #{pkg_dir}\\vagrant-en-us.wxl ^
--out #{dist_dir} ^
+-out #{dist_dir}\\vagrant.msi ^
 #{pkg_dir}\\vagrant-files.wixobj ^
 #{pkg_dir}\\vagrant-main.wixobj
   EOH
 
   returns [0, 204]
 end
-=end
