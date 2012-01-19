@@ -12,6 +12,11 @@ if platform?("mac_os_x")
 
   # Build a Mach Universal Binary on Mac
   config_flags << "--with-arch=x86_64,i386"
+elsif node[:os] == "linux"
+  # On all linux installations, add in this rpath so that our
+  # libraries can be accessed when called from the `ruby`
+  # binary.
+  env_vars["LDFLAGS"] = "-Wl,-rpath,$ORIGIN/../lib"
 end
 
 util_autotools "ruby" do
