@@ -1,5 +1,5 @@
 # patch to fix CHEF-2684
-if RUBY_VERSION =~ /^1\.8/
+if RUBY_PLATFORM =~ /mswin|mingw32|windows/ && RUBY_VERSION =~ /^1\.8/
   require 'win32/open3'
 else
   require 'open3'
