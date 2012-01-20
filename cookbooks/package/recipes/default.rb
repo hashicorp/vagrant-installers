@@ -26,6 +26,8 @@ if platform?("mac_os_x")
   include_recipe "package::mac"
 elsif platform?("windows")
   include_recipe "package::windows"
+elsif platform?("ubuntu")
+  include_recipe "package::debian"
 else
   raise Exception, "Unsupported packaging platform: #{node[:platform]}"
 end

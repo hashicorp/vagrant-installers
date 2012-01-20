@@ -2,41 +2,44 @@ require 'fileutils'
 
 #----------------------------------------------------------------------
 # Gem creation
+#
+# This is all done at compilation time so that we know the gem version,
+# we know it builds properly, etc.
 #----------------------------------------------------------------------
 # Check out the source
 checkout_path = ::File.join(Chef::Config[:file_cache_path], "vagrant-src")
 git checkout_path do
   repository node[:vagrant][:repository]
   revision   node[:vagrant][:revision]
-  action     :sync
-end
+  action     :nothing
+end.run_action(:sync)
 
 # Build the gem
 execute "vagrant-gem-build" do
   command "gem build vagrant.gemspec"
   cwd     checkout_path
-end
+  action  :nothing
+end.run_action(:run)
 
 # Set this variable so that the sub-recipes can access it
 node[:vagrant][:gem_path] = ::File.join(Chef::Config[:file_cache_path], "vagrant.gem")
 
-# Copy the gem to the file cache.
-ruby_block "copy-built-gem" do
-  block do
-    # Find the built gem, which is the latest "gem" file in the source
-    built_gem_path = ::Dir[::File.join(checkout_path, "vagrant-*.gem")]
-    built_gem_path = built_gem_path.sort_by{|f| ::File.mtime(f)}.last
+# Find the built gem, which is the latest "gem" file in the source
+built_gem_path = ::Dir[::File.join(checkout_path, "vagrant-*.gem")]
+built_gem_path = built_gem_path.sort_by{|f| ::File.mtime(f)}.last
 
-    # Copy it over
-    FileUtils.cp(built_gem_path, node[:vagrant][:gem_path])
+# Copy it over
+FileUtils.cp(built_gem_path, node[:vagrant][:gem_path])
 
-    # Set the version on our node so we can use it later
-    gem_name = ::File.basename(built_gem_path, ".gem")
-    version  = gem_name.split("-").last
-    node[:vagrant][:version] = version.gsub(".dev", "")
-  end
-end
+# Set the version on our node so we can use it later
+gem_name = ::File.basename(built_gem_path, ".gem")
+version  = gem_name.split("-").last
+node[:vagrant][:version] = version.gsub(".dev", "")
 
+Chef::Log.info("Building installers for Vagrant v#{node[:vagrant][:version]}")
+
+# Bring in the tasks that install the gem into the environment, which is
+# done during actual convergence
 if platform?("windows")
   include_recipe "vagrant::windows"
 else

@@ -10,3 +10,6 @@ default[:package][:packagemaker][:pmdoc] = File.expand_path("../../../../vagrant
 
 # Windows options
 default[:package][:win][:upgrade_code] = "1a672674-6722-4e3a-9061-8f539a8b0ed6"
+
+# Debian options
+default[:package][:debian][:prefix] = "/opt/vagrant"
