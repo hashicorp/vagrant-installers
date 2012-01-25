@@ -1,3 +1,4 @@
+.vagrant
 Gemfile.lock
 cache
 dist
