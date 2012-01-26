@@ -28,6 +28,8 @@ elsif platform?("windows")
   include_recipe "package::windows"
 elsif platform?("ubuntu")
   include_recipe "package::debian"
+elsif platform?("centos")
+  include_recipe "package::centos"
 else
   raise Exception, "Unsupported packaging platform: #{node[:platform]}"
 end
