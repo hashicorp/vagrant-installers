@@ -28,9 +28,20 @@ template ::File.join(setup_dir, "PKGBUILD") do
   variables vars
 end
 
+# Remove any of the old binary packages
+execute "remove-old-binary-packages" do
+  command "rm *.pkg.tar.xz"
+  cwd     setup_dir
+end
+
 # Make the package
 execute "makepkg" do
   command "makepkg --asroot"
   cwd     setup_dir
 end
 
+# Copy the package to the dist directory
+execute "copy-package" do
+  command "cp #{setup_dir}/*.pkg.tar.xz #{node[:package][:output_dir]}"
+  cwd     setup_dir
+end
