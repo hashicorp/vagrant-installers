@@ -1,0 +1,42 @@
+# This is an example PKGBUILD file. Use this as a start to creating your own,
+# and remove these comments. For more information, see 'man PKGBUILD'.
+# NOTE: Please fill out the license field for your package! If it is unknown,
+# then please put 'unknown'.
+
+# Maintainer: Mitchell Hashimoto <mitchell.hashimoto@gmail.com>
+pkgname=<%= @pkgname %>
+pkgver="<%= @pkgver %>"
+pkgrel=1
+epoch=
+pkgdesc=""
+arch=('<%= @arch %>')
+url=""
+license=('MIT')
+groups=()
+depends=()
+makedepends=()
+checkdepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=('<%= @source %>')
+noextract=()
+md5sums=(`md5sum <%= @source %> | awk '{ print $1 }'`)
+
+build() {
+  echo build
+}
+
+check() {
+  echo check
+}
+
+package() {
+  mkdir -p $pkgdir<%= node[:package][:arch][:prefix] %>
+  mv <%= staging_dir %>/* $pkgdir<%= node[:package][:arch][:prefix] %>/
+}

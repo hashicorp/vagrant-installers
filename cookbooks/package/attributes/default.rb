@@ -16,3 +16,6 @@ default[:package][:debian][:prefix] = "/opt/vagrant"
 
 # CentOS options
 default[:package][:centos][:prefix] = "/opt/vagrant"
+
+# Arch options
+default[:package][:arch][:prefix] = "/opt/vagrant"

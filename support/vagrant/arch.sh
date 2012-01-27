@@ -20,5 +20,6 @@ gem install rake --no-ri --no-rdoc
 pacman -S git --noconfirm
 
 # Grab the installer sources
+pushd ~
 git clone git://github.com/mitchellh/vagrant-installers.git
-cd vagrant-installers
+popd
