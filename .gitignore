@@ -1,4 +1,6 @@
+*.pyc
 .vagrant
 Gemfile.lock
 cache
 dist
+fabfile_local.py
