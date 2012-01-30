@@ -8,8 +8,15 @@ except ImportError:
 
 @task
 def update():
+    "Updates the installer generate code on the host."
     with cd("~/vagrant-installers"):
         run("git pull")
+
+@task
+def build():
+    "Builds the installer."
+    with cd("~/vagrant-installers"):
+        run("rake")
 
 @task
 def all():
