@@ -1,4 +1,4 @@
-from fabric.api import cd, run, task
+from fabric.api import cd, env, run, task
 
 try:
     import fabfile_local
@@ -10,3 +10,14 @@ except ImportError:
 def update():
     with cd("~/vagrant-installers"):
         run("git pull")
+
+@task
+def all():
+    "Run the task against all hosts."
+    for _, value in env.roledefs.iteritems():
+        env.hosts.extend(value)
+
+@task
+def role(name):
+    "Set the hosts to a specific role."
+    env.hosts = env.roledefs[name]
