@@ -10,6 +10,14 @@ directory Chef::Config[:file_cache_path] do
   action :nothing
 end.run_action(:create)
 
+# We delete the staging directory first so that every time we build
+# an installer we have a fresh directory that doesn't have any cruft
+# that may be left over from the last build.
+directory node[:installer][:staging_dir] do
+  recursive true
+  action :delete
+end
+
 # Create the directories which will store our staging environment
 # that we use to package the installer.
 ["", "bin", "embedded"].each do |subdir|
