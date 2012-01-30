@@ -1,4 +1,4 @@
-from fabric.api import cd, env, run, task
+from fabric.api import cd, env, run, parallel, task
 
 try:
     import fabfile_local
@@ -7,13 +7,14 @@ except ImportError:
     pass
 
 @task
+@parallel
 def update():
     "Updates the installer generate code on the host."
     with cd("~/vagrant-installers"):
         run("git pull")
 
-@parallel
 @task
+@parallel
 def build():
     "Builds the installer."
     with cd("~/vagrant-installers"):
