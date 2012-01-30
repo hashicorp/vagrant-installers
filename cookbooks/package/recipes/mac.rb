@@ -1,3 +1,7 @@
+# Set the resulting file to be copied later
+node[:package][:output] = ::File.join(node[:package][:output_dir],
+                                      "Vagrant-#{node[:vagrant][:version]}.dmg")
+
 #----------------------------------------------------------------------
 # PKG
 #----------------------------------------------------------------------
@@ -41,7 +45,7 @@ env_vars = {
   "SOURCE" => node[:package][:output_dir],
   "SIZE"   => "102400",
   "TEMP_PATH" => ::File.join(Chef::Config[:file_cache_path], "temp.dmg"),
-  "FINAL_PATH" => ::File.join(node[:package][:output_dir], "Vagrant.dmg"),
+  "FINAL_PATH" => node[:package][:output],
   "INSTALLER_NAME" => "Vagrant.pkg",
   "BG_FILENAME" => "background.png"
 }

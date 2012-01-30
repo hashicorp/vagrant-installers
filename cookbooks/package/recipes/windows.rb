@@ -4,6 +4,10 @@ include_recipe "wix"
 pkg_dir    = node[:package][:output_dir]
 assets_dir = ::File.join(pkg_dir, "assets")
 dist_dir   = node[:package][:output_dir]
+output_name = "vagrant_#{node[:vagrant][:version]}.msi"
+
+# Set the output data
+node[:package][:output] = ::File.join(pkg_dir, output_name)
 
 # Store the directories as part of our run state
 node.run_state[:package_pkg_dir]    = pkg_dir
@@ -93,7 +97,7 @@ windows_batch "link vagrant" do
 -nologo ^
 -ext WixUIExtension ^
 -cultures:en-us -loc #{pkg_dir}\\vagrant-en-us.wxl ^
--out #{dist_dir}\\vagrant.msi ^
+-out #{dist_dir}\\#{output_name} ^
 #{pkg_dir}\\vagrant-files.wixobj ^
 #{pkg_dir}\\vagrant-main.wixobj
   EOH
