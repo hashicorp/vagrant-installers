@@ -12,6 +12,7 @@ def update():
     with cd("~/vagrant-installers"):
         run("git pull")
 
+@parallel
 @task
 def build():
     "Builds the installer."
