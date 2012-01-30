@@ -32,7 +32,7 @@ end
 
 # Remove any of the old binary packages
 execute "remove-old-binary-packages" do
-  command "rm *.pkg.tar.xz"
+  command "rm -f *.pkg.tar.xz"
   cwd     setup_dir
 end
 
