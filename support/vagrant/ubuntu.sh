@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
-# This script will setup the dependencies for the installer generator
-# and will actually finish by running the installer generator. The result
-# is that a package should appear in the `dist` directory.
+# This script will setup the dependencies for the installer generator.
+set -e
 
 # Update the source list
 apt-get update
@@ -30,5 +29,6 @@ gem install chef --no-ri --no-rdoc
 gem install rake --no-ri --no-rdoc
 
 # Run the installer generate
-cd /vagrant
-rake
+pushd ~
+git clone git://github.com/mitchellh/vagrant-installers.git
+popd

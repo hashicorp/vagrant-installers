@@ -1,4 +1,5 @@
 #!/bin/env bash
+set -e
 
 # Update the yum repos
 yum -y update
@@ -31,5 +32,6 @@ gem install chef --no-ri --no-rdoc
 gem install rake --no-ri --no-rdoc
 
 # Clone out the installers repo
+pushd ~
 git clone git://github.com/mitchellh/vagrant-installers.git
-cd vagrant-installers
+popd
