@@ -1,19 +1,9 @@
+include_recipe "fog"
+
 required = [:aws_secret_access_key, :aws_access_key_id, :bucket]
 required.each do |key|
   if !node[:upload][key]
     raise "Upload setting required: #{key}"
-  end
-end
-
-#----------------------------------------------------------------------
-# Setup Fog
-#----------------------------------------------------------------------
-gem_package "fog"
-
-ruby_block "reset-gem-for-fog" do
-  block do
-    Gem.clear_paths
-    require 'fog'
   end
 end
 
