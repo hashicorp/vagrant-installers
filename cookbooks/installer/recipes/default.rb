@@ -47,6 +47,15 @@ at_exit do
 end
 
 #----------------------------------------------------------------------
+# Options, options, options
+#----------------------------------------------------------------------
+# If we specify a revision with an environmental variable, then we should
+# use that instead
+if ENV["VAGRANT_REVISION"]
+  node[:vagrant][:revision] = ENV["VAGRANT_REVISION"]
+end
+
+#----------------------------------------------------------------------
 # Platform-specific stuff
 #----------------------------------------------------------------------
 if platform?("mac_os_x")

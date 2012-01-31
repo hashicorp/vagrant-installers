@@ -6,6 +6,8 @@ require 'fileutils'
 # This is all done at compilation time so that we know the gem version,
 # we know it builds properly, etc.
 #----------------------------------------------------------------------
+Chef::Log.info("Packaging Vagrant from revision: #{node[:vagrant][:revision]}")
+
 # Check out the source
 checkout_path = ::File.join(Chef::Config[:file_cache_path], "vagrant-src")
 git checkout_path do
