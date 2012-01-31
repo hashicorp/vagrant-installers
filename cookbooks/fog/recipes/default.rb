@@ -2,9 +2,16 @@
 if platform?("arch")
   package "libxml2"
   package "libxslt"
-elsif platform("ubuntu")
+elsif platform?("ubuntu")
   package "libxml2-dev"
   package "libxslt1-dev"
+elsif platform?("centos")
+  package "libxml2"
+  package "libxml2-devel"
+  package "libxslt"
+  package "libxslt-devel"
+elsif platform?("mac_os_x")
+  # Already have the deps
 else
   raise "I don't know how to build Fog on this platform."
 end
