@@ -55,6 +55,14 @@ if ENV["VAGRANT_REVISION"]
   node[:vagrant][:revision] = ENV["VAGRANT_REVISION"]
 end
 
+# AWS settings
+if ENV["AWS"]
+  parts = ENV["AWS"].split(",")
+  node[:upload][:aws_access_key_id]     = parts[0]
+  node[:upload][:aws_secret_access_key] = parts[1]
+  node[:upload][:bucket]                = parts[2]
+end
+
 #----------------------------------------------------------------------
 # Platform-specific stuff
 #----------------------------------------------------------------------
@@ -71,3 +79,8 @@ elsif platform?("arch")
 else
   raise "Unsupported platform: #{node[:platform]}"
 end
+
+#----------------------------------------------------------------------
+# Upload the package that was created
+#----------------------------------------------------------------------
+include_recipe "upload"

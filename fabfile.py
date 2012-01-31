@@ -15,10 +15,18 @@ def update():
 
 @task
 @parallel
-def build():
+def build(revision="HEAD"):
     "Builds the installer."
+    aws = "%s,%s,%s" % (env.aws["aws_access_key_id"],
+                        env.aws["aws_secret_access_key"],
+                        env.aws["bucket"])
+
+    env_vars = {}
+    env_vars["VAGRANT_REVISION"] = revision
+    env_vars["AWS"] = aws
+
     with cd("~/vagrant-installers"):
-        run("rake")
+        run("%s rake" % _env_string(env_vars))
 
 @task
 def all():
@@ -30,3 +38,10 @@ def all():
 def role(name):
     "Set the hosts to a specific role."
     env.hosts = env.roledefs[name]
+
+def _env_string(env_vars):
+    parts = []
+    for key, value in env_vars.iteritems():
+        parts.append("%s=%s" % (key, value))
+
+    return " ".join(parts)
