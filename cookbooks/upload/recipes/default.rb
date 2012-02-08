@@ -23,10 +23,13 @@ ruby_block "upload-package" do
     bucket = connection.directories.get(node[:upload][:bucket])
 
     # Upload the package
-    bucket.files.create(
+    file = bucket.files.create(
       :key => "packages/#{node[:vagrant][:revision]}/#{::File.basename(node[:package][:output])}",
       :body => ::File.open(node[:package][:output], "r"),
       :public => true
     )
+
+    # Log it out
+    Chef::Log.info("Uploaded: #{file.public_url}")
   end
 end
