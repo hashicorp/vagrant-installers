@@ -20,7 +20,7 @@ def action_compile
 
   # Run "./configure" with the proper flags
   execute "#{new_resource.name}-configure" do
-    command "./configure #{config_flags.join(" ")}"
+    command "./#{new_resource.config_file} #{config_flags.join(" ")}"
     cwd "#{Chef::Config[:file_cache_path]}/#{directory}"
     environment env_vars
   end
