@@ -1,4 +1,4 @@
-actions :compile
+actions :compile, :install, :test
 
 attribute :file, :kind_of => String, :required => true
 attribute :directory, :kind_of => String
@@ -9,5 +9,5 @@ attribute :config_file, :kind_of => String, :default => "configure"
 def initialize(*args)
   super
 
-  @action = :compile
+  @action = [:compile, :install]
 end

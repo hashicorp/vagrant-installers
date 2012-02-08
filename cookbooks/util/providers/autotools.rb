@@ -1,13 +1,7 @@
 def action_compile
   # Setup the variables used for configuring compilation
   config_flags = ["--prefix=#{embedded_dir}"] + new_resource.config_flags
-  directory = new_resource.directory || new_resource.file.gsub(".tar.gz", "")
-  env_vars  = cflags
-
-  new_resource.environment.each do |key, value|
-    env_vars[key] = "" if !env_vars[key]
-    env_vars[key] += " #{value}"
-  end
+  env_vars  = compute_env_vars
 
   # Upload the source package
   cookbook_file "#{Chef::Config[:file_cache_path]}/#{new_resource.file}"
@@ -31,6 +25,10 @@ def action_compile
     cwd "#{Chef::Config[:file_cache_path]}/#{directory}"
     environment env_vars
   end
+end
+
+def action_install
+  env_vars = compute_env_vars
 
   # Install
   execute "#{new_resource.name}-make-install" do
@@ -38,4 +36,27 @@ def action_compile
     cwd "#{Chef::Config[:file_cache_path]}/#{directory}"
     environment env_vars
   end
+end
+
+def action_test
+  execute "#{new_resource.name}-make-test" do
+    command "make test"
+    cwd     "#{Chef::Config[:file_cache_path]}/#{directory}"
+    environment env_vars
+  end
+end
+
+def compute_env_vars
+  env_vars = cflags
+
+  new_resource.environment.each do |key, value|
+    env_vars[key] = "" if !env_vars[key]
+    env_vars[key] += " #{value}"
+  end
+
+  return env_vars
+end
+
+def directory
+  new_resource.directory || new_resource.file.gsub(".tar.gz", "")
 end
