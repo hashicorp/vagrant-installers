@@ -39,6 +39,8 @@ def action_install
 end
 
 def action_test
+  env_vars = compute_env_vars
+
   execute "#{new_resource.name}-make-test" do
     command "make test"
     cwd     "#{Chef::Config[:file_cache_path]}/#{directory}"
