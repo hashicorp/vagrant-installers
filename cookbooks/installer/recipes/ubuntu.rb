@@ -1,4 +1,5 @@
 # Some dependencies for Ruby extensions we want installed
+include_recipe "libffi"
 include_recipe "libyaml"
 include_recipe "zlib"
 include_recipe "openssl"
