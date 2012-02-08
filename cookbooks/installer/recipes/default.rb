@@ -6,8 +6,8 @@
 # phase) depends on this.
 directory Chef::Config[:file_cache_path] do
   recursive true
-  action :delete
-end.run_action(:create)
+  action :nothing
+end.run_action(:delete)
 
 directory Chef::Config[:file_cache_path] do
   mode 0755
