@@ -6,6 +6,10 @@ end
 # Move libffi headers. libffi installs its headers in a
 # really strange place, so we move them into the standard
 # location.
+directory "#{embedded_dir}/include" do
+  mode 0755
+end
+
 execute "libffi-headers-move" do
   command "mv #{embedded_dir}/lib/libffi-*/include/* #{embedded_dir}/include"
 end
