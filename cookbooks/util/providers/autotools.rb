@@ -12,6 +12,21 @@ def action_compile
     cwd Chef::Config[:file_cache_path]
   end
 
+  # Patch the thing
+  if new_resource.patches && !new_resource.patches.empty?
+    new_resource.patches.each do |level, files|
+      level = level[1..-1]
+
+      files.each do |file|
+        util_patch "#{new_resource.name}-patch-#{file}" do
+          source  file
+          p_level level.to_i
+          cwd     "#{Chef::Config[:file_cache_path]}/#{directory}"
+        end
+      end
+    end
+  end
+
   # Run "./configure" with the proper flags
   execute "#{new_resource.name}-configure" do
     command "./#{new_resource.config_file} #{config_flags.join(" ")}"
