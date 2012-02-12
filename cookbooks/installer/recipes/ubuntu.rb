@@ -1,3 +1,8 @@
+# Update the mirror list
+execute "refresh-apt" do
+  command "apt-get update"
+end
+
 # Some dependencies for Ruby extensions we want installed
 include_recipe "libffi"
 include_recipe "libyaml"

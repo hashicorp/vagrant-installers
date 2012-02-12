@@ -1,3 +1,8 @@
+# Update the package repo
+execute "refresh-pacman" do
+  command "pacman -Syy"
+end
+
 # Some dependencies for Ruby extensions we want installed
 include_recipe "libffi"
 include_recipe "libyaml"
