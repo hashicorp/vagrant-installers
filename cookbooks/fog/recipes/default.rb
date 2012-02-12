@@ -10,7 +10,7 @@ elsif platform?("centos")
   package "libxml2-devel"
   package "libxslt"
   package "libxslt-devel"
-elsif platform?("mac_os_x")
+elsif platform?("mac_os_x") || platform?("windows")
   # Already have the deps
 else
   raise "I don't know how to build Fog on this platform."
