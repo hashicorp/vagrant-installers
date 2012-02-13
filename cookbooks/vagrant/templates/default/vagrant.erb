@@ -7,9 +7,28 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+# Useful variables
+EMBEDDED_DIR=${DIR}/../embedded
+
 # Export gem paths so that we use the isolated gems.
-export GEM_PATH=${DIR}/../embedded/gems
+export GEM_PATH=${EMBEDDED_DIR}/gems
 export GEM_HOME=${GEM_PATH}
 
+# Setup CFLAGS/LDFLAGS so that any gem installs (for plugins) will
+# be able to link against our tools. First, append a space to any
+# previously set CFLAGS/LDFLAGS.
+if [ "${CFLAGS}x" != "x" ]; then
+	CFLAGS="$CFLAGS "
+fi
+
+if [ "${LDFLAGS}x" != "x" ]; then
+	LDFLAGS="$LDFLAGS "
+fi
+
+# Append our include/lib search path to the flags and make sure they're
+# exported so that any child processes have access to them.
+export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
+export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
+
 # Call the actual Vagrant bin with our arguments
-${DIR}/../embedded/bin/ruby ${GEM_PATH}/bin/vagrant $@
+${EMBEDDED_DIR}/bin/ruby ${GEM_PATH}/bin/vagrant $@
