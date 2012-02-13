@@ -24,6 +24,11 @@
            CompressionLevel="high"
            EmbedCab="yes" />
 
+     <!-- Require Windows NT Kernel -->
+     <Condition Message="This application is only supported on Windows 2000 or higher.">
+       <![CDATA[Installed or (VersionNT >= 500)]]>
+     </Condition>
+
      <!-- The directory where we'll install Vagrant -->
      <Directory Id="TARGETDIR" Name="SourceDir">
        <Directory Id="WindowsVolume">
