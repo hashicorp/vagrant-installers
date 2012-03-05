@@ -31,4 +31,4 @@ export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 
 # Call the actual Vagrant bin with our arguments
-${EMBEDDED_DIR}/bin/ruby ${GEM_PATH}/bin/vagrant $@
+${EMBEDDED_DIR}/bin/ruby ${GEM_PATH}/bin/vagrant "$@"
