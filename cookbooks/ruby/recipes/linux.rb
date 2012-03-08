@@ -20,7 +20,7 @@ elsif node[:os] == "linux"
 end
 
 util_autotools "ruby" do
-  file "ruby-1.9.3-p0.tar.gz"
+  file "ruby-1.9.3-p125.tar.gz"
   config_flags config_flags
   environment env_vars
 end
