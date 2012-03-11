@@ -13,3 +13,10 @@ template "#{staging_dir}/bin/vagrant.bat" do
   mode   0755
   variables :bin => "vagrant"
 end
+
+# Create a bash script as well for users on Windows who
+# are using msys or some shell that has bash.
+template "#{staging_dir}/bin/vagrant" do
+  source "vagrant.erb"
+  mode   0755
+end
