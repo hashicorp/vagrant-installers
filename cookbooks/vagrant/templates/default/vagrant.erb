@@ -31,4 +31,8 @@ export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 
 # Call the actual Vagrant bin with our arguments
+<% if platform?("windows?") -%>
+${EMBEDDED_DIR}/bin/ruby ${EMBEDDED_DIR}/bin/vagrant "$@"
+<% else -%>
 ${EMBEDDED_DIR}/bin/ruby ${GEM_PATH}/bin/vagrant "$@"
+<% end -%>
