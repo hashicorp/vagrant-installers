@@ -16,15 +16,18 @@ else
   raise "I don't know how to build Fog on this platform."
 end
 
-# Install fog
-gem_package "fog"
+if platform?("windows")
+  # Fog is required beforehand
+  require "fog"
+else
+  # Install fog
+  gem_package "fog"
 
-# Reset the gem path and load the fog gem
-ruby_block "reset-gem-for-fog" do
-  block do
-    Gem.clear_paths
-    require 'fog'
+  # Reset the gem path and load the fog gem
+  ruby_block "reset-gem-for-fog" do
+    block do
+      Gem.clear_paths
+      require 'fog'
+    end
   end
 end
-
-
