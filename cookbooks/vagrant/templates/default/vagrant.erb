@@ -10,10 +10,12 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 # Useful variables
 EMBEDDED_DIR=${DIR}/../embedded
 
+<% if node[:platform] != "windows" -%>
 # Export gem paths so that we use the isolated gems.
 export GEM_PATH=${EMBEDDED_DIR}/gems
 export GEM_HOME=${GEM_PATH}
 
+<% end -%>
 # Setup CFLAGS/LDFLAGS so that any gem installs (for plugins) will
 # be able to link against our tools. First, append a space to any
 # previously set CFLAGS/LDFLAGS.
@@ -31,7 +33,7 @@ export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 
 # Call the actual Vagrant bin with our arguments
-<% if platform?("windows?") -%>
+<% if node[:platform] == "windows" -%>
 ${EMBEDDED_DIR}/bin/ruby ${EMBEDDED_DIR}/bin/vagrant "$@"
 <% else -%>
 ${EMBEDDED_DIR}/bin/ruby ${GEM_PATH}/bin/vagrant "$@"
