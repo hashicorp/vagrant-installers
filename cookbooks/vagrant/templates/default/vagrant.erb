@@ -32,9 +32,18 @@ fi
 export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 
-# Call the actual Vagrant bin with our arguments
+# The path to the Vagrant executable
 <% if node[:platform] == "windows" -%>
-${EMBEDDED_DIR}/bin/ruby ${EMBEDDED_DIR}/bin/vagrant "$@"
+VAGRANT_EXECUTABLE=${EMBEDDED_DIR}/bin/vagrant
+
+# If we're in Cygwin, we want to convert the path to a Windows path, rather
+# than a Cygwin path, which Ruby does not work with.
+if [ `uname -o` = "Cygwin" ]; then
+	VAGRANT_EXECUTABLE=`cygpath -w "${VAGRANT_EXECUTABLE}"`
+fi
 <% else -%>
-${EMBEDDED_DIR}/bin/ruby ${GEM_PATH}/bin/vagrant "$@"
+VAGRANT_EXECUTABLE=${GEM_PATH}/bin/vagrant
 <% end -%>
+
+# Call the actual Vagrant bin with our arguments
+${EMBEDDED_DIR}/bin/ruby ${VAGRANT_EXECUTABLE} "$@"
