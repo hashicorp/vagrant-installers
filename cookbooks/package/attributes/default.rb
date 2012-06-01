@@ -5,7 +5,8 @@ default[:package][:support_dir] = File.expand_path("../../../../support",
                                                    __FILE__)
 
 # Mac PackageMaker options
-default[:package][:packagemaker][:path] = "/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker"
+default[:package][:packagemaker][:path] = "/Applications/PackageMaker.app/Contents/MacOS/PackageMaker"
+#default[:package][:packagemaker][:path] = "/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker"
 default[:package][:packagemaker][:pmdoc] = File.expand_path("../../../../vagrant.pmdoc", __FILE__)
 
 # Windows options
