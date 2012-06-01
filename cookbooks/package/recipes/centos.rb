@@ -20,7 +20,9 @@ execute "fpm-rpm" do
           "-s", "dir",
           "-t", "rpm",
           "-C", staging_dir,
-          "--prefix", node[:package][:centos][:prefix]]
+          "--prefix", node[:package][:centos][:prefix],
+          "."]
 
   command "fpm #{args.join(" ")}"
+  cwd     staging_dir
 end
