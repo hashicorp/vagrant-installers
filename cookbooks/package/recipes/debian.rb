@@ -13,7 +13,9 @@ execute "fpm-deb" do
           "-s", "dir",
           "-t", "deb",
           "-C", staging_dir,
-          "--prefix", node[:package][:debian][:prefix]]
+          "--prefix", node[:package][:debian][:prefix],
+          "."]
 
   command "fpm #{args.join(" ")}"
+  cwd     staging_dir
 end
