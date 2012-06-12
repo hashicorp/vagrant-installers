@@ -88,4 +88,6 @@ end
 #----------------------------------------------------------------------
 # Upload the package that was created
 #----------------------------------------------------------------------
-include_recipe "upload"
+# If the "NO_UPLOAD" environmental variable is set, the we don't
+# upload the installer.
+include_recipe "upload" if !ENV["NO_UPLOAD"]
