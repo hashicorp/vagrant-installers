@@ -16,7 +16,7 @@ elsif node[:os] == "linux"
   # On all linux installations, add in this rpath so that our
   # libraries can be accessed when called from the `ruby`
   # binary.
-  env_vars["LDFLAGS"] = "-Wl,-rpath,$ORIGIN/../lib"
+  env_vars["LD_RUN_PATH"] = "\$ORIGIN/../lib"
 end
 
 util_autotools "ruby" do
