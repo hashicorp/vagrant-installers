@@ -3,10 +3,69 @@ node[:package][:output] = ::File.join(node[:package][:output_dir],
                                       "Vagrant-#{node[:vagrant][:version]}.dmg")
 
 #----------------------------------------------------------------------
+# Temporary directory for creating the package stuff
+#
+# Most of the package building command line tools are heavily
+# dependent on working directory and many intermediary files, so we
+# need a place to put them. We put them in this "staging" directory.
+#----------------------------------------------------------------------
+pkg_staging_dir = ::File.join(Chef::Config[:file_cache_path], "pkg")
+directory pkg_staging_dir do
+  mode 0755
+end
+
+#----------------------------------------------------------------------
 # PKG
 #----------------------------------------------------------------------
-execute "mac-pkg" do
-  command "#{node[:package][:packagemaker][:path]} -v -d #{node[:package][:packagemaker][:pmdoc]} -o #{node[:package][:output_dir]}/Vagrant.pkg"
+# Variables
+#
+# This is the path to resources directory that will be used
+# with `productbuild` to get our resources for the installer.
+pkg_resources_dir = ::File.join(node[:package][:support_dir], "mac", "resources")
+
+# This is the path where the distribution definition will live.
+pkg_dist_path = ::File.join(pkg_staging_dir, "vagrant.dist")
+
+# These are the command line options for pkgbuild
+pkgbuild_options = [
+  "--root", node[:installer][:staging_dir],
+  "--identifier", "com.vagrant.vagrant",
+  "--version", node[:vagrant][:version],
+  "--install-location", node[:package][:mac][:install_location],
+  "--scripts", ::File.join(node[:package][:support_dir], "mac", "scripts"),
+  "--sign", "\"#{node[:package][:mac][:sign_name]}\""
+]
+
+# This is the final path for the core package
+pkgbuild_output_path = ::File.join(pkg_staging_dir, "core.pkg")
+
+# These are the command line options for productbuild
+productbuild_options = [
+  "--distribution", pkg_dist_path,
+  "--resources", pkg_resources_dir,
+  "--package-path", pkg_staging_dir,
+  "--sign", "\"#{node[:package][:mac][:sign_name]}\""
+]
+
+# This is the final output path for the installer package
+productbuild_output_path = ::File.join(node[:package][:output_dir], "Vagrant.pkg")
+
+# First, create the component package using pkgbuild. The component
+# package contains the raw file structure that is installed via the
+# installer package.
+execute "component-pkg" do
+  command "pkgbuild #{pkgbuild_options.join(" ")} #{pkgbuild_output_path}"
+end
+
+# Create the distribution definition
+template pkg_dist_path do
+  source "mac/dist.erb"
+  mode   0644
+end
+
+# Build the installer package
+execute "installer-pkg" do
+  command "productbuild #{productbuild_options.join(" ")} #{productbuild_output_path}"
 end
 
 #----------------------------------------------------------------------
