@@ -4,7 +4,7 @@ default[:package][:support_dir] = File.expand_path("../../../../support", __FILE
 
 # Mac options
 default[:package][:mac][:install_location] = "/Applications/Vagrant"
-default[:package][:mac][:sign_name] = "Mitchell Hashimoto"
+default[:package][:mac][:sign_name] = "Developer ID Installer: Mitchell Hashimoto"
 
 # Windows options
 default[:package][:win][:upgrade_code] = "1a672674-6722-4e3a-9061-8f539a8b0ed6"
