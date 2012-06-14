@@ -1,3 +1,5 @@
+default[:package][:maintainer] = "Mitchell Hashimoto <mitchell.hashimoto@gmail.com>"
+
 # The path where the installer will be outputted to
 default[:package][:output_dir] = File.expand_path("../../../../dist", __FILE__)
 default[:package][:support_dir] = File.expand_path("../../../../support", __FILE__)

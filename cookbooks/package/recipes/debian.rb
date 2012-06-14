@@ -14,6 +14,7 @@ execute "fpm-deb" do
           "-t", "deb",
           "-C", staging_dir,
           "--prefix", node[:package][:debian][:prefix],
+          "--maintainer", "\"#{node[:package][:maintainer]}\"",
           "."]
 
   command "fpm #{args.join(" ")}"
