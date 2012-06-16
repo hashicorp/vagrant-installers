@@ -16,7 +16,7 @@ def cflags
 
     # Build down to Mac OS X 10.5
     flags["LDFLAGS"] += " -mmacosx-version-min=10.5"
-    flags["CFLAGS"] += " -mmacosx-version-min=10.5"
+    flags["CFLAGS"]  += " -mmacosx-version-min=10.5"
   end
 
   return flags
