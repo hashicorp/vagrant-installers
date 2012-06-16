@@ -15,8 +15,7 @@ def cflags
     flags["LDFLAGS"] += " -R#{embedded_dir}/lib"
 
     # Build down to Mac OS X 10.5
-    flags["LDFLAGS"] += " -mmacosx-version-min=10.5"
-    flags["CFLAGS"]  += " -mmacosx-version-min=10.5"
+    flags["MACOSX_DEPLOYMENT_TARGET"] = "10.5"
   end
 
   return flags
