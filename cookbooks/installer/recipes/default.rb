@@ -5,6 +5,11 @@
 # phase since the git checkout (which also happens during the compilation
 # phase) depends on this.
 directory Chef::Config[:file_cache_path] do
+  recursive true
+  action :nothing
+end.run_action(:delete)
+
+directory Chef::Config[:file_cache_path] do
   mode 0755
   recursive true
   action :nothing
