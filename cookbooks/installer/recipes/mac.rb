@@ -2,6 +2,7 @@
 include_recipe "libffi"
 include_recipe "libyaml"
 include_recipe "zlib"
+include_recipe "openssl"
 include_recipe "readline"
 
 # The actual dependencies of Vagrant

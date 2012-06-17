@@ -12,6 +12,14 @@ def action_compile
     cwd Chef::Config[:file_cache_path]
   end
 
+  # If we have a target directory, then rename the source directory
+  if new_resource.target_directory
+    execute "#{new_resource.name}-rename-target-directory" do
+      command "mv #{source_directory} #{new_resource.target_directory}"
+      cwd     Chef::Config[:file_cache_path]
+    end
+  end
+
   # Patch the thing
   if new_resource.patches && !new_resource.patches.empty?
     new_resource.patches.each do |level, files|
@@ -21,7 +29,7 @@ def action_compile
         util_patch "#{new_resource.name}-patch-#{file}" do
           source  file
           p_level level.to_i
-          cwd     "#{Chef::Config[:file_cache_path]}/#{directory}"
+          cwd     target_directory
         end
       end
     end
@@ -30,14 +38,14 @@ def action_compile
   # Run "./configure" with the proper flags
   execute "#{new_resource.name}-configure" do
     command "./#{new_resource.config_file} #{config_flags.join(" ")}"
-    cwd "#{Chef::Config[:file_cache_path]}/#{directory}"
+    cwd     target_directory
     environment env_vars
   end
 
   # Compile!
   execute "#{new_resource.name}-make" do
     command "make"
-    cwd "#{Chef::Config[:file_cache_path]}/#{directory}"
+    cwd     target_directory
     environment env_vars
   end
 end
@@ -48,7 +56,7 @@ def action_install
   # Install
   execute "#{new_resource.name}-make-install" do
     command "make install"
-    cwd "#{Chef::Config[:file_cache_path]}/#{directory}"
+    cwd     target_directory
     environment env_vars
   end
 end
@@ -58,7 +66,7 @@ def action_test
 
   execute "#{new_resource.name}-make-test" do
     command "make test"
-    cwd     "#{Chef::Config[:file_cache_path]}/#{directory}"
+    cwd     target_directory
     environment env_vars
   end
 end
@@ -74,6 +82,10 @@ def compute_env_vars
   return env_vars
 end
 
-def directory
+def source_directory
   new_resource.directory || new_resource.file.gsub(".tar.gz", "")
+end
+
+def target_directory
+  new_resource.target_directory || "#{Chef::Config[:file_cache_path]}/#{source_directory}"
 end
