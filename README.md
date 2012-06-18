@@ -5,10 +5,10 @@ Vagrant. This allows us to distribute Vagrant as a single executable
 item which will install Ruby, RubyGems, Vagrant, etc. in an isolated
 environment already ready to run.
 
-**Current status:** Highly experimental. This doesn't yet generate
-stable installers. Use at your own risk. This will create stable installers
-very soon.
-n
+**Current status:** Production quality. This project has generated the
+installers and packages in use by Vagrant on Linux, Windows, and Mac OS X
+since March, 2012.
+
 ## How it Works (Technically)
 
 The general steps are given below. Note that for specific platforms,
@@ -35,7 +35,6 @@ there may be more steps involved but the basic idea is the same:
 
 * [Chef](http://opscode.com/chef)
 * [Git](http://git-scm.com/)
-* [XCode](http://developer.apple.com/xcode/) (for PackageMaker)
 
 #### Build
 
