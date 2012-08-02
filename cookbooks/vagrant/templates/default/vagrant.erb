@@ -37,8 +37,9 @@ export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 VAGRANT_EXECUTABLE=${EMBEDDED_DIR}/bin/vagrant
 
 # If we're in Cygwin, we want to convert the path to a Windows path, rather
-# than a Cygwin path, which Ruby does not work with.
-# uname -o is not POSIX compliant, so be extra careful
+# than a Cygwin path, which Ruby does not work with. We use `uname -o` to
+# determine whether we're in Cygwin. Since `uname -o` is not POSIX compliant
+# we're extra careful to handle error cases where it doesn't exist.
 OS=$(uname -o 2> /dev/null)
 if [ "${OS}" = "Cygwin" ]; then
 	VAGRANT_EXECUTABLE=`cygpath -w "${VAGRANT_EXECUTABLE}"`
