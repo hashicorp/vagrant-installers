@@ -10,6 +10,10 @@ except ImportError:
 @parallel
 def update():
     "Updates the installer generate code on the host."
+    if env.host == "local":
+      # We don't need to update here
+      return
+
     with cd("~/vagrant-installers"):
         run("git pull")
 
