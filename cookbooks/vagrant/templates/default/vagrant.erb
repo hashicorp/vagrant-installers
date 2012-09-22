@@ -32,6 +32,9 @@ fi
 export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
 
+# Unset any RUBYOPT, we don't want this bleeding into our runtime.
+unset RUBYOPT
+
 # The path to the Vagrant executable
 <% if node[:platform] == "windows" -%>
 VAGRANT_EXECUTABLE=${EMBEDDED_DIR}/bin/vagrant
