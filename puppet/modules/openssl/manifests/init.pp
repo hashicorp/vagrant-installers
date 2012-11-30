@@ -32,6 +32,7 @@ class openssl(
     configure_sentinel => "${source_dir_path}/Makefile.bak",
     cwd                => $source_dir_path,
     environment        => $autotools_environment,
+    install_sentinel   => "${prefix}/lib/libssl.so",
     require            => Exec["untar-openssl"],
   }
 }
