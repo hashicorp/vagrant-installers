@@ -60,4 +60,9 @@ class vagrant_installer {
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
   }
+
+  class { "readline":
+    autotools_environment => $default_autotools_environment,
+    prefix                => $embedded_dir,
+  }
 }
