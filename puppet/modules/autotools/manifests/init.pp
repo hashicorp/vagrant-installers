@@ -4,10 +4,16 @@
 #
 define autotools(
   $configure_flags="",
+  $configure_sentinel=undef,
   $cwd,
   $environment=undef,
   $make_sentinel=undef,
 ) {
+  $real_configure_sentinel = $configure_sentinel ? {
+    undef   => "${cwd}/Makefile",
+    default => $configure_sentinel,
+  }
+
   $exec_environment = $environment ? {
     undef   => undef,
     default => autotools_flatten_environment($environment),
@@ -15,7 +21,7 @@ define autotools(
 
   exec { "configure-${name}":
     command     => "sh ./configure ${configure_flags}",
-    creates     => "${cwd}/Makefile",
+    creates     => $real_configure_sentinel,
     cwd         => $cwd,
     environment => $exec_environment,
   }
