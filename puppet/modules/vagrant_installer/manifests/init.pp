@@ -65,4 +65,16 @@ class vagrant_installer {
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
   }
+
+  class { "ruby":
+    autotools_environment => $default_autotools_environment,
+    prefix                => $embedded_dir,
+    require               => [
+      Class["libffi"],
+      Class["libyaml"],
+      Class["zlib"],
+      Class["openssl"],
+      Class["readline"],
+    ],
+  }
 }
