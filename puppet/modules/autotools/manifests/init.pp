@@ -3,12 +3,18 @@
 # This compiles and installs software with autotools.
 #
 define autotools(
+  $configure_file=undef,
   $configure_flags="",
   $configure_sentinel=undef,
   $cwd,
   $environment=undef,
   $make_sentinel=undef,
 ) {
+  $real_configure_file = $configure_file ? {
+    undef   => "./configure",
+    default => $configure_file,
+  }
+
   $real_configure_sentinel = $configure_sentinel ? {
     undef   => "${cwd}/Makefile",
     default => $configure_sentinel,
@@ -20,7 +26,7 @@ define autotools(
   }
 
   exec { "configure-${name}":
-    command     => "sh ./configure ${configure_flags}",
+    command     => "sh ${real_configure_file} ${configure_flags}",
     creates     => $real_configure_sentinel,
     cwd         => $cwd,
     environment => $exec_environment,
