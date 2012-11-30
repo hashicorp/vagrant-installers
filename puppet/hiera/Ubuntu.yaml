@@ -1,0 +1,3 @@
+---
+file_cache_dir: /tmp
+installer_staging_dir: /tmp/vagrant-temp

@@ -1,0 +1,11 @@
+---
+:backends:
+  - yaml
+  - puppet
+
+:hierarchy:
+  - %{operatingsystem}
+  - common
+
+:yaml:
+  :datadir: hiera/
