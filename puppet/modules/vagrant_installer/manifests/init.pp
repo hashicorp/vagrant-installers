@@ -56,12 +56,12 @@ class vagrant_installer {
     prefix                => $embedded_dir,
   }
 
-  class { "openssl":
+  class { "readline":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
   }
 
-  class { "readline":
+  class { "openssl":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
   }

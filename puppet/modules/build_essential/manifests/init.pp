@@ -1,6 +1,8 @@
 class build_essential {
-  package {
-    ["build-essential", "autoconf", "automake", "libtool"]:
-      ensure => installed,
+  if $operatingsystem == 'Ubuntu' {
+    package {
+      ["build-essential", "autoconf", "automake", "libtool"]:
+        ensure => installed,
+    }
   }
 }

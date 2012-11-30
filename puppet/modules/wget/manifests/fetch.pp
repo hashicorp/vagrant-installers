@@ -6,7 +6,7 @@ define wget::fetch($source=$name, $destination) {
   include wget
 
   exec { "wget-${name}":
-    command => "/usr/bin/wget --output-document=${destination} ${source}",
+    command => "wget --output-document=${destination} ${source}",
     creates => $destination,
     timeout => 1200,
     require => Class["wget"],

@@ -1,6 +1,6 @@
 # Globally set the exec path because that is really annoying.
 Exec {
-  path => ["/bin", "/sbin" , "/usr/bin", "/usr/sbin"],
+  path => ["/bin", "/sbin" , "/usr/bin", "/usr/sbin", "/usr/local/bin"],
 }
 
 # Build the installer

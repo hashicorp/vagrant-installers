@@ -10,14 +10,14 @@ define patch($content, $prefixlevel, $cwd) {
   file { $patch_file:
     ensure  => present,
     content => $content,
-    owner   => "root",
-    group   => "root",
     mode    => "0644",
+    notify  => Exec["patch-${name}"],
   }
 
   exec { "patch-${name}":
-    command => "patch -p${prefixlevel} -i ${patch_file}",
-    cwd     => $cwd,
-    require => File[$patch_file],
+    command     => "patch -p${prefixlevel} -i ${patch_file}",
+    cwd         => $cwd,
+    refreshonly => true,
+    require     => File[$patch_file],
   }
 }
