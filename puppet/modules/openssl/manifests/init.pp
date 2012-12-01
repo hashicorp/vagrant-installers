@@ -5,6 +5,7 @@ class openssl(
 ) {
   require build_essential
 
+  $lib_version      = "1.0.0"
   $source_filename  = "openssl-1.0.1c.tar.gz"
   $source_url = "http://www.openssl.org/source/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
@@ -26,13 +27,8 @@ class openssl(
     require => Wget::Fetch["openssl"],
   }
 
-  autotools { "openssl":
-    configure_file     => "config",
-    configure_flags    => "--prefix=${prefix} shared",
-    configure_sentinel => "${source_dir_path}/Makefile.bak",
-    cwd                => $source_dir_path,
-    environment        => $autotools_environment,
-    install_sentinel   => "${prefix}/lib/libssl.so",
-    require            => Exec["untar-openssl"],
+  case $operatingsystem {
+    'Darwin': { include openssl::install::darwin }
+    default:  { include openssl::install::linux }
   }
 }

@@ -8,6 +8,7 @@ define autotools(
   $configure_sentinel=undef,
   $cwd,
   $environment=undef,
+  $install=true,
   $install_sentinel=undef,
   $make_sentinel=undef,
 ) {
@@ -41,11 +42,13 @@ define autotools(
     require     => Exec["configure-${name}"],
   }
 
-  exec { "make-install-${name}":
-    command     => "make install",
-    creates     => $install_sentinel,
-    cwd         => $cwd,
-    environment => $exec_environment,
-    require     => Exec["make-${name}"],
+  if $install {
+    exec { "make-install-${name}":
+      command     => "make install",
+      creates     => $install_sentinel,
+      cwd         => $cwd,
+      environment => $exec_environment,
+      require     => Exec["make-${name}"],
+    }
   }
 }
