@@ -11,6 +11,7 @@ define autotools(
   $install=true,
   $install_sentinel=undef,
   $make_command=undef,
+  $make_notify=undef,
   $make_sentinel=undef,
 ) {
   $real_configure_file = $configure_file ? {
@@ -46,6 +47,7 @@ define autotools(
     cwd         => $cwd,
     environment => $exec_environment,
     require     => Exec["configure-${name}"],
+    notify      => $make_notify,
   }
 
   if $install {

@@ -1,6 +1,7 @@
 class ruby(
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
+  $make_notify = undef,
   $prefix = params_lookup('prefix'),
 ) {
   require build_essential
@@ -66,6 +67,7 @@ class ruby(
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/bin/ruby",
+    make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/ruby",
     require          => Exec["untar-ruby"],
   }

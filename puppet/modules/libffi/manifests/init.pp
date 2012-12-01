@@ -5,6 +5,7 @@
 class libffi (
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
+  $make_notify = undef,
   $prefix = params_lookup('prefix'),
 ) {
   require build_essential
@@ -53,6 +54,7 @@ class libffi (
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/lib/libffi.a",
     make_command     => "make && touch ${source_dir_path}/make_complete",
+    make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/make_complete",
     require          => Exec["untar-libffi"],
   }

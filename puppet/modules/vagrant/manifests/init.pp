@@ -23,6 +23,20 @@ class vagrant(
   $merged_environment = autotools_merge_environments(
     $autotools_environment, $extra_environment)
 
+  #------------------------------------------------------------------
+  # Resetter
+  #------------------------------------------------------------------
+  # Users outside this class should notify this resource if they want
+  # to force a recompile of Vagrant.
+  exec { "reset-vagrant":
+    command     => "rm -rf ${source_dir_path}",
+    refreshonly => true,
+    before      => Exec["untar-vagrant"],
+  }
+
+  #------------------------------------------------------------------
+  # Download and Compile Vagrant
+  #------------------------------------------------------------------
   wget::fetch { "vagrant":
     source      => $source_url,
     destination => $source_file_path,
@@ -56,6 +70,9 @@ class vagrant(
     ],
   }
 
+  #------------------------------------------------------------------
+  # Install the gem into the proper location
+  #------------------------------------------------------------------
   exec { "vagrant-gem-install":
     command     => "${embedded_dir}/bin/gem install ${vagrant_gem_path} --no-ri --no-rdoc",
     creates     => "${embedded_dir}/gems/bin/vagrant",

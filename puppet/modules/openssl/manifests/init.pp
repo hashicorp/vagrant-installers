@@ -1,6 +1,7 @@
 class openssl(
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
+  $make_notify = undef,
   $prefix = params_lookup('prefix'),
 ) {
   require build_essential

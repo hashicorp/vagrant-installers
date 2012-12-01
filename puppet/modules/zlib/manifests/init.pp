@@ -1,6 +1,7 @@
 class zlib(
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
+  $make_notify = undef,
   $prefix = params_lookup('prefix'),
 ) {
   require build_essential
@@ -47,6 +48,7 @@ class zlib(
     cwd                => $source_dir_path,
     environment        => $real_autotools_environment,
     install_sentinel   => "${prefix}/lib/libz.a",
+    make_notify        => $make_notify,
     make_sentinel      => "${source_dir_path}/libz.a",
     require            => Exec["untar-libz"],
   }
