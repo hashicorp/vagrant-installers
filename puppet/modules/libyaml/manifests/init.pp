@@ -15,7 +15,8 @@ class libyaml(
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libyaml.dylib",
+      "CFLAGS"  => "-arch i386 -arch x86_64",
+      "LDFLAGS" => "-arch i386 -arch x86_64 -Wl,-install_name,@rpath/libyaml.dylib",
     }
   } else {
     $extra_autotools_environment = {}

@@ -11,19 +11,14 @@ class vagrant_installer {
   #------------------------------------------------------------------
   # Calculate variables based on operating system
   #------------------------------------------------------------------
-  $extra_autotools_cflags = $operatingsystem ? {
-    'Darwin' => '-arch i386 -arch x86_64',
-    default  => '',
-  }
-
   $extra_autotools_ldflags = $operatingsystem ? {
-    'Darwin' => "-arch i386 -arch x86_64 -R${embedded_dir}/lib",
+    'Darwin' => "-R${embedded_dir}/lib",
     default  => '',
   }
 
   $default_autotools_environment = {
     "CFLAGS"                   =>
-      "-I${embedded_dir}/include -L${embedded_dir}/lib ${extra_autotools_cflags}",
+      "-I${embedded_dir}/include -L${embedded_dir}/lib",
     "LDFLAGS"                  =>
       "-I${embedded_dir}/include -L${embedded_dir}/lib ${extra_autotools_ldflags}",
     "MACOSX_DEPLOYMENT_TARGET" => "10.5",

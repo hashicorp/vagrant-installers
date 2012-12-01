@@ -15,7 +15,8 @@ class zlib(
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libz.dylib",
+      "CFLAGS"  => "-arch i386 -arch x86_64",
+      "LDFLAGS" => "-arch i386 -arch x86_64 -Wl,-install_name,@rpath/libz.dylib",
     }
   } else {
     $extra_autotools_environment = {}
