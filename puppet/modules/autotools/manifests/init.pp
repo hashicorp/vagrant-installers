@@ -10,6 +10,7 @@ define autotools(
   $environment=undef,
   $install=true,
   $install_sentinel=undef,
+  $make_command=undef,
   $make_sentinel=undef,
 ) {
   $real_configure_file = $configure_file ? {
@@ -20,6 +21,11 @@ define autotools(
   $real_configure_sentinel = $configure_sentinel ? {
     undef   => "${cwd}/Makefile",
     default => $configure_sentinel,
+  }
+
+  $real_make_command = $make_command ? {
+    undef   => "make",
+    default => $make_command,
   }
 
   $exec_environment = $environment ? {
@@ -35,7 +41,7 @@ define autotools(
   }
 
   exec { "make-${name}":
-    command     => "make",
+    command     => $real_make_command,
     creates     => $make_sentinel,
     cwd         => $cwd,
     environment => $exec_environment,

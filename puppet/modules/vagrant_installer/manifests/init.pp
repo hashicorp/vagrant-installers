@@ -44,26 +44,31 @@ class vagrant_installer {
   class { "libffi":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
+    notify                => Exec["reset-ruby"],
   }
 
   class { "libyaml":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
+    notify                => Exec["reset-ruby"],
   }
 
   class { "zlib":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
+    notify                => Exec["reset-ruby"],
   }
 
   class { "readline":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
+    notify                => Exec["reset-ruby"],
   }
 
   class { "openssl":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
+    notify                => Exec["reset-ruby"],
   }
 
   class { "ruby":

@@ -36,6 +36,17 @@ class ruby(
     $autotools_environment, $extra_autotools_environment)
 
   #------------------------------------------------------------------
+  # Resetter
+  #------------------------------------------------------------------
+  # This is an exec that will "reset" Ruby so that it is recompiled.
+  # This should be notified from outside of the Ruby class.
+  exec { "reset-ruby":
+    command     => "rm -rf ${source_dir_path}",
+    refreshonly => true,
+    before      => Exec["untar-ruby"],
+  }
+
+  #------------------------------------------------------------------
   # Compile
   #------------------------------------------------------------------
   wget::fetch { "ruby":

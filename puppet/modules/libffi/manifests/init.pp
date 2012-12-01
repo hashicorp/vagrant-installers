@@ -44,11 +44,16 @@ class libffi (
     require => Wget::Fetch["libffi"],
   }
 
+  # Note we use a custom make command here so we can have a make sentinel
+  # of value to actually use. The files made by compiling libffi are hard to
+  # know from Puppet, so this is the best way to do it, seemingly.
   autotools { "libffi":
     configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking",
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/lib/libffi.a",
+    make_command     => "make && touch ${source_dir_path}/make_complete",
+    make_sentinel    => "${source_dir_path}/make_complete",
     require          => Exec["untar-libffi"],
   }
 
