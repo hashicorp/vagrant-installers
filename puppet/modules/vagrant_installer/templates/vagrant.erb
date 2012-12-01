@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# This is a wrapper to properly execute Vagrant within the embedded
+# Vagrant installation directory. This sets up proper environmental variables
+# so that everything loads and compiles to proper directories.
+
+# Get the directory where this script is. This will also resolve
+# any symlinks in the directory/script, so it will be the fully
+# resolved path.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+# Useful variables
+EMBEDDED_DIR="${DIR}/../embedded"
+
+<% if @operatingsystem != "windows" -%>
+# Export gem paths so that we use the isolated gems.
+export GEM_PATH=${EMBEDDED_DIR}/gems
+export GEM_HOME=${GEM_PATH}
+
+<% end -%>
+# Setup CFLAGS/LDFLAGS so that any gem installs (for plugins) will
+# be able to link against our tools. First, append a space to any
+# previously set CFLAGS/LDFLAGS.
+if [ "${CFLAGS}x" != "x" ]; then
+	CFLAGS="$CFLAGS "
+fi
+
+if [ "${LDFLAGS}x" != "x" ]; then
+	LDFLAGS="$LDFLAGS "
+fi
+
+# Append our include/lib search path to the flags and make sure they're
+# exported so that any child processes have access to them.
+export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
+export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
+
+# Unset any RUBYOPT, we don't want this bleeding into our runtime.
+unset RUBYOPT
+
+# The path to the Vagrant executable
+<% if @operatingsystem == "windows" -%>
+VAGRANT_EXECUTABLE=${EMBEDDED_DIR}/bin/vagrant
+
+# If we're in Cygwin, we want to convert the path to a Windows path, rather
+# than a Cygwin path, which Ruby does not work with. We use `uname -o` to
+# determine whether we're in Cygwin. Since `uname -o` is not POSIX compliant
+# we're extra careful to handle error cases where it doesn't exist.
+OS=$(uname -o 2> /dev/null)
+if [ "${OS}" = "Cygwin" ]; then
+	VAGRANT_EXECUTABLE=`cygpath -w "${VAGRANT_EXECUTABLE}"`
+fi
+<% else -%>
+VAGRANT_EXECUTABLE=${GEM_PATH}/bin/vagrant
+<% end -%>
+
+# Call the actual Vagrant bin with our arguments
+${EMBEDDED_DIR}/bin/ruby ${VAGRANT_EXECUTABLE} "$@"

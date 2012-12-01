@@ -7,6 +7,7 @@ class vagrant_installer {
   include vagrant_installer::params
 
   $embedded_dir = $vagrant_installer::params::embedded_dir
+  $staging_dir  = $vagrant_installer::params::staging_dir
 
   #------------------------------------------------------------------
   # Calculate variables based on operating system
@@ -76,7 +77,17 @@ class vagrant_installer {
   class { "vagrant":
     autotools_environment => $default_autotools_environment,
     embedded_dir          => $embedded_dir,
-    revision              => "ee713a0e70d8881ba5b30a0f5612bd7a4884277a",
+    revision              => "d84b71d73eefb9ea554288c92f64020e719e1135",
     require               => Class["ruby"],
+  }
+
+  #------------------------------------------------------------------
+  # Bin wrappers
+  #------------------------------------------------------------------
+  # Vagrant
+  file { "${staging_dir}/bin/vagrant":
+    content => template("vagrant_installer/vagrant.erb"),
+    mode    => "0755",
+    require => Class["vagrant"],
   }
 }
