@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# Variables:
+# * TITLE - Title of the DMG that appears in the sidebar when it is
+#   mounted as well as the Finder window title.
+# * SOURCE - The directory to create the DMG from.
+# * SIZE - The size (in KB) of the temporary DMG. Must be larger than the
+#   final DMG.
+# * TEMP_PATH - Path to store the temporary DMG.
+# * FINAL_PATH - Path to store the final DMG.
+# * INSTALLER_NAME - Name of the installer file (pkg).
+# * BG_FILENAME - Filename of the background image in the ".background"
+#   directory
+set -e
+
+# Variables
+BG_FILENAME="background.png"
+INSTALLER_NAME="Vagrant.pkg"
+FINAL_PATH="<%= @final_output_path %>"
+SIZE="102400"
+SOURCE="<%= @pkg_dmg_dir %>"
+TEMP_PATH="<%= @pkg_staging_dir %>/temp.dmg"
+TITLE="Vagrant"
+
+# Create the temporary DMG
+rm -f ${TEMP_PATH}
+hdiutil create -srcfolder "${SOURCE}" -volname "${TITLE}" -fs HFS+ \
+      -fsargs "-c c=64,a=16,e=16" -format UDRW -size ${SIZE}k ${TEMP_PATH}
+
+# Attach the temporary DMG and read the device number
+DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "${TEMP_PATH}" | \
+         egrep '^/dev/' | sed 1q | awk '{print $1}')
+
+# The magic to setup the DMG for us
+echo '
+   tell application "Finder"
+     tell disk "'${TITLE}'"
+           open
+           set current view of container window to icon view
+           set toolbar visible of container window to false
+           set statusbar visible of container window to false
+           set the bounds of container window to {400, 100, 885, 430}
+           set theViewOptions to the icon view options of container window
+           set arrangement of theViewOptions to not arranged
+           set icon size of theViewOptions to 72
+           set background picture of theViewOptions to file ".support:'${BG_FILENAME}'"
+           delay 5
+           set position of item "'${INSTALLER_NAME}'" of container window to {385, 60}
+           set position of item "uninstall.tool" of container window to {385, 220}
+           update without registering applications
+           delay 5
+     end tell
+   end tell
+' | osascript
+
+# Set the permissions and generate the final DMG
+chmod -Rf go-w /Volumes/"${TITLE}"
+sync
+hdiutil detach ${DEVICE}
+hdiutil convert "${TEMP_PATH}" -format UDZO -imagekey zlib-level=9 -o "${FINAL_PATH}"
+rm -f ${TEMP_PATH}

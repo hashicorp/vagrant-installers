@@ -9,18 +9,27 @@ class vagrant_installer::package::darwin {
   $pkg_sign_name        = hiera("darwin_pkg_sign")
   $pkg_staging_dir      = "${file_cache_dir}/pkg-staging"
   $pkg_dist_path        = "${pkg_staging_dir}/vagrant.dist"
+  $pkg_dmg_dir          = "${pkg_staging_dir}/dmg"
   $pkg_resources_dir    = "${pkg_staging_dir}/resources"
   $pkg_scripts_dir      = "${pkg_staging_dir}/scripts"
   $pkgbuild_output_path = "${pkg_staging_dir}/core.pkg"
-  $productbuild_output_path = "${pkg_staging_dir}/Vagrant.pkg"
+  $productbuild_output_path = "${pkg_dmg_dir}/Vagrant.pkg"
   $staging_dir          = $vagrant_installer::params::staging_dir
   $vagrant_version      = $vagrant_installer::params::vagrant_version
+
+  $final_output_path    = "${pkg_staging_dir}/final.dmg"
 
   $pkgbuild_options = "--root ${staging_dir} --identifier com.vagrant.vagrant --version ${vagrant_version} --install-location ${install_location} --scripts ${pkg_scripts_dir} --sign '${pkg_sign_name}' --keychain '${pkg_sign_keychain}' --timestamp=none"
 
   $productbuild_options = "--distribution ${pkg_dist_path} --resources ${pkg_resources_dir} --package-path ${pkg_staging_dir} --sign '${pkg_sign_name}' --keychain '${pkg_sign_keychain}' --timestamp=none"
 
   util::recursive_directory { $pkg_staging_dir: }
+
+  file { $pkg_dmg_dir:
+    ensure  => directory,
+    mode    => "0755",
+    require => Util::Recursive_directory[$pkg_staging_dir],
+  }
 
   #------------------------------------------------------------------
   # Resources
@@ -104,6 +113,54 @@ class vagrant_installer::package::darwin {
     require   => [
       Exec["component-pkg"],
       File[$pkg_dist_path],
+      File[$pkg_dmg_dir],
+    ],
+  }
+
+  #------------------------------------------------------------------
+  # Uninstaller
+  #------------------------------------------------------------------
+  file { "${pkg_dmg_dir}/uninstall.tool":
+    source  => "puppet:///modules/vagrant_installer/mac/uninstall.tool",
+    mode    => "0755",
+    require => File[$pkg_dmg_dir],
+  }
+
+  #------------------------------------------------------------------
+  # DMG
+  #------------------------------------------------------------------
+  $dmg_support_dir = "${pkg_dmg_dir}/.support"
+  $script_build_dmg = "${pkg_staging_dir}/build_dmg.sh"
+
+  file { $dmg_support_dir:
+    ensure  => directory,
+    mode    => "0755",
+    require => File[$pkg_dmg_dir],
+  }
+
+  file { "${dmg_support_dir}/background.png":
+    source  => "puppet:///modules/vagrant_installer/mac/background.png",
+    mode    => "0644",
+    require => File[$dmg_support_dir],
+    tag     => "dmg-support",
+  }
+
+  File <| tag == "dmg-support" |> -> Exec["build-dmg"]
+
+  file { $script_build_dmg:
+    content => template("vagrant_installer/package/darwin_build_dmg.sh.erb"),
+    mode    => "0755",
+    require => Util::Recursive_directory[$pkg_staging_dir],
+  }
+
+  exec { "build-dmg":
+    command   => $script_build_dmg,
+    creates   => $final_output_path,
+    logoutput => true,
+    require   => [
+      Exec["installer-pkg"],
+      File[$script_build_dmg],
+      File["${pkg_dmg_dir}/uninstall.tool"],
     ],
   }
 }

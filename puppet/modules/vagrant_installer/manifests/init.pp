@@ -30,6 +30,9 @@ class vagrant_installer {
   # Run stages
   #------------------------------------------------------------------
   stage { "prepare": before => Stage["main"] }
+  stage { "package": }
+
+  Stage["main"] -> Stage["package"]
 
   #------------------------------------------------------------------
   # Classes
@@ -95,8 +98,7 @@ class vagrant_installer {
   #------------------------------------------------------------------
   # Package!
   #------------------------------------------------------------------
-  case $operatingsystem {
-    'Darwin': { include vagrant_installer::package::darwin }
-    default:  { fail("Unknown operating system to package for.") }
+  class { "vagrant_installer::package":
+    stage => "package",
   }
 }

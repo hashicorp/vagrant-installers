@@ -7,8 +7,6 @@ define util::script($path=$name, $content) {
   file { $path:
     ensure  => present,
     content => $content,
-    owner   => "root",
-    group   => "root",
     mode    => "0755",
   }
 }
