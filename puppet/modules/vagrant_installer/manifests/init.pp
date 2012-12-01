@@ -6,8 +6,9 @@
 class vagrant_installer {
   include vagrant_installer::params
 
-  $embedded_dir = $vagrant_installer::params::embedded_dir
-  $staging_dir  = $vagrant_installer::params::staging_dir
+  $embedded_dir     = $vagrant_installer::params::embedded_dir
+  $staging_dir      = $vagrant_installer::params::staging_dir
+  $vagrant_revision = $vagrant_installer::params::vagrant_revision
 
   #------------------------------------------------------------------
   # Calculate variables based on operating system
@@ -77,7 +78,7 @@ class vagrant_installer {
   class { "vagrant":
     autotools_environment => $default_autotools_environment,
     embedded_dir          => $embedded_dir,
-    revision              => "d84b71d73eefb9ea554288c92f64020e719e1135",
+    revision              => $vagrant_revision,
     require               => Class["ruby"],
   }
 
@@ -89,5 +90,13 @@ class vagrant_installer {
     content => template("vagrant_installer/vagrant.erb"),
     mode    => "0755",
     require => Class["vagrant"],
+  }
+
+  #------------------------------------------------------------------
+  # Package!
+  #------------------------------------------------------------------
+  case $operatingsystem {
+    'Darwin': { include vagrant_installer::package::darwin }
+    default:  { fail("Unknown operating system to package for.") }
   }
 }

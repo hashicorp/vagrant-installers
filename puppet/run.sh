@@ -19,8 +19,12 @@ if [ `uname` = 'Darwin' ]; then
   sudo dscl . -create /groups/puppet passwd '*'
 fi
 
+# XXX: Temporary
+export FACTER_param_vagrant_revision="d84b71d73eefb9ea554288c92f64020e719e1135"
+export FACTER_param_vagrant_version="1.1.0"
+
 # Invoke Puppet
-sudo puppet apply \
+sudo -E puppet apply \
   --confdir=${TMP_CONFIG_DIR} \
   --modulepath=modules \
   manifests/init.pp
