@@ -52,9 +52,11 @@ class readline(
   }
 
   autotools { "readline":
-    configure_flags    => "--prefix=${prefix}",
-    cwd                => $source_dir_path,
-    environment        => $real_autotools_environment,
-    require            => Exec["untar-readline"],
+    configure_flags  => "--prefix=${prefix}",
+    cwd              => $source_dir_path,
+    environment      => $real_autotools_environment,
+    install_sentinel => "${prefix}/lib/libreadline.a",
+    make_sentinel    => "${source_dir_path}/libreadline.a",
+    require          => Exec["untar-readline"],
   }
 }

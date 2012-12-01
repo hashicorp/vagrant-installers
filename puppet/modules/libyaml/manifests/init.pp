@@ -42,9 +42,11 @@ class libyaml(
   }
 
   autotools { "libyaml":
-    configure_flags => "--prefix=${prefix} --disable-dependency-tracking",
-    cwd             => $source_dir_path,
-    environment     => $real_autotools_environment,
-    require         => Exec["untar-libyaml"],
+    configure_flags  => "--prefix=${prefix} --disable-dependency-tracking",
+    cwd              => $source_dir_path,
+    environment      => $real_autotools_environment,
+    install_sentinel => "${prefix}/lib/libyaml.a",
+    make_sentinel    => "${source_dir_path}/src/.libs/libyaml.a",
+    require          => Exec["untar-libyaml"],
   }
 }

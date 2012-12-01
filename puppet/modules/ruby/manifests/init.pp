@@ -51,10 +51,11 @@ class ruby(
   }
 
   autotools { "ruby":
-    configure_flags    => "--prefix=${prefix} --disable-debug --disable-dependency-tracking --disable-install-doc --enable-shared --with-opt-dir=${prefix} --enable-load-relative${extra_configure_flags}",
-    cwd                => $source_dir_path,
-    environment        => $real_autotools_environment,
-    install_sentinel   => "${prefix}/bin/ruby",
-    require            => Exec["untar-ruby"],
+    configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking --disable-install-doc --enable-shared --with-opt-dir=${prefix} --enable-load-relative${extra_configure_flags}",
+    cwd              => $source_dir_path,
+    environment      => $real_autotools_environment,
+    install_sentinel => "${prefix}/bin/ruby",
+    make_sentinel    => "${source_dir_path}/ruby",
+    require          => Exec["untar-ruby"],
   }
 }

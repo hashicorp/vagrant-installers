@@ -39,6 +39,7 @@ class openssl::install::darwin {
     cwd                => $openssl_32_path,
     environment        => $autotools_environment,
     install            => false,
+    make_sentinel      => "${openssl_32_path}/libssl.a",
     require            => Exec["copy-openssl-32"],
   }
 
@@ -67,6 +68,7 @@ class openssl::install::darwin {
     cwd                => $openssl_64_path,
     environment        => $autotools_environment,
     install            => false,
+    make_sentinel      => "${openssl_64_path}/libssl.a",
     require            => Exec["copy-openssl-64"],
   }
 

@@ -45,10 +45,11 @@ class libffi (
   }
 
   autotools { "libffi":
-    configure_flags => "--prefix=${prefix} --disable-debug --disable-dependency-tracking",
-    cwd             => $source_dir_path,
-    environment     => $real_autotools_environment,
-    require         => Exec["untar-libffi"],
+    configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking",
+    cwd              => $source_dir_path,
+    environment      => $real_autotools_environment,
+    install_sentinel => "${prefix}/lib/libffi.a",
+    require          => Exec["untar-libffi"],
   }
 
   #------------------------------------------------------------------

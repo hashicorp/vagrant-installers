@@ -46,6 +46,8 @@ class zlib(
     configure_sentinel => "${source_dir_path}/zlib.pc",
     cwd                => $source_dir_path,
     environment        => $real_autotools_environment,
+    install_sentinel   => "${prefix}/lib/libz.a",
+    make_sentinel      => "${source_dir_path}/libz.a",
     require            => Exec["untar-libz"],
   }
 }
