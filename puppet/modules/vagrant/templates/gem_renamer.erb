@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+#
+# This renames the vagrant-*.gem file to just vagrant.gem.
+
+require 'fileutils'
+
+source_dir = ARGV[0]
+
+results = Dir.glob(File.join(source_dir, "vagrant-*.gem"))
+if results.length != 1
+  puts "Results are invalid: #{results.inspect}"
+  exit 1
+end
+
+FileUtils.cp(results[0], File.join(source_dir, "vagrant.gem"))

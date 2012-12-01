@@ -72,4 +72,11 @@ class vagrant_installer {
       Class["readline"],
     ],
   }
+
+  class { "vagrant":
+    autotools_environment => $default_autotools_environment,
+    embedded_dir          => $embedded_dir,
+    revision              => "ee713a0e70d8881ba5b30a0f5612bd7a4884277a",
+    require               => Class["ruby"],
+  }
 }
