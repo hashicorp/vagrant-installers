@@ -7,6 +7,11 @@
 class vagrant_installer::prepare {
   $staging_dir  = $vagrant_installer::params::staging_dir
   $embedded_dir = $vagrant_installer::params::embedded_dir
+  $dist_dir     = $vagrant_installer::params::dist_dir
+
+  exec { "clear-dist-dir":
+    command => "rm -rf ${dist_dir}",
+  }
 
   exec { "clear-staging-dir":
     command => "rm -rf ${staging_dir}",
@@ -19,7 +24,11 @@ class vagrant_installer::prepare {
     "${embedded_dir}/bin",
     "${embedded_dir}/include",
     "${embedded_dir}/lib",
-    "${embedded_dir}/share",]:
-    require => Exec["clear-staging-dir"],
+    "${embedded_dir}/share",
+    $dist_dir,]:
+    require => [
+      Exec["clear-dist-dir"],
+      Exec["clear-staging-dir"],
+    ],
   }
 }

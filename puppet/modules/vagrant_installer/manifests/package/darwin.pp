@@ -14,16 +14,25 @@ class vagrant_installer::package::darwin {
   $pkg_scripts_dir      = "${pkg_staging_dir}/scripts"
   $pkgbuild_output_path = "${pkg_staging_dir}/core.pkg"
   $productbuild_output_path = "${pkg_dmg_dir}/Vagrant.pkg"
+  $dist_dir             = $vagrant_installer::params::dist_dir
   $staging_dir          = $vagrant_installer::params::staging_dir
   $vagrant_version      = $vagrant_installer::params::vagrant_version
 
-  $final_output_path    = "${pkg_staging_dir}/final.dmg"
+  $final_output_path    = "${dist_dir}/Vagrant.dmg"
 
   $pkgbuild_options = "--root ${staging_dir} --identifier com.vagrant.vagrant --version ${vagrant_version} --install-location ${install_location} --scripts ${pkg_scripts_dir} --sign '${pkg_sign_name}' --keychain '${pkg_sign_keychain}' --timestamp=none"
 
   $productbuild_options = "--distribution ${pkg_dist_path} --resources ${pkg_resources_dir} --package-path ${pkg_staging_dir} --sign '${pkg_sign_name}' --keychain '${pkg_sign_keychain}' --timestamp=none"
 
-  util::recursive_directory { $pkg_staging_dir: }
+  # We delete the staging environment every run because every run must
+  # generate a new package.
+  exec { "clear-pkg-staging-dir":
+    command => "rm -rf ${pkg_staging_dir}",
+  }
+
+  util::recursive_directory { $pkg_staging_dir:
+    require => Exec["clear-pkg-staging-dir"],
+  }
 
   file { $pkg_dmg_dir:
     ensure  => directory,
