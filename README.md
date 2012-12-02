@@ -33,14 +33,16 @@ there may be more steps involved but the basic idea is the same:
 
 #### Prerequisites
 
-* [Chef](http://opscode.com/chef)
-* [Git](http://git-scm.com/)
+* Command Line Tools for Mac OS X
+* [Homebrew](http://mxcl.github.com/homebrew/)
+* [Puppet](http://puppetlabs.com/misc/download-options/)
+* Developer ID Setup with Keychain
 
 #### Build
 
-    sudo rake
+    ./run.sh ${REVISION} ${OUTPUT_DIRECTORY}
 
-The resulting `dmg` will appear in the `dist` directory.
+The resulting `dmg` will appear in the output directory.
 
 ### Windows
 
