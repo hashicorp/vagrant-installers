@@ -1,7 +1,11 @@
 *.DS_Store
 *.pyc
+.librarian/
+.tmp/
 .vagrant
 Gemfile.lock
 cache
 dist
 fabfile_local.py
+modules/
+Puppetfile.lock

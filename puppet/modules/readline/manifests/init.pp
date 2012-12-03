@@ -1,3 +1,7 @@
+# == Class: readline
+#
+# This installs the readline library from source.
+#
 class readline(
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
@@ -17,7 +21,7 @@ class readline(
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64 -Wl,-install_name,@rpath/libreadline.dylib",
+      "LDFLAGS" => "-arch i386 -arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}

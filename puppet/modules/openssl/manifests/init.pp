@@ -1,3 +1,7 @@
+# == Class: openssl
+#
+# This installs OpenSSL from source.
+#
 class openssl(
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),

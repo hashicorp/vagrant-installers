@@ -1,6 +1,52 @@
 # == Define: autotools
 #
-# This compiles and installs software with autotools.
+# This compiles and installs software that follows autotools-like
+# patterns: configure, make, make install.
+#
+# === Parameters:
+#
+# [*configure_file*]
+#   The file to be called for the configure step. Defaults to "./configure"
+#
+# [*configure_flags*]
+#   A string of flags to pass to configure. This could be something like
+#   "--prefix=/home/foo" and so on. This is passed directly to the
+#   configure_file.
+#
+# [*configure_sentinel*]
+#   This is the path to a sentinel file denoting that the configuration
+#   step has completed. By default this resource will search for a Makefile
+#   in your working directory. If this file exists, the configure step
+#   is not run.
+#
+# [*cwd*]
+#   This is the working directory where all the commands (such as make)
+#   are executed from.
+#
+# [*environment*]
+#   This is a hash of environmental variables to set while calling each
+#   step.
+#
+# [*install*]
+#   If this is true, `make install` is called. If this is false, the
+#   install step is skipped.
+#
+# [*install_sentinel*]
+#   This is the path to a sentinel file denoting that the install step
+#   has already completed. By default this is nothing, and `make install`
+#   will be called every time.
+#
+# [*make_command*]
+#   This is the command to execute to compile. By default this is `make`
+#
+# [*make_notify*]
+#   This should point to a resource that is notified when `make` is called.
+#   This can be used to know when only the compilation step is redone.
+#
+# [*make_sentinel*]
+#   This is the path to a sentinel file denoting that the make step
+#   has already completed. By default this is nothing, and `make` runs
+#   every time.
 #
 define autotools(
   $configure_file=undef,

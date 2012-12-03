@@ -12,6 +12,8 @@ module Puppet::Parser::Functions
       result << "#{key}=#{value}"
     end
 
-    result
+    # We sort the results just so that tests pass across Ruby versions since
+    # Hash traversal order is non-deterministic
+    result.sort
   end
 end

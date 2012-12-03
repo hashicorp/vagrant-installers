@@ -20,7 +20,7 @@ class libffi (
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64 -Wl,-install_name,@rpath/libffi.dylib",
+      "LDFLAGS" => "-arch i386 -arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}

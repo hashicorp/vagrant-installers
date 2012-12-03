@@ -1,3 +1,7 @@
+# == Class: zlib
+#
+# This class installs zlib from source.
+#
 class zlib(
   $autotools_environment = {},
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
@@ -17,7 +21,7 @@ class zlib(
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64 -Wl,-install_name,@rpath/libz.dylib",
+      "LDFLAGS" => "-arch i386 -arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}

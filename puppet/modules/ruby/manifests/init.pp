@@ -12,29 +12,9 @@ class ruby(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
-  # Determine if we have an extra environmental variables we need to set
-  # based on the operating system.
-  if $operatingsystem == 'Darwin' {
-    $extra_autotools_environment = {
-      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
-    }
-  } elsif $kernel == 'Linux' {
-    $extra_autotools_environment = {
-      "LD_RUN_PATH" => '\$ORIGIN/../lib',
-    }
-  } else {
-    $extra_autotools_environment = {}
-  }
-
   if $operatingsystem == 'Darwin' {
     $extra_configure_flags = ' --with-arch=x86_64,i386'
-  } else {
-    $extra_configure_flags = ''
   }
-
-  # Merge our environments.
-  $real_autotools_environment = autotools_merge_environments(
-    $autotools_environment, $extra_autotools_environment)
 
   #------------------------------------------------------------------
   # Resetter
@@ -65,7 +45,7 @@ class ruby(
   autotools { "ruby":
     configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking --disable-install-doc --enable-shared --with-opt-dir=${prefix} --enable-load-relative${extra_configure_flags}",
     cwd              => $source_dir_path,
-    environment      => $real_autotools_environment,
+    environment      => $autotools_environment,
     install_sentinel => "${prefix}/bin/ruby",
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/ruby",
