@@ -1,6 +1,7 @@
 hashicorp_modules = [
   'autotools',
   'build_essential',
+  'fpm',
   'libffi',
   'libyaml',
   'openssl',

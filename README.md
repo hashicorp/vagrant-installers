@@ -36,6 +36,7 @@ there may be more steps involved but the basic idea is the same:
 * Command Line Tools for Mac OS X
 * [Homebrew](http://mxcl.github.com/homebrew/)
 * [Puppet](http://puppetlabs.com/misc/download-options/)
+* RubyGems
 * Developer ID Setup with Keychain
 
 #### Build
