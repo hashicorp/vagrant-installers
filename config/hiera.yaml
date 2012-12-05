@@ -3,7 +3,7 @@
   - yaml
 
 :hierarchy:
-  - %{operatingsystem}
+  - "%{operatingsystem}"
   - common
 
 :yaml:
