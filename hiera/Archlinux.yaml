@@ -1,3 +1,3 @@
 ---
-file_cache_dir: /tmp
-installer_staging_dir: /tmp/vagrant-temp
+file_cache_dir: /vagrant-tmp
+installer_staging_dir: /vagrant-tmp/staging
