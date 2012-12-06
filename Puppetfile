@@ -15,6 +15,7 @@ hashicorp_modules = [
   'vagrant',
   'vagrant_installer',
   'wget',
+  'wix',
   'zlib',
 ]
 
