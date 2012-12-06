@@ -24,6 +24,15 @@ Param(
     [string]$DistDir
 )
 
+# We need to create a temporary configuration directory because Puppet
+# needs to run on a filesystem that supports NTFS.
+$tmpDir = [System.IO.Path]::GetTempPath()
+$tmpDir = [System.IO.Path]::Combine($tmpDir, [System.IO.Path]::GetRandomFileName())
+[System.IO.Directory]::CreateDirectory($tmpDir) | Out-Null
+
+# Copy all the configuration items into the temporary directory
+Get-ChildItem -Recurse config | Copy-Item -Destination $tmpDir
+
 # Set environmental variables for facter
 $env:FACTER_param_vagrant_revision = $Revision
 $env:FACTER_param_vagrant_version = $Version
@@ -32,7 +41,7 @@ $env:FACTER_param_dist_dir = $DistDir
 # Execute Puppet
 $arguments = @(
     "apply",
-    "--confdir=config",
+    "--confdir=$tmpDir",
     "--modulepath=modules",
     "manifests/init.pp"
 )
