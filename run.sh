@@ -17,14 +17,6 @@ sudo rm -rf ${TMP_CONFIG_DIR}
 sudo mkdir -p ${TMP_CONFIG_DIR}
 sudo cp -R config/* ${TMP_CONFIG_DIR}
 
-# On Mac OS X, we need to create the "puppet" group, otherwise Puppet
-# will not run.
-if [ `uname` = 'Darwin' ]; then
-  sudo dscl . -create /groups/puppet
-  sudo dscl . -create /groups/puppet gid 1000
-  sudo dscl . -create /groups/puppet passwd '*'
-fi
-
 # Export the parameters for Puppet
 export FACTER_param_vagrant_revision="$1"
 export FACTER_param_vagrant_version="$2"
