@@ -9,6 +9,11 @@ if [ "$#" -ne "3" ]; then
   exit 1
 fi
 
+# Find the directory of this script
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 # We need to create a temporary configuration directory because Puppet
 # needs to be able to set the permissions on this and if we call this
 # from a filesystem that doesn't support that (VMWare shared folders),
@@ -25,5 +30,5 @@ export FACTER_param_dist_dir="$3"
 # Invoke Puppet
 sudo -E puppet apply \
   --confdir=${TMP_CONFIG_DIR} \
-  --modulepath=modules \
-  manifests/init.pp
+  --modulepath=${DIR}/modules \
+  ${DIR}/manifests/init.pp
