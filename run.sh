@@ -20,7 +20,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 # then Puppet will fail.
 sudo rm -rf ${TMP_CONFIG_DIR}
 sudo mkdir -p ${TMP_CONFIG_DIR}
-sudo cp -R config/* ${TMP_CONFIG_DIR}
+sudo cp -R ${DIR}/config/* ${TMP_CONFIG_DIR}
 
 # Export the parameters for Puppet
 export FACTER_param_vagrant_revision="$1"
@@ -28,6 +28,7 @@ export FACTER_param_vagrant_version="$2"
 export FACTER_param_dist_dir="$3"
 
 # Invoke Puppet
+cd $DIR
 sudo -E puppet apply \
   --confdir=${TMP_CONFIG_DIR} \
   --modulepath=${DIR}/modules \
