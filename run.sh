@@ -27,7 +27,7 @@ export FACTER_param_dist_dir="$3"
 
 # Invoke Puppet
 cd $DIR
-puppet apply \
+sudo -E puppet apply \
   --confdir=${TMP_CONFIG_DIR} \
   --modulepath=${DIR}/modules \
   ${DIR}/manifests/init.pp
