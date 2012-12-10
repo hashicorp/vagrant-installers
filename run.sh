@@ -2,6 +2,12 @@
 #
 # This script will actually run the puppet code here.
 
+# Verify we're running as root
+if [ "$EUID" -ne "0" ]; then
+  echo "This script must be run as root." >&2
+  exit 1
+fi
+
 # Verify arguments
 if [ "$#" -ne "3" ]; then
   echo "Usage: $0 revision version output_directory" >&2
@@ -27,7 +33,7 @@ export FACTER_param_dist_dir="$3"
 
 # Invoke Puppet
 cd $DIR
-sudo -E puppet apply \
+puppet apply \
   --confdir=${TMP_CONFIG_DIR} \
   --modulepath=${DIR}/modules \
   ${DIR}/manifests/init.pp
