@@ -23,7 +23,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 # needs to be able to set the permissions on this and if we call this
 # from a filesystem that doesn't support that (VMWare shared folders),
 # then Puppet will fail.
-TMP_CONFIG_DIR=$(mktemp -d vagrant-installer.XXXXXX)
+TMP_CONFIG_DIR=$(mktemp -d -t vagrant-installer.XXXXXX)
 cp -R ${DIR}/config/* ${TMP_CONFIG_DIR}
 
 # Export the parameters for Puppet
