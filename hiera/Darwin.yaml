@@ -1,5 +1,4 @@
 ---
 file_cache_dir: /tmp
-darwin_pkg_keychain: "/Users/mitchellh/Library/Keychains/hashicorp.keychain"
 darwin_pkg_sign: "Developer ID Installer: Mitchell Hashimoto"
 installer_staging_dir: /tmp/vagrant-temp
