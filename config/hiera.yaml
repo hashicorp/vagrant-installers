@@ -3,6 +3,7 @@
   - yaml
 
 :hierarchy:
+  - local
   - "%{operatingsystem}"
   - common
 
