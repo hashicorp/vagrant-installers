@@ -3,6 +3,7 @@ hashicorp_modules = [
   'build_essential',
   'download',
   'fpm',
+  'homebrew',
   'libffi',
   'libyaml',
   'openssl',
