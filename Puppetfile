@@ -12,6 +12,7 @@ hashicorp_modules = [
   'powershell',
   'readline',
   'ruby',
+  'rubyencoder',
   'util',
   'vagrant',
   'vagrant_installer',
