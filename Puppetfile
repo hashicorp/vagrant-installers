@@ -1,5 +1,6 @@
 hashicorp_modules = [
   'autotools',
+  'bsdtar',
   'build_essential',
   'download',
   'fpm',
@@ -31,7 +32,7 @@ hashicorp_modules.each do |module_name|
     opts[:path] = "../puppet-modules/modules/#{module_name}"
   else
     opts[:git] = "git://github.com/hashicorp/puppet-modules.git"
-    opts[:ref] = "020c0dfaef33dca8bbaeefb3deb8d904a5fadb5d"
+    opts[:ref] = "043a1d487bd241b24ae203b2aa1d199d0ba28d2f"
     opts[:path] = "modules/#{module_name}"
   end
 
