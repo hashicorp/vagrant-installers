@@ -8,7 +8,7 @@ if $kernel == 'windows' {
   }
 } else {
   Exec {
-    path => ["/bin", "/sbin" , "/usr/bin", "/usr/sbin", "/usr/local/bin"],
+    path => ["/usr/local/bin", "/bin", "/sbin" , "/usr/bin", "/usr/sbin"],
   }
 }
 
