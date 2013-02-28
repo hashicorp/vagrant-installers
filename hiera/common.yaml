@@ -1,5 +1,4 @@
 ---
-arch_prefix: "/opt/vagrant"
 linux_prefix: "/opt/vagrant"
 deb_maintainer: "HashiCorp <hello@hashicorp.com>"
 fpm_version: "0.4.29"
