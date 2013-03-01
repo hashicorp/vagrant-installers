@@ -37,7 +37,7 @@ there may be more steps involved but the basic idea is the same:
 * [Homebrew](http://mxcl.github.com/homebrew/)
 * [Puppet](http://puppetlabs.com/misc/download-options/)
 * RubyGems
-* Developer ID Setup with Keychain
+* [Developer ID Setup with Keychain](https://developer.apple.com/library/mac/#documentation/ToolsLanguages/Conceptual/OSXWorkflowGuide/CodeSigning/CodeSigning.html#//apple_ref/doc/uid/TP40011201-CH7-SW1/)
 
 #### Build
 
