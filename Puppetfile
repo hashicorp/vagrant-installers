@@ -8,6 +8,7 @@ hashicorp_modules = [
   'libffi',
   'libiconv',
   'libxml2',
+  'libxslt',
   'libyaml',
   'openssl',
   'params_lookup',
@@ -34,7 +35,7 @@ hashicorp_modules.each do |module_name|
     opts[:path] = "../puppet-modules/modules/#{module_name}"
   else
     opts[:git] = "git://github.com/hashicorp/puppet-modules.git"
-    opts[:ref] = "87cf3c8579ff1e0ea4e752bbdcab6323fcb22eae"
+    opts[:ref] = "31f65c92f5266c7fcc30cd9c5e3c5dae8f8dbf40"
     opts[:path] = "modules/#{module_name}"
   end
 
