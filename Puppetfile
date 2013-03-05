@@ -6,6 +6,7 @@ hashicorp_modules = [
   'fpm',
   'homebrew',
   'libffi',
+  'libiconv',
   'libyaml',
   'openssl',
   'params_lookup',
