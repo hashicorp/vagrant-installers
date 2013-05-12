@@ -1,4 +1,12 @@
 ---
 linux_prefix: "/opt/vagrant"
 deb_maintainer: "HashiCorp <hello@hashicorp.com>"
+deb_description: "Vagrant is a tool for building and distributing development environments.
+
+Vagrant provides the framework and configuration format to create and manage
+complete portable development environments. These development environments can
+live on your computer or in the cloud, and are portable between Windows,
+Mac OS X, and Linux"
+deb_homepage: "http://www.vagrantup.com/"
+deb_license: "MIT"
 fpm_version: "0.4.29"
