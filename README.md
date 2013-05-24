@@ -41,7 +41,7 @@ there may be more steps involved but the basic idea is the same:
 
 #### Build
 
-    ./run.sh ${REVISION} ${OUTPUT_DIRECTORY}
+    ./run.sh ${REVISION} ${VERSION} ${OUTPUT_DIRECTORY}
 
 The resulting `dmg` will appear in the output directory.
 
