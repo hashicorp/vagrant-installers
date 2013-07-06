@@ -49,7 +49,7 @@ The resulting `dmg` will appear in the output directory.
 
 #### Prerequisites
 
-* [Chef](http://opscode.com/chef)
+* [Puppet](http://puppetlabs.com/misc/download-options/)
 * [Git](http://git-scm.com/)
 
 #### Build
