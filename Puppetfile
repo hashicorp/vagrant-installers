@@ -36,7 +36,7 @@ hashicorp_modules.each do |module_name|
     opts[:path] = "../puppet-modules/modules/#{module_name}"
   else
     opts[:git] = "git://github.com/hashicorp/puppet-modules.git"
-    opts[:ref] = "a6c5c0891b6122f8c2f71a91663011e75ba7cd2b"
+    opts[:ref] = "e0ad4435206c337ed2ad77dd94ee5ea17775cf06"
     opts[:path] = "modules/#{module_name}"
   end
 
