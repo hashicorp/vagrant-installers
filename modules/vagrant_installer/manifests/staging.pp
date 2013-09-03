@@ -38,6 +38,11 @@ class vagrant_installer::staging {
         cwd     => $staging_dir,
         require => Exec["copy-archive-contents"],
       }
+
+      exec { "rm-archive-staging-dir":
+        command => "rm -rf ${archive_staging_dir}",
+        require => Exec["archive-installer"],
+      }
     }
 
     'windows': {
