@@ -47,15 +47,7 @@ The resulting `dmg` will appear in the output directory.
 
 ### Windows
 
-#### Prerequisites
+In an administrator PowerShell console:
 
-* [Chef](http://opscode.com/chef)
-* [Git](http://git-scm.com/)
-
-#### Build
-
-In an administrator console:
-
-    rake
-
-The resulting `msi` will appear in the `dist` directory.
+    > Set-ExecutionPolicy Bypass
+    > .\run.ps1
