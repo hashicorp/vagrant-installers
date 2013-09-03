@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# This installs RubyGems from source.
+
+FILE="rubygems-1.8.25"
+
+cd /tmp
+wget http://production.cf.rubygems.org/rubygems/${FILE}.tgz
+tar xzvf ${FILE}.tgz
+cd ${FILE}
+sudo ruby setup.rb
+
+# Symlink to the `gem` binary
+sudo ln -s /usr/bin/gem1.8 /usr/bin/gem

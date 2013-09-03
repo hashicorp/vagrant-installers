@@ -1,0 +1,13 @@
+diff --git a/xpath.c b/xpath.c
+index 9a82e90..c5b6aeb 100644
+--- a/xpath.c
++++ b/xpath.c
+@@ -12399,7 +12399,7 @@ xmlXPathNodeCollectAndTest(xmlXPathParserContextPtr ctxt,
+ 				break;
+ 			}
+ 		    } else if (cur->type == type) {
+-			if (type == XML_NAMESPACE_DECL)
++			if (cur->type == XML_NAMESPACE_DECL)
+ 			    XP_TEST_HIT_NS
+ 			else
+ 			    XP_TEST_HIT

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define VersionNumber="<%= @vagrant_version %>" ?>
+  <?define DisplayVersionNumber="<%= @vagrant_version %>" ?>
+
+  <!--
+    Upgrade code must be unique per version installer.
+    This is used to determine uninstall/reinstall cases.
+  -->
+  <?define UpgradeCode="<%= @upgrade_code %>" ?>
+</Include>

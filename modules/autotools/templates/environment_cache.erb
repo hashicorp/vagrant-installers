@@ -1,0 +1,5 @@
+# This keeps track of the environmental variables used to configure
+# an autotools project by Puppet. If these change it triggers a recompile.
+<% @exec_environment.sort.each do |part| -%>
+<%= part %>
+<% end -%>

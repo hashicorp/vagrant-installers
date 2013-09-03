@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#
+# This sets up the staging directory for Linux packaging.
+set -e
+
+PREFIX="<%= @linux_prefix %>"
+
+mkdir -p ./usr/bin
+mkdir -p ./${PREFIX}
+mv bin/ ./${PREFIX}
+mv embedded ./${PREFIX}

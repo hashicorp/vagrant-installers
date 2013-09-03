@@ -1,0 +1,8 @@
+$zipPath = "<%= @source_file_path %>"
+$destination = "<%= @install_dir %>"
+
+$shell = New-Object -ComObject "Shell.Application"
+$zip = $shell.NameSpace($zipPath)
+foreach($item in $zip.items()) {
+    $shell.Namespace($destination).copyhere($item)
+}

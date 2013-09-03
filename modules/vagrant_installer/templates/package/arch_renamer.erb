@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+#
+# This renames the final Arch package to the output path.
+
+require 'fileutils'
+
+source_dir = ARGV[0]
+dest_path  = ARGV[1]
+
+results = Dir.glob(File.join(source_dir, "*.pkg.tar.xz"))
+if results.length != 1
+  puts "Results are invalid: #{results.inspect}"
+  exit 1
+end
+
+FileUtils.cp(results[0], dest_path)

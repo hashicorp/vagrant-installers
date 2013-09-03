@@ -1,0 +1,8 @@
+description "Dynamically adds this node as a slave to the master."
+
+start on runlevel [23]
+
+respawn
+
+# Execute the swarm client pointed at the master server.
+exec <%= @script_run %> >> <%= @swarm_log_dir %>/upstart.log 2>&1

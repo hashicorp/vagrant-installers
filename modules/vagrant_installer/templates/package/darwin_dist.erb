@@ -1,0 +1,30 @@
+<installer-gui-script minSpecVersion="1">
+    <title>Vagrant</title>
+
+    <!-- Configure the visuals and the various pages that exist throughout
+         the installation process. -->
+    <background file="background.png"
+        alignment="bottomleft"
+        mime-type="image/png" />
+    <welcome file="welcome.html"
+        mime-type="text/html" />
+    <license file="license.html"
+        mime-type="text/html" />
+
+    <!-- Don't let the user customize the install (i.e. choose what
+         components to install. -->
+    <options customize="never" />
+
+    <!-- The "choices" for things that can be installed, although the
+         user has no actually choice, they're still required so that
+         the installer knows what to install. -->
+    <choice description="Vagrant Application"
+        id="choice-vagrant-application"
+        title="Vagrant Application">
+        <pkg-ref id="com.vagrant.vagrant">core.pkg</pkg-ref>
+    </choice>
+
+    <choices-outline>
+        <line choice="choice-vagrant-application" />
+    </choices-outline>
+</installer-gui-script>

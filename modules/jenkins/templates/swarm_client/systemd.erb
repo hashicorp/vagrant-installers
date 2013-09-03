@@ -1,0 +1,7 @@
+[Unit]
+Description=Jenkins swarm client which joins a master.
+
+[Service]
+Type=simple
+ExecStart=<%= @script_run %>
+Restart=always
