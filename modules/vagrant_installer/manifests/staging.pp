@@ -42,7 +42,7 @@ class vagrant_installer::staging {
 
     'windows': {
       powershell { "archive-installer":
-        contents => template("vagrant_installer/staging/powershell_zip.erb"),
+        content  => template("vagrant_installer/staging/powershell_zip.erb"),
         creates  => $archive_path,
         require  => Class["vagrant_installer::staging::windows"],
       }
