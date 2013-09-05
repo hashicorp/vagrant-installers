@@ -8,7 +8,8 @@ class vagrant_installer::staging {
   $staging_dir     = $vagrant_installer::params::staging_dir
   $vagrant_version = $vagrant_installer::params::vagrant_version
 
-  $archive_name = "vagrant_${vagrant_version}_${kernel}_${hardwaremodel}"
+  $archive_name_raw = "vagrant_${vagrant_version}_${kernel}_${hardwaremodel}"
+  $archive_name = inline_template("<%= archive_name_raw.downcase %>")
   $archive_path = "${dist_dir}${file_sep}${archive_name}.zip"
 
   case $kernel {
