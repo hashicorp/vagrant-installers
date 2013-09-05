@@ -5,4 +5,5 @@
 Gemfile.lock
 cache
 dist
-fabfile_local.py
+packer/packer_cache
+packer/var-file.json
