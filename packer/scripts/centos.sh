@@ -10,10 +10,6 @@ wget --no-check-certificate \
 rpm -Uvh http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
 yum install -y git
 
-# Install and update RubyGems
-gem install --no-ri --no-rdoc rubygems-update
-update_rubygems
-
 # Install build-essential stuff we'll need
 yum groupinstall -y "Development Tools"
 yum install -y ruby-devel
