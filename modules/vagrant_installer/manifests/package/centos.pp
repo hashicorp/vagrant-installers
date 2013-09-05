@@ -12,7 +12,12 @@ class vagrant_installer::package::centos {
 
   $final_output_path = "${dist_dir}/vagrant_${vagrant_version}_${hardwaremodel}.rpm"
 
-  $fpm_args = "-p '${final_output_path}' -n vagrant -v '${vagrant_version}' -s dir -t rpm --prefix '/' -C '${staging_dir}'"
+  $fpm_args = "-p '${final_output_path}' -n vagrant -v '${vagrant_version}' \
+    --description 'Vagrant is a tool for building and distributing development environments.' \
+    --license 'MIT' \
+    --maintainer 'Mitchell Hashimoto <mitchell.hashimoto@gmail.com>' \
+    --url 'http://www.vagrantup.com' \
+    -s dir -t rpm --prefix '/' -C '${staging_dir}'"
 
   package { "rpm-build":
     ensure => installed,
