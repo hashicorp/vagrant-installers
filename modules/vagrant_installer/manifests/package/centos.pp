@@ -17,6 +17,7 @@ class vagrant_installer::package::centos {
     --license 'MIT' \
     --maintainer 'Mitchell Hashimoto <mitchell.hashimoto@gmail.com>' \
     --url 'http://www.vagrantup.com' \
+    --epoch 1 \
     -s dir -t rpm --prefix '/' -C '${staging_dir}'"
 
   package { "rpm-build":
