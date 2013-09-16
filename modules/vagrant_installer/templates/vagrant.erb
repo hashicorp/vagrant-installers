@@ -85,6 +85,11 @@ case $OS in
 		GEM_HOME=`cygpath -wla "${GEM_HOME}"`
 		GEM_PATH=`cygpath -wla "${GEM_PATH}"`
 		;;
+	Darwin*)
+		# Update the DYLD_LIBRARY_PATH so that our libraries take priority
+		# over any other installed libraries.
+		export DYLD_LIBRARY_PATH="${EMBEDDED_DIR}/lib:${DYLD_LIBRARY_PATH}"
+		;;
 esac
 
 # Call the actual Vagrant bin with our arguments
