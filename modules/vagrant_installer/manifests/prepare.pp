@@ -50,6 +50,7 @@ class vagrant_installer::prepare {
   }
 
   util::recursive_directory { [
+    $file_cache_dir,
     $staging_dir,
     "${staging_dir}/bin",
     $embedded_dir,
