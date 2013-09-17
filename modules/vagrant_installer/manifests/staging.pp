@@ -20,6 +20,8 @@ class vagrant_installer::staging {
 
   case $kernel {
     'Darwin', 'Linux': {
+      require zip
+
       $archive_staging_dir = "${staging_dir}/${archive_name}"
 
       exec { "archive-staging-dir":
@@ -37,7 +39,10 @@ class vagrant_installer::staging {
         command => "/usr/bin/zip -r ${archive_path} ${archive_name}/",
         creates => $archive_path,
         cwd     => $staging_dir,
-        require => Exec["copy-archive-contents"],
+        require => [
+          Class["zip"],
+          Exec["copy-archive-contents"],
+        ],
       }
 
       exec { "rm-archive-staging-dir":
