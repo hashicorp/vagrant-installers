@@ -20,7 +20,7 @@ class vagrant_installer::staging {
 
   case $kernel {
     'Darwin', 'Linux': {
-      require zip
+      include zip
 
       $archive_staging_dir = "${staging_dir}/${archive_name}"
 
