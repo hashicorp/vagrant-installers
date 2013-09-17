@@ -7,9 +7,10 @@
 class vagrant_installer::prepare {
   include vagrant_installer::params
 
-  $staging_dir  = $vagrant_installer::params::staging_dir
-  $embedded_dir = $vagrant_installer::params::embedded_dir
-  $dist_dir     = $vagrant_installer::params::dist_dir
+  $file_cache_dir = $vagrant_installer::params::file_cache_dir
+  $staging_dir    = $vagrant_installer::params::staging_dir
+  $embedded_dir   = $vagrant_installer::params::embedded_dir
+  $dist_dir       = $vagrant_installer::params::dist_dir
 
   # Sometimes when we're debugging, its nice to keep these directories
   # around to keep the Puppet runs fast. This will make that happen.
