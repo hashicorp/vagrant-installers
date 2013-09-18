@@ -18,6 +18,7 @@ REM Export an enviromental variable to say we're in a Vagrant
 REM installer created environment.
 SET "VAGRANT_INSTALLER_ENV=1"
 SET "VAGRANT_INSTALLER_EMBEDDED_DIR=%EMBEDDED_DIR%"
+SET "VAGRANT_INSTALLER_VERSION=<%= @installer_version %>"
 
 REM Prepend embedded bin to PATH so we prefer those binaries
 SET "PATH=%EMBEDDED_DIR%\bin;%EMBEDDED_DIR%\gnuwin32\bin;%PATH%"

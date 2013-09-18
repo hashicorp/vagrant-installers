@@ -23,6 +23,7 @@ export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 # installer created environment.
 export VAGRANT_INSTALLER_ENV=1
 export VAGRANT_INSTALLER_EMBEDDED_DIR="${EMBEDDED_DIR}"
+export VAGRANT_INSTALLER_VERSION="<%= @installer_version %>"
 
 # Setup CFLAGS/LDFLAGS so that any gem installs (for plugins) will
 # be able to link against our tools. First, append a space to any

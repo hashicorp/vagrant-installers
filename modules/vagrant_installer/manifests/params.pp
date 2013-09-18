@@ -4,6 +4,7 @@
 #
 class vagrant_installer::params {
   $file_cache_dir       = hiera("file_cache_dir")
+  $installer_version    = hiera("installer_version")
 
   $file_sep = $operatingsystem ? {
     'windows' => "\\",

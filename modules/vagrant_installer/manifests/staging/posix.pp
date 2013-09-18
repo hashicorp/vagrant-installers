@@ -6,6 +6,7 @@ class vagrant_installer::staging::posix {
   include vagrant_installer::params
 
   $embedded_dir     = $vagrant_installer::params::embedded_dir
+  $installer_version = $vagrant_installer::params::installer_version
   $staging_dir      = $vagrant_installer::params::staging_dir
   $vagrant_revision = $vagrant_installer::params::vagrant_revision
 
