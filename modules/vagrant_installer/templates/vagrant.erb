@@ -88,7 +88,7 @@ case $OS in
 	Darwin*)
 		# Update the DYLD_LIBRARY_PATH so that our libraries take priority
 		# over any other installed libraries.
-		#export DYLD_LIBRARY_PATH="${EMBEDDED_DIR}/lib:${DYLD_LIBRARY_PATH}"
+		export DYLD_LIBRARY_PATH="${EMBEDDED_DIR}/lib:${DYLD_LIBRARY_PATH}"
 		;;
 esac
 
