@@ -41,6 +41,11 @@ there may be more steps involved but the basic idea is the same:
 
 #### Build
 
+Edit the `hiera/Darwin.yaml` file and change the parameters to your signing key & user:
+
+    darwin_pkg_sign: "Developer ID Installer: John Doe"
+    homebrew_user: jdoe
+
     ./run.sh ${REVISION} ${OUTPUT_DIRECTORY}
 
 The resulting `dmg` will appear in the output directory.
