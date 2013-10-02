@@ -10,7 +10,7 @@ class libxml2(
 ) {
   require build_essential
 
-  $source_filename  = "libxml2-2.9.0.tar.gz"
+  $source_filename  = "libxml2-2.9.1.tar.gz"
   $source_url = "ftp://xmlsoft.org/libxml2/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
@@ -44,22 +44,6 @@ class libxml2(
     creates => $source_dir_path,
     cwd     => $file_cache_dir,
     require => Wget::Fetch["libxml2"],
-  }
-
-  patch { "patch-libxml2-001":
-    content     => template('libxml2/patch_001.diff'),
-    prefixlevel => "1",
-    cwd         => $source_dir_path,
-    require     => Exec["untar-libxml2"],
-    before      => Autotools["libxml2"],
-  }
-
-  patch { "patch-libxml2-002":
-    content     => template('libxml2/patch_002.diff'),
-    prefixlevel => "1",
-    cwd         => $source_dir_path,
-    require     => Exec["untar-libxml2"],
-    before      => Autotools["libxml2"],
   }
 
   autotools { "libxml2":
