@@ -9,6 +9,7 @@ class vagrant_installer::package {
     'Darwin': { include vagrant_installer::package::darwin }
     'Ubuntu': { include vagrant_installer::package::ubuntu }
     'windows': { include vagrant_installer::package::windows }
+    'FreeBSD': { include vagrant_installer::package::freebsd }
     default:  { fail("Unknown operating system to package for.") }
   }
 }

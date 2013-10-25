@@ -72,9 +72,9 @@ class bsdtar::posix {
 
   # Build it
   autotools { "libarchive":
-    configure_flags  => "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-lzmadec --without-iconv --without-libiconv-prefix --without-lzma --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex",
+    configure_flags  => "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-lzmadec --without-iconv --without-libiconv-prefix --without-lzma --without-nettle --without-openssl --without-xml2 --without-expat",
     cwd              => $source_dir_path,
-    environment      => $real_autotools_environment,
+    #environment      => $real_autotools_environment,
     install_sentinel => "${install_dir}/bin/bsdtar",
     make_sentinel    => "${source_dir_path}/bsdtar",
     require          => Exec["automake-libarchive"],
