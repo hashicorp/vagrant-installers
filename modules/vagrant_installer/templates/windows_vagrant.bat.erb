@@ -14,6 +14,9 @@ SET "GEM_HOME=%EMBEDDED_DIR%\gems"
 SET "GEM_PATH=%GEM_HOME%"
 SET "GEMRC=%EMBEDDED_DIR%\etc\gemrc"
 
+REM Make ruby aware of our CA bundle
+SET "SSL_CERT_FILE=%EMBEDDED_DIR%\cacert.pem"
+
 REM Export an enviromental variable to say we're in a Vagrant
 REM installer created environment.
 SET "VAGRANT_INSTALLER_ENV=1"
