@@ -25,11 +25,11 @@ export VAGRANT_INSTALLER_ENV=1
 export VAGRANT_INSTALLER_EMBEDDED_DIR="${EMBEDDED_DIR}"
 export VAGRANT_INSTALLER_VERSION="<%= @installer_version %>"
 
-# Setup CFLAGS/LDFLAGS so that any gem installs (for plugins) will
+# Setup CPPFLAGS/LDFLAGS so that any gem installs (for plugins) will
 # be able to link against our tools. First, append a space to any
-# previously set CFLAGS/LDFLAGS.
-if [ "${CFLAGS}x" != "x" ]; then
-  CFLAGS="$CFLAGS "
+# previously set CPPFLAGS/LDFLAGS.
+if [ "${CPPFLAGS}x" != "x" ]; then
+  CPPFLAGS="$CPPFLAGS "
 fi
 
 if [ "${LDFLAGS}x" != "x" ]; then
@@ -38,8 +38,8 @@ fi
 
 # Append our include/lib search path to the flags and make sure they're
 # exported so that any child processes have access to them.
-export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
-export LDFLAGS="${LDFLAGS}-I${EMBEDDED_DIR}/include -L${EMBEDDED_DIR}/lib}"
+export CPPFLAGS="${CPPFLAGS}-I${EMBEDDED_DIR}/include"
+export LDFLAGS="${LDFLAGS}-L${EMBEDDED_DIR}/lib"
 
 # Determine the OS that we're on, which is used in some later checks.
 # It is very important we do this _before_ setting the PATH below
