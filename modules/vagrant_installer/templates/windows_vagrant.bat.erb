@@ -8,11 +8,15 @@ SET "VAGRANT_GEM_PATH_SAVED=%GEM_PATH%"
 SET "VAGRANT_GEMRC_SAVED=%GEMRC%"
 SET "VAGRANT_PATH_SAVED=%PATH%"
 SET "VAGRANT_RUBYOPT_SAVED=%RUBYOPT%"
+SET "VAGRANT_SSL_CERT_FILE=%SSL_CERT_FILE%"
 
 REM Set environmental variables
 SET "GEM_HOME=%EMBEDDED_DIR%\gems"
 SET "GEM_PATH=%GEM_HOME%"
 SET "GEMRC=%EMBEDDED_DIR%\etc\gemrc"
+
+REM Make ruby aware of our CA bundle
+SET "SSL_CERT_FILE=%EMBEDDED_DIR%\cacert.pem"
 
 REM Export an enviromental variable to say we're in a Vagrant
 REM installer created environment.
@@ -38,6 +42,7 @@ SET "GEM_PATH=%VAGRANT_GEM_PATH_SAVED%"
 SET "GEMRC=%VAGRANT_GEMRC_SAVED%"
 SET "PATH=%VAGRANT_PATH_SAVED%"
 SET "RUBYOPT=%VAGRANT_RUBYOPT_SAVED%"
+SET "SSL_CERT_FILE=%VAGRANT_SSL_CERT_FILE%"
 
 REM Exit with the proper exit status from Vagrant
 exit /b %VAGRANT_EXIT_STATUS%
