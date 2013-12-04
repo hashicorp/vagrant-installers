@@ -20,9 +20,9 @@ class vagrant_installer::staging::posix {
 
   $default_autotools_environment = {
     "CFLAGS"                   =>
-      "-I${embedded_dir}/include -L${embedded_dir}/lib",
+      "-I${embedded_dir}/include",
     "LDFLAGS"                  =>
-      "-I${embedded_dir}/include -L${embedded_dir}/lib ${extra_autotools_ldflags}",
+      "-L${embedded_dir}/lib ${extra_autotools_ldflags}",
     "MACOSX_DEPLOYMENT_TARGET" => "10.5",
   }
 
