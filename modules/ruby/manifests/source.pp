@@ -20,6 +20,15 @@ class ruby::source(
     $extra_configure_flags = ' --with-arch=x86_64,i386'
   }
 
+  # Ruby 2.0 needs this include path on the include path so that
+  # it will properly compile.
+  $extra_autotools_environment = {
+    "CFLAGS" => "-I${source_dir_path}/include",
+  }
+
+  $real_autotools_environment = autotools_merge_environments(
+    $autotools_environment, $extra_autotools_environment)
+
   #------------------------------------------------------------------
   # Resetter
   #------------------------------------------------------------------
