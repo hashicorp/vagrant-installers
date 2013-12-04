@@ -5,9 +5,9 @@ class bsdtar::posix {
   $file_cache_dir        = $bsdtar::file_cache_dir
   $install_dir           = $bsdtar::install_dir
 
-  $source_dir_path = "${file_cache_dir}/libarchive-3.1.1"
+  $source_dir_path = "${file_cache_dir}/libarchive-3.1.2"
   $source_package_path = "${file_cache_dir}/libarchive.tar.gz"
-  $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.1.tar.gz"
+  $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.2.tar.gz"
 
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
