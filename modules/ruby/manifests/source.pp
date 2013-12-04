@@ -66,9 +66,9 @@ class ruby::source(
   }
 
   if $operatingsystem == 'Darwin' {
-    file { "${prefix}/include/ruby-1.9.1/x86_64-darwin12.2.1":
+    file { "${prefix}/include/ruby-2.0.0/x86_64-darwin12.5.0":
       ensure  => link,
-      target  => "universal-darwin12.2.1",
+      target  => "universal-darwin12.5.0",
       require => Autotools["ruby"],
     }
   }
