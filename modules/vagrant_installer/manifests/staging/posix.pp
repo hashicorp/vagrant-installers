@@ -80,63 +80,72 @@ class vagrant_installer::staging::posix {
   class { "libffi":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $libffi_autotools_environment),
-    prefix                => $embedded_dir,
-    make_notify           => Exec["reset-ruby"],
+    prefix      => $embedded_dir,
+    make_notify => Exec["reset-ruby"],
+    tag         => "platform",
   }
 
   if $operatingsystem == "Ubuntu" or $operatingsystem == "Darwin" {
     class { "libiconv":
       autotools_environment => autotools_merge_environments(
         $default_autotools_environment, $libiconv_autotools_environment),
-        prefix                => $embedded_dir,
+        prefix => $embedded_dir,
+      tag      => "platform",
     }
 
     class { "libxml2":
       autotools_environment => autotools_merge_environments(
         $default_autotools_environment, $libxml2_autotools_environment),
-        prefix  => $embedded_dir,
-        require => Class["libiconv"],
+      prefix  => $embedded_dir,
+      require => Class["libiconv"],
+      tag     => "platform",
     }
 
     class { "libxslt":
       autotools_environment => $default_autotools_environment,
       prefix                => $embedded_dir,
       require               => Class["libxml2"],
+      tag                   => "platform",
     }
   }
 
   class { "libyaml":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $libyaml_autotools_environment),
-    prefix                => $embedded_dir,
-    make_notify           => Exec["reset-ruby"],
+    prefix      => $embedded_dir,
+    make_notify => Exec["reset-ruby"],
+    tag         => "platform",
   }
 
   class { "zlib":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $zlib_autotools_environment),
-    prefix                => $embedded_dir,
-    make_notify           => Exec["reset-ruby"],
+    prefix      => $embedded_dir,
+    make_notify => Exec["reset-ruby"],
+    tag         => "platform",
   }
 
   class { "readline":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $readline_autotools_environment),
-    prefix                => $embedded_dir,
-    make_notify           => Exec["reset-ruby"],
+    prefix      => $embedded_dir,
+    make_notify => Exec["reset-ruby"],
+    tag         => "platform",
   }
 
   class { "openssl":
     autotools_environment => $default_autotools_environment,
     prefix                => $embedded_dir,
     make_notify           => Exec["reset-ruby"],
+    tag                   => "platform",
   }
 
   class { "bsdtar":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $bsdtar_autotools_environment),
-    install_dir           => $embedded_dir,
-    require               => Class["zlib"],
+    install_dir => $embedded_dir,
+    require     => Class["zlib"],
+    tag         => "platform",
   }
 
   class { "curl":
@@ -147,6 +156,7 @@ class vagrant_installer::staging::posix {
       Class["openssl"],
       Class["zlib"],
     ],
+    tag => "platform",
   }
 
   class { "ruby::source":
@@ -161,16 +171,19 @@ class vagrant_installer::staging::posix {
       Class["openssl"],
       Class["readline"],
     ],
+    tag => "platform",
   }
 
   class { "rubyencoder::loaders":
     path => $embedded_dir,
+    tag  => "platform",
   }
 
   class { "vagrant":
     autotools_environment => $default_autotools_environment,
     embedded_dir          => $embedded_dir,
     revision              => $vagrant_revision,
+    tag                   => "platform",
     require               => Class["ruby::source"],
   }
 
@@ -178,12 +191,18 @@ class vagrant_installer::staging::posix {
   # Optimize some disk space
   #------------------------------------------------------------------
 
-  file { "${embedded_dir}/ssl/man":
-    ensure  => absent,
-    purge   => true,
-    recurse => true,
+  exec { "clear-openssl-man":
+    command => "rm -rf ${embedded_dir}/ssl/man",
     require => Class["openssl"],
   }
+
+  # We have to remove all the '.la' files because they cause issues
+  # with libtool later because they have hardcoded temp paths in them.
+  exec { "remove-la-files":
+    command => "rm -rf ${embedded_dir}/lib/*.la",
+  }
+
+  Class <| tag == "platform" |> -> Exec["remove-la-files"]
 
   #------------------------------------------------------------------
   # Other files
