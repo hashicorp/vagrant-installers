@@ -7,7 +7,7 @@ class wix(
   $install_path,
 ) {
   $source_file_path = "${file_cache_dir}\\wix.zip"
-  $source_url = "http://files.vagrantup.com.s3.amazonaws.com/installer_deps/wix37-binaries.zip"
+  $source_url = "http://hc-vagrant-files.s3.amazonaws.com/installer_deps/wix37-binaries.zip"
 
   download { "wix":
     source      => $source_url,
