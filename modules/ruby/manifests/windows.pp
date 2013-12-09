@@ -67,10 +67,4 @@ class ruby::windows(
     content => template("ruby/windows/devkit.rb.erb"),
     require => Exec["install-devkit"],
   }
-
-  file { "${install_dir}/lib/ruby/site_ruby/1.9.1/rubygems/defaults/operating_system.rb":
-    backup  => false,
-    content => template("ruby/windows/operating_system.rb.erb"),
-    require => Exec["install-devkit"],
-  }
 }
