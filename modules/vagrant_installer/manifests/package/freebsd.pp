@@ -16,7 +16,7 @@ class vagrant_installer::package::freebsd {
   $setup_dir = "${file_cache_dir}/freebsd_setup"
   $source_package = "vagrant.tar.gz"
 
-  $final_output_path = "${dist_dir}/vagrant_${vagrant_version}_${hardwaremodel}.txz"
+  $final_output_path = "${dist_dir}/vagrant-${vagrant_version}.txz"
 
   #------------------------------------------------------------------
   # Setup the working directory we'll use
@@ -50,10 +50,32 @@ class vagrant_installer::package::freebsd {
     require => File[$setup_dir],
   }
 
-  # Create the binary package
-  exec { "createpkg":
-    command => "pkg create -m $setup_dir",
-    cwd     => $setup_dir,
+  # Append list of package's directories to +MANIFEST
+  $dirs_list_cmd = "find * -type d | sed -e 's/^/  - \\//'"
+  $dirs_cmd = "echo \"dirs:\" >> ${setup_dir}/+MANIFEST;  $dirs_list_cmd >> ${setup_dir}/+MANIFEST"
+  exec { "append-dirs-to-manifest":
+    command => $dirs_cmd,
+    cwd     => $staging_dir,
     require => File["${setup_dir}/+MANIFEST"],
+  }
+
+  # Append list of package's files to +MANIFEST
+  $files_list_cmd = "for F in `find * -type f`; do echo \"  `echo \$F | sed -e 's/^/\\//'`: `sha256 -q \$F`\"; done"
+  $files_cmd = "echo \"files:\" >> ${setup_dir}/+MANIFEST;  $files_list_cmd >> ${setup_dir}/+MANIFEST"
+  exec { "append-files-to-manifest":
+    command => $files_cmd,
+    cwd     => $staging_dir,
+    require => File["${setup_dir}/+MANIFEST"],
+  }
+
+  # Create the binary package
+  exec { "pkg-create":
+    command => "pkg create -o $dist_dir -r $staging_dir -m $setup_dir",
+    cwd     => $staging_dir,
+    require => [
+      File["${setup_dir}/+MANIFEST"],
+      Exec['append-dirs-to-manifest'],
+      Exec['append-files-to-manifest'],
+    ],
   }
 }

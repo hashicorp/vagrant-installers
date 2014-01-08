@@ -1,15 +1,16 @@
 name: <%= @pkgname %>
 version: <%= @pkgver %>
-origin: emulators/vagrant
-comment: Vagrant package
 arch: freebsd:9:x86:64
-www: http://www.vagrantup.com
-maintainer: HashiCorp <biz@hashicorp.com>
+origin: emulators/<%= @pkgname %>
+comment: Vagrant is a tool for building complete development environments
+desc: Vagrant is a tool for building complete development environments
+www: http://www.vagrantup.com/
+maintainer: biz@hashicorp.com
 prefix: /
-licenselogic: MIT
-desc: |-
-  Vagrant
+deps: 
 categories: [emulators]
-files:
-dirs:
-- /usr/local/vagrant
+licenselogic: single
+licenses: [MIT]
+users: []
+groups: []
+options: {}
