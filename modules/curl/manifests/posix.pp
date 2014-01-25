@@ -5,7 +5,7 @@ class curl::posix {
   $file_cache_dir        = $curl::file_cache_dir
   $install_dir           = $curl::install_dir
 
-  $source_filename  = "curl-7.33.0.tar.gz"
+  $source_filename  = "curl-7.34.0.tar.gz"
   $source_url = "http://curl.haxx.se/download/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
@@ -17,6 +17,11 @@ class curl::posix {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch i386",
       "LDFLAGS" => "-arch i386 -Wl,-rpath,${install_dir}/lib",
+    }
+  } elsif $operatingsystem == 'FreeBSD' {
+    $extra_autotools_environment = {
+      "CFLAGS"  => '-fPIC',
+      "LD_RUN_PATH" => "${install_dir}/lib",
     }
   } else {
     $extra_autotools_environment = {
