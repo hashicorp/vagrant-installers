@@ -8,9 +8,14 @@ class wget {
     homebrew::package { "wget":
       creates     => "/usr/local/bin/wget",
     }
-  } else {
+  } elsif $operatingsystem == 'FreeBSD' {
     package { "wget":
-      ensure => installed,
+      ensure   => installed,
+      provider => pkgng,
+    }
+  } else { 
+    package { "wget":
+      ensure   => installed,
     }
   }
 }

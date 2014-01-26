@@ -8,7 +8,7 @@ class curl(
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
 ) {
   case $kernel {
-    'Darwin', 'Linux': { include curl::posix }
+    'Darwin', 'Linux', 'FreeBSD': { include curl::posix }
     'windows':         { include curl::windows }
     default: { fail("Unknown OS to install cURL") }
   }
