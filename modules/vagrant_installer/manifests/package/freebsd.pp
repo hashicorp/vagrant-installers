@@ -65,7 +65,18 @@ class vagrant_installer::package::freebsd {
   exec { "append-files-to-manifest":
     command => $files_cmd,
     cwd     => $staging_dir,
-    require => File["${setup_dir}/+MANIFEST"],
+    require => [ File["${setup_dir}/+MANIFEST"], Exec['append-dirs-to-manifest'] ],
+  }
+
+  # Append list of package's symlinks to +MANIFEST
+  #$symlink_list_cmd = "for F in `find * -type l`; do echo \"  `echo \$F | sed -e 's/^/\\//'`: `sha256 -q \$F`\"; done"
+  #$symlink_cmd = "echo \"files:\" >> ${setup_dir}/+MANIFEST;  $files_list_cmd >> ${setup_dir}/+MANIFEST"
+  $symlink_cmd = "for F in `find * -type l`; do echo \"  `echo \$F | sed -e 's/^/\\//'`: '-'\"; done >> ${setup_dir}/+MANIFEST"
+  exec { "append-symlinks-to-manifest":
+    command => $symlink_cmd,
+    cwd     => $staging_dir,
+    require => [ File["${setup_dir}/+MANIFEST"], Exec['append-files-to-manifest'] ],
+    provider => 'shell',
   }
 
   # Create the binary package
@@ -76,6 +87,7 @@ class vagrant_installer::package::freebsd {
       File["${setup_dir}/+MANIFEST"],
       Exec['append-dirs-to-manifest'],
       Exec['append-files-to-manifest'],
+      Exec['append-symlinks-to-manifest'],
     ],
   }
 }
