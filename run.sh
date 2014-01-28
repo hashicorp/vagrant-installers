@@ -9,8 +9,8 @@ if [ "$EUID" -ne "0" ]; then
 fi
 
 # Verify arguments
-if [ "$#" -ne "3" ]; then
-  echo "Usage: $0 revision version output_directory" >&2
+if [ "$#" -ne "1" ]; then
+  echo "Usage: $0 output-dir" >&2
   exit 1
 fi
 
@@ -27,9 +27,7 @@ TMP_CONFIG_DIR=$(mktemp -d -t vagrant-installer.XXXXXX)
 cp -R ${DIR}/config/* ${TMP_CONFIG_DIR}
 
 # Export the parameters for Puppet
-export FACTER_param_vagrant_revision="$1"
-export FACTER_param_vagrant_version="$2"
-export FACTER_param_dist_dir="$3"
+export FACTER_param_output_dir="$1"
 
 # Invoke Puppet
 cd $DIR

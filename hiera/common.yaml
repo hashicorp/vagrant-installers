@@ -3,3 +3,6 @@ installer_version: "2"
 linux_prefix: "/opt/vagrant"
 deb_maintainer: "HashiCorp <hello@hashicorp.com>"
 fpm_version: "0.4.42"
+
+vagrant_substrate::build_dir: "/vagrant-substrate"
+vagrant_substrate::installer_version: "2"

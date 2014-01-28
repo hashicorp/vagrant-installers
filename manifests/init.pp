@@ -1,4 +1,6 @@
+#--------------------------------------------------------------------
 # Globally set the exec path because that is really annoying.
+#--------------------------------------------------------------------
 if $kernel == 'windows' {
   Exec {
     path => [
@@ -12,5 +14,7 @@ if $kernel == 'windows' {
   }
 }
 
-# Build the installer
-include vagrant_installer
+#--------------------------------------------------------------------
+# Build the substrate
+#--------------------------------------------------------------------
+include vagrant_substrate

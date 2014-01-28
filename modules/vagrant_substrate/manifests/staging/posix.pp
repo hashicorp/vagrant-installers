@@ -1,10 +1,10 @@
-class vagrant_installer::staging::posix_setup {
-  include vagrant_installer::params
+class vagrant_substrate::staging::posix {
+  include vagrant_substrate
 
-  $embedded_dir     = $vagrant_installer::params::embedded_dir
-  $installer_version = $vagrant_installer::params::installer_version
-  $staging_dir      = $vagrant_installer::params::staging_dir
-  $vagrant_revision = $vagrant_installer::params::vagrant_revision
+  $cache_dir         = $vagrant_substrate::cache_dir
+  $embedded_dir      = $vagrant_substrate::embedded_dir
+  $staging_dir       = $vagrant_substrate::staging_dir
+  $installer_version = $vagrant_substrate::installer_version
 
   #------------------------------------------------------------------
   # Calculate variables based on operating system
@@ -76,26 +76,30 @@ class vagrant_installer::staging::posix_setup {
   class { "libffi":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $libffi_autotools_environment),
-    prefix      => $embedded_dir,
-    make_notify => Exec["reset-ruby"],
+    file_cache_dir => $cache_dir,
+    prefix         => $embedded_dir,
+    make_notify   => Exec["reset-ruby"],
   }
 
   if $operatingsystem == "Ubuntu" or $operatingsystem == "Darwin" {
     class { "libiconv":
       autotools_environment => autotools_merge_environments(
         $default_autotools_environment, $libiconv_autotools_environment),
-        prefix => $embedded_dir,
+      file_cache_dir => $cache_dir,
+      prefix         => $embedded_dir,
     }
 
     class { "libxml2":
       autotools_environment => autotools_merge_environments(
         $default_autotools_environment, $libxml2_autotools_environment),
-        prefix  => $embedded_dir,
-        require => Class["libiconv"],
+      file_cache_dir => $cache_dir,
+      prefix         => $embedded_dir,
+      require        => Class["libiconv"],
     }
 
     class { "libxslt":
       autotools_environment => $default_autotools_environment,
+      file_cache_dir        => $cache_dir,
       prefix                => $embedded_dir,
       require               => Class["libxml2"],
     }
@@ -104,26 +108,30 @@ class vagrant_installer::staging::posix_setup {
   class { "libyaml":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $libyaml_autotools_environment),
-    prefix      => $embedded_dir,
-    make_notify => Exec["reset-ruby"],
+    file_cache_dir => $cache_dir,
+    prefix         => $embedded_dir,
+    make_notify    => Exec["reset-ruby"],
   }
 
   class { "zlib":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $zlib_autotools_environment),
-    prefix      => $embedded_dir,
-    make_notify => Exec["reset-ruby"],
+    file_cache_dir => $cache_dir,
+    prefix         => $embedded_dir,
+    make_notify    => Exec["reset-ruby"],
   }
 
   class { "readline":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $readline_autotools_environment),
-    prefix      => $embedded_dir,
-    make_notify => Exec["reset-ruby"],
+    file_cache_dir => $cache_dir,
+    prefix         => $embedded_dir,
+    make_notify    => Exec["reset-ruby"],
   }
 
   class { "openssl":
     autotools_environment => $default_autotools_environment,
+    file_cache_dir        => $cache_dir,
     prefix                => $embedded_dir,
     make_notify           => Exec["reset-ruby"],
   }
@@ -131,13 +139,15 @@ class vagrant_installer::staging::posix_setup {
   class { "bsdtar":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $bsdtar_autotools_environment),
-    install_dir => $embedded_dir,
-    require     => Class["zlib"],
+    file_cache_dir => $cache_dir,
+    install_dir    => $embedded_dir,
+    require        => Class["zlib"],
   }
 
   class { "curl":
     autotools_environment => autotools_merge_environments(
       $default_curl_autotools_environment, $curl_autotools_environment),
+    file_cache_dir        => $cache_dir,
     install_dir           => $embedded_dir,
     require               => [
       Class["openssl"],
@@ -148,8 +158,8 @@ class vagrant_installer::staging::posix_setup {
   class { "ruby::source":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $ruby_autotools_environment),
+    file_cache_dir        => $cache_dir,
     prefix                => $embedded_dir,
-    make_notify           => Exec["reset-vagrant"],
     require               => [
       Class["libffi"],
       Class["libyaml"],
@@ -161,13 +171,6 @@ class vagrant_installer::staging::posix_setup {
 
   class { "rubyencoder::loaders":
     path => $embedded_dir,
-  }
-
-  class { "vagrant":
-    autotools_environment => $default_autotools_environment,
-    embedded_dir          => $embedded_dir,
-    revision              => $vagrant_revision,
-    require               => Class["ruby::source"],
   }
 
   #------------------------------------------------------------------
@@ -184,12 +187,12 @@ class vagrant_installer::staging::posix_setup {
   $gemrc_path = "${embedded_dir}/etc/gemrc"
 
   file { $gemrc_path:
-    content => template("vagrant_installer/gemrc.erb"),
+    content => template("vagrant_substrate/gemrc.erb"),
     mode    => "0644",
   }
 
   file { "${embedded_dir}/cacert.pem":
-    source => "puppet:///modules/vagrant_installer/cacert.pem",
+    source => "puppet:///modules/vagrant_substrate/cacert.pem",
     mode   => "0644",
   }
 
@@ -198,8 +201,7 @@ class vagrant_installer::staging::posix_setup {
   #------------------------------------------------------------------
   # Vagrant
   file { "${staging_dir}/bin/vagrant":
-    content => template("vagrant_installer/vagrant.erb"),
+    content => template("vagrant_substrate/vagrant.erb"),
     mode    => "0755",
-    require => Class["vagrant"],
   }
 }
