@@ -17,10 +17,12 @@ class vagrant_substrate(
   #--------------------------------------------------------------------
   stage { "prepare": }
   stage { "post-staging": }
+  stage { "package": }
 
   Stage["prepare"] ->
   Stage["main"] ->
-  Stage["post-staging"]
+  Stage["post-staging"] ->
+  Stage["package"]
 
   class { "vagrant_substrate::prepare":
     stage => "prepare",
@@ -30,5 +32,9 @@ class vagrant_substrate(
 
   class { "vagrant_substrate::post_staging":
     stage => "post-staging",
+  }
+
+  class { "vagrant_substrate::package":
+    stage => "package",
   }
 }
