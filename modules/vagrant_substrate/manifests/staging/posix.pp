@@ -174,14 +174,6 @@ class vagrant_substrate::staging::posix {
   }
 
   #------------------------------------------------------------------
-  # Optimize some disk space
-  #------------------------------------------------------------------
-  exec { "clear-openssl-man":
-    command => "rm -rf ${embedded_dir}/ssl/man",
-    require => Class["openssl"],
-  }
-
-  #------------------------------------------------------------------
   # Other files
   #------------------------------------------------------------------
   $gemrc_path = "${embedded_dir}/etc/gemrc"
