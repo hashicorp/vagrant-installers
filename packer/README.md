@@ -1,4 +1,4 @@
-# Vagrant Installer Packer Templates
+# Substrate Builder Packer Templates
 
-This repository contains the Packer templates that create the VMs
-used to create Vagrant installers.
+This folder contains the Packer templates that can be used to build
+machines that can build the substrate layers.
