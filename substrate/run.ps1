@@ -28,11 +28,12 @@ $env:FACTER_param_output_dir = Resolve-Path $OutputDir
 # Execute Puppet
 $arguments = @(
     "apply",
-    "--confdir=$tmpDir",
+    "--confdir=$TmpDir",
     "--modulepath=$($Dir)/modules",
     "$($Dir)/manifests/init.pp"
 )
 
 $path = "C:\Program Files (x86)\Puppet Labs\Puppet\bin\puppet.bat"
 
+Set-Location $Dir
 Start-Process -NoNewWindow -Wait -ArgumentList $arguments -FilePath $path
