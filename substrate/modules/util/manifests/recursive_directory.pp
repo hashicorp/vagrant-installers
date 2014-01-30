@@ -30,8 +30,6 @@ define util::recursive_directory($dir=$name) {
 
     file { $name:
       ensure  => directory,
-      owner   => "root",
-      group   => "root",
       mode    => "0755",
       require => Exec[$name],
     }
