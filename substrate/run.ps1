@@ -23,13 +23,13 @@ $TmpDir = [System.IO.Path]::Combine($TmpDir, [System.IO.Path]::GetRandomFileName
 Get-ChildItem -Recurse config | Copy-Item -Destination $TmpDir
 
 # Set environmental variables for facter
-$env:FACTER_param_output_dir = $OutputDir
+$env:FACTER_param_output_dir = Resolve-Path $OutputDir
 
 # Execute Puppet
 $arguments = @(
     "apply",
     "--confdir=$tmpDir",
-    "--modulepath=modules",
+    "--modulepath=$($Dir)/modules",
     "$($Dir)/manifests/init.pp"
 )
 
