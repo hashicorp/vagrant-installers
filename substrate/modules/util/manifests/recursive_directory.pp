@@ -27,5 +27,13 @@ define util::recursive_directory($dir=$name) {
       path    => ["/bin", "/usr/bin"],
       unless  => "test -d ${dir}",
     }
+
+    file { $name:
+      ensure  => directory,
+      owner   => "root",
+      group   => "root",
+      mode    => "0755",
+      require => Exec[$name],
+    }
   }
 }
