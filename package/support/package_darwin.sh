@@ -17,6 +17,7 @@ rm -rf package-staging
 mkdir -p package-staging
 STAGING_DIR=$(cd package-staging; pwd)
 pushd $STAGING_DIR
+echo "Darwin staging dir: ${STAGING_DIR}"
 
 SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
@@ -25,6 +26,7 @@ OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}.pkg"
 #-------------------------------------------------------------------------
 # Resources
 #-------------------------------------------------------------------------
+echo "Copying installer resources..."
 mkdir -p ${STAGING_DIR}/resources
 cp ${DIR}/darwin/background.png ${STAGING_DIR}/background.png
 cp ${DIR}/darwin/welcome.html ${STAGING_DIR}/welcome.html
@@ -33,6 +35,7 @@ cp ${DIR}/darwin/license.html ${STAGING_DIR}/license.html
 #-------------------------------------------------------------------------
 # Scripts
 #-------------------------------------------------------------------------
+echo "Copying installer scripts.."
 mkdir -p ${STAGING_DIR}/scripts
 cat <<EOF >${STAGING_DIR}/scripts/postinstall
 #!/usr/bin/env bash
@@ -51,6 +54,7 @@ chmod 0755 ${STAGING_DIR}/scripts/postinstall
 #-------------------------------------------------------------------------
 # Create the component package using pkgbuild. The component package
 # contains the raw file structure that is installed via the installer package.
+echo "Building core.pkg..."
 pkgbuild \
     --root ${SUBSTRATE_DIR} \
     --identifier com.vagrant.vagrant \
@@ -97,6 +101,7 @@ cat <<EOF >${STAGING_DIR}/vagrant.dist
 EOF
 
 # Build the actual installer.
+echo "Building Vagrant.pkg..."
 productbuild \
     --distribution ${STAGING_DIR}/vagrant.dist \
     --resources ${STAGING_DIR}/resources \
@@ -116,6 +121,7 @@ mkdir ${STAGING_DIR}/dmg/.support
 cp ${DIR}/darwin/background_installer.png ${STAGING_DIR}/dmg/.support/background.png
 
 # Create the temporary DMG
+echo "Creating temporary DMG..."
 hdiutil create \
     -srcfolder "${STAGING_DIR}/dmg" \
     -volname "Vagrant" \
@@ -152,12 +158,13 @@ echo '
 ' | osascript
 
 # Set the permissions and generate the final DMG
+echo "Creating final DMG..."
 chmod -Rf go-w /Volumes/Vagrant
 sync
 hdiutil detach ${DEVICE}
 hdiutil convert \
-    "${STAGING_DIR}/tmp.dmg" \
+    "${STAGING_DIR}/temp.dmg" \
     -format UDZO \
     -imagekey zlib-level=9 \
     -o "${OUTPUT_PATH}"
-rm -f ${STAGING_DIR}/tmp.dmg
+rm -f ${STAGING_DIR}/temp.dmg
