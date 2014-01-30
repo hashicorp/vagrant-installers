@@ -27,6 +27,7 @@ TMP_CONFIG_DIR=$(mktemp -d -t vagrant-installer.XXXXXX)
 cp -R ${DIR}/config/* ${TMP_CONFIG_DIR}
 
 # Export the parameters for Puppet
+export FACTER_param_homebrew_user=${SUDO_USER}
 export FACTER_param_output_dir=$(cd $1; pwd)
 
 # Invoke Puppet

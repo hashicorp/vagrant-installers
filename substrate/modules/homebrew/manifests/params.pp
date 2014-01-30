@@ -3,7 +3,7 @@
 # This is a parameter farm for homebrew.
 #
 class homebrew::params {
-  $user = params_lookup('user')
+  $user = $param_homebrew_user
 
   if !$test {
     if $user == '' {
