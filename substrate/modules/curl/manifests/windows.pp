@@ -9,8 +9,9 @@ class curl::windows {
   }
 
   powershell { "extract-curl":
-    content => template("curl/extract.erb"),
-    creates => "${install_dir}/curl.exe",
-    require => File[$source_file_path],
+    content        => template("curl/extract.erb"),
+    creates        => "${install_dir}/curl.exe",
+    file_cache_dir => $file_cache_dir,
+    require        => File[$source_file_path],
   }
 }

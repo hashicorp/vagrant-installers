@@ -2,6 +2,7 @@ class vagrant_substrate::staging {
   include vagrant_substrate
 
   $embedded_dir = $vagrant_substrate::embedded_dir
+  $staging_dir  = $vagrant_substrate::staging_dir
 
   #------------------------------------------------------------------
   # OS-Specific

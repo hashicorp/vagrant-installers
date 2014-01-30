@@ -9,8 +9,9 @@ class bsdtar::windows {
   }
 
   powershell { "extract-bsdtar":
-    content => template("bsdtar/extract.erb"),
-    creates => "${install_dir}/bin/bsdtar.exe",
-    require => File[$source_file_path],
+    content        => template("bsdtar/extract.erb"),
+    creates        => "${install_dir}/bin/bsdtar.exe",
+    file_cache_dir => $file_cache_dir,
+    require        => File[$source_file_path],
   }
 }

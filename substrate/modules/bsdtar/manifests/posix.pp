@@ -48,8 +48,9 @@ class bsdtar::posix {
   # Download and Setup
   #------------------------------------------------------------------
   download { "libarchive":
-    source      => $source_url,
-    destination => $source_package_path,
+    source         => $source_url,
+    destination    => $source_package_path,
+    file_cache_dir => $file_cache_dir,
   }
 
   exec { "untar-libarchive":

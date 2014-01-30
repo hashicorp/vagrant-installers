@@ -20,8 +20,9 @@ class ruby::windows(
   # Ruby
   #------------------------------------------------------------------
   download { "ruby":
-    source      => $ruby_source_url,
-    destination => $ruby_installer_path,
+    source         => $ruby_source_url,
+    destination    => $ruby_installer_path,
+    file_cache_dir => $file_cache_dir,
   }
 
   exec { "install-ruby":
@@ -36,6 +37,7 @@ class ruby::windows(
   download { "ruby-devkit":
     source      => $devkit_source_url,
     destination => $devkit_installer_path,
+    file_cache_dir => $file_cache_dir,
   }
 
   exec { "extract-devkit":

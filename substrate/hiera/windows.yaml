@@ -1,2 +1,2 @@
 ---
-vagrant_substrate::build_dir: "C:\vagrant-substrate"
+vagrant_substrate::build_dir: "C:\\vagrant-substrate"
