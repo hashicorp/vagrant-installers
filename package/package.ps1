@@ -269,13 +269,16 @@ Write-Host "Running heat.exe"
     -out "$($InstallerTmpDir)\vagrant-files.wxs"
 
 Write-Host "Running candle.exe"
-&$WixCandle `
-    -nologo `
-    -I$($InstallerTmpDir) `
-    -dVagrantSourceDir="$($SubstrateDir)" `
-    -out $InstallerTmpDir `
-    "$($InstallerTmpDir)\vagrant-files.wxs" `
-    "$($InstallerTmpDir)\vagrant-main.wxs"
+$CandleArgs = @(
+    "-nologo",
+    "-I$($InstallerTmpDir)",
+    "-dVagrantSourceDir=$($SubstrateDir)",
+    "-out $InstallerTmpDir",
+    "$($InstallerTmpDir)\vagrant-files.wxs",
+    "$($InstallerTmpDir)\varant-main.wxs"
+)
+Start-Process -NoNewWindow -Wait `
+    -ArgumentList $CandleArgs -FilePath $WixCandle
 
 Write-Host "Running light.exe"
 &$WixLight `
@@ -286,3 +289,5 @@ Write-Host "Running light.exe"
     -out $OutputPath `
     "$($InstallerTmpDir)\vagrant-files.wixobj" `
     "$($InstallerTmpDir)\vagrant-main.wixobj"
+
+Write-Host "Installer at: $($OutputPath)"

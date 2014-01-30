@@ -3,6 +3,7 @@
 .tmp/
 .vagrant
 Gemfile.lock
+Thumbs.db
 cache
 dist
 packer/packer_cache
