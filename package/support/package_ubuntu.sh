@@ -29,7 +29,7 @@ cat <<EOF >./usr/bin/vagrant
 #
 # This script just forwards all arguments to the real vagrant binary.
 
-/opt/vagrant/bin/vagrant "$@"
+/opt/vagrant/bin/vagrant "\$@"
 EOF
 chmod +x ./usr/bin/vagrant
 
