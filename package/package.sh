@@ -50,5 +50,10 @@ if [ -f "/etc/redhat-release" ]; then
     ${DIR}/support/package_centos.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
 fi
 
+# Darwin
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ${DIR}/support/package_darwin.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
+fi
+
 # Clean up the temporary dir
 rm -rf ${SUBSTRATE_TMP_DIR} ${TMP_DIR}
