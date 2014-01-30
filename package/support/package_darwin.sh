@@ -12,16 +12,16 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+SUBSTRATE_DIR=$1
+VAGRANT_VERSION=$2
+OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}"
+
 # Work in a temporary directory
 rm -rf package-staging
 mkdir -p package-staging
 STAGING_DIR=$(cd package-staging; pwd)
 pushd $STAGING_DIR
 echo "Darwin staging dir: ${STAGING_DIR}"
-
-SUBSTRATE_DIR=$1
-VAGRANT_VERSION=$2
-OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}.pkg"
 
 #-------------------------------------------------------------------------
 # Resources
@@ -132,6 +132,7 @@ hdiutil create \
     ${STAGING_DIR}/temp.dmg
 
 # Attach the temporary DMG and read the device
+echo "Mounting and configuring temp DMG..."
 DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "${STAGING_DIR}/temp.dmg" | \
          egrep '^/dev/' | sed 1q | awk '{print $1}')
 
