@@ -45,5 +45,10 @@ if [ -f "/etc/debian_version" ]; then
     ${DIR}/support/package_ubuntu.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
 fi
 
+# CentOS/RHEL/Fedora
+if [ -f "/etc/redhat-release" ]; then
+    ${DIR}/support/package_centos.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
+fi
+
 # Clean up the temporary dir
 rm -rf ${SUBSTRATE_TMP_DIR} ${TMP_DIR}
