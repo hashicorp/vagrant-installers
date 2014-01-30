@@ -13,11 +13,6 @@ class vagrant_substrate::prepare {
     'windows': {
       # 'rmdir' is SO incredibly faster than the Puppet file resource
       # on Windows, so we shell out to that.
-      exec { "clear-output-dir":
-        command => "cmd.exe /C rmdir.exe /S /Q ${output_dir} & exit /B 0",
-        tag     => "prepare-clear",
-      }
-
       exec { "clear-staging-dir":
         command => "cmd.exe /C rmdir.exe /S /Q ${staging_dir} & exit /B 0",
         tag     => "prepare-clear",
@@ -27,11 +22,6 @@ class vagrant_substrate::prepare {
     default: {
       # 'rm' is again much faster than the Puppet file resource, so we
       # just execute that directly.
-      exec { "clear-output-dir":
-        command => "rm -rf ${output_dir}",
-        tag     => "prepare-clear",
-      }
-
       exec { "clear-staging-dir":
         command => "rm -rf ${staging_dir}",
         tag     => "prepare-clear",
