@@ -1,3 +1,2 @@
 ---
-file_cache_dir: C:\vagrant-temp
-installer_staging_dir: C:\vagrant-temp\staging
+vagrant_substrate::build_dir: "C:\vagrant-substrate"
