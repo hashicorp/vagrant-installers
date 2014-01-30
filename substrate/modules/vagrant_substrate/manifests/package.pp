@@ -6,7 +6,7 @@ class vagrant_substrate::package {
   $output_dir   = $vagrant_substrate::output_dir
   $staging_dir  = $vagrant_substrate::staging_dir
 
-  $package_name_raw = "substrate_${kernel}_${hardwaremodel}.zip"
+  $package_name_raw = "substrate_${operatingsystem}_${hardwaremodel}.zip"
   $package_name     = inline_template("<%= @package_name_raw.downcase %>")
   $package_path     = "${output_dir}${file_sep}${package_name}"
 
