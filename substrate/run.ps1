@@ -20,7 +20,7 @@ $TmpDir = [System.IO.Path]::Combine($TmpDir, [System.IO.Path]::GetRandomFileName
 [System.IO.Directory]::CreateDirectory($TmpDir) | Out-Null
 
 # Copy all the configuration items into the temporary directory
-Get-ChildItem -Recurse config | Copy-Item -Destination $TmpDir
+Get-ChildItem -Recurse "$($Dir)\config" | Copy-Item -Destination $TmpDir
 
 # Set environmental variables for facter
 $env:FACTER_param_output_dir = Resolve-Path $OutputDir
