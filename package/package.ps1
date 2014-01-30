@@ -164,7 +164,9 @@ $contents = @"
   <?define UpgradeCode="$($UpgradeCode)" ?>
 </Include>
 "@
-$contents | Out-File -FilePath "$($InstallerTmpDir)\vagrant-config.wxi"
+$contents | Out-File `
+    -Encoding ASCII `
+    -FilePath "$($InstallerTmpDir)\vagrant-config.wxi"
 
 $contents = @"
 <?xml version="1.0"?>
@@ -256,7 +258,9 @@ $contents = @"
   </Product>
 </Wix>
 "@
-$contents | Out-File -FilePath "$($InstallerTmpDir)\vagrant-main.wxs"
+$contents | Out-File `
+    -Encoding ASCII `
+    -FilePath "$($InstallerTmpDir)\vagrant-main.wxs"
 
 Write-Host "Running heat.exe"
 &$WixHeat dir $SubstrateDir `
@@ -273,9 +277,9 @@ $CandleArgs = @(
     "-nologo",
     "-I$($InstallerTmpDir)",
     "-dVagrantSourceDir=$($SubstrateDir)",
-    "-out $InstallerTmpDir",
+    "-out $InstallerTmpDir\",
     "$($InstallerTmpDir)\vagrant-files.wxs",
-    "$($InstallerTmpDir)\varant-main.wxs"
+    "$($InstallerTmpDir)\vagrant-main.wxs"
 )
 Start-Process -NoNewWindow -Wait `
     -ArgumentList $CandleArgs -FilePath $WixCandle
