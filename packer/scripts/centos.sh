@@ -17,3 +17,6 @@ update_rubygems
 # Install build-essential stuff we'll need
 yum groupinstall -y "Development Tools"
 yum install -y ruby-devel
+
+# Install fpm
+gem install fpm --no-ri --no-rdoc

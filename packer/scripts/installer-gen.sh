@@ -1,9 +1,6 @@
 #!/bin/bash
 
-GENDIR=/opt/vagrant-installer-gen
-
-# Install librarian-puppet so we can get dependencies
-gem install --no-ri --no-rdoc librarian-puppet
+GENDIR=/opt/vagrant-installer
 
 # Make the directory that'll contain our installer generator
 # and start setting that up.
@@ -13,9 +10,6 @@ cd $GENDIR
 git clone \
     --depth=1 \
     https://github.com/mitchellh/vagrant-installers.git .
-
-# Install the Puppet modules
-librarian-puppet install
 
 # Done!
 echo 'Done! Vagrant installer generators are ready.'

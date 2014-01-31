@@ -17,3 +17,6 @@ cd /var/lib/gems/1.8/bin
 
 # Install build-essential stuff we'll need
 apt-get install -y build-essential ruby-dev
+
+# Install fpm
+gem install fpm --no-ri --no-rdoc
