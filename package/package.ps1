@@ -105,12 +105,9 @@ Pop-Location
 # Determine the version
 $VagrantVersionFile = Join-Path $VagrantSourceDir version.xt
 if (-Not (Test-Path $VagrantVersionFile)) {
-    "0.1.TIMESTAMP" | Out-File -FilePath $VagrantVersionFile
+    "0.1.0" | Out-File -FilePath $VagrantVersionFile
 }
-$VagrantVersion=$(`
-    (Get-Content $VagrantVersionFile) -replace `
-    "TIMESTAMP", `
-    $([int][double]::Parse((Get-Date -UFormat "%s"))))
+$VagrantVersion=$(Get-Content $VagrantVersionFile)
 Write-Host "Vagrant version: $VagrantVersion"
 
 # Install gem. We do this in a sub-shell so we don't have to worry

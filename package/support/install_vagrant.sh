@@ -36,9 +36,9 @@ cd vagrant-${VAGRANT_REV}
 # If we have a version file, use that. Otherwise, use a timestamp
 # on version 0.1.
 if [ ! -f "version.txt" ]; then
-    echo -n "0.1.TIMESTAMP" > version.txt
+    echo -n "0.1.0" > version.txt
 fi
-VERSION=$(cat version.txt | sed -e "s/TIMESTAMP/$(date +%s)/")
+VERSION=$(cat version.txt)
 echo -n $VERSION >${VERSION_OUTPUT}
 
 # Build the gem
