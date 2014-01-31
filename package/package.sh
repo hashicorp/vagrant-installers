@@ -4,14 +4,13 @@
 set -e
 
 # Verify arguments
-if [ "$#" -ne "3" ]; then
-  echo "Usage: $0 SUBSTRATE-PATH VAGRANT-REVISION VAGRANT-VERSION" >&2
+if [ "$#" -ne "2" ]; then
+  echo "Usage: $0 SUBSTRATE-PATH VAGRANT-REVISION" >&2
   exit 1
 fi
 
 SUBSTRATE_PATH=$1
 VAGRANT_REVISION=$2
-VAGRANT_VERSION=$3
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -21,6 +20,11 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 #--------------------------------------------------------------------
 # Common Operations
 #--------------------------------------------------------------------
+# Create a writeable temporary directory
+TMP_DIR=$(mktemp -d tmp.XXXXXXXXXX)
+TMP_DIR=$(cd ${TMP_DIR}; pwd)
+export TMPDIR="${TMP_DIR}"
+
 # Copy the substrate and unzip it
 SUBSTRATE_TMP_DIR=$(mktemp -d tmp.XXXXXXXXXX)
 cp $SUBSTRATE_PATH ${SUBSTRATE_TMP_DIR}/substrate.zip
@@ -30,12 +34,9 @@ popd
 SUBSTRATE_DIR=$(cd ${SUBSTRATE_TMP_DIR}/substrate; pwd)
 
 # Install Vagrant
-${DIR}/support/install_vagrant.sh ${SUBSTRATE_DIR} ${VAGRANT_REVISION}
-
-# Create a writeable temporary directory
-TMP_DIR=$(mktemp -d tmp.XXXXXXXXXX)
-TMP_DIR=$(cd ${TMP_DIR}; pwd)
-export TMPDIR="${TMP_DIR}"
+${DIR}/support/install_vagrant.sh \
+    ${SUBSTRATE_DIR} ${VAGRANT_REVISION} ${TMPDIR}/vagrant_version
+VAGRANT_VERSION=$(cat ${TMPDIR}/vagrant_version)
 
 #--------------------------------------------------------------------
 # OS-specific packaging

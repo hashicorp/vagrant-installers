@@ -9,14 +9,15 @@
 set -e
 
 # Verify arguments
-if [ "$#" -ne "2" ]; then
-  echo "Usage: $0 SUBSTRATE-DIR VAGRANT-REVISION" >&2
+if [ "$#" -ne "3" ]; then
+  echo "Usage: $0 SUBSTRATE-DIR VAGRANT-REVISION VERSION-FILE" >&2
   exit 1
 fi
 
 SUBSTRATE_DIR=$1
 EMBEDDED_DIR="$1/embedded"
 VAGRANT_REV=$2
+VERSION_OUTPUT=$3
 
 GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
 
@@ -30,6 +31,14 @@ wget --output-document=vagrant.tar.gz ${SOURCE_URL}
 tar xvzf vagrant.tar.gz
 rm vagrant.tar.gz
 cd vagrant-${VAGRANT_REV}
+
+# If we have a version file, use that. Otherwise, use a timestamp
+# on version 0.1.
+if [ ! -f "version.txt" ]; then
+    echo -n "0.1.TIMESTAMP" > version.txt
+fi
+VERSION=$(cat version.txt | sed -e "s/TIMESTAMP/$(date +%s)/")
+echo -n $VERSION >${VERSION_OUTPUT}
 
 # Build the gem
 ${GEM_COMMAND} build vagrant.gemspec
