@@ -231,6 +231,9 @@ $contents = @"
                  Part="last"
                  System="yes"
                  Value="[VAGRANTAPPDIR]bin" />
+
+               <!-- We need this to avoid an ICE validation error -->
+               <CreateFolder />
              </Component>
            </Directory>
          </Directory>
