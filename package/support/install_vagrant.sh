@@ -7,6 +7,7 @@
 # the substrate. Once this command runs, the substrate directory it is
 # pointed to is no longer valid.
 set -e
+set -x
 
 # Verify arguments
 if [ "$#" -ne "3" ]; then
