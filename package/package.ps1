@@ -17,20 +17,13 @@
 
 .PARAMETER VagrantRevision
     The commit revision of Vagrant to install.
-
-.PARAMETER VagrantVersion
-    The version of Vagrant that will be installed, also the version reported
-    by the installer.
 #>
 param(
     [Parameter(Mandatory=$true)]
     [string]$SubstratePath,
 
     [Parameter(Mandatory=$true)]
-    [string]$VagrantRevision,
-
-    [Parameter(Mandatory=$true)]
-    [string]$VagrantVersion
+    [string]$VagrantRevision
 )
 
 # Exit if there are any exceptions
@@ -46,9 +39,6 @@ $Dir = Split-Path $script:MyInvocation.MyCommand.Path
 $WixHeat   = Get-Command heat | Select-Object -ExpandProperty Definition
 $WixCandle = Get-Command candle | Select-Object -ExpandProperty Definition
 $WixLight  = Get-Command light | Select-Object -ExpandProperty Definition
-
-# Final path to output
-$OutputPath = "vagrant_$($VagrantVersion).msi"
 
 #--------------------------------------------------------------------
 # Helper Functions
@@ -112,6 +102,17 @@ Push-Location $VagrantSourceDir
 Copy-Item vagrant-*.gem -Destination vagrant.gem
 Pop-Location
 
+# Determine the version
+$VagrantVersionFile = Join-Path $VagrantSourceDir version.xt
+if (-Not (Test-Path $VagrantVersionFile)) {
+    "0.1.TIMESTAMP" | Out-File -FilePath $VagrantVersionFile
+}
+$VagrantVersion=$(`
+    (Get-Content $VagrantVersionFile) -replace `
+    "TIMESTAMP", `
+    $([int][double]::Parse((Get-Date -UFormat "%s"))))
+Write-Host "Vagrant version: $VagrantVersion"
+
 # Install gem. We do this in a sub-shell so we don't have to worry
 # about restoring environmental variables.
 $env:SubstrateDir     = $SubstrateDir
@@ -135,6 +136,9 @@ Remove-Item Env:VagrantSourceDir
 #--------------------------------------------------------------------
 # MSI
 #--------------------------------------------------------------------
+# Final path to output
+$OutputPath = "vagrant_$($VagrantVersion).msi"
+
 $InstallerTmpDir = [System.IO.Path]::GetTempPath()
 $InstallerTmpDir = [System.IO.Path]::Combine(
     $InstallerTmpDir, [System.IO.Path]::GetRandomFileName())
