@@ -62,6 +62,11 @@ unset RUBYOPT
 # Set the path to the Ruby executable
 RUBY_EXECUTABLE="${EMBEDDED_DIR}/bin/ruby"
 
+# Find the Vagrant executable
+files=(${GEM_PATH}/gems/vagrant-*)
+VAGRANT_GEM_PATH="${files[0]}"
+VAGRANT_EXECUTABLE="${VAGRANT_GEM_PATH}/bin/vagrant"
+
 # Do some things depending on the OS that we're running on.
 case $OS in
 	CYGWIN* | MINGW32*)
@@ -69,12 +74,6 @@ case $OS in
 		# Windows path to the PATH so that bsdtar and friends can
 		# be found.
 		export PATH="${EMBEDDED_DIR}/gnuwin32/bin:${PATH}"
-
-		# The Vagrant executable is at a different path on Windows
-		VAGRANT_EXECUTABLE="${EMBEDDED_DIR}/gems/bin/vagrant"
-		;;
-	*)
-		VAGRANT_EXECUTABLE=${GEM_PATH}/bin/vagrant
 		;;
 esac
 
@@ -91,5 +90,8 @@ case $OS in
 		;;
 esac
 
+# Export the VAGRANT_EXECUTABLE so that pre-rubygems can optimize a bit
+export VAGRANT_EXECUTABLE
+
 # Call the actual Vagrant bin with our arguments
-"${RUBY_EXECUTABLE}" "${VAGRANT_EXECUTABLE}" "$@"
+"${RUBY_EXECUTABLE}" "${VAGRANT_GEM_PATH}/lib/vagrant/pre-rubygems.rb" "$@"
