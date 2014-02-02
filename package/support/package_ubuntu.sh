@@ -9,7 +9,8 @@ fi
 
 SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
-OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}.deb"
+ARCH=$(arch | perl -ne 'chomp and print')
+OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_${ARCH}.deb"
 
 # Work in a temporary directory
 rm -rf package-staging
