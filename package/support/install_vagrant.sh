@@ -38,7 +38,7 @@ cd vagrant-${VAGRANT_REV}
 if [ ! -f "version.txt" ]; then
     echo -n "0.1.0" > version.txt
 fi
-VERSION=$(cat version.txt)
+VERSION=$(cat version.txt | sed -r -e 's/\.[^0-9]+$//')
 echo -n $VERSION >${VERSION_OUTPUT}
 
 # Build the gem

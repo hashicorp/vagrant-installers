@@ -107,7 +107,7 @@ $VagrantVersionFile = Join-Path $VagrantSourceDir version.xt
 if (-Not (Test-Path $VagrantVersionFile)) {
     "0.1.0" | Out-File -FilePath $VagrantVersionFile
 }
-$VagrantVersion=$(Get-Content $VagrantVersionFile)
+$VagrantVersion=$(Get-Content $VagrantVersionFile -creplace '\.[^0-9]+$')
 Write-Host "Vagrant version: $VagrantVersion"
 
 # Install gem. We do this in a sub-shell so we don't have to worry
