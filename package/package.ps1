@@ -103,7 +103,7 @@ Copy-Item vagrant-*.gem -Destination vagrant.gem
 Pop-Location
 
 # Determine the version
-$VagrantVersionFile = Join-Path $VagrantSourceDir version.xt
+$VagrantVersionFile = Join-Path $VagrantSourceDir version.txt
 if (-Not (Test-Path $VagrantVersionFile)) {
     "0.1.0" | Out-File -FilePath $VagrantVersionFile
 }
