@@ -39,8 +39,8 @@ class vagrant_substrate::staging::windows {
   #------------------------------------------------------------------
   # Bin wrappers
   #------------------------------------------------------------------
-  # Batch wrapper so that Vagrant can be executed from normal cmd.exe
-  file { "${staging_dir}/bin/vagrant.bat":
-    content => template("vagrant_substrate/vagrant.bat.erb"),
+  # EXE launcher for CMD.exe
+  file { "${staging_dir}/bin/vagrant.exe":
+    source  => "puppet:///modules/vagrant_substrate/vagrant.exe",
   }
 }
