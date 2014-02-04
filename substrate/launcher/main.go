@@ -18,7 +18,7 @@ func main() {
 	}
 
 	// Determine some basic directories that we use throughout
-	installerDir := filepath.Dir(path)
+	installerDir := filepath.Dir(filepath.Clean(path))
 	embeddedDir := filepath.Join(installerDir, "embedded")
 
 	// Find the Vagrant gem
