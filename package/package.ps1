@@ -300,3 +300,10 @@ Write-Host "Running light.exe"
     "$($InstallerTmpDir)\vagrant-main.wixobj"
 
 Write-Host "Installer at: $($OutputPath)"
+
+#--------------------------------------------------------------------
+# Clean up
+#--------------------------------------------------------------------
+Remove-Item -Recurse -Force $InstallerTmpDir
+Remove-Item -Recurse -Force $SubstrateTmpDir
+Remove-Item -Recurse -Force $VagrantTmpDir
