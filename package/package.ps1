@@ -321,7 +321,7 @@ if ($SignKey) {
         $SignTool = $SignPath
     }
 
-    &$SignTool `
+    &$SignTool sign `
         /t http://timestamp.digicert.com `
         /f $SignKey `
         /p $SignKeyPassword `
