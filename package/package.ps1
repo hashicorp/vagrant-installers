@@ -23,7 +23,10 @@ param(
     [string]$SubstratePath,
 
     [Parameter(Mandatory=$true)]
-    [string]$VagrantRevision
+    [string]$VagrantRevision,
+
+    [string]$SignKey="",
+    [string]$SignKeyPassword=""
 )
 
 # Exit if there are any exceptions
@@ -307,3 +310,14 @@ Write-Host "Installer at: $($OutputPath)"
 Remove-Item -Recurse -Force $InstallerTmpDir
 Remove-Item -Recurse -Force $SubstrateTmpDir
 Remove-Item -Recurse -Force $VagrantTmpDir
+
+#--------------------------------------------------------------------
+# Sign
+#--------------------------------------------------------------------
+if ($SignKey) {
+    signtool.exe `
+        /t http://timestamp.digicert.com `
+        /f $SignKey `
+        /p $SignKeyPassword `
+        $OutputPath
+}
