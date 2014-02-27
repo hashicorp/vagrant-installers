@@ -26,7 +26,8 @@ param(
     [string]$VagrantRevision,
 
     [string]$SignKey="",
-    [string]$SignKeyPassword=""
+    [string]$SignKeyPassword="",
+    [string]$SignPath=""
 )
 
 # Exit if there are any exceptions
@@ -315,7 +316,12 @@ Remove-Item -Recurse -Force $VagrantTmpDir
 # Sign
 #--------------------------------------------------------------------
 if ($SignKey) {
-    signtool.exe `
+    $SignTool = "signtool.exe"
+    if ($SignPath) {
+        $SignTool = $SignPath
+    }
+
+    &$SignTool `
         /t http://timestamp.digicert.com `
         /f $SignKey `
         /p $SignKeyPassword `
