@@ -59,6 +59,24 @@ ${GEM_COMMAND} install vagrant.gem --no-ri --no-rdoc
 ${GEM_COMMAND} install vagrant-login --no-ri --no-rdoc --source "http://gems.hashicorp.com"
 ${GEM_COMMAND} install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
 
+# Setup the system plugins
+cat <<EOF >${EMBEDDED_DIR}/plugins.json
+{
+    "version": "1",
+    "installed": {
+        "vagrant-login": {
+            "ruby_version": "0",
+            "vagrant_version": "${VERSION}"
+        },
+        "vagrant-share": {
+            "ruby_version": "0",
+            "vagrant_version": "${VERSION}"
+        }
+    }
+}
+EOF
+chmod 0644 ${EMBEDDED_DIR}/plugins.json
+
 # Exit the temporary directory
 popd
 rm -rf ${TMP_DIR}
