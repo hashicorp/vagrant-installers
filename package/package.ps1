@@ -130,9 +130,35 @@ powershell {
     $env:LDFLAGS  = "-L$($EmbeddedDir)\lib"
     $env:Path     ="$($EmbeddedDir)\bin;$($env:Path)"
     &"$($EmbeddedDir)\bin\gem.bat" install vagrant.gem --no-ri --no-rdoc
+
+    # Extensions
+    &"$($EmbeddedDir)\bin\gem.bat" install vagrant-login --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+    &"$($EmbeddedDir)\bin\gem.bat" install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
 }
 Remove-Item Env:SubstrateDir
 Remove-Item Env:VagrantSourceDir
+
+#--------------------------------------------------------------------
+# System Plugins
+#--------------------------------------------------------------------
+$contents = @"
+{
+    "version": "1",
+    "installed": {
+        "vagrant-login": {
+            "ruby_version": "0",
+            "vagrant_version": "${VERSION}"
+        },
+        "vagrant-share": {
+            "ruby_version": "0",
+            "vagrant_version": "${VERSION}"
+        }
+    }
+}
+"@
+$contents | Out-File `
+    -Encoding ASCII `
+    -FilePath "$($EmbeddedDir)\plugins.json"
 
 #--------------------------------------------------------------------
 # MSI
