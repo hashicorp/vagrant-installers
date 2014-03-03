@@ -55,6 +55,10 @@ export LDFLAGS="-L${EMBEDDED_DIR}/lib"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 ${GEM_COMMAND} install vagrant.gem --no-ri --no-rdoc
 
+# Install extensions
+${GEM_COMMAND} install vagrant-login --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+${GEM_COMMAND} install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+
 # Exit the temporary directory
 popd
 rm -rf ${TMP_DIR}
