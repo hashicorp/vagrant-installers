@@ -147,18 +147,18 @@ $contents = @"
     "installed": {
         "vagrant-login": {
             "ruby_version": "0",
-            "vagrant_version": "${VERSION}"
+            "vagrant_version": "$($VagrantVersion)"
         },
         "vagrant-share": {
             "ruby_version": "0",
-            "vagrant_version": "${VERSION}"
+            "vagrant_version": "$($VagrantVersion)"
         }
     }
 }
 "@
 $contents | Out-File `
     -Encoding ASCII `
-    -FilePath "$($EmbeddedDir)\plugins.json"
+    -FilePath "$($SubstrateDir)\embedded\plugins.json"
 
 #--------------------------------------------------------------------
 # MSI
