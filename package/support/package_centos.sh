@@ -39,7 +39,7 @@ fpm -p ${OUTPUT_PATH} \
   -n vagrant \
   -v $VAGRANT_VERSION \
   -s dir \
-  -t deb \
+  -t rpm \
   --prefix '/' \
   --maintainer "HashiCorp <hello@hashicorp.com>" \
   --epoch 1 \
