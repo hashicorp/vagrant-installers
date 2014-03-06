@@ -66,6 +66,7 @@ RUBY_EXECUTABLE="${EMBEDDED_DIR}/bin/ruby"
 files=(${GEM_PATH}/gems/vagrant-*)
 VAGRANT_GEM_PATH="${files[0]}"
 VAGRANT_EXECUTABLE="${VAGRANT_GEM_PATH}/bin/vagrant"
+VAGRANT_LAUNCHER="${VAGRANT_GEM_PATH}/lib/vagrant/pre-rubygems.rb"
 
 # Do some things depending on the OS that we're running on.
 case $OS in
@@ -85,6 +86,7 @@ case $OS in
 		# than a Cygwin path, which Ruby does not work with.
 		VAGRANT_EXECUTABLE=`cygpath -wla "${VAGRANT_EXECUTABLE}"`
 		VAGRANT_INSTALLER_EMBEDDED_DIR=`cygpath -wla "${EMBEDDED_DIR}"`
+		VAGRANT_LAUNCHER=`cygpath -wla "${VAGRANT_LAUNCHER}"`
 		GEM_HOME=`cygpath -wla "${GEM_HOME}"`
 		GEM_PATH=`cygpath -wla "${GEM_PATH}"`
 		;;
@@ -94,4 +96,4 @@ esac
 export VAGRANT_EXECUTABLE
 
 # Call the actual Vagrant bin with our arguments
-"${RUBY_EXECUTABLE}" "${VAGRANT_GEM_PATH}/lib/vagrant/pre-rubygems.rb" "$@"
+"${RUBY_EXECUTABLE}" "${VAGRANT_LAUNCHER}" "$@"
