@@ -64,7 +64,13 @@ RUBY_EXECUTABLE="${EMBEDDED_DIR}/bin/ruby"
 
 # Find the Vagrant executable
 files=(${GEM_PATH}/gems/vagrant-*)
-VAGRANT_GEM_PATH="${files[0]}"
+for needle in "${files[@]}"; do
+  if [ -f "${needle}/bin/vagrant" ]; then
+    VAGRANT_GEM_PATH="${needle}"
+    break
+  fi
+done
+
 VAGRANT_EXECUTABLE="${VAGRANT_GEM_PATH}/bin/vagrant"
 VAGRANT_LAUNCHER="${VAGRANT_GEM_PATH}/lib/vagrant/pre-rubygems.rb"
 
