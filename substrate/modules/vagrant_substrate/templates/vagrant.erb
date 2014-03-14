@@ -56,8 +56,10 @@ export VAGRANT_DETECTED_OS="${OS}"
 # Prepend our embedded dir to the PATH so that we call that preferably
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 
-# Unset any RUBYOPT, we don't want this bleeding into our runtime.
+# Unset any RUBYOPT and RUBYLIB, we don't want these bleeding into our
+# runtime.
 unset RUBYOPT
+unset RUBYLIB
 
 # Set the path to the Ruby executable
 RUBY_EXECUTABLE="${EMBEDDED_DIR}/bin/ruby"
