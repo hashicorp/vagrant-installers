@@ -22,8 +22,9 @@ SET "VAGRANT_INSTALLER_VERSION=<%= @installer_version %>"
 REM Prepend embedded bin to PATH so we prefer those binaries
 SET "PATH=%EMBEDDED_DIR%\bin;%EMBEDDED_DIR%\gnuwin32\bin;%PATH%"
 
-REM Remove RUBYOPT, which causes serious problems.
+REM Remove RUBYOPT and RUBYLIB, which cause serious problems.
 SET RUBYOPT=
+SET RUBYLIB=
 
 REM Run Vagrant...
 "%EMBEDDED_DIR%\..\embedded\bin\ruby.exe" "%EMBEDDED_DIR%/../embedded/gems/bin/%~n0" %*
