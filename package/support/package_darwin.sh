@@ -117,6 +117,7 @@ productbuild \
 mkdir -p ${STAGING_DIR}/dmg
 cp ${STAGING_DIR}/Vagrant.pkg ${STAGING_DIR}/dmg/Vagrant.pkg
 cp ${DIR}/darwin/uninstall.tool ${STAGING_DIR}/dmg/uninstall.tool
+chmod +x ${STAGING_DIR}/dmg/uninstall.tool
 mkdir ${STAGING_DIR}/dmg/.support
 cp ${DIR}/darwin/background_installer.png ${STAGING_DIR}/dmg/.support/background.png
 
