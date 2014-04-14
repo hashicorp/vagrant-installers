@@ -33,6 +33,12 @@ class openssl::install::darwin {
     ],
   }
 
+  exec { "clean-openssl-32":
+    command => "make clean",
+    cwd     => $openssl_32_path,
+    require => Exec["copy-openssl-32"],
+  }
+
   autotools { "openssl-32":
     configure_file     => "./Configure",
     configure_flags    => "--prefix=${prefix} shared darwin-i386-cc",
@@ -42,7 +48,7 @@ class openssl::install::darwin {
     install            => false,
     make_notify        => $make_notify,
     make_sentinel      => "${openssl_32_path}/libssl.a",
-    require            => Exec["copy-openssl-32"],
+    require            => Exec["clean-openssl-32"],
   }
 
   #------------------------------------------------------------------
@@ -63,6 +69,12 @@ class openssl::install::darwin {
     ],
   }
 
+  exec { "clean-openssl-64":
+    command => "make clean",
+    cwd     => $openssl_64_path,
+    require => Exec["copy-openssl-64"],
+  }
+
   # Note that we "install" the 64-bit version. This is just so that we
   # can get the headers and all that properly into the final directory.
   # We replace the libraries it would install with our own universal
@@ -70,14 +82,14 @@ class openssl::install::darwin {
   autotools { "openssl-64":
     configure_file     => "./Configure",
     configure_flags    => "--prefix=${prefix} shared darwin64-x86_64-cc",
-    configure_sentinel => "${openssl_32_path}/apps/CA.pl.bak",
+    configure_sentinel => "${openssl_64_path}/apps/CA.pl.bak",
     cwd                => $openssl_64_path,
     environment        => $autotools_environment,
     install            => true,
     install_sentinel   => "${prefix}/include/openssl/aes.h",
     make_notify        => $make_notify,
     make_sentinel      => "${openssl_64_path}/libssl.a",
-    require            => Exec["copy-openssl-64"],
+    require            => Exec["clean-openssl-64"],
   }
 
   #------------------------------------------------------------------
