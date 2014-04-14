@@ -36,7 +36,7 @@ class openssl::install::darwin {
   autotools { "openssl-32":
     configure_file     => "./Configure",
     configure_flags    => "--prefix=${prefix} shared darwin-i386-cc",
-    configure_sentinel => "${openssl_32_path}/Makefile.bak",
+    configure_sentinel => "${openssl_32_path}/apps/CA.pl.bak",
     cwd                => $openssl_32_path,
     environment        => $autotools_environment,
     install            => false,
@@ -70,7 +70,7 @@ class openssl::install::darwin {
   autotools { "openssl-64":
     configure_file     => "./Configure",
     configure_flags    => "--prefix=${prefix} shared darwin64-x86_64-cc",
-    configure_sentinel => "${openssl_64_path}/Makefile.bak",
+    configure_sentinel => "${openssl_32_path}/apps/CA.pl.bak",
     cwd                => $openssl_64_path,
     environment        => $autotools_environment,
     install            => true,
