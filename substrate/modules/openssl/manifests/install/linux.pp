@@ -11,7 +11,7 @@ class openssl::install::linux {
   autotools { "openssl":
     configure_file     => "config",
     configure_flags    => "--prefix=${prefix} shared",
-    configure_sentinel => "${source_dir_path}/Makefile.bak",
+    configure_sentinel => "${source_dir_path}/apps/CA.pl.bak",
     cwd                => $source_dir_path,
     environment        => $autotools_environment,
     install_sentinel   => "${prefix}/lib/libssl.so",
