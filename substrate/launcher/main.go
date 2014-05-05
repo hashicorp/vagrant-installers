@@ -33,7 +33,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant!\n")
 		os.Exit(1)
 	}
-	gemPath := gemPaths[0]
+	gemPath := gemPaths[len(gemPaths)-1]
 	vagrantExecutable := filepath.Join(gemPath, "bin", "vagrant")
 
 	// Setup the CPP/LDFLAGS so that native extensions can be
