@@ -74,7 +74,6 @@ files=("${GEM_PATH}/gems/vagrant-"*)
 for needle in "${files[@]}"; do
   if [ -f "${needle}/lib/vagrant/pre-rubygems.rb" ]; then
     VAGRANT_GEM_PATH="${needle}"
-    break
   fi
 done
 
