@@ -29,6 +29,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant: %s\n", err)
 		os.Exit(1)
 	}
+	for i, v := range gemPaths {
+		fullPath := filepath.Join(v, "lib", "vagrant", "pre-rubygems.rb")
+		if _, err := os.Stat(fullPath); err != nil {
+			gemPaths = gemPaths[0:i-1]
+		}
+	}
 	if len(gemPaths) == 0 {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant!\n")
 		os.Exit(1)
