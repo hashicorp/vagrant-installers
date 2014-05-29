@@ -165,6 +165,7 @@ $contents | Out-File `
 # Fix for vagrant issue #3674, MSI Upgrade 1.5 -> 1.6
 #--------------------------------------------------------------------
 # Download verpatch from http://ddverpatch.codeplex.com/
+<#
 $verpatchSourceURL = "http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=ddverpatch&DownloadId=713811&FileTime=130201209882270000&Build=20907"
 $verpatchDest = "$($VagrantTmpDir)\verpatch.zip"
 
@@ -190,6 +191,7 @@ Write-Host "Patching version $bsdversion into $bsdcpio"
 & $verpatch $bsdcpio /va $bsdversion /pv $bsdversion
 
 Write-Host "Done"
+#>
 
 #--------------------------------------------------------------------
 # MSI
