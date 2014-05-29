@@ -160,6 +160,37 @@ $contents | Out-File `
     -Encoding ASCII `
     -FilePath "$($SubstrateDir)\embedded\plugins.json"
 
+#-------------------------------------------------------------------
+# Patch version info into bsdtar.exe and bsdcpio.exe with verpatch.exe
+# Fix for vagrant issue #3674, MSI Upgrade 1.5 -> 1.6
+#--------------------------------------------------------------------
+# Download verpatch from http://ddverpatch.codeplex.com/
+$verpatchSourceURL = "http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=ddverpatch&DownloadId=713811&FileTime=130201209882270000&Build=20907"
+$verpatchDest = "$($VagrantTmpDir)\verpatch.zip"
+
+Write-Host "Downloading verpatch 1.0.14"
+(New-Object System.Net.WebClient).DownloadFile($verpatchSourceURL, $verpatchDest)
+
+Write-Host "Unzipping verpatch"
+Expand-ZipFile -file $verpatchDest -destination $VagrantTmpDir
+
+$verpatch = "$($VagrantTmpDir)\verpatch.exe"
+
+$bsdtar = "$($SubstrateDir)\embedded\gnuwin32\bin\bsdtar.exe"
+$bsdcpio = "$($SubstrateDir)\embedded\gnuwin32\bin\bsdcpio.exe"
+
+$version = & $bsdtar --version
+$version -match '([\d.]+)'
+$bsdversion = "$($matches[0]).0"
+
+Write-Host "Patching version $bsdversion into $bsdtar"
+& $verpatch $bsdtar /va $bsdversion /pv $bsdversion
+
+Write-Host "Patching version $bsdversion into $bsdcpio"
+& $verpatch $bsdcpio /va $bsdversion /pv $bsdversion
+
+Write-Host "Done"
+
 #--------------------------------------------------------------------
 # MSI
 #--------------------------------------------------------------------
