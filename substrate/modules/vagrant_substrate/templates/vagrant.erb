@@ -113,4 +113,4 @@ esac
 export VAGRANT_EXECUTABLE
 
 # Call the actual Vagrant bin with our arguments
-"${RUBY_EXECUTABLE}" "${VAGRANT_LAUNCHER}" "$@"
+exec "${RUBY_EXECUTABLE}" "${VAGRANT_LAUNCHER}" "$@"
