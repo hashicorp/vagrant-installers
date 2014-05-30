@@ -57,9 +57,10 @@ func main() {
 	path = os.Getenv("PATH")
 	if runtime.GOOS == "windows" {
 		path = fmt.Sprintf(
-			"%s;%s;%s",
+			"%s;%s;%s;%s",
 			filepath.Join(embeddedDir, "bin"),
 			filepath.Join(embeddedDir, "gnuwin32", "bin"),
+			filepath.Join(embeddedDir, "mingw", "bin"),
 			path)
 	} else {
 		path = fmt.Sprintf("%s:%s",
