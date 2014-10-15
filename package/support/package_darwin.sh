@@ -59,7 +59,7 @@ pkgbuild \
     --root ${SUBSTRATE_DIR} \
     --identifier com.vagrant.vagrant \
     --version ${VAGRANT_VERSION} \
-    --install-location "/Applications/Vagrant" \
+    --install-location "/opt/vagrant" \
     --scripts ${STAGING_DIR}/scripts \
     --timestamp=none \
     --sign "Developer ID Installer: Mitchell Hashimoto" \
