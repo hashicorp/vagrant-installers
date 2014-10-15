@@ -44,6 +44,13 @@ cat <<EOF >${STAGING_DIR}/scripts/postinstall
 # PATH.
 ln -Fs \$2/bin/vagrant /usr/bin/vagrant
 
+# Remove old legacy Vagrant installation
+[ -d /Applications/Vagrant ] && rm -rf /Applications/Vagrant
+
+# In some cases the opt folder doesn't exists before Vagrant
+# install. This folder must be always hidden.
+chflags hidden /opt
+
 # Exit with a success code
 exit 0
 EOF
