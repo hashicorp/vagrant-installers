@@ -1,155 +1,161 @@
-diff --git a/callback.c b/callback.c
-index 4ee6361..7682cd0 100644
---- a/callback.c
-+++ b/callback.c
-@@ -148,6 +148,9 @@ rl_callback_read_char ()
- 	  eof = _rl_vi_domove_callback (_rl_vimvcxt);
- 	  /* Should handle everything, including cleanup, numeric arguments,
- 	     and turning off RL_STATE_VIMOTION */
-+	  if (RL_ISSTATE (RL_STATE_NUMERICARG) == 0)
-+	    _rl_internal_char_cleanup ();
-+
- 	  return;
+diff --git a/display.c b/display.c
+index 913e0da..4df1f73 100644
+--- a/display.c
++++ b/display.c
+@@ -1637,7 +1637,7 @@ update_line (old, new, current_line, omax, nmax, inv_botlin)
+   /* If we are changing the number of invisible characters in a line, and
+      the spot of first difference is before the end of the invisible chars,
+      lendiff needs to be adjusted. */
+-  if (current_line == 0 && !_rl_horizontal_scroll_mode &&
++  if (current_line == 0 && /* !_rl_horizontal_scroll_mode && */
+       current_invis_chars != visible_wrap_offset)
+     {
+       if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+@@ -1825,8 +1825,13 @@ update_line (old, new, current_line, omax, nmax, inv_botlin)
+ 	      else
+ 		_rl_last_c_pos += bytes_to_insert;
+
++	      /* XXX - we only want to do this if we are at the end of the line
++		 so we move there with _rl_move_cursor_relative */
+ 	      if (_rl_horizontal_scroll_mode && ((oe-old) > (ne-new)))
+-		goto clear_rest_of_line;
++		{
++		  _rl_move_cursor_relative (ne-new, new);
++		  goto clear_rest_of_line;
++		}
+ 	    }
  	}
- #endif
+       /* Otherwise, print over the existing material. */
+@@ -2677,7 +2682,8 @@ _rl_clean_up_for_exit ()
+ {
+   if (_rl_echoing_p)
+     {
+-      _rl_move_vert (_rl_vis_botlin);
++      if (_rl_vis_botlin > 0)	/* minor optimization plus bug fix */
++	_rl_move_vert (_rl_vis_botlin);
+       _rl_vis_botlin = 0;
+       fflush (rl_outstream);
+       rl_restart_output (1, 0);
 diff --git a/input.c b/input.c
-index 7c74c99..b49af88 100644
+index 117dfe8..f3f6d59 100644
 --- a/input.c
 +++ b/input.c
-@@ -409,7 +409,7 @@ rl_clear_pending_input ()
- int
- rl_read_key ()
- {
--  int c;
-+  int c, r;
+@@ -534,8 +534,16 @@ rl_getc (stream)
+ 	return (RL_ISSTATE (RL_STATE_READCMD) ? READERR : EOF);
+       else if (_rl_caught_signal == SIGHUP || _rl_caught_signal == SIGTERM)
+ 	return (RL_ISSTATE (RL_STATE_READCMD) ? READERR : EOF);
++      /* keyboard-generated signals of interest */
+       else if (_rl_caught_signal == SIGINT || _rl_caught_signal == SIGQUIT)
+         RL_CHECK_SIGNALS ();
++      /* non-keyboard-generated signals of interest */
++      else if (_rl_caught_signal == SIGALRM
++#if defined (SIGVTALRM)
++		|| _rl_caught_signal == SIGVTALRM
++#endif
++	      )
++        RL_CHECK_SIGNALS ();
 
-   rl_key_sequence_length++;
-
-@@ -429,14 +429,18 @@ rl_read_key ()
- 	{
- 	  while (rl_event_hook)
- 	    {
--	      if (rl_gather_tyi () < 0)	/* XXX - EIO */
-+	      if (rl_get_char (&c) != 0)
-+		break;
-+
-+	      if ((r = rl_gather_tyi ()) < 0)	/* XXX - EIO */
- 		{
- 		  rl_done = 1;
- 		  return ('\n');
- 		}
-+	      else if (r == 1)			/* read something */
-+		continue;
-+
- 	      RL_CHECK_SIGNALS ();
--	      if (rl_get_char (&c) != 0)
--		break;
- 	      if (rl_done)		/* XXX - experimental */
- 		return ('\n');
- 	      (*rl_event_hook) ();
+       if (rl_signal_event_hook)
+ 	(*rl_signal_event_hook) ();
+diff --git a/misc.c b/misc.c
+index da5c696..a890cda 100644
+--- a/misc.c
++++ b/misc.c
+@@ -461,6 +461,7 @@ _rl_revert_all_lines ()
+ 	    saved_undo_list = 0;
+ 	  /* Set up rl_line_buffer and other variables from history entry */
+ 	  rl_replace_from_history (entry, 0);	/* entry->line is now current */
++	  entry->data = 0;			/* entry->data is now current undo list */
+ 	  /* Undo all changes to this history entry */
+ 	  while (rl_undo_list)
+ 	    rl_do_undo ();
+@@ -468,7 +469,6 @@ _rl_revert_all_lines ()
+ 	     the timestamp. */
+ 	  FREE (entry->line);
+ 	  entry->line = savestring (rl_line_buffer);
+-	  entry->data = 0;
+ 	}
+       entry = previous_history ();
+     }
 diff --git a/patchlevel b/patchlevel
-index fdf4740..626a945 100644
+index e0ba09d..6c10f12 100644
 --- a/patchlevel
 +++ b/patchlevel
 @@ -1,3 +1,3 @@
  # Do not edit -- exists only for use by patch
 
--1
-+4
-diff --git a/support/shobj-conf b/support/shobj-conf
-index 5a63e80..c61dc78 100644
---- a/support/shobj-conf
-+++ b/support/shobj-conf
-@@ -157,7 +157,7 @@ freebsd[4-9]*|freebsdelf*|dragonfly*)
- 	;;
+-5
++8
+diff --git a/readline.c b/readline.c
+index 03eefa6..abb29a0 100644
+--- a/readline.c
++++ b/readline.c
+@@ -744,7 +744,8 @@ _rl_dispatch_callback (cxt)
+     r = _rl_subseq_result (r, cxt->oldmap, cxt->okey, (cxt->flags & KSEQ_SUBSEQ));
 
- # Darwin/MacOS X
--darwin[89]*|darwin10*)
-+darwin[89]*|darwin1[012]*)
- 	SHOBJ_STATUS=supported
- 	SHLIB_STATUS=supported
+   RL_CHECK_SIGNALS ();
+-  if (r == 0)			/* success! */
++  /* We only treat values < 0 specially to simulate recursion. */
++  if (r >= 0 || (r == -1 && (cxt->flags & KSEQ_SUBSEQ) == 0))	/* success! or failure! */
+     {
+       _rl_keyseq_chain_dispose ();
+       RL_UNSETSTATE (RL_STATE_MULTIKEY);
+@@ -964,7 +965,7 @@ _rl_dispatch_subseq (key, map, got_subseq)
+ #if defined (VI_MODE)
+   if (rl_editing_mode == vi_mode && _rl_keymap == vi_movement_keymap &&
+       key != ANYOTHERKEY &&
+-      rl_key_sequence_length == 1 &&	/* XXX */
++      _rl_dispatching_keymap == vi_movement_keymap &&
+       _rl_vi_textmod_command (key))
+     _rl_vi_set_last (key, rl_numeric_arg, rl_arg_sign);
+ #endif
+diff --git a/rltypedefs.h b/rltypedefs.h
+index b113ee6..f9f5cd3 100644
+--- a/rltypedefs.h
++++ b/rltypedefs.h
+@@ -26,6 +26,25 @@
+ extern "C" {
+ #endif
 
-@@ -186,7 +186,7 @@ darwin*|macosx*)
- 	SHLIB_LIBSUFF='dylib'
++/* Old-style, attempt to mark as deprecated in some way people will notice. */
++
++#if !defined (_FUNCTION_DEF)
++#  define _FUNCTION_DEF
++
++#if defined(__GNUC__) || defined(__clang__)
++typedef int Function () __attribute__ ((deprecated));
++typedef void VFunction () __attribute__ ((deprecated));
++typedef char *CPFunction () __attribute__ ((deprecated));
++typedef char **CPPFunction () __attribute__ ((deprecated));
++#else
++typedef int Function ();
++typedef void VFunction ();
++typedef char *CPFunction ();
++typedef char **CPPFunction ();
++#endif
++
++#endif /* _FUNCTION_DEF */
++
+ /* New style. */
 
- 	case "${host_os}" in
--	darwin[789]*|darwin10*)	SHOBJ_LDFLAGS=''
-+	darwin[789]*|darwin1[012]*)	SHOBJ_LDFLAGS=''
- 			SHLIB_XLDFLAGS='-dynamiclib -arch_only `/usr/bin/arch` -install_name $(libdir)/$@ -current_version $(SHLIB_MAJOR)$(SHLIB_MINOR) -compatibility_version $(SHLIB_MAJOR) -v'
- 			;;
- 	*)		SHOBJ_LDFLAGS='-dynamic'
-diff --git a/vi_mode.c b/vi_mode.c
-index 41e1dbb..4408053 100644
---- a/vi_mode.c
-+++ b/vi_mode.c
-@@ -1114,7 +1114,7 @@ rl_domove_read_callback (m)
-       rl_beg_of_line (1, c);
-       _rl_vi_last_motion = c;
-       RL_UNSETSTATE (RL_STATE_VIMOTION);
--      return (0);
-+      return (vidomove_dispatch (m));
-     }
- #if defined (READLINE_CALLBACKS)
-   /* XXX - these need to handle rl_universal_argument bindings */
-@@ -1234,11 +1234,19 @@ rl_vi_delete_to (count, key)
-       _rl_vimvcxt->motion = '$';
-       r = rl_domove_motion_callback (_rl_vimvcxt);
-     }
--  else if (vi_redoing)
-+  else if (vi_redoing && _rl_vi_last_motion != 'd')	/* `dd' is special */
-     {
-       _rl_vimvcxt->motion = _rl_vi_last_motion;
-       r = rl_domove_motion_callback (_rl_vimvcxt);
-     }
-+  else if (vi_redoing)		/* handle redoing `dd' here */
-+    {
-+      _rl_vimvcxt->motion = _rl_vi_last_motion;
-+      rl_mark = rl_end;
-+      rl_beg_of_line (1, key);
-+      RL_UNSETSTATE (RL_STATE_VIMOTION);
-+      r = vidomove_dispatch (_rl_vimvcxt);
-+    }
- #if defined (READLINE_CALLBACKS)
-   else if (RL_ISSTATE (RL_STATE_CALLBACK))
-     {
-@@ -1316,11 +1324,19 @@ rl_vi_change_to (count, key)
-       _rl_vimvcxt->motion = '$';
-       r = rl_domove_motion_callback (_rl_vimvcxt);
-     }
--  else if (vi_redoing)
-+  else if (vi_redoing && _rl_vi_last_motion != 'c')	/* `cc' is special */
-     {
-       _rl_vimvcxt->motion = _rl_vi_last_motion;
-       r = rl_domove_motion_callback (_rl_vimvcxt);
-     }
-+  else if (vi_redoing)		/* handle redoing `cc' here */
-+    {
-+      _rl_vimvcxt->motion = _rl_vi_last_motion;
-+      rl_mark = rl_end;
-+      rl_beg_of_line (1, key);
-+      RL_UNSETSTATE (RL_STATE_VIMOTION);
-+      r = vidomove_dispatch (_rl_vimvcxt);
-+    }
- #if defined (READLINE_CALLBACKS)
-   else if (RL_ISSTATE (RL_STATE_CALLBACK))
-     {
-@@ -1377,6 +1393,19 @@ rl_vi_yank_to (count, key)
-       _rl_vimvcxt->motion = '$';
-       r = rl_domove_motion_callback (_rl_vimvcxt);
-     }
-+  else if (vi_redoing && _rl_vi_last_motion != 'y')	/* `yy' is special */
-+    {
-+      _rl_vimvcxt->motion = _rl_vi_last_motion;
-+      r = rl_domove_motion_callback (_rl_vimvcxt);
-+    }
-+  else if (vi_redoing)			/* handle redoing `yy' here */
-+    {
-+      _rl_vimvcxt->motion = _rl_vi_last_motion;
-+      rl_mark = rl_end;
-+      rl_beg_of_line (1, key);
-+      RL_UNSETSTATE (RL_STATE_VIMOTION);
-+      r = vidomove_dispatch (_rl_vimvcxt);
-+    }
- #if defined (READLINE_CALLBACKS)
-   else if (RL_ISSTATE (RL_STATE_CALLBACK))
-     {
+ #if !defined (_RL_FUNCTION_TYPEDEF)
+diff --git a/util.c b/util.c
+index fa3a667..58b55e2 100644
+--- a/util.c
++++ b/util.c
+@@ -476,6 +476,7 @@ _rl_savestring (s)
+   return (strcpy ((char *)xmalloc (1 + (int)strlen (s)), (s)));
+ }
+
++#if defined (DEBUG)
+ #if defined (USE_VARARGS)
+ static FILE *_rl_tracefp;
+
+@@ -538,6 +539,7 @@ _rl_settracefp (fp)
+   _rl_tracefp = fp;
+ }
+ #endif
++#endif /* DEBUG */
+
+
+ #if HAVE_DECL_AUDIT_USER_TTY && defined (ENABLE_TTY_AUDIT_SUPPORT)
