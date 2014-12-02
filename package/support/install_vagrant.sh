@@ -28,8 +28,12 @@ pushd $TMP_DIR
 
 # Download Vagrant and extract
 SOURCE_REPO=${VAGRANT_REPO:-mitchellh/vagrant}
-SOURCE_URL="https://github.com/${SOURCE_REPO}/archive/${VAGRANT_REV}.tar.gz"
-curl -L ${SOURCE_URL} > vagrant.tar.gz
+SOURCE_URL="https://api.github.com/repos/${SOURCE_REPO}/tarball/${VAGRANT_REV}"
+if [ -z "${VAGRANT_TOKEN}" ]; then
+    curl -L ${SOURCE_URL} > vagrant.tar.gz
+else
+    curl -L -u "${VAGRANT_TOKEN}:x-oauth-basic" ${SOURCE_URL} > vagrant.tar.gz
+fi
 tar xvzf vagrant.tar.gz
 rm vagrant.tar.gz
 cd vagrant-${VAGRANT_REV}
