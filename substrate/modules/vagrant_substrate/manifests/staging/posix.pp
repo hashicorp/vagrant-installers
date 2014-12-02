@@ -33,6 +33,10 @@ class vagrant_substrate::staging::posix {
       "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
     }
 
+    $bsdtar_autotools_environment = {
+      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
+    }
+
     $libffi_autotools_environment = {
       "LDFLAGS" => "-Wl,-install_name,@rpath/libffi.dylib",
     }
@@ -55,6 +59,10 @@ class vagrant_substrate::staging::posix {
 
     $ruby_autotools_environment = {
       "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
+    }
+
+    $xz_autotools_environment = {
+      "LDFLAGS" => "-Wl,-install_name,@rpath/liblzma.dylib",
     }
 
     $zlib_autotools_environment = {
@@ -121,6 +129,14 @@ class vagrant_substrate::staging::posix {
     make_notify    => Exec["reset-ruby"],
   }
 
+  class { "xz":
+    autotools_environment => autotools_merge_environments(
+      $default_autotools_environment, $xz_autotools_environment),
+    file_cache_dir => $cache_dir,
+    prefix         => $embedded_dir,
+    make_notify    => Exec["reset-ruby"],
+  }
+
   class { "readline":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $readline_autotools_environment),
@@ -141,7 +157,10 @@ class vagrant_substrate::staging::posix {
       $default_autotools_environment, $bsdtar_autotools_environment),
     file_cache_dir => $cache_dir,
     install_dir    => $embedded_dir,
-    require        => Class["zlib"],
+    require        => [
+      Class["xz"],
+      Class["zlib"],
+    ]
   }
 
   class { "curl":
