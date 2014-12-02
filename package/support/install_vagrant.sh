@@ -59,6 +59,7 @@ export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 export CPPFLAGS="-I${EMBEDDED_DIR}/include"
 export LDFLAGS="-L${EMBEDDED_DIR}/lib"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
+export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
 ${GEM_COMMAND} install vagrant.gem --no-ri --no-rdoc
 
 # Install extensions
