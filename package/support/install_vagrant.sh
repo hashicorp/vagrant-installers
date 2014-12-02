@@ -27,8 +27,8 @@ TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
 pushd $TMP_DIR
 
 # Download Vagrant and extract
-SOURCE_PREFIX=${VAGRANT_REPO_PREFIX:-vagrant}
 SOURCE_REPO=${VAGRANT_REPO:-mitchellh/vagrant}
+SOURCE_PREFIX=${VAGRANT_REPO/\//-}
 SOURCE_URL="https://api.github.com/repos/${SOURCE_REPO}/tarball/${VAGRANT_REV}"
 if [ -z "${VAGRANT_TOKEN}" ]; then
     curl -L ${SOURCE_URL} > vagrant.tar.gz
