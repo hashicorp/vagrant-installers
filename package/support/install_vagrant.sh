@@ -27,6 +27,7 @@ TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
 pushd $TMP_DIR
 
 # Download Vagrant and extract
+SOURCE_PREFIX=${VAGRANT_REPO_PREFIX:-vagrant}
 SOURCE_REPO=${VAGRANT_REPO:-mitchellh/vagrant}
 SOURCE_URL="https://api.github.com/repos/${SOURCE_REPO}/tarball/${VAGRANT_REV}"
 if [ -z "${VAGRANT_TOKEN}" ]; then
@@ -36,7 +37,7 @@ else
 fi
 tar xvzf vagrant.tar.gz
 rm vagrant.tar.gz
-cd vagrant-${VAGRANT_REV}
+cd "${SOURCE_PREFIX}-${VAGRANT_REV}"
 
 # If we have a version file, use that. Otherwise, use a timestamp
 # on version 0.1.
