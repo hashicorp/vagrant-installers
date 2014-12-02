@@ -6,7 +6,7 @@ wget -O- https://raw.github.com/hashicorp/puppet-bootstrap/master/ubuntu.sh | sh
 CODE
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "precise64"
+  config.vm.box = "hashicorp/precise64"
 
   config.vm.provision "shell", inline: $script
 
