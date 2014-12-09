@@ -35,9 +35,10 @@ if [ -z "${VAGRANT_TOKEN}" ]; then
 else
     curl -L -u "${VAGRANT_TOKEN}:x-oauth-basic" ${SOURCE_URL} > vagrant.tar.gz
 fi
+rm -rf "${SOURCE_PREFIX}-*"
 tar xvzf vagrant.tar.gz
 rm vagrant.tar.gz
-cd "${SOURCE_PREFIX}-${VAGRANT_REV}"
+cd "${SOURCE_PREFIX}-*"
 
 # If we have a version file, use that. Otherwise, use a timestamp
 # on version 0.1.
