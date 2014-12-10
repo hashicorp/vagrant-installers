@@ -64,7 +64,6 @@ export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
 ${GEM_COMMAND} install vagrant.gem --no-ri --no-rdoc
 
 # Install extensions
-${GEM_COMMAND} install vagrant-login --no-ri --no-rdoc --source "http://gems.hashicorp.com"
 ${GEM_COMMAND} install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
 
 # Setup the system plugins
