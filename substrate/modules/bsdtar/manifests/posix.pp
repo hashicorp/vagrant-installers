@@ -14,7 +14,7 @@ class bsdtar::posix {
   # We don't currently support LZMA on Linux. TODO
   $real_configure_flags = $operatingsystem ? {
     "Darwin" => $configure_flags,
-    default  => "${configure_flags} --without-lzmadec",
+    default  => "${configure_flags} --without-lzmadec --without-lzma",
   }
 
 
