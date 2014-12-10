@@ -9,6 +9,15 @@ class bsdtar::posix {
   $source_package_path = "${file_cache_dir}/libarchive.tar.gz"
   $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.2.tar.gz"
 
+  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex"
+
+  # We don't currently support LZMA on Linux. TODO
+  $real_configure_flags = $operatingsystem ? {
+    "Darwin" => $configure_flags,
+    default  => "${configure_flags} --without-lzmadec",
+  }
+
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
@@ -73,7 +82,7 @@ class bsdtar::posix {
 
   # Build it
   autotools { "libarchive":
-    configure_flags  => "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex",
+    configure_flags  => "",
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${install_dir}/bin/bsdtar",
