@@ -82,7 +82,7 @@ class bsdtar::posix {
 
   # Build it
   autotools { "libarchive":
-    configure_flags  => "",
+    configure_flags  => $real_configure_flags,
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${install_dir}/bin/bsdtar",
