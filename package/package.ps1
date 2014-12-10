@@ -132,7 +132,6 @@ powershell {
     &"$($EmbeddedDir)\bin\gem.bat" install vagrant.gem --no-ri --no-rdoc
 
     # Extensions
-    &"$($EmbeddedDir)\bin\gem.bat" install vagrant-login --no-ri --no-rdoc --source "http://gems.hashicorp.com"
     &"$($EmbeddedDir)\bin\gem.bat" install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
 }
 Remove-Item Env:SubstrateDir
