@@ -71,10 +71,6 @@ cat <<EOF >${EMBEDDED_DIR}/plugins.json
 {
     "version": "1",
     "installed": {
-        "vagrant-login": {
-            "ruby_version": "0",
-            "vagrant_version": "${VERSION}"
-        },
         "vagrant-share": {
             "ruby_version": "0",
             "vagrant_version": "${VERSION}"

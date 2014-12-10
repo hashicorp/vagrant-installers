@@ -144,10 +144,6 @@ $contents = @"
 {
     "version": "1",
     "installed": {
-        "vagrant-login": {
-            "ruby_version": "0",
-            "vagrant_version": "$($VagrantVersion)"
-        },
         "vagrant-share": {
             "ruby_version": "0",
             "vagrant_version": "$($VagrantVersion)"
