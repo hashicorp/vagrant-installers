@@ -129,7 +129,7 @@ powershell {
     $env:CPPFLAGS = "-I$($EmbeddedDir)\include"
     $env:LDFLAGS  = "-L$($EmbeddedDir)\lib"
     $env:Path     ="$($EmbeddedDir)\bin;$($env:Path)"
-    $env:SSL_CERT_FILE = "$(EmbeddedDir)\cacert.pem"
+    $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
     &"$($EmbeddedDir)\bin\gem.bat" install vagrant.gem --no-ri --no-rdoc
 
     # Extensions
