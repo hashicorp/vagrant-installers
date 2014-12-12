@@ -39,14 +39,15 @@ func main() {
 	if debug {
 		log.Printf("launcher: gemPaths (initial) = %#v", gemPaths)
 	}
-	for i, v := range gemPaths {
-		fullPath := filepath.Join(v, "lib", "vagrant", "pre-rubygems.rb")
+	for i := 0; i < len(gemPaths); i++ {
+		fullPath := filepath.Join(gemPaths[i], "lib", "vagrant", "pre-rubygems.rb")
 		if _, err := os.Stat(fullPath); err != nil {
 			if debug {
 				log.Printf("launcher: bad gemPath += %s", fullPath)
 			}
 
-			gemPaths = gemPaths[0 : i-1]
+			gemPaths = append(gemPaths[:i], gemPaths[i+1:]...)
+			i--
 		}
 	}
 	if len(gemPaths) == 0 {
