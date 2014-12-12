@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +13,8 @@ import (
 )
 
 func main() {
+	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
+
 	path, err := osext.ExecutableFolder()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load Vagrant: %s\n", err)
@@ -21,6 +24,10 @@ func main() {
 	// Determine some basic directories that we use throughout
 	installerDir := filepath.Dir(filepath.Clean(path))
 	embeddedDir := filepath.Join(installerDir, "embedded")
+	if debug {
+		log.Printf("launcher: installerDir = %s", installerDir)
+		log.Printf("launcher: embeddedDir = %s", embeddedDir)
+	}
 
 	// Find the Vagrant gem
 	gemPaths, err := filepath.Glob(
@@ -29,10 +36,17 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant: %s\n", err)
 		os.Exit(1)
 	}
+	if debug {
+		log.Printf("launcher: gemPaths (initial) = %#v", gemPaths)
+	}
 	for i, v := range gemPaths {
 		fullPath := filepath.Join(v, "lib", "vagrant", "pre-rubygems.rb")
 		if _, err := os.Stat(fullPath); err != nil {
-			gemPaths = gemPaths[0:i-1]
+			if debug {
+				log.Printf("launcher: bad gemPath += %s", fullPath)
+			}
+
+			gemPaths = gemPaths[0 : i-1]
 		}
 	}
 	if len(gemPaths) == 0 {
@@ -41,6 +55,10 @@ func main() {
 	}
 	gemPath := gemPaths[len(gemPaths)-1]
 	vagrantExecutable := filepath.Join(gemPath, "bin", "vagrant")
+	if debug {
+		log.Printf("launcher: gemPaths (final) = %#v", gemPaths)
+		log.Printf("launcher: gemPath = %s", gemPath)
+	}
 
 	// Setup the CPP/LDFLAGS so that native extensions can be
 	// properly compiled into the Vagrant environment.
@@ -106,6 +124,10 @@ func main() {
 	cmd.Args[0] = "ruby"
 	cmd.Args[1] = filepath.Join(gemPath, "lib", "vagrant", "pre-rubygems.rb")
 	copy(cmd.Args[2:], os.Args[1:])
+	if debug {
+		log.Printf("launcher: rubyPath = %s", rubyPath)
+		log.Printf("launcher: args = %#v", cmd.Args)
+	}
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
