@@ -70,8 +70,7 @@ unset RUBYLIB
 RUBY_EXECUTABLE="${EMBEDDED_DIR}/bin/ruby"
 
 # Find the Vagrant executable
-files=("${GEM_PATH}/gems/vagrant-"*)
-for needle in "${files[@]}"; do
+for needle in "${GEM_PATH}/gems/vagrant-"*; do
   if [ -f "${needle}/lib/vagrant/pre-rubygems.rb" ]; then
     VAGRANT_GEM_PATH="${needle}"
   fi
