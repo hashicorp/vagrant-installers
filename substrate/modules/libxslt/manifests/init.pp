@@ -67,7 +67,6 @@ class libxslt(
 
     exec { "libxslt-rpath":
       command     => "install_name_tool -id ${new_xslt_path} ${xslt_path}",
-      refreshonly => true,
       require     => Autotools["libxslt"],
     }
 
@@ -78,13 +77,11 @@ class libxslt(
 
     exec { "libexslt-rpath":
       command     => "install_name_tool -id ${new_exslt_path} ${exslt_path}",
-      refreshonly => true,
       require     => Autotools["libxslt"],
     }
 
     exec { "libexslt-xslt-rpath":
       command     => "install_name_tool -change ${old_xslt_path} ${new_xslt_path} ${exslt_path}",
-      refreshonly => true,
       require     => Autotools["libxslt"],
     }
   }
