@@ -52,6 +52,9 @@ echo -n $VERSION >${VERSION_OUTPUT}
 ${GEM_COMMAND} build vagrant.gemspec
 cp vagrant-*.gem vagrant.gem
 
+# We want to use the system libxml/libxslt for Nokogiri
+export NOKOGIRI_USE_SYSTEM_LIBRARIES=1
+
 # Install the gem. Export all these environmental variables so the Gem
 # goes into the proper place.
 export GEM_PATH="${EMBEDDED_DIR}/gems"
