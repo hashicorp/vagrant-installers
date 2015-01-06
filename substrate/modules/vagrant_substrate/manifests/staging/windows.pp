@@ -16,6 +16,10 @@ class vagrant_substrate::staging::windows {
   #------------------------------------------------------------------
   # Dependencies
   #------------------------------------------------------------------
+  class { "atlas_upload_cli":
+    install_path => "${embedded_dir}\\bin\\atlas-upload",
+  }
+
   class { "bsdtar":
     file_cache_dir => $cache_dir,
     install_dir    => $gnuwin32_dir,

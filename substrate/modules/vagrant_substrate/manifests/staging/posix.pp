@@ -81,6 +81,10 @@ class vagrant_substrate::staging::posix {
   #------------------------------------------------------------------
   # Classes
   #------------------------------------------------------------------
+  class { "atlas_upload_cli":
+    install_path => "${embedded_dir}/bin/atlas-upload",
+  }
+
   class { "libffi":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $libffi_autotools_environment),
