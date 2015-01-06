@@ -29,8 +29,9 @@ class bsdtar::posix {
     $extra_autotools_environment = {}
   }
 
+  # Set the LD_LIBRARY_PATH for the configure script
   $ld_path_environment = {
-    "LD_LIBRARY_PATH" => "${prefix}/lib",
+    "LD_LIBRARY_PATH" => "${install_dir}/lib",
   }
 
   # Merge our environments.
