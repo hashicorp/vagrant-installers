@@ -29,9 +29,13 @@ class bsdtar::posix {
     $extra_autotools_environment = {}
   }
 
+  $ld_path_environment = {
+    "LD_LIBRARY_PATH" => "${prefix}/lib",
+  }
+
   # Merge our environments.
   $real_autotools_environment = autotools_merge_environments(
-    $autotools_environment, $extra_autotools_environment)
+    $autotools_environment, $extra_autotools_environment, $ld_path_environment)
 
   if $kernel == 'Darwin' {
     # Make sure we have a later version of automake/autoconf
