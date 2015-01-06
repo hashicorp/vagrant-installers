@@ -40,13 +40,19 @@ if [ "${CPPFLAGS}x" != "x" ]; then
   CPPFLAGS="$CPPFLAGS "
 fi
 
+if [ "${CFLAGS}x" != "x" ]; then
+  CFLAGS="$CFLAGS "
+fi
+
 if [ "${LDFLAGS}x" != "x" ]; then
   LDFLAGS="$LDFLAGS "
 fi
 
 # Append our include/lib search path to the flags and make sure they're
-# exported so that any child processes have access to them.
-export CPPFLAGS="${CPPFLAGS}-I${EMBEDDED_DIR}/include"
+# exported so that any child processes have access to them. We set
+# CFLAGS as well since some old plugins don't use CPPFLAGS.
+export CPPFLAGS="${CPPFLAGS}-I${EMBEDDED_DIR}/include -I${EMBEDDED_DIR}/include/libxml2"
+export CFLAGS="${CFLAGS}-I${EMBEDDED_DIR}/include -I${EMBEDDED_DIR}/include/libxml2"
 export LDFLAGS="${LDFLAGS}-L${EMBEDDED_DIR}/lib"
 
 # Determine the OS that we're on, which is used in some later checks.
