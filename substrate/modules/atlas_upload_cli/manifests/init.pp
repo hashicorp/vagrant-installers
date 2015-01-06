@@ -2,9 +2,14 @@ class atlas_upload_cli($install_path) {
   $version = "0.1.1"
 
   $goos = inline_template("<%= @kernel.downcase %>")
-  $goarch = $hardwaremodel ? {
-    "i686"   => "386",
-    "x86_64" => "amd64",
+  if $goos == "windows" {
+    $goarch = "386"
+  } else {
+    $goarch = $hardwaremodel ? {
+      "i686"   => "386",
+      "x86_64" => "amd64",
+      "x64"    => "amd64",
+    }
   }
 
   $source_filename  = "atlas-upload-cli_${version}_${goos}_${goarch}"
