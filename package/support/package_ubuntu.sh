@@ -42,6 +42,7 @@ fpm -p ${OUTPUT_PATH} \
   -t deb \
   --prefix '/' \
   --maintainer "HashiCorp <hello@hashicorp.com>" \
+  --url "http://vagrantup.com/" \
   --epoch 1 \
   --deb-user root \
   --deb-group root \
