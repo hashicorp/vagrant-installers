@@ -6,6 +6,7 @@ Gemfile.lock
 Thumbs.db
 cache
 dist
+package/package-staging
 packer/packer_cache
 packer/var-file.json
 substrate/launcher/launcher.exe

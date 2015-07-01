@@ -21,6 +21,7 @@ class curl::posix {
   } else {
     $extra_autotools_environment = {
       "LD_RUN_PATH" => "${install_dir}/lib",
+      "PKG_CONFIG_PATH" => "${install_dir}/lib/pkgconfig",
     }
   }
 
@@ -44,7 +45,7 @@ class curl::posix {
   }
 
   autotools { "curl":
-    configure_flags    => "--prefix=${install_dir} --disable-dependency-tracking --disable-ldap",
+    configure_flags    => "--prefix=${install_dir} --disable-dependency-tracking --disable-ldap --with-libssh2",
     configure_sentinel => "${source_dir_path}/src/Makefile",
     cwd                => $source_dir_path,
     environment        => $real_autotools_environment,
