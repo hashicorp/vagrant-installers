@@ -11,7 +11,7 @@ class openssl(
   require build_essential
 
   $lib_version      = "1.0.0"
-  $source_filename  = "openssl-1.0.1j.tar.gz"
+  $source_filename  = "openssl-1.0.2c.tar.gz"
   $source_url = "http://www.openssl.org/source/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
