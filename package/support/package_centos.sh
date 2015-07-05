@@ -41,6 +41,7 @@ fpm -p ${OUTPUT_PATH} \
   -s dir \
   -t rpm \
   --prefix '/' \
+  --rpm-auto-add-directories \
   --maintainer "HashiCorp <hello@hashicorp.com>" \
   --epoch 1 \
   --url 'http://www.vagrantup.com' \
