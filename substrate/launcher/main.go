@@ -12,6 +12,8 @@ import (
 	"github.com/mitchellh/osext"
 )
 
+const envPrefix = "VAGRANT_OLD_ENV"
+
 func main() {
 	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
 
@@ -105,6 +107,13 @@ func main() {
 
 	// Unset any RUBYOPT, we don't want this bleeding into our runtime
 	newEnv["RUBYOPT"] = ""
+
+	// Store the "current" environment so Vagrant can restore it when shelling
+	// out.
+	for _, k := range os.Environ() {
+		key = fmt.Sprintf("%s_%s", envPrefix, k)
+		newEnv[key] = os.Getenv(k)
+	}
 
 	// Set all the environmental variables
 	for k, v := range newEnv {
