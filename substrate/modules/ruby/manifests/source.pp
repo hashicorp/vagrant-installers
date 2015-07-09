@@ -10,7 +10,7 @@ class ruby::source(
 ) {
   require build_essential
 
-  $source_filename  = "ruby-2.0.0-p598.tar.gz"
+  $source_filename  = "ruby-2.0.0-p645.tar.gz"
   $source_url = "http://cache.ruby-lang.org/pub/ruby/2.0/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
