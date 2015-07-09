@@ -3,6 +3,13 @@ class vagrant_substrate::staging {
 
   $embedded_dir = $vagrant_substrate::embedded_dir
   $staging_dir  = $vagrant_substrate::staging_dir
+  $goarch       = $vagrant_substrate::goarch
+  $goos         = $vagrant_substrate::goos
+
+  $exe = $goos ? {
+    "windows" => ".exe",
+    default   => "",
+  }
 
   #------------------------------------------------------------------
   # OS-Specific
@@ -29,8 +36,8 @@ class vagrant_substrate::staging {
   }
 
   # Unix bin file. We include this in Windows too in case mingw/cygwin
-  file { "${staging_dir}/bin/vagrant":
-    content => template("vagrant_substrate/vagrant.erb"),
+  file { "${staging_dir}/bin/vagrant${exe}":
+    source  => "puppet:///modules/vagrant_substrate/launcher_${goos}_${goarch}${exe}",
     mode    => "0755",
   }
 }

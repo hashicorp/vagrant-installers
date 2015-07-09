@@ -39,12 +39,4 @@ class vagrant_substrate::staging::windows {
   class { "rubyencoder::loaders":
     path => $embedded_dir,
   }
-
-  #------------------------------------------------------------------
-  # Bin wrappers
-  #------------------------------------------------------------------
-  # EXE launcher for CMD.exe
-  file { "${staging_dir}/bin/vagrant.exe":
-    source  => "puppet:///modules/vagrant_substrate/vagrant.exe",
-  }
 }

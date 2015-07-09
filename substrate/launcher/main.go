@@ -111,7 +111,7 @@ func main() {
 	// Store the "current" environment so Vagrant can restore it when shelling
 	// out.
 	for _, k := range os.Environ() {
-		key = fmt.Sprintf("%s_%s", envPrefix, k)
+		key := fmt.Sprintf("%s_%s", envPrefix, k)
 		newEnv[key] = os.Getenv(k)
 	}
 
