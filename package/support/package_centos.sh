@@ -42,9 +42,9 @@ fpm -p ${OUTPUT_PATH} \
   -t rpm \
   --prefix '/' \
   --rpm-auto-add-directories \
-  --maintainer "HashiCorp <hello@hashicorp.com>" \
+  --maintainer "HashiCorp <support@hashicorp.com>" \
   --epoch 1 \
-  --url 'http://www.vagrantup.com' \
+  --url 'https://www.vagrantup.com' \
   --license 'MIT' \
   --description 'Vagrant is a tool for building and distributing development environments.' \
   -C ${STAGING_DIR} \
