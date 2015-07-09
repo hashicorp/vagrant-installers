@@ -42,7 +42,7 @@ cat <<EOF >${STAGING_DIR}/scripts/postinstall
 
 # Create the symlink so that vagrant is available on the
 # PATH.
-ln -Fs \$2/bin/vagrant /usr/bin/vagrant
+ln -Fs \$2/bin/vagrant /usr/local/bin/vagrant
 
 # Remove old legacy Vagrant installation
 [ -d /Applications/Vagrant ] && rm -rf /Applications/Vagrant
