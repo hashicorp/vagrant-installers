@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/mitchellh/osext"
@@ -17,14 +18,40 @@ const envPrefix = "VAGRANT_OLD_ENV"
 func main() {
 	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
 
-	path, err := osext.ExecutableFolder()
+	// Get the path to the executable. This path doesn't resolve symlinks
+	// so we have to do that afterwards to find the real binary.
+	path, err := osext.Executable()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load Vagrant: %s\n", err)
 		os.Exit(1)
 	}
+	if debug {
+		log.Printf("launcher: path = %s", path)
+	}
+	for {
+		fi, err := os.Lstat(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to stat executable: %s\n", err)
+			os.Exit(1)
+		}
+		if fi.Mode()&os.ModeSymlink == 0 {
+			break
+		}
+
+		// The executable is a symlink, so resolve it
+		path, err = os.Readlink(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load Vagrant: %s\n", err)
+			os.Exit(1)
+		}
+		if debug {
+			log.Printf("launcher: resolved symlink = %s", path)
+		}
+	}
 
 	// Determine some basic directories that we use throughout
-	installerDir := filepath.Dir(filepath.Clean(path))
+	path = filepath.Dir(filepath.Clean(path))
+	installerDir := filepath.Dir(path)
 	embeddedDir := filepath.Join(installerDir, "embedded")
 	if debug {
 		log.Printf("launcher: installerDir = %s", installerDir)
@@ -110,9 +137,13 @@ func main() {
 
 	// Store the "current" environment so Vagrant can restore it when shelling
 	// out.
-	for _, k := range os.Environ() {
+	for _, value := range os.Environ() {
+		parts := strings.SplitN(value, "=", 2)
+		k := parts[0]
+		v := parts[1]
+
 		key := fmt.Sprintf("%s_%s", envPrefix, k)
-		newEnv[key] = os.Getenv(k)
+		newEnv[key] = v
 	}
 
 	// Set all the environmental variables
