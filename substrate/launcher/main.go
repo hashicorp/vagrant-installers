@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"syscall"
 
@@ -144,6 +145,17 @@ func main() {
 
 		key := fmt.Sprintf("%s_%s", envPrefix, k)
 		newEnv[key] = v
+	}
+	if debug {
+		keys := make([]string, 0, len(newEnv))
+		for k, _ := range newEnv {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			log.Printf("launcher: env %q = %q", k, newEnv[k])
+		}
 	}
 
 	// Set all the environmental variables
