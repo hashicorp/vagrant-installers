@@ -139,12 +139,9 @@ func main() {
 	// Store the "current" environment so Vagrant can restore it when shelling
 	// out.
 	for _, value := range os.Environ() {
-		parts := strings.SplitN(value, "=", 2)
-		k := parts[0]
-		v := parts[1]
-
-		key := fmt.Sprintf("%s_%s", envPrefix, k)
-		newEnv[key] = v
+		idx := strings.IndexRune(value, '=')
+		key := fmt.Sprintf("%s_%s", envPrefix, value[:idx])
+		newEnv[key] = value[idx+1:]
 	}
 	if debug {
 		keys := make([]string, 0, len(newEnv))
