@@ -66,7 +66,7 @@ RUBY_EXECUTABLE="${EMBEDDED_DIR}/bin/ruby"
 
 # Do some things depending on the OS that we're running on.
 case $OS in
-	CYGWIN* | MINGW32* | MINGW64*)
+	CYGWIN* | MINGW32* | MINGW64* | MSYS_NT*)
 		# In Linux-like environments on Windows, we want to add the
 		# Windows path to the PATH so that bsdtar and friends can
 		# be found.
