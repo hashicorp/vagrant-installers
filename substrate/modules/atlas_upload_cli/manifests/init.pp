@@ -1,5 +1,5 @@
 class atlas_upload_cli($install_path) {
-  $version = "0.1.1"
+  $version = "0.2.0"
 
   $goos = inline_template("<%= @kernel.downcase %>")
   if $goos == "windows" {
