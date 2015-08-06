@@ -40,6 +40,10 @@ mkdir -p ${STAGING_DIR}/scripts
 cat <<EOF >${STAGING_DIR}/scripts/postinstall
 #!/usr/bin/env bash
 
+if [ ! -d /usr/local/bin ]; then
+  mkdir -p /usr/local/bin
+fi
+
 # Create the symlink so that vagrant is available on the
 # PATH.
 ln -Fs \$2/bin/vagrant /usr/local/bin/vagrant
