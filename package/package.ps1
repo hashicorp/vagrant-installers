@@ -25,6 +25,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$VagrantRevision,
 
+    [string]$VagrantSourceBaseURL="https://github.com/mitchellh/vagrant/archive/",
+
     [string]$SignKey="",
     [string]$SignKeyPassword="",
     [string]$SignPath=""
@@ -84,7 +86,7 @@ $VagrantTmpDir = [System.IO.Path]::Combine(
 [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
 Write-Host "Vagrant temp dir: $($VagrantTmpDir)"
 
-$VagrantSourceURL = "https://github.com/mitchellh/vagrant/archive/$($VagrantRevision).zip"
+$VagrantSourceURL = "$($VagrantSourceBaseURL)/$($VagrantRevision).zip"
 $VagrantDest      = "$($VagrantTmpDir)\vagrant.zip"
 
 # Download
