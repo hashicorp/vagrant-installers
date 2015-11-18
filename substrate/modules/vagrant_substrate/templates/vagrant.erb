@@ -25,7 +25,7 @@ export GEM_HOME="${GEM_PATH}"
 export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 
 # Make ruby aware of our CA bundle
-export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
+export SSL_CERT_FILE="${SSL_CERT_FILE:-${EMBEDDED_DIR}/cacert.pem}"
 
 # Export an enviromental variable to say we're in a Vagrant
 # installer created environment.

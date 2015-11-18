@@ -115,6 +115,12 @@ func main() {
 			filepath.Join(embeddedDir, "bin"), path)
 	}
 
+	// Allow users to specify a custom SSL cert
+	sslCertFile := os.Getenv("SSL_CERT_FILE")
+	if sslCertFile == "" {
+		sslCertFile = filepath.Join(embeddedDir, "cacert.pem")
+	}
+
 	newEnv := map[string]string{
 		// Setup the environment to prefer our embedded dir over
 		// anything the user might have setup on his/her system.
@@ -124,7 +130,7 @@ func main() {
 		"GEMRC":         filepath.Join(embeddedDir, "etc", "gemrc"),
 		"LDFLAGS":       ldflags,
 		"PATH":          path,
-		"SSL_CERT_FILE": filepath.Join(embeddedDir, "cacert.pem"),
+		"SSL_CERT_FILE": sslCertFile,
 
 		// Environmental variables used by Vagrant itself
 		"VAGRANT_EXECUTABLE":             vagrantExecutable,
