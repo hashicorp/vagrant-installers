@@ -1,7 +1,4 @@
-all:
-	gox -arch=386 -os=windows -output="launcher"
+build:
+	gox -output="../modules/vagrant_substrate/files/launcher_{{.OS}}_{{.Arch}}"
 
-install: all
-	cp launcher.exe ../modules/vagrant_substrate/files/vagrant.exe
-
-.PHONY: all install
+.PHONY: build
