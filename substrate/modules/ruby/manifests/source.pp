@@ -10,8 +10,8 @@ class ruby::source(
 ) {
   require build_essential
 
-  $source_filename  = "ruby-2.0.0-p645.tar.gz"
-  $source_url = "http://cache.ruby-lang.org/pub/ruby/2.0/${source_filename}"
+  $source_filename  = "ruby-2.2.3.tar.gz"
+  $source_url = "https://cache.ruby-lang.org/pub/ruby/2.2/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
@@ -20,7 +20,7 @@ class ruby::source(
     $extra_configure_flags = ' --with-arch=x86_64,i386'
   }
 
-  # Ruby 2.0 needs this include path on the include path so that
+  # Ruby needs this include path on the include path so that
   # it will properly compile.
   $extra_autotools_environment = {
     "CFLAGS" => "-I${source_dir_path}/include",
@@ -66,9 +66,9 @@ class ruby::source(
   }
 
   if $operatingsystem == 'Darwin' {
-    file { "${prefix}/include/ruby-2.0.0/x86_64-darwin12.5.0":
+    file { "${prefix}/include/ruby-2.2.0/x86_64-darwin15":
       ensure  => link,
-      target  => "universal-darwin12.5.0",
+      target  => "universal-darwin15",
       require => Autotools["ruby"],
     }
   }
