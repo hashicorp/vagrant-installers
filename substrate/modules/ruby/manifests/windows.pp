@@ -37,6 +37,7 @@ class ruby::windows(
   file { "${install_dir}/lib/ruby/2.2.3/dl.rb":
     source  => "puppet:///modules/ruby/modified_dl.rb",
     require => Exec["install-ruby"],
+    mode    => '0644',
   }
 
   #------------------------------------------------------------------

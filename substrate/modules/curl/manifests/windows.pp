@@ -6,6 +6,7 @@ class curl::windows {
 
   file { $source_file_path:
     source => "puppet:///modules/curl/windows.zip",
+    mode   => '0644',
   }
 
   powershell { "extract-curl":

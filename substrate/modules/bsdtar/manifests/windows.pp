@@ -6,6 +6,7 @@ class bsdtar::windows {
 
   file { $source_file_path:
     source => "puppet:///modules/bsdtar/windows.zip",
+    mode   => '0644',
   }
 
   powershell { "extract-bsdtar":

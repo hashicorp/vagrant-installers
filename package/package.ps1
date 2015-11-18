@@ -25,6 +25,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$VagrantRevision,
 
+    [string]$VagrantSourceBaseURL="https://github.com/mitchellh/vagrant/archive/",
+
     [string]$SignKey="",
     [string]$SignKeyPassword="",
     [string]$SignPath=""
@@ -84,7 +86,7 @@ $VagrantTmpDir = [System.IO.Path]::Combine(
 [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
 Write-Host "Vagrant temp dir: $($VagrantTmpDir)"
 
-$VagrantSourceURL = "https://github.com/mitchellh/vagrant/archive/$($VagrantRevision).zip"
+$VagrantSourceURL = "$($VagrantSourceBaseURL)/$($VagrantRevision).zip"
 $VagrantDest      = "$($VagrantTmpDir)\vagrant.zip"
 
 # Download
@@ -111,7 +113,7 @@ $VagrantVersionFile = Join-Path $VagrantSourceDir version.txt
 if (-Not (Test-Path $VagrantVersionFile)) {
     "0.1.0" | Out-File -FilePath $VagrantVersionFile
 }
-$VagrantVersion=$((Get-Content $VagrantVersionFile) -creplace '\.[^0-9]+$')
+$VagrantVersion=$((Get-Content $VagrantVersionFile) -creplace '\.[^0-9]+(\.[0-9]+)?$', '$1')
 Write-Host "Vagrant version: $VagrantVersion"
 
 # Install gem. We do this in a sub-shell so we don't have to worry

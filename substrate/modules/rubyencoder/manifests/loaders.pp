@@ -22,7 +22,7 @@ class rubyencoder::loaders(
   } else {
     $owner = undef
     $group = undef
-    $mode  = undef
+    $mode  = '0644'
   }
 
   file { "${path}/rgloader":
