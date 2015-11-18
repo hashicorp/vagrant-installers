@@ -6,10 +6,10 @@ class ruby::windows(
   $install_dir = undef,
   $file_cache_dir = params_lookup('file_cache_dir', 'global'),
 ) {
-  $devkit_source_url = "http://cdn.rubyinstaller.org/archives/devkits/DevKit-mingw64-32-4.7.2-20130224-1151-sfx.exe"
+  $devkit_source_url = "http://dl.bintray.com/oneclick/rubyinstaller/DevKit-mingw64-32-4.7.2-20130224-1151-sfx.exe"
   $devkit_installer_path = "${file_cache_dir}\\devkit-4.7.2-64.exe"
-  $ruby_source_url = "http://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.0.0-p645.exe?direct"
-  $ruby_installer_path = "${file_cache_dir}\\ruby-2.0.0-p645.exe"
+  $ruby_source_url = "http://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.2.3.exe?direct"
+  $ruby_installer_path = "${file_cache_dir}\\ruby-2.2.3.exe"
 
   $extra_args = $install_dir ? {
     undef   => "",
@@ -34,7 +34,7 @@ class ruby::windows(
   # Remove the "DL is deprecated warning"
   # NOTE(mitchellh): REMOVE THIS AT SOME POINT. BE CAREFUL WITH EVERY
   # RUBY VERSION TO CHANGE THIS.
-  file { "${install_dir}/lib/ruby/2.0.0/dl.rb":
+  file { "${install_dir}/lib/ruby/2.2.3/dl.rb":
     source  => "puppet:///modules/ruby/modified_dl.rb",
     require => Exec["install-ruby"],
   }
