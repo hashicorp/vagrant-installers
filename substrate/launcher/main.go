@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -174,6 +175,10 @@ func main() {
 	if runtime.GOOS == "windows" {
 		rubyPath += ".exe"
 	}
+
+	// Prior to starting the command, we ignore interrupts. Vagrant itself
+	// handles these, so the launcher should just wait until that exits.
+	signal.Ignore(os.Interrupt)
 
 	cmd := exec.Command(rubyPath)
 	cmd.Args = make([]string, len(os.Args)+1)
