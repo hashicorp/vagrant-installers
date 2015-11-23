@@ -81,6 +81,7 @@ class vagrant_substrate::staging::posix {
   #------------------------------------------------------------------
   # Classes
   #------------------------------------------------------------------
+  /*
   class { "atlas_upload_cli":
     install_path => "${embedded_dir}/bin/atlas-upload",
   }
@@ -122,6 +123,11 @@ class vagrant_substrate::staging::posix {
     prefix         => $embedded_dir,
     make_notify    => Exec["reset-ruby"],
   }
+  */
+
+  exec { "reset-ruby":
+    command => "echo hello",
+  }
 
   class { "zlib":
     autotools_environment => autotools_merge_environments(
@@ -139,6 +145,7 @@ class vagrant_substrate::staging::posix {
     make_notify    => Exec["reset-ruby"],
   }
 
+  /*
   class { "readline":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $readline_autotools_environment),
@@ -153,6 +160,7 @@ class vagrant_substrate::staging::posix {
     prefix                => $embedded_dir,
     make_notify           => Exec["reset-ruby"],
   }
+  */
 
   class { "bsdtar":
     autotools_environment => autotools_merge_environments(
@@ -165,6 +173,7 @@ class vagrant_substrate::staging::posix {
     ]
   }
 
+  /*
   class { "curl":
     autotools_environment => autotools_merge_environments(
       $default_curl_autotools_environment, $curl_autotools_environment),
@@ -189,6 +198,7 @@ class vagrant_substrate::staging::posix {
       Class["readline"],
     ],
   }
+  */
 
   class { "rubyencoder::loaders":
     path => $embedded_dir,

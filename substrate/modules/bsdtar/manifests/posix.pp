@@ -23,7 +23,7 @@ class bsdtar::posix {
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch i386",
-      "LDFLAGS" => "-arch i386",
+      "LDFLAGS" => "-arch i386 -Wl,-rpath,${install_dir}/lib",
     }
   } else {
     $extra_autotools_environment = {}
@@ -93,5 +93,14 @@ class bsdtar::posix {
     install_sentinel => "${install_dir}/bin/bsdtar",
     make_sentinel    => "${source_dir_path}/bsdtar",
     require          => Exec["automake-libarchive"],
+  }
+
+  if $kernel == 'Darwin' {
+    exec { "remove-bsdtar-rpath":
+      command     => "install_name_tool -delete_rpath ${install_dir}/lib ${install_dir}/bin/bsdtar",
+      refreshonly => true,
+      require     => Autotools["libarchive"],
+      subscribe   => Autotools["libarchive"],
+    }
   }
 }
