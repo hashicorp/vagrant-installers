@@ -122,11 +122,6 @@ class vagrant_substrate::staging::posix {
     prefix         => $embedded_dir,
     make_notify    => Exec["reset-ruby"],
   }
-  */
-
-  exec { "reset-ruby":
-    command => "echo hello",
-  }
 
   class { "zlib":
     autotools_environment => autotools_merge_environments(
