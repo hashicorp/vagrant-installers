@@ -26,6 +26,9 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 TMP_CONFIG_DIR=$(mktemp -d -t vagrant-installer.XXXXXX)
 cp -R ${DIR}/config/* ${TMP_CONFIG_DIR}
 
+# Setup the output directory
+mkdir -p $1
+
 # Export the parameters for Puppet
 export FACTER_param_homebrew_user=${SUDO_USER}
 export FACTER_param_output_dir=$(cd $1; pwd)
