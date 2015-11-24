@@ -53,16 +53,17 @@ class ruby::source(
   #------------------------------------------------------------------
   # Compile
   #------------------------------------------------------------------
-  wget::fetch { "ruby":
-    source      => $source_url,
-    destination => $source_file_path,
+  exec { "download-ruby":
+    command => "curl -o ${source_file_path} ${source_url}",
+    creates => $source_file_path,
+    timeout => 1200,
   }
 
   exec { "untar-ruby":
     command => "tar xvzf ${source_file_path}",
     creates => $source_dir_path,
     cwd     => $file_cache_dir,
-    require => Wget::Fetch["ruby"],
+    require => Exec["download-ruby"],
   }
 
   autotools { "ruby":
