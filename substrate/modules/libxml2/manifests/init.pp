@@ -47,7 +47,7 @@ class libxml2(
   }
 
   autotools { "libxml2":
-    configure_flags  => "--prefix=${prefix} --disable-dependency-tracking --without-python",
+    configure_flags  => "--prefix=${prefix} --disable-dependency-tracking --without-python --without-lzma",
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/lib/libxml2.a",
