@@ -20,6 +20,16 @@ class ruby::source(
     $extra_configure_flags = ' --with-arch=x86_64,i386'
   }
 
+  # OS-specific environment vars
+  if $operatingsystem == 'Darwin' {
+    $os_autotools_environment = {
+      "LDFLAGS" => "-Wl,-rpath,${prefix}/lib",
+    }
+  } else {
+    $os_autotools_environment = {}
+  }
+
+
   # Ruby needs this include path on the include path so that
   # it will properly compile.
   $extra_autotools_environment = {
@@ -27,7 +37,7 @@ class ruby::source(
   }
 
   $real_autotools_environment = autotools_merge_environments(
-    $autotools_environment, $extra_autotools_environment)
+    $autotools_environment, $extra_autotools_environment, $os_autotools_environment)
 
   #------------------------------------------------------------------
   # Resetter
@@ -70,6 +80,23 @@ class ruby::source(
       ensure  => link,
       target  => "universal-darwin15",
       require => Autotools["ruby"],
+    }
+  }
+
+  # On Darwin we have to clean up some paths
+  if $kernel == 'Darwin' {
+    exec { "remove-ruby-bundle-rpaths":
+      command     => "find ${prefix}/lib/ruby -type f -name '*.bundle' | xargs -n1 install_name_tool -delete_rpath ${prefix}/lib",
+      refreshonly => true,
+      require     => Autotools["ruby"],
+      subscribe   => Autotools["ruby"],
+    }
+
+    exec { "remove-ruby-rpaths":
+      command     => "xargs -n1 install_name_tool -delete_rpath ${prefix}/lib ${prefix}/bin/ruby",
+      refreshonly => true,
+      require     => Autotools["ruby"],
+      subscribe   => Autotools["ruby"],
     }
   }
 }
