@@ -93,7 +93,7 @@ class ruby::source(
     }
 
     exec { "remove-ruby-rpaths":
-      command     => "xargs -n1 install_name_tool -delete_rpath ${prefix}/lib ${prefix}/bin/ruby",
+      command     => "install_name_tool -delete_rpath ${prefix}/lib ${prefix}/bin/ruby",
       refreshonly => true,
       require     => Autotools["ruby"],
       subscribe   => Autotools["ruby"],
