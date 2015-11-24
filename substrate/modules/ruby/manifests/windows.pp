@@ -31,15 +31,6 @@ class ruby::windows(
     require => Download["ruby"],
   }
 
-  # Remove the "DL is deprecated warning"
-  # NOTE(mitchellh): REMOVE THIS AT SOME POINT. BE CAREFUL WITH EVERY
-  # RUBY VERSION TO CHANGE THIS.
-  file { "${install_dir}/lib/ruby/2.2.3/dl.rb":
-    source  => "puppet:///modules/ruby/modified_dl.rb",
-    require => Exec["install-ruby"],
-    mode    => '0644',
-  }
-
   #------------------------------------------------------------------
   # Ruby DevKit
   #------------------------------------------------------------------
