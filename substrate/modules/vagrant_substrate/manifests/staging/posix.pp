@@ -105,8 +105,10 @@ class vagrant_substrate::staging::posix {
       $default_autotools_environment, $libxml2_autotools_environment),
       file_cache_dir => $cache_dir,
       prefix         => $embedded_dir,
-      require        => Class["libiconv"],
-      require        => Class["xz"],
+      require        => [
+        Class["libiconv"],
+        Class["xz"],
+      ],
   }
 
   class { "libxslt":
