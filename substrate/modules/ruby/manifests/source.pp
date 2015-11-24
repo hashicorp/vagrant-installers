@@ -68,7 +68,7 @@ class ruby::source(
   autotools { "ruby":
     configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking --disable-install-doc --enable-shared --with-opt-dir=${prefix} --enable-load-relative${extra_configure_flags}",
     cwd              => $source_dir_path,
-    environment      => $autotools_environment,
+    environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/bin/ruby",
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/ruby",
