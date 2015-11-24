@@ -106,6 +106,7 @@ class vagrant_substrate::staging::posix {
       file_cache_dir => $cache_dir,
       prefix         => $embedded_dir,
       require        => Class["libiconv"],
+      require        => Class["xz"],
   }
 
   class { "libxslt":
