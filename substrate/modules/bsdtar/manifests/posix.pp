@@ -9,7 +9,7 @@ class bsdtar::posix {
   $source_package_path = "${file_cache_dir}/libarchive.tar.gz"
   $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.2.tar.gz"
 
-  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex"
+  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex --without-lzo2"
 
   # We don't currently support LZMA on Linux. TODO
   $real_configure_flags = $operatingsystem ? {
