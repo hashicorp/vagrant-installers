@@ -94,6 +94,7 @@ define autotools(
     environment => $exec_environment,
     require     => Exec["configure-${name}"],
     notify      => $make_notify,
+    timeout     => 1200,
   }
 
   if $install {
@@ -103,6 +104,7 @@ define autotools(
       cwd         => $cwd,
       environment => $exec_environment,
       require     => Exec["make-${name}"],
+      timeout     => 1200,
     }
   }
 }
