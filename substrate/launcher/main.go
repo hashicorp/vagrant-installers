@@ -142,6 +142,8 @@ func main() {
 
 	// Unset any RUBYOPT, we don't want this bleeding into our runtime
 	newEnv["RUBYOPT"] = ""
+	// Unset any RUBYLIB, we don't want this bleeding into our runtime
+	newEnv["RUBYLIB"] = ""
 
 	// Store the "current" environment so Vagrant can restore it when shelling
 	// out.
