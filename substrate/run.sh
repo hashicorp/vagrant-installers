@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script will actually run the puppet code here.
 
@@ -19,6 +19,9 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+# Find the puppet version
+PUPPET_VERSION=$(puppet --version)
+
 # We need to create a temporary configuration directory because Puppet
 # needs to be able to set the permissions on this and if we call this
 # from a filesystem that doesn't support that (VMWare shared folders),
@@ -35,7 +38,16 @@ export FACTER_param_output_dir=$(cd $1; pwd)
 
 # Invoke Puppet
 cd $DIR
-puppet apply \
-  --confdir=${TMP_CONFIG_DIR} \
-  --modulepath=${DIR}/modules \
-  ${DIR}/manifests/init.pp
+case "$PUPPET_VERSION" in
+  [4-9].*)
+    puppet apply \
+      --codedir=${TMP_CONFIG_DIR} \
+      --confdir=${TMP_CONFIG_DIR} \
+      --modulepath=${DIR}/modules \
+      ${DIR}/manifests/init.pp ;;
+  *)
+    puppet apply \
+      --confdir=${TMP_CONFIG_DIR} \
+      --modulepath=${DIR}/modules \
+      ${DIR}/manifests/init.pp ;;
+esac
