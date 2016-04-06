@@ -18,6 +18,11 @@ class curl::posix {
       "CFLAGS"  => "-arch i386",
       "LDFLAGS" => "-arch i386 -Wl,-rpath,${install_dir}/lib",
     }
+  } elsif $operatingsystem == 'FreeBSD' {
+    $extra_autotools_environment = {
+      "CFLAGS"      => '-fPIC',
+      "LD_RUN_PATH" => "${install_dir}/lib",
+    }
   } else {
     $extra_autotools_environment = {
       "LD_RUN_PATH" => "${install_dir}/lib",

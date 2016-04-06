@@ -26,6 +26,26 @@
             "snapshot_name": "vagrant-packager-centos-5-x32 {{timestamp}}"
         },
         {
+            "name": "freebsd-10-x64",
+            "type": "digitalocean",
+            "client_id": "{{user `do_client_id`}}",
+            "api_key": "{{user `do_api_key`}}",
+            "image_id": "XXX",
+            "region_id": 3,
+            "size_id": 66,
+            "snapshot_name": "vagrant-packager-freebsd-10-x64 {{timestamp}}"
+        },
+        {
+            "name": "freebsd-10-x32",
+            "type": "digitalocean",
+            "client_id": "{{user `do_client_id`}}",
+            "api_key": "{{user `do_api_key`}}",
+            "image_id": "XXX",
+            "region_id": 3,
+            "size_id": 66,
+            "snapshot_name": "vagrant-packager-freebsd-10-x32 {{timestamp}}"
+        },
+        {
             "name": "ubuntu-10-x64",
             "type": "digitalocean",
             "client_id": "{{user `do_client_id`}}",
@@ -56,6 +76,12 @@
                 },
                 "centos-5-x32": {
                     "scripts": ["scripts/packager_centos.sh"]
+                },
+                "freebsd-10-x64": {
+                    "scripts": ["scripts/packager_freebsd.sh"]
+                },
+                "freebsd-10-x32": {
+                    "scripts": ["scripts/packager_freebsd.sh"]
                 },
                 "ubuntu-10-x64": {
                     "scripts": ["scripts/packager_ubuntu.sh"]

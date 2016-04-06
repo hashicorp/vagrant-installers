@@ -13,13 +13,13 @@ class vagrant_installer::staging {
   $archive_path = "${dist_dir}${file_sep}${archive_name}.zip"
 
   case $kernel {
-    'Darwin', 'Linux': { include vagrant_installer::staging::posix }
+    'Darwin', 'Linux', 'FreeBSD': { include vagrant_installer::staging::posix }
     'windows': { include vagrant_installer::staging::windows }
     default:   { fail("Unknown operating system to stage.") }
   }
 
   case $kernel {
-    'Darwin', 'Linux': {
+    'Darwin', 'Linux', 'FreeBSD': {
       include zip
 
       $archive_staging_dir = "${staging_dir}/${archive_name}"
@@ -36,9 +36,10 @@ class vagrant_installer::staging {
       }
 
       exec { "archive-installer":
-        command => "/usr/bin/zip -r ${archive_path} ${archive_name}/",
+        command => "zip -r ${archive_path} ${archive_name}/",
         creates => $archive_path,
         cwd     => $staging_dir,
+        path    => ['/usr/bin', '/usr/local/bin'],
         require => [
           Class["zip"],
           Exec["copy-archive-contents"],

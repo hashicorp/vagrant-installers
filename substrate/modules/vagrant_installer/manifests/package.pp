@@ -7,6 +7,7 @@ class vagrant_installer::package {
     'Archlinux': { include vagrant_installer::package::arch }
     'CentOS': { include vagrant_installer::package::centos }
     'Darwin': { include vagrant_installer::package::darwin }
+    'FreeBSD': { include vagrant_installer::package::freebsd }
     'Ubuntu': { include vagrant_installer::package::ubuntu }
     'windows': { include vagrant_installer::package::windows }
     default:  { fail("Unknown operating system to package for.") }

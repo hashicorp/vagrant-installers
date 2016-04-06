@@ -11,7 +11,7 @@ class vagrant_substrate::package {
   $package_path     = "${output_dir}${file_sep}${package_name}"
 
   case $kernel {
-    'Darwin', 'Linux': {
+    'Darwin', 'Linux', 'FreeBSD': {
       include zip
 
       $archive_dir = "${cache_dir}/archive"

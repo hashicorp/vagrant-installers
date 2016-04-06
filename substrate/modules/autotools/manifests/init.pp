@@ -84,6 +84,7 @@ define autotools(
     command     => "sh ${real_configure_file} ${configure_flags}",
     creates     => $real_configure_sentinel,
     cwd         => $cwd,
+    provider    => shell,
     environment => $exec_environment,
   }
 

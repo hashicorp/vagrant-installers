@@ -10,8 +10,9 @@ class vagrant_installer::staging::posix_setup {
   # Calculate variables based on operating system
   #------------------------------------------------------------------
   $extra_autotools_ldflags = $operatingsystem ? {
-    'Darwin' => "",
-    default  => '',
+    'Darwin'  => "",
+    'FreeBSD' => "",
+    default   => '',
   }
 
   $default_autotools_environment = {
