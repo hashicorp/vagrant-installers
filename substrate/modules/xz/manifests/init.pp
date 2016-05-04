@@ -10,7 +10,7 @@ class xz(
 ) {
   require build_essential
 
-  $source_filename  = "xz-5.2.1.tar.gz"
+  $source_filename  = "xz-5.2.2.tar.gz"
   $source_url = "http://tukaani.org/xz/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
