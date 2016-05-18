@@ -10,8 +10,8 @@ class libiconv(
 ) {
   require build_essential
 
-  $source_filename  = "libiconv-1.14.tar.gz"
-  $source_url = "http://mirrors.kernel.org/gnu/libiconv/${source_filename}"
+  $source_filename  = "libiconv-1.14-custom.tar.gz"
+  $source_url = "https://raw.githubusercontent.com/mawatech/vagrant-installers/master/libiconv/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
