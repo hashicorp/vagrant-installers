@@ -10,7 +10,7 @@ class libxslt(
 ) {
   require build_essential
 
-  $source_filename  = "libxslt-1.1.28.tar.gz"
+  $source_filename  = "libxslt-1.1.29.tar.gz"
   $source_url = "ftp://xmlsoft.org/libxml2/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
