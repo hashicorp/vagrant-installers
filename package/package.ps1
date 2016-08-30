@@ -213,6 +213,12 @@ Copy-Item "$($Dir)\support\windows\license.rtf" `
 Copy-Item "$($Dir)\support\windows\vagrant-en-us.wxl" `
     -Destination "$($InstallerTmpDir)\vagrant-en-us.wxl"
 
+# Find runtime redistributable
+$VSCR = Get-Item -path "C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC*_CRT_x86.msm"
+
+# Copy runtime redistributable into package
+Copy-Item $VSCR -Destination "$($InstallerTmpDir)\vscr.msm"
+
 $contents = @"
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
@@ -301,12 +307,22 @@ $contents = @"
        </Directory>
      </Directory>
 
+     <!-- Include the proper Visual C++ redistributable -->
+     <DirectoryRef Id="TARGETDIR">
+       <Merge Id="VCRedist" SourceFile="vscr.msm" DiskId="1" Language="0" />
+     </DirectoryRef>
+
      <!-- Define the features of our install -->
      <Feature Id="VagrantFeature"
               Title="!(loc.ProductName)"
               Level="1">
        <ComponentGroupRef Id="VagrantDir" />
        <ComponentRef Id="VagrantBin" />
+     </Feature>
+
+     <!-- Install Visual C++ redistributable -->
+     <Feature Id="VCRedist" Title="Visual C++ Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+       <MergeRef Id="VCRedist" />
      </Feature>
 
      <!-- WixUI configuration so we can have a UI -->
