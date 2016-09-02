@@ -29,7 +29,10 @@ param(
 
     [string]$SignKey="",
     [string]$SignKeyPassword="",
-    [string]$SignPath=""
+    [string]$SignPath="",
+
+    [string]$BuildStyle="cached",
+    [string]$ScrubCache="no"
 )
 
 # Exit if there are any exceptions
@@ -45,6 +48,13 @@ $Dir = Split-Path $script:MyInvocation.MyCommand.Path
 $WixHeat   = Get-Command heat | Select-Object -ExpandProperty Definition
 $WixCandle = Get-Command candle | Select-Object -ExpandProperty Definition
 $WixLight  = Get-Command light | Select-Object -ExpandProperty Definition
+
+If ($BuildStyle -ne "ephemeral" -And $BuildStyle -ne "cached") {
+  Write-Host "Error: BuildStyle must be either 'ephemeral' or 'cached'"
+  exit 1
+}
+
+$UseCache = $false
 
 #--------------------------------------------------------------------
 # Helper Functions
@@ -65,14 +75,34 @@ $SubstratePath = Resolve-Path $SubstratePath
 
 # We need to create a temporary configuration directory
 $SubstrateTmpDir = [System.IO.Path]::GetTempPath()
-$SubstrateTmpDir = [System.IO.Path]::Combine(
-    $SubstrateTmpDir, [System.IO.Path]::GetRandomFileName())
-[System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
+If ($BuildStyle -eq "ephemeral") {
+  $SubstrateTmpDir = [System.IO.Path]::Combine(
+      $SubstrateTmpDir, [System.IO.Path]::GetRandomFileName())
+  [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
+} Else {
+  $SubstrateTmpDir = [System.IO.Path]::Combine(
+      $SubstrateTmpDir, "vagrant-substrate-builder")
+  If ($ScrubCache -eq "no") {
+    [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
+    $SubstrateDirectory = Get-ChildItem $SubstrateTmpDir
+    If ($SubstrateDirectory.count -ne 0) {
+      $UseCache = $true
+    }
+  } Else {
+    [System.IO.Directory]::Delete($SubstrateTmpDir, $true)
+    [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
+  }
+}
+
 Write-Host "Substrate temp dir: $($SubstrateTmpDir)"
 
 # Unzip
-Write-Host "Expanding substrate..."
-Expand-ZipFile -file $SubstratePath -destination $SubstrateTmpDir
+If ($UseCache -eq $false) {
+  Write-Host "Expanding substrate..."
+  Expand-ZipFile -file $SubstratePath -destination $SubstrateTmpDir
+} Else {
+  Write-Host "Using cached substrate"
+}
 
 # Set the full path to the substrate
 $SubstrateDir = "$($SubstrateTmpDir)"
@@ -81,32 +111,56 @@ $SubstrateDir = "$($SubstrateTmpDir)"
 # Install Vagrant
 #--------------------------------------------------------------------
 $VagrantTmpDir = [System.IO.Path]::GetTempPath()
-$VagrantTmpDir = [System.IO.Path]::Combine(
+if ($BuildStyle -eq "ephemeral" ) {
+  $VagrantTmpDir = [System.IO.Path]::Combine(
     $VagrantTmpDir, [System.IO.Path]::GetRandomFileName())
-[System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
+  [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
+} Else {
+  $VagrantTmpDir = [System.IO.Path]::Combine(
+    $VagrantTmpDir, "vagrant-$($VagrantRevision)")
+  If ($ScrubCache -eq "no") {
+    [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
+    $VagrantDirectory = Get-ChildItem $VagrantTmpDir
+    If ($VagrantDirectory.count -ne 0) {
+      $UseCache = $true
+    }
+  } Else {
+    [System.IO.Directory]::Delete($VagrantTmpDir, $true)
+    [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
+  }
+}
+
 Write-Host "Vagrant temp dir: $($VagrantTmpDir)"
 
 $VagrantSourceURL = "$($VagrantSourceBaseURL)/$($VagrantRevision).zip"
 $VagrantDest      = "$($VagrantTmpDir)\vagrant.zip"
 
 # Download
-Write-Host "Downloading Vagrant: $($VagrantRevision)"
-$client = New-Object System.Net.WebClient
-$client.DownloadFile($VagrantSourceURL, $VagrantDest)
+If ($UseCache -eq $false) {
+  Write-Host "Downloading Vagrant: $($VagrantRevision)"
+  $client = New-Object System.Net.WebClient
+  $client.DownloadFile($VagrantSourceURL, $VagrantDest)
 
-# Unzip
-Write-Host "Unzipping Vagrant"
-Expand-ZipFile -file $VagrantDest -destination $VagrantTmpDir
+  # Unzip
+  Write-Host "Unzipping Vagrant"
+  Expand-ZipFile -file $VagrantDest -destination $VagrantTmpDir
+} Else {
+  Write-Host "Using cached Vagrant download: $($VagrantRevision)"
+}
 
 # Set the full path to where Vagrant is
 $VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
 
 # Build gem
-Write-Host "Building Vagrant Gem"
-Push-Location $VagrantSourceDir
-&"$($SubstrateDir)\embedded\bin\gem.bat" build vagrant.gemspec
-Copy-Item vagrant-*.gem -Destination vagrant.gem
-Pop-Location
+If ($UseCache -eq $false) {
+  Write-Host "Building Vagrant Gem"
+  Push-Location $VagrantSourceDir
+  &"$($SubstrateDir)\embedded\bin\gem.bat" build vagrant.gemspec
+  Copy-Item vagrant-*.gem -Destination vagrant.gem
+  Pop-Location
+} Else {
+  Write-Host "Using cached build of Vagrant Gem"
+}
 
 # Determine the version
 $VagrantVersionFile = Join-Path $VagrantSourceDir version.txt
@@ -116,29 +170,33 @@ if (-Not (Test-Path $VagrantVersionFile)) {
 $VagrantVersion=$((Get-Content $VagrantVersionFile) -creplace '\.[^0-9]+(\.[0-9]+)?$', '$1')
 Write-Host "Vagrant version: $VagrantVersion"
 
-# Install gem. We do this in a sub-shell so we don't have to worry
-# about restoring environmental variables.
-$env:SubstrateDir     = $SubstrateDir
-$env:VagrantSourceDir = $VagrantSourceDir
-powershell {
-    $ErrorActionPreference = "Stop"
+if ($UseCache -eq $false) {
+  # Install gem. We do this in a sub-shell so we don't have to worry
+  # about restoring environmental variables.
+  $env:SubstrateDir     = $SubstrateDir
+  $env:VagrantSourceDir = $VagrantSourceDir
+  powershell {
+      $ErrorActionPreference = "Stop"
 
-    Set-Location $env:VagrantSourceDir
-    $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
-    $env:GEM_PATH = "$($EmbeddedDir)\gems"
-    $env:GEM_HOME = $env:GEM_PATH
-    $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
-    $env:CPPFLAGS = "-I$($EmbeddedDir)\include"
-    $env:LDFLAGS  = "-L$($EmbeddedDir)\lib"
-    $env:Path     ="$($EmbeddedDir)\bin;$($env:Path)"
-    $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
-    &"$($EmbeddedDir)\bin\gem.bat" install vagrant.gem --no-ri --no-rdoc
+      Set-Location $env:VagrantSourceDir
+      $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
+      $env:GEM_PATH = "$($EmbeddedDir)\gems"
+      $env:GEM_HOME = $env:GEM_PATH
+      $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
+      $env:CPPFLAGS = "-I$($EmbeddedDir)\include"
+      $env:LDFLAGS  = "-L$($EmbeddedDir)\lib"
+      $env:Path     ="$($EmbeddedDir)\bin;$($env:Path)"
+      $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
+      &"$($EmbeddedDir)\bin\gem.bat" install vagrant.gem --no-ri --no-rdoc
 
-    # Extensions
-    &"$($EmbeddedDir)\bin\gem.bat" install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+      # Extensions
+      &"$($EmbeddedDir)\bin\gem.bat" install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+  }
+  Remove-Item Env:SubstrateDir
+  Remove-Item Env:VagrantSourceDir
+} Else {
+  Write-Host "Using cached installation of Vagrant Gem"
 }
-Remove-Item Env:SubstrateDir
-Remove-Item Env:VagrantSourceDir
 
 #--------------------------------------------------------------------
 # System Plugins
@@ -210,14 +268,22 @@ Copy-Item "$($Dir)\support\windows\bg_dialog.bmp" `
     -Destination "$($InstallerTmpDir)\assets\bg_dialog.bmp"
 Copy-Item "$($Dir)\support\windows\license.rtf" `
     -Destination "$($InstallerTmpDir)\assets\license.rtf"
+Copy-Item "$($Dir)\support\windows\burn_logo.bmp" `
+    -Destination "$($InstallerTmpDir)\assets\burn_logo.bmp"
 Copy-Item "$($Dir)\support\windows\vagrant-en-us.wxl" `
     -Destination "$($InstallerTmpDir)\vagrant-en-us.wxl"
 
-# Find runtime redistributable
-$VSCR = Get-Item -path "C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC*_CRT_x86.msm"
+# Download the C++ Runtime Redistributable package
+$vcredistSourceURL = "https://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe"
+$vcredistDest = "$($VagrantTmpDir)\vcredist_x86.exe"
 
-# Copy runtime redistributable into package
-Copy-Item $VSCR -Destination "$($InstallerTmpDir)\vscr.msm"
+If ($UseCache -eq $false) {
+  Write-Host "Downloading C++ Runtime Redistributable"
+  (New-Object System.Net.WebClient).DownloadFile($vcredistSourceURL, $vcredistDest)
+}
+
+# Move runtime redistributable into our package
+Copy-Item "$($vcredistDest)" -Destination "$($InstallerTmpDir)\vcredist_x86.exe"
 
 $contents = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -281,11 +347,14 @@ $contents = @"
      <!-- Get the proper system directory -->
      <SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
 
+     <PropertyRef Id="WIX_ACCOUNT_USERS" />
+     <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
+
      <!-- The directory where we'll install Vagrant -->
      <Directory Id="TARGETDIR" Name="SourceDir">
        <Directory Id="WINDOWSVOLUME">
          <Directory Id="MANUFACTURERDIR" Name="HashiCorp">
-           <Directory Id="VAGRANTAPPDIR" Name="Vagrant">
+           <Directory Id="INSTALLDIR" Name="Vagrant">
              <Component Id="VagrantBin"
                Guid="{12a01bfc-ae9e-4543-8a32-47865cc03071}">
                <!--
@@ -297,20 +366,19 @@ $contents = @"
                  Action="set"
                  Part="last"
                  System="yes"
-                 Value="[VAGRANTAPPDIR]bin" />
+                 Value="[INSTALLDIR]bin" />
 
-               <!-- We need this to avoid an ICE validation error -->
-               <CreateFolder />
+               <!-- Because we are not in "Program Files" we inherit
+                    permissions that are not desirable. Force new permissions -->
+               <CreateFolder>
+                 <Permission GenericAll="yes" User="[WIX_ACCOUNT_ADMINISTRATORS]" />
+                 <Permission GenericRead="yes" GenericExecute="yes" User="[WIX_ACCOUNT_USERS]" />
+               </CreateFolder>
              </Component>
            </Directory>
          </Directory>
        </Directory>
      </Directory>
-
-     <!-- Include the proper Visual C++ redistributable -->
-     <DirectoryRef Id="TARGETDIR">
-       <Merge Id="VCRedist" SourceFile="vscr.msm" DiskId="1" Language="0" />
-     </DirectoryRef>
 
      <!-- Define the features of our install -->
      <Feature Id="VagrantFeature"
@@ -320,13 +388,8 @@ $contents = @"
        <ComponentRef Id="VagrantBin" />
      </Feature>
 
-     <!-- Install Visual C++ redistributable -->
-     <Feature Id="VCRedist" Title="Visual C++ Runtime" AllowAdvertise="no" Display="hidden" Level="1">
-       <MergeRef Id="VCRedist" />
-     </Feature>
-
      <!-- WixUI configuration so we can have a UI -->
-     <Property Id="WIXUI_INSTALLDIR" Value="VAGRANTAPPDIR" />
+     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
 
      <UIRef Id="VagrantUI_InstallDir" />
      <UI Id="VagrantUI_InstallDir">
@@ -349,7 +412,7 @@ Write-Host "Running heat.exe"
     -srd `
     -gg `
     -cg VagrantDir `
-    -dr VAGRANTAPPDIR `
+    -dr INSTALLDIR `
     -var 'var.VagrantSourceDir' `
     -out "$($InstallerTmpDir)\vagrant-files.wxs"
 
@@ -369,21 +432,13 @@ Write-Host "Running light.exe"
 &$WixLight `
     -nologo `
     -ext WixUIExtension `
+    -ext WixUtilExtension `
     -spdb `
     -cultures:en-us `
     -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
     -out $OutputPath `
     "$($InstallerTmpDir)\vagrant-files.wixobj" `
     "$($InstallerTmpDir)\vagrant-main.wixobj"
-
-Write-Host "Installer at: $($OutputPath)"
-
-#--------------------------------------------------------------------
-# Clean up
-#--------------------------------------------------------------------
-Remove-Item -Recurse -Force $InstallerTmpDir
-Remove-Item -Recurse -Force $SubstrateTmpDir
-Remove-Item -Recurse -Force $VagrantTmpDir
 
 #--------------------------------------------------------------------
 # Sign
@@ -400,3 +455,65 @@ if ($SignKey) {
         /p $SignKeyPassword `
         $OutputPath
 }
+
+$BundleOutputPath = "vagrant_$($VagrantVersion).exe"
+
+Copy-Item $OutputPath -Destination "$($InstallerTmpDir)\vagrant.msi"
+
+$contents = @"
+<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+    <Bundle Version="1.8.6" UpgradeCode="a48b8e2d-87a9-4655-8951-41c8a1b254eb">
+        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+            <bal:WixStandardBootstrapperApplication
+                LicenseFile="$($InstallerTmpDir)\assets\license.rtf"
+                LogoFile="$($InstallerTmpDir)\assets\burn_logo.bmp" />
+        </BootstrapperApplicationRef>
+        <Variable Name="InstallFolder" Type="string" Value="[WindowsVolume]HashiCorp\Vagrant" bal:Overridable="yes" />
+        <Chain>
+          <ExePackage SourceFile="$($InstallerTmpDir)\vcredist_x86.exe" InstallCommand="/quiet /norestart" />
+          <RollbackBoundary />
+          <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Vital="yes">
+            <MsiProperty Name="INSTALLDIR" Value="[InstallFolder]" />
+          </MsiPackage>
+        </Chain>
+    </Bundle>
+</Wix>
+"@
+$contents | Out-File `
+    -Encoding ASCII `
+    -FilePath "$($InstallerTmpDir)\vagrant-bundle.wxs"
+
+Write-Host "Running bundle candle.exe"
+$CandleArgs = @(
+    "-nologo",
+    "-ext WixBalExtension",
+    "-I$($InstallerTmpDir)",
+    "-out $InstallerTmpDir\",
+    "$($InstallerTmpDir)\vagrant-bundle.wxs"
+)
+Start-Process -NoNewWindow -Wait `
+    -ArgumentList $CandleArgs -FilePath $WixCandle
+
+Write-Host "Running bundle light.exe"
+&$WixLight `
+    -nologo `
+    -ext WixBalExtension `
+    -spdb `
+    -cultures:en-us `
+    -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
+    -out $BundleOutputPath `
+    "$($InstallerTmpDir)\vagrant-bundle.wixobj"
+
+#--------------------------------------------------------------------
+# Clean up
+#--------------------------------------------------------------------
+Remove-Item -Recurse -Force $InstallerTmpDir
+
+If ($BuildStyle -eq "ephemeral") {
+  Remove-Item -Recurse -Force $SubstrateTmpDir
+  Remove-Item -Recurse -Force $VagrantTmpDir
+}
+
+Write-Host "Installer MSI at: $($OutputPath)"
+Write-Host "Installer bundled EXE at: $($BundleOutputPath)"
