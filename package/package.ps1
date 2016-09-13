@@ -470,10 +470,16 @@ $contents = @"
                 LogoFile="$($InstallerTmpDir)\assets\burn_logo.bmp" />
         </BootstrapperApplicationRef>
         <Variable Name="InstallFolder" Type="string" Value="[WindowsVolume]HashiCorp\Vagrant" bal:Overridable="yes" />
+        <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\DevDiv\VC\Servicing\9.0\RED\1033" Value="SP" Variable="vcredist" />
         <Chain>
-          <ExePackage SourceFile="$($InstallerTmpDir)\vcredist_x86.exe" InstallCommand="/quiet /norestart" />
+          <ExePackage
+            SourceFile="$($InstallerTmpDir)\vcredist_x86.exe"
+            InstallCommand="/quiet"
+            PerMachine="yes"
+            Permanent="yes"
+            DetectCondition="vcredist AND (vcredist >= 1) />
           <RollbackBoundary />
-          <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Vital="yes">
+          <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Compressed="yes" Vital="yes">
             <MsiProperty Name="INSTALLDIR" Value="[InstallFolder]" />
           </MsiPackage>
         </Chain>
