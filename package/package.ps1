@@ -464,7 +464,7 @@ $contents = @"
 <?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
-  xmlns:util="http://schema.microsoft.com/wix/UtilExtension">
+  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
     <Bundle Version="1.8.6" UpgradeCode="a48b8e2d-87a9-4655-8951-41c8a1b254eb">
         <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
             <bal:WixStandardBootstrapperApplication
