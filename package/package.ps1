@@ -31,7 +31,7 @@ param(
     [string]$SignKeyPassword="",
     [string]$SignPath="",
 
-    [string]$BuildStyle="cached",
+    [string]$BuildStyle="ephemeral",
     [string]$ScrubCache="no"
 )
 
