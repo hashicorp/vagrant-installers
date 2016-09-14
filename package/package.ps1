@@ -462,7 +462,9 @@ Copy-Item $OutputPath -Destination "$($InstallerTmpDir)\vagrant.msi"
 
 $contents = @"
 <?xml version="1.0"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+  xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+  xmlns:util="http://schema.microsoft.com/wix/UtilExtension">
     <Bundle Version="1.8.6" UpgradeCode="a48b8e2d-87a9-4655-8951-41c8a1b254eb">
         <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
             <bal:WixStandardBootstrapperApplication
@@ -477,7 +479,7 @@ $contents = @"
             InstallCommand="/quiet"
             PerMachine="yes"
             Permanent="yes"
-            DetectCondition="vcredist AND (vcredist >= 1) />
+            DetectCondition="vcredist AND (vcredist >= 1)" />
           <RollbackBoundary />
           <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Compressed="yes" Vital="yes">
             <MsiProperty Name="INSTALLDIR" Value="[InstallFolder]" />
@@ -494,6 +496,7 @@ Write-Host "Running bundle candle.exe"
 $CandleArgs = @(
     "-nologo",
     "-ext WixBalExtension",
+    "-ext WixUtilExtension",
     "-I$($InstallerTmpDir)",
     "-out $InstallerTmpDir\",
     "$($InstallerTmpDir)\vagrant-bundle.wxs"
@@ -505,6 +508,7 @@ Write-Host "Running bundle light.exe"
 &$WixLight `
     -nologo `
     -ext WixBalExtension `
+    -ext WixUtilExtension `
     -spdb `
     -cultures:en-us `
     -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
