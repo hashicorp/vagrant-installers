@@ -522,6 +522,22 @@ Write-Host "Running bundle light.exe"
     "$($InstallerTmpDir)\vagrant-bundle.wixobj"
 
 #--------------------------------------------------------------------
+# Sign
+#--------------------------------------------------------------------
+if ($SignKey) {
+    $SignTool = "signtool.exe"
+    if ($SignPath) {
+        $SignTool = $SignPath
+    }
+
+    &$SignTool sign `
+        /t http://timestamp.digicert.com `
+        /f $SignKey `
+        /p $SignKeyPassword `
+        $BundleOutputPath
+}
+
+#--------------------------------------------------------------------
 # Clean up
 #--------------------------------------------------------------------
 Remove-Item -Recurse -Force $InstallerTmpDir
