@@ -343,7 +343,7 @@ $contents = @"
 
      <!-- Some steps for our installation -->
      <InstallExecuteSequence>
-       <ScheduleReboot After="InstallFinalize"><![CDATA[UILevel <> 2]]></ScheduleReboot>
+       <ScheduleReboot After="InstallFinalize"/>
      </InstallExecuteSequence>
 
      <!-- Include application icon for add/remove programs -->
@@ -480,16 +480,15 @@ $contents = @"
         <Variable Name="InstallFolder" Type="string" Value="[WindowsVolume]HashiCorp\Vagrant" bal:Overridable="yes" />
         <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\DevDiv\VC\Servicing\9.0\RED\1033" Value="SP" Variable="vcredist" />
         <Chain>
+          <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Vital="yes" Visible="yes">
+            <MsiProperty Name="INSTALLDIR" Value="[InstallFolder]" />
+          </MsiPackage>
           <ExePackage
             SourceFile="$($InstallerTmpDir)\vcredist_x86.exe"
-            InstallCommand="/quiet"
+            InstallCommand="/passive"
             PerMachine="yes"
             Permanent="yes"
             DetectCondition="vcredist AND (vcredist >= 1)" />
-          <RollbackBoundary />
-          <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Compressed="yes" Vital="yes" Visible="yes">
-            <MsiProperty Name="INSTALLDIR" Value="[InstallFolder]" />
-          </MsiPackage>
         </Chain>
     </Bundle>
 </Wix>
