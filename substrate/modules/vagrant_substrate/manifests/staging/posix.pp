@@ -111,6 +111,14 @@ class vagrant_substrate::staging::posix {
       ],
   }
 
+  class { "libssh2":
+    autotools_environment => autotools_merge_environments(
+      $default_autotools_environment, $libssh2_autotools_environment),
+      file_cache_dir => $cache_dir,
+      prefix         => $embedded_dir,
+      require        => Class["openssl"],
+  }
+
   class { "libxslt":
     autotools_environment => $default_autotools_environment,
     file_cache_dir        => $cache_dir,
@@ -175,6 +183,7 @@ class vagrant_substrate::staging::posix {
     install_dir           => $embedded_dir,
     require               => [
       Class["openssl"],
+      Class["libssh2"],
       Class["zlib"],
     ],
   }
