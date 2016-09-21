@@ -349,6 +349,7 @@ $contents = @"
      <!-- Include application icon for add/remove programs -->
      <Icon Id="icon.ico" SourceFile="$($InstallerTmpDir)\assets\vagrant.ico" />
      <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+     <Property Id="ARPHELPLINK" Value="https://www.vagrantup.com" />
 
      <!-- Get the proper system directory -->
      <SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
@@ -471,7 +472,7 @@ $contents = @"
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
   xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-    <Bundle Version="1.8.6" UpgradeCode="a48b8e2d-87a9-4655-8951-41c8a1b254eb">
+    <Bundle Name="VagrantInstaller" Manufacturer="HashiCorp" Version="$($VagrantVersion)" UpgradeCode="a48b8e2d-87a9-4655-8951-41c8a1b254eb">
         <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
             <bal:WixStandardBootstrapperApplication
                 LicenseFile="$($InstallerTmpDir)\assets\license.rtf"
