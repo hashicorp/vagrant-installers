@@ -8,8 +8,8 @@ class ruby::windows(
 ) {
   $devkit_source_url = "http://dl.bintray.com/oneclick/rubyinstaller/DevKit-mingw64-32-4.7.2-20130224-1151-sfx.exe"
   $devkit_installer_path = "${file_cache_dir}\\devkit-4.7.2-64.exe"
-  $ruby_source_url = "http://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.2.3.exe?direct"
-  $ruby_installer_path = "${file_cache_dir}\\ruby-2.2.3.exe"
+  $ruby_source_url = "http://dl.bintray.com/oneclick/rubyinstaller/rubyinstaller-2.2.5.exe?direct"
+  $ruby_installer_path = "${file_cache_dir}\\ruby-2.2.5.exe"
 
   $extra_args = $install_dir ? {
     undef   => "",
