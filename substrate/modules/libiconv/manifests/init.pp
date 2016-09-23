@@ -46,6 +46,12 @@ class libiconv(
     require => Wget::Fetch["libiconv"],
   }
 
+  exec { "remove-getc-warning":
+    command => "sed -i -e 's/^_GL_WARN_ON_USE.*gets.*security.*fgets.*$//' stdio.in.h",
+    cwd => "${source_dir_path}/srclib",
+    require => Exec["untar-libiconv"]
+  }
+
   autotools { "libiconv":
     configure_flags  => "--prefix=${prefix} --disable-dependency-tracking",
     cwd              => $source_dir_path,

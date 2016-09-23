@@ -17,8 +17,13 @@ class build_essential {
     }
 
     'CentOS': {
-      package { ["chrpath", "gcc", "make", "perl"]:
+      package { ["chrpath", "gcc", "make", "perl", "automake", "libtool"]:
         ensure => installed,
+      }
+
+      exec { "perl-Data-Dumper":
+        command => "/usr/bin/yum -d 0 -e 0 -y install perl-Data-Dumper",
+        onlyif => "/usr/bin/yum -d 0 -e 0 -y list perl-Data-Dumper",
       }
 
       $script_build_autotools = "/usr/local/bin/centos_build_autotools"
