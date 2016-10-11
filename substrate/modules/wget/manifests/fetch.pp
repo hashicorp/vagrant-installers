@@ -18,7 +18,7 @@ define wget::fetch($source=$name, $destination) {
   require wget
 
   exec { "wget-${name}":
-    command => "wget --output-document=${destination} ${source}",
+    command => "wget --no-check-certificate --output-document=${destination} ${source}",
     creates => $destination,
     timeout => 1200,
   }
