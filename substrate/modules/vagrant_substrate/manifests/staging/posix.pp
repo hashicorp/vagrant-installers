@@ -157,6 +157,13 @@ class vagrant_substrate::staging::posix {
     make_notify           => Exec["reset-ruby"],
   }
 
+  class { "libssh2":
+    autotools_environment => $default_autotools_environment,
+    file_cache_dir        => $cache_dir,
+    prefix                => $embedded_dir,
+    require               => Class["openssl"],
+  }
+
   class { "bsdtar":
     autotools_environment => autotools_merge_environments(
       $default_autotools_environment, $bsdtar_autotools_environment),

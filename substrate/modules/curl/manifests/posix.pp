@@ -1,5 +1,6 @@
 class curl::posix {
   require build_essential
+  require libssh2
 
   $autotools_environment = $curl::autotools_environment
   $file_cache_dir        = $curl::file_cache_dir
@@ -44,7 +45,7 @@ class curl::posix {
   }
 
   autotools { "curl":
-    configure_flags    => "--prefix=${install_dir} --disable-dependency-tracking --disable-ldap",
+    configure_flags    => "--prefix=${install_dir} --disable-dependency-tracking --disable-ldap --with-libssh2",
     configure_sentinel => "${source_dir_path}/src/Makefile",
     cwd                => $source_dir_path,
     environment        => $real_autotools_environment,
