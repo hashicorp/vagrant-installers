@@ -8,6 +8,7 @@ class bsdtar::posix {
   $source_dir_path = "${file_cache_dir}/libarchive-3.1.2"
   $source_package_path = "${file_cache_dir}/libarchive.tar.gz"
   $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.2.tar.gz"
+  $lib_version = "13"
 
   $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex"
 
@@ -22,8 +23,8 @@ class bsdtar::posix {
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386",
-      "LDFLAGS" => "-arch i386 -Wl,-rpath,${install_dir}/lib",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -96,11 +97,20 @@ class bsdtar::posix {
   }
 
   if $kernel == 'Darwin' {
-    exec { "remove-bsdtar-rpath":
-      command     => "install_name_tool -delete_rpath ${install_dir}/lib ${install_dir}/bin/bsdtar",
-      refreshonly => true,
-      require     => Autotools["libarchive"],
-      subscribe   => Autotools["libarchive"],
+    $libarchive_paths = [
+      "${install_dir}/lib/libarchive.dylib",
+      "${install_dir}/lib/libarchive.${lib_version}.dylib",
+      "${install_dir}/bin/bsdtar",
+      "${install_dir}/bin/bsdcpio",
+    ]
+    $lib_path = "@rpath/libarchive.${lib_version}.dylib"
+    $embedded_dir = "${install_dir}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libarchive_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libarchive"],
+      subscribe => Autotools["libarchive"],
     }
   }
 }

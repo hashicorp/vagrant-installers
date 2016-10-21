@@ -16,12 +16,15 @@ class zlib(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "1.2.8"
+  $lib_short_version = "1"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -55,5 +58,22 @@ class zlib(
     make_notify        => $make_notify,
     make_sentinel      => "${source_dir_path}/libz.a",
     require            => Exec["untar-libz"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libz_paths = [
+      "${prefix}/lib/libz.dylib",
+      "${prefix}/lib/libz.${lib_short_version}.dylib",
+      "${prefix}/lib/libz.${lib_version}.dylib",
+    ]
+    $lib_path = "@rpath/libz.${lib_short_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libz_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libz"],
+      subscribe => Autotools["libz"],
+    }
   }
 }

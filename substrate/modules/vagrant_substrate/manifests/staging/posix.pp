@@ -61,6 +61,14 @@ class vagrant_substrate::staging::posix {
       "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
     }
 
+    $openssl_autotools_environment = {
+      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
+    }
+
+    $libssh2_autotools_environment = {
+      "LDFLAGS" => "-Wl,-install_name,@rpath/libssh2.dylib -Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
+    }
+
     $xz_autotools_environment = {
       "LDFLAGS" => "-Wl,-install_name,@rpath/liblzma.dylib",
     }
@@ -151,14 +159,16 @@ class vagrant_substrate::staging::posix {
   }
 
   class { "openssl":
-    autotools_environment => $default_autotools_environment,
+    autotools_environment => autotools_merge_environments(
+      $default_autotools_environment, $openssl_autotools_environment),
     file_cache_dir        => $cache_dir,
     prefix                => $embedded_dir,
     make_notify           => Exec["reset-ruby"],
   }
 
   class { "libssh2":
-    autotools_environment => $default_autotools_environment,
+    autotools_environment => autotools_merge_environments(
+      $default_autotools_environment, $libssh2_autotools_environment),
     file_cache_dir        => $cache_dir,
     prefix                => $embedded_dir,
     require               => Class["openssl"],

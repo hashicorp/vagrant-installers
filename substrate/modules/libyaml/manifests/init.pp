@@ -16,12 +16,14 @@ class libyaml(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "0.2"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -54,5 +56,21 @@ class libyaml(
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/src/.libs/libyaml.a",
     require          => Exec["untar-libyaml"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libyaml_paths = [
+      "${prefix}/lib/libyaml.dylib",
+      "${prefix}/lib/libyaml-${lib_version}.dylib",
+    ]
+    $lib_path = "@rpath/libyaml-${lib_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libyaml_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libyaml"],
+      subscribe => Autotools["libyaml"],
+    }
   }
 }
