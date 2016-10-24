@@ -65,6 +65,12 @@ export CFLAGS="${CPPFLAGS}"
 export LDFLAGS="-L${EMBEDDED_DIR}/lib"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
+
+# Darwin
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export CONFIGURE_ARGS="-Wl,-rpath,${EMBEDDED_DIR}/lib"
+fi
+
 ${GEM_COMMAND} install vagrant.gem --no-ri --no-rdoc
 
 # Install extensions

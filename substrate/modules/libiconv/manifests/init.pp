@@ -16,12 +16,15 @@ class libiconv(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_iconv_version = "2"
+  $lib_charset_version = "1"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -60,5 +63,34 @@ class libiconv(
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/lib/.libs/iconv.o",
     require          => Exec["untar-libiconv"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libiconv_paths = [
+      "${prefix}/lib/libiconv.dylib",
+      "${prefix}/lib/libiconv.${lib_iconv_version}.dylib",
+    ]
+    $lib_iconv_path = "@rpath/libiconv.${lib_iconv_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libiconv_paths:
+      new_lib_path => $lib_iconv_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libiconv"],
+      subscribe => Autotools["libiconv"],
+    }
+
+    $libcharset_paths = [
+      "${prefix}/lib/libcharset.dylib",
+      "${prefix}/lib/libcharset.${lib_charset_version}.dylib",
+    ]
+    $lib_charset_path = "@rpath/libcharset.${lib_charset_version}.dylib"
+
+    vagrant_substrate::staging::darwin_rpath { $libcharset_paths:
+      new_lib_path => $lib_charset_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libiconv"],
+      subscribe => Autotools["libiconv"],
+    }
   }
 }

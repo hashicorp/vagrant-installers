@@ -15,45 +15,6 @@ class openssl::install::darwin {
   $openssl_32_path = "${file_cache_dir}/openssl-32"
   $openssl_64_path = "${file_cache_dir}/openssl-64"
 
-  #------------------------------------------------------------------
-  # Compile 32-bit
-  #------------------------------------------------------------------
-  exec { "nuke-openssl-32":
-    command     => "rm -rf ${openssl_32_path}",
-    refreshonly => true,
-    subscribe   => Exec["untar-openssl"],
-  }
-
-  exec { "copy-openssl-32":
-    command   => "cp -R ${source_dir_path} ${openssl_32_path}",
-    creates   => $openssl_32_path,
-    require   => [
-      Exec["nuke-openssl-32"],
-      Exec["untar-openssl"],
-    ],
-  }
-
-  exec { "clean-openssl-32":
-    command => "make clean",
-    cwd     => $openssl_32_path,
-    require => Exec["copy-openssl-32"],
-  }
-
-  autotools { "openssl-32":
-    configure_file     => "./Configure",
-    configure_flags    => "--prefix=${prefix} shared darwin-i386-cc",
-    configure_sentinel => "${openssl_32_path}/apps/CA.pl.bak",
-    cwd                => $openssl_32_path,
-    environment        => $autotools_environment,
-    install            => false,
-    make_notify        => $make_notify,
-    make_sentinel      => "${openssl_32_path}/libssl.a",
-    require            => Exec["clean-openssl-32"],
-  }
-
-  #------------------------------------------------------------------
-  # Compile 64-bit
-  #------------------------------------------------------------------
   exec { "nuke-openssl-64":
     command     => "rm -rf ${openssl_64_path}",
     refreshonly => true,
@@ -92,47 +53,63 @@ class openssl::install::darwin {
     require            => Exec["clean-openssl-64"],
   }
 
-  #------------------------------------------------------------------
-  # Create the Universal Binary
-  #
-  # OpenSSL has no built-in support for creating the universal binary
-  # of the library so we have to take both the 32-bit and 64-bit versions
-  # and then lipo them together.
-  #------------------------------------------------------------------
-  $final_directory      = "${file_cache_dir}/openssl-final"
-  $final_libssl_path    = "${prefix}/lib/libssl.${lib_version}.dylib"
+  $libssl_path = "${prefix}/lib/libssl.${lib_version}.dylib"
+  $libssl_stub_path = "${prefix}/lib/libssl.dylib"
+  $new_ssl_rpath = "@rpath/libssl.${lib_version}.dylib"
+  $libcrypto_path = "${prefix}/lib/libcrypto.${lib_version}.dylib"
+  $libcrypto_stub_path = "${prefix}/lib/libcrypto.dylib"
+  $new_crypto_rpath = "@rpath/libcrypto.${lib_version}.dylib"
+  $openssl_path = "${prefix}/bin/openssl"
+  $embedded_libdir = "${prefix}/lib"
 
-  exec { "nuke-openssl-final":
-    command     => "rm -rf ${final_directory}",
-    refreshonly => true,
-    subscribe   => Exec["untar-openssl"],
+  vagrant_substrate::staging::darwin_rpath { [$libcrypto_path, $libcrypto_stub_path]:
+    new_lib_path => $new_crypto_rpath,
+    remove_rpath => $embedded_libdir,
+    require => Autotools["openssl-64"],
+    subscribe => Autotools["openssl-64"],
   }
 
-  util::recursive_directory { $final_directory:
-    require => Exec["nuke-openssl-final"],
+  vagrant_substrate::staging::darwin_rpath { $libssl_path:
+    change_install_names => {
+      libssl_crypto => {
+        original => $libcrypto_path,
+        replacement => $new_crypto_rpath
+      },
+    },
+    new_lib_path => $new_ssl_rpath,
+    remove_rpath => $embedded_libdir,
+    require => Autotools["openssl-64"],
+    subscribe => Autotools["openssl-64"],
   }
 
-  openssl::install::darwin_lipo { ["libcrypto", "libssl"]:
-    final_directory => $final_directory,
-    lib_version     => $lib_version,
-    path_32         => $openssl_32_path,
-    path_64         => $openssl_64_path,
-    prefix_dir      => $prefix,
-    require         => [
-      Autotools["openssl-32"],
-      Autotools["openssl-64"],
-      Util::Recursive_directory[$final_directory],
-    ],
+  vagrant_substrate::staging::darwin_rpath { $libssl_stub_path:
+    change_install_names => {
+      libssl_crypto_stub => {
+        original => $libcrypto_path,
+        replacement => $new_crypto_rpath
+      },
+    },
+    new_lib_path => $new_ssl_rpath,
+    remove_rpath => $embedded_libdir,
+    require => Autotools["openssl-64"],
+    subscribe => Autotools["openssl-64"],
   }
 
-  # For libssl, we need to change the rpath to the libcrypto lib
-  # so that it can properly find it in our embedded setup.
-  $old_rpath = "${prefix}/lib/libcrypto.${lib_version}.dylib"
-  $new_rpath = "@rpath/libcrypto.${lib_version}.dylib"
-  exec { "libssl-rpath":
-    command     => "install_name_tool -change ${old_rpath} ${new_rpath} ${final_libssl_path}",
-    refreshonly => true,
-    require     => Openssl::Install::Darwin_lipo["libssl"],
-    subscribe   => Exec["move-dylib-libssl"],
+
+  vagrant_substrate::staging::darwin_rpath { $openssl_path:
+    change_install_names => {
+      openssl_libssl => {
+        original => $libcrypto_path,
+        replacement => $new_crypto_rpath
+      },
+      openssl_libcrypto => {
+        original => $libssl_path,
+        replacement => $new_ssl_rpath
+      },
+    },
+    new_lib_path => $openssl_path,
+    remove_rpath => $embedded_libdir,
+    require => Autotools["openssl-64"],
+    subscribe => Autotools["openssl-64"],
   }
 }

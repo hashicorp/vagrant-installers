@@ -145,6 +145,14 @@ func main() {
 	// Unset any RUBYLIB, we don't want this bleeding into our runtime
 	newEnv["RUBYLIB"] = ""
 
+	if runtime.GOOS == "darwin" {
+		configure_args := "-Wl,rpath," + filepath.Join(embeddedDir, "lib")
+		if original_configure_args := os.Getenv("CONFIGURE_ARGS"); original_configure_args != "" {
+			configure_args = original_configure_args + " " + configure_args
+		}
+		newEnv["CONFIGURE_ARGS"] = configure_args
+	}
+
 	// Store the "current" environment so Vagrant can restore it when shelling
 	// out.
 	for _, value := range os.Environ() {

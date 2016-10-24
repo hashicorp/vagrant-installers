@@ -16,12 +16,14 @@ class libxslt(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "1"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -56,33 +58,20 @@ class libxslt(
     require          => Exec["untar-libxslt"],
   }
 
-  #------------------------------------------------------------------
-  # Mac OS X lib name setup
-  #------------------------------------------------------------------
-  if $operatingsystem == 'Darwin' {
-    # XSLT
-    $xslt_path     = "${prefix}/lib/libxslt.dylib"
-    $old_xslt_path = "${prefix}/lib/libxslt.1.dylib"
-    $new_xslt_path = "@rpath/libxslt.1.dylib"
+  if $kernel == 'Darwin' {
+    $libxslt_paths = [
+      "${prefix}/lib/libxslt.dylib",
+      "${prefix}/lib/libxslt.${lib_version}.dylib",
+      "${prefix}/bin/xsltproc",
+    ]
+    $lib_path = "@rpath/libxslt.${lib_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
 
-    exec { "libxslt-rpath":
-      command     => "install_name_tool -id ${new_xslt_path} ${xslt_path}",
-      require     => Autotools["libxslt"],
-    }
-
-    # EXSLT
-    $exslt_path     = "${prefix}/lib/libexslt.dylib"
-    $old_exslt_path = "${prefix}/lib/libexslt.0.dylib"
-    $new_exslt_path = "@rpath/libexslt.0.dylib"
-
-    exec { "libexslt-rpath":
-      command     => "install_name_tool -id ${new_exslt_path} ${exslt_path}",
-      require     => Autotools["libxslt"],
-    }
-
-    exec { "libexslt-xslt-rpath":
-      command     => "install_name_tool -change ${old_xslt_path} ${new_xslt_path} ${exslt_path}",
-      require     => Autotools["libxslt"],
+    vagrant_substrate::staging::darwin_rpath { $libxslt_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libxslt"],
+      subscribe => Autotools["libxslt"],
     }
   }
 }

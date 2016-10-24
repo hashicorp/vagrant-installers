@@ -12,12 +12,14 @@ class curl::posix {
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "4"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386",
-      "LDFLAGS" => "-arch i386 -Wl,-rpath,${install_dir}/lib",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64 -Wl,-rpath,${install_dir}/lib",
     }
   } else {
     $extra_autotools_environment = {
@@ -55,33 +57,32 @@ class curl::posix {
   }
 
   if $operatingsystem == 'Darwin' {
-    # On Mac OS X, we add a temporary rpath value so that the ./configure
-    # passes properly. In this step, we remove that temporary rpath value
-    # because we don't actually need it in the resulting binary.
-    exec { "remove-temp-curl-rpath":
-      command     => "install_name_tool -delete_rpath ${install_dir}/lib ${install_dir}/bin/curl",
-      refreshonly => true,
-      require     => Autotools["curl"],
-      subscribe   => Autotools["curl"],
+
+    $libcurl_paths = [
+      "${install_dir}/lib/libcurl.dylib",
+      "${install_dir}/lib/libcurl.${lib_version}.dylib"
+    ]
+    $lib_path = "@rpath/libcurl.${lib_version}.dylib"
+    $embedded_libdir = "${install_dir}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libcurl_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_libdir,
+      require => Autotools["curl"],
+      subscribe => Autotools["curl"],
     }
 
-    $original_dylib = "${install_dir}/lib/libcurl.4.dylib"
-    $rpath_dylib    = "@rpath/libcurl.4.dylib"
-
-    # Now to flip a bunch of bits so that things point to the proper
-    # locations.
-    exec { "change-id-libcurl":
-      command     => "install_name_tool -id ${rpath_dylib} ${original_dylib}",
-      refreshonly => true,
-      require     => Autotools["curl"],
-      subscribe   => Autotools["curl"],
-    }
-
-    exec { "change-curl-libcurl-dep":
-      command     => "install_name_tool -change ${original_dylib} ${rpath_dylib} ${install_dir}/bin/curl",
-      refreshonly => true,
-      require     => Autotools["curl"],
-      subscribe   => Autotools["curl"],
+    vagrant_substrate::staging::darwin_rpath { "${install_dir}/bin/curl":
+      change_install_names => {
+        libcurl => {
+          original => "${install_dir}/lib/libcurl.${lib_version}.dylib",
+          replacement => $lib_path,
+        }
+      },
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_libdir,
+      require => Autotools["curl"],
+      subscribe => Autotools["curl"],
     }
   }
 

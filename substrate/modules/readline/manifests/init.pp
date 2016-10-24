@@ -16,12 +16,14 @@ class readline(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "6"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -64,5 +66,21 @@ class readline(
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/libreadline.a",
     require          => Exec["untar-readline"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libreadline_paths = [
+      "${prefix}/lib/libreadline.dylib",
+      "${prefix}/lib/libreadline.${lib_version}.dylib",
+    ]
+    $lib_path = "@rpath/libreadline.${lib_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libreadline_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["readline"],
+      subscribe => Autotools["readline"],
+    }
   }
 }

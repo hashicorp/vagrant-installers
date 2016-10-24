@@ -16,17 +16,17 @@ class libssh2(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "1"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386",
-      "LDFLAGS" => "-arch i386 -Wl,-rpath,${install_dir}/lib",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
-    $extra_autotools_environment = {
-      "LD_RUN_PATH" => "${prefix}/lib",
-    }
+    $extra_autotools_environment = {}
   }
 
   # Merge our environments.
@@ -56,5 +56,21 @@ class libssh2(
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/.libs/libssh2.a",
     require          => Exec["untar-libssh2"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libssh2_paths = [
+      "${prefix}/lib/libssh2.dylib",
+      "${prefix}/lib/libssh2.${lib_version}.dylib",
+    ]
+    $lib_path = "@rpath/libssh2.${lib_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libssh2_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libssh2"],
+      subscribe => Autotools["libssh2"],
+    }
   }
 }

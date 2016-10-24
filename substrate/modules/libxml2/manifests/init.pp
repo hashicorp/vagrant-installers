@@ -16,12 +16,14 @@ class libxml2(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $lib_version = "2"
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -54,5 +56,23 @@ class libxml2(
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/.libs/libxml2.a",
     require          => Exec["untar-libxml2"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libxml2_paths = [
+      "${prefix}/lib/libxml2.dylib",
+      "${prefix}/lib/libxml2.${lib_version}.dylib",
+      "${prefix}/bin/xmlcatalog",
+      "${prefix}/bin/xmllint",
+    ]
+    $lib_path = "@rpath/libxml2.${lib_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libxml2_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libxml2"],
+      subscribe => Autotools["libxml2"],
+    }
   }
 }

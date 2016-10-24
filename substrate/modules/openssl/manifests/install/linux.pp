@@ -14,7 +14,7 @@ class openssl::install::linux {
     configure_sentinel => "${source_dir_path}/apps/CA.pl.bak",
     cwd                => $source_dir_path,
     environment        => $autotools_environment,
-    install_sentinel   => "${prefix}/lib/libssl.so",
+    install_sentinel   => "${prefix}/bin/openssl",
     make_notify        => $make_notify,
     make_sentinel      => "${source_dir_path}/libssl.a",
     require            => Exec["untar-openssl"],

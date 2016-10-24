@@ -14,13 +14,14 @@ class libffi (
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
+  $lib_version = "6"
 
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
-      "CFLAGS"  => "-arch i386 -arch x86_64",
-      "LDFLAGS" => "-arch i386 -arch x86_64",
+      "CFLAGS"  => "-arch x86_64",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {}
@@ -74,5 +75,21 @@ class libffi (
     ensure  => link,
     target  => "../lib/${source_dir_name}/include/ffitarget.h",
     require => Autotools["libffi"],
+  }
+
+  if $kernel == 'Darwin' {
+    $libffi_paths = [
+      "${prefix}/lib/libffi.dylib",
+      "${prefix}/lib/libffi.${lib_version}.dylib",
+    ]
+    $lib_path = "@rpath/libffi.${lib_version}.dylib"
+    $embedded_dir = "${prefix}/lib"
+
+    vagrant_substrate::staging::darwin_rpath { $libffi_paths:
+      new_lib_path => $lib_path,
+      remove_rpath => $embedded_dir,
+      require => Autotools["libffi"],
+      subscribe => Autotools["libffi"],
+    }
   }
 }
