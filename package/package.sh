@@ -56,5 +56,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     ${DIR}/support/package_darwin.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
 fi
 
+# FreeBSD
+if [[ "$OSTYPE" == "freebsd"* ]] || [[ "$OSTYPE" == "FreeBSD"* ]]; then
+    ${DIR}/support/package_freebsd.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
+fi
+
 # Clean up the temporary dir
 rm -rf ${SUBSTRATE_TMP_DIR} ${TMP_DIR}

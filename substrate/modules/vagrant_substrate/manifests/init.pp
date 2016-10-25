@@ -15,6 +15,7 @@ class vagrant_substrate(
       "i686"   => "386",
       "x86_64" => "amd64",
       "x64"    => "amd64",
+      "amd64"  => "amd64",
     }
   }
 

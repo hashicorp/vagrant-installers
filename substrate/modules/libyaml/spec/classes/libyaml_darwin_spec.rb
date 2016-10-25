@@ -18,4 +18,21 @@ describe "libyaml" do
       should contain_autotools("libyaml").with_environment(environment)
     end
   end
+
+  context "on FreeBSD" do
+    let(:facts) do
+      {
+        :operatingsystem => 'FreeBSD',
+        :test => true
+      }
+    end
+
+    it "should call autotools with proper environment" do
+      environment = {
+        "CFLAGS" => "-fPIC",
+      }
+
+      should contain_autotools("libyaml").with_environment(environment)
+    end
+  end
 end

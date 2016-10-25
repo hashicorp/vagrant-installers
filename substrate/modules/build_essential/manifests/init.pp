@@ -42,6 +42,13 @@ class build_essential {
       }
     }
 
+    'FreeBSD': {
+      package {
+        ['autotools', 'curl', 'gcc', 'perl5']:
+          ensure => installed,
+      }
+    }
+
     'Ubuntu': {
       package {
         ["build-essential", "autoconf", "automake", "chrpath", "libtool"]:

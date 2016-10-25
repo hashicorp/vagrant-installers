@@ -9,8 +9,8 @@ define download(
   $file_cache_dir,
 ) {
   case $kernel {
-    'Darwin', 'Linux': {
-      # On Mac and Linux we use wget
+    'Darwin', 'Linux', 'FreeBSD': {
+      # On Mac, Linux and FreeBSD we use wget
       wget::fetch { $name:
         source      => $source,
         destination => $destination,

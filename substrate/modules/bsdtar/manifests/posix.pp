@@ -10,12 +10,13 @@ class bsdtar::posix {
   $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.2.tar.gz"
   $lib_version = "13"
 
-  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex"
+  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat"
 
   # We don't currently support LZMA on Linux. TODO
   $real_configure_flags = $operatingsystem ? {
-    "Darwin" => $configure_flags,
-    default  => "${configure_flags} --without-lzmadec --without-lzma",
+    "Darwin"  => "$configure_flags --without-libregex",
+    "FreeBSD" => "$configure_flags --without-lzmadec --without-lzma",
+    default   => "${configure_flags} --without-libregex --without-lzmadec --without-lzma",
   }
 
 
@@ -25,6 +26,10 @@ class bsdtar::posix {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch x86_64",
       "LDFLAGS" => "-arch x86_64",
+    }
+  } elsif $operatingsystem == 'FreeBSD' {
+    $extra_autotools_environment = {
+      "CFLAGS"  => "-fPIC",
     }
   } else {
     $extra_autotools_environment = {}

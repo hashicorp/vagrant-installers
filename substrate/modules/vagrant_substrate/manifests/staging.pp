@@ -15,7 +15,7 @@ class vagrant_substrate::staging {
   # OS-Specific
   #------------------------------------------------------------------
   case $kernel {
-    'Darwin', 'Linux': { include vagrant_substrate::staging::posix }
+    'Darwin', 'Linux', 'FreeBSD': { include vagrant_substrate::staging::posix }
     'windows': { include vagrant_substrate::staging::windows }
     default:   { fail("Unknown operating system to stage.") }
   }

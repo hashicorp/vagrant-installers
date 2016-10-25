@@ -26,6 +26,10 @@ class zlib(
       "CFLAGS"  => "-arch x86_64",
       "LDFLAGS" => "-arch x86_64",
     }
+  } elsif $operatingsystem == 'FreeBSD' {
+    $extra_autotools_environment = {
+      "CFLAGS"  => "-fPIC",
+    }
   } else {
     $extra_autotools_environment = {}
   }

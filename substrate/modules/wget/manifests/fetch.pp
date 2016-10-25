@@ -21,5 +21,6 @@ define wget::fetch($source=$name, $destination) {
     command => "wget --no-check-certificate --output-document=${destination} ${source}",
     creates => $destination,
     timeout => 1200,
+    path    => $::path,
   }
 }
