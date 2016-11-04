@@ -40,7 +40,7 @@ class openssl::install::darwin {
   # can get the headers and all that properly into the final directory.
   # We replace the libraries it would install with our own universal
   # binaries later in the process.
-  autotools { "openssl-64":
+  autotools { "openssl":
     configure_file     => "./Configure",
     configure_flags    => "--prefix=${prefix} shared darwin64-x86_64-cc",
     configure_sentinel => "${openssl_64_path}/apps/CA.pl.bak",
@@ -65,8 +65,8 @@ class openssl::install::darwin {
   vagrant_substrate::staging::darwin_rpath { [$libcrypto_path, $libcrypto_stub_path]:
     new_lib_path => $new_crypto_rpath,
     remove_rpath => $embedded_libdir,
-    require => Autotools["openssl-64"],
-    subscribe => Autotools["openssl-64"],
+    require => Autotools["openssl"],
+    subscribe => Autotools["openssl"],
   }
 
   vagrant_substrate::staging::darwin_rpath { $libssl_path:
@@ -78,8 +78,8 @@ class openssl::install::darwin {
     },
     new_lib_path => $new_ssl_rpath,
     remove_rpath => $embedded_libdir,
-    require => Autotools["openssl-64"],
-    subscribe => Autotools["openssl-64"],
+    require => Autotools["openssl"],
+    subscribe => Autotools["openssl"],
   }
 
   vagrant_substrate::staging::darwin_rpath { $libssl_stub_path:
@@ -91,8 +91,8 @@ class openssl::install::darwin {
     },
     new_lib_path => $new_ssl_rpath,
     remove_rpath => $embedded_libdir,
-    require => Autotools["openssl-64"],
-    subscribe => Autotools["openssl-64"],
+    require => Autotools["openssl"],
+    subscribe => Autotools["openssl"],
   }
 
 
@@ -109,7 +109,7 @@ class openssl::install::darwin {
     },
     new_lib_path => $openssl_path,
     remove_rpath => $embedded_libdir,
-    require => Autotools["openssl-64"],
-    subscribe => Autotools["openssl-64"],
+    require => Autotools["openssl"],
+    subscribe => Autotools["openssl"],
   }
 }

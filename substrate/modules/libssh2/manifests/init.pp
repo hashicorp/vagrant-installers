@@ -55,7 +55,10 @@ class libssh2(
     install_sentinel => "${prefix}/lib/libssh2.a",
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/.libs/libssh2.a",
-    require          => Exec["untar-libssh2"],
+    require          => [
+      Exec["untar-libssh2"],
+      Autotools["openssl"],
+    ],
   }
 
   if $kernel == 'Darwin' {
