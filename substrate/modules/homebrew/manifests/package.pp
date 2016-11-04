@@ -16,6 +16,7 @@ define homebrew::package(
     creates     => $creates,
     environment => "HOME=/Users/${user}",
     user        => $user,
+    timeout     => 1200
   }
 
   if $link {
