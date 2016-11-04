@@ -24,7 +24,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 # from a filesystem that doesn't support that (VMWare shared folders),
 # then Puppet will fail.
 TMP_CONFIG_DIR=$(mktemp -d -t vagrant-installer.XXXXXX)
-cp -R ${DIR}/config/* ${TMP_CONFIG_DIR}
+cp -R "${DIR}/config/"* ${TMP_CONFIG_DIR}
 
 # Setup the output directory
 mkdir -p $1
@@ -33,9 +33,17 @@ mkdir -p $1
 export FACTER_param_homebrew_user=${SUDO_USER}
 export FACTER_param_output_dir=$(cd $1; pwd)
 
+export TERM="vt100"
+export LANG="en_US.UTF-8"
+
 # Invoke Puppet
-cd $DIR
+cd "${DIR}"
 puppet apply \
   --confdir=${TMP_CONFIG_DIR} \
-  --modulepath=${DIR}/modules \
-  ${DIR}/manifests/init.pp
+  --modulepath="${DIR}/modules" \
+  --detailed-exitcodes \
+  "${DIR}/manifests/init.pp"
+
+puppet_result=$?
+(test $puppet_result -eq 0 || test $puppet_result -eq 2) && exit 0
+exit $puppet_result

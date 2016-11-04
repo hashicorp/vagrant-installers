@@ -30,10 +30,17 @@ $arguments = @(
     "apply",
     "--confdir=$TmpDir",
     "--modulepath=$($Dir)/modules",
+    "--detailed-exitcodes",
     "$($Dir)/manifests/init.pp"
 )
 
 $path = "C:\Program Files (x86)\Puppet Labs\Puppet\bin\puppet.bat"
 
 Set-Location $Dir
-Start-Process -NoNewWindow -Wait -ArgumentList $arguments -FilePath $path
+$result = Start-Process -NoNewWindow -Wait -ArgumentList $arguments -FilePath $path
+
+if($result.ExitCode -ne 0 -And $result.ExitCode -ne 2){
+  Exit $result.ExitCode
+} else {
+  Exit 0
+}
