@@ -25,6 +25,11 @@ define vagrant_substrate::staging::darwin_rpath(
     { target_file_path => $target_file_path }
   )
 
+  exec { "change-${name}-rpath":
+    command => "install_name_tool -rpath ${remove_rpath} ${add_rpath[0]} ${target_file_path}",
+    onlyif => "otool -l ${target_file_path} | grep 'path ${remove_rpath}'"
+  }
+
   $add_rpath_stringify = join($add_rpath, "<${target_file_path}>,")
   $hacky_add_rpath = split("${add_rpath_stringify}<${target_file_path}>", ",")
   vagrant_substrate::staging::darwin_add_rpath { $hacky_add_rpath:
