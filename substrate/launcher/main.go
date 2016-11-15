@@ -71,7 +71,7 @@ func main() {
 		log.Printf("launcher: gemPaths (initial) = %#v", gemPaths)
 	}
 	for i := 0; i < len(gemPaths); i++ {
-		fullPath := filepath.Join(gemPaths[i], "lib", "vagrant", "pre-rubygems.rb")
+		fullPath := filepath.Join(gemPaths[i], "lib", "vagrant", "version.rb")
 		if _, err := os.Stat(fullPath); err != nil {
 			if debug {
 				log.Printf("launcher: bad gemPath += %s", fullPath)
@@ -193,7 +193,7 @@ func main() {
 	cmd := exec.Command(rubyPath)
 	cmd.Args = make([]string, len(os.Args)+1)
 	cmd.Args[0] = "ruby"
-	cmd.Args[1] = filepath.Join(gemPath, "lib", "vagrant", "pre-rubygems.rb")
+	cmd.Args[1] = vagrantExecutable
 	copy(cmd.Args[2:], os.Args[1:])
 	if debug {
 		log.Printf("launcher: rubyPath = %s", rubyPath)
