@@ -71,10 +71,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     export CONFIGURE_ARGS="-Wl,-rpath,${EMBEDDED_DIR}/lib"
 fi
 
-${GEM_COMMAND} install vagrant.gem --no-ri --no-rdoc
+${GEM_COMMAND} install vagrant.gem --no-document
 
 # Install extensions
-${GEM_COMMAND} install vagrant-share --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+${GEM_COMMAND} install vagrant-share --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
 
 # Setup the system plugins
 cat <<EOF >${EMBEDDED_DIR}/plugins.json
