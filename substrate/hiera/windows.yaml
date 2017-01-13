@@ -1,2 +1,3 @@
 ---
+installation_dir: "C:\\HashiCorp\\Vagrant"
 vagrant_substrate::build_dir: "C:\\vagrant-substrate"

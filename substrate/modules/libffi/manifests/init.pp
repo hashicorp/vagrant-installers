@@ -92,4 +92,15 @@ class libffi (
       subscribe => Autotools["libffi"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libffi_paths = [
+      "${prefix}/lib/libffi.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libffi_paths:
+      require => Autotools["libffi"],
+      subscribe => Autotools["libffi"],
+    }
+  }
 }

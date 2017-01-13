@@ -83,4 +83,15 @@ class readline(
       subscribe => Autotools["readline"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libreadline_paths = [
+      "${prefix}/lib/libreadline.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libreadline_paths:
+      require => Autotools["readline"],
+      subscribe => Autotools["readline"],
+    }
+  }
 }

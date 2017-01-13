@@ -23,7 +23,6 @@ class curl::posix {
     }
   } else {
     $extra_autotools_environment = {
-      "LD_RUN_PATH" => "${install_dir}/lib",
     }
   }
 
@@ -88,11 +87,14 @@ class curl::posix {
 
   if $kernel == 'Linux' {
     # We need to clean up the rpaths...
-    exec { "curl-rpath":
-      command => "chrpath -r '\${ORIGIN}/../lib' ${install_dir}/bin/curl",
-      refreshonly => true,
-      require     => Autotools["curl"],
-      subscribe   => Autotools["curl"],
+    $libcurl_paths = [
+      "${install_dir}/bin/curl",
+      "${install_dir}/lib/libcurl.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libcurl_paths:
+      require => Autotools["curl"],
+      subscribe => Autotools["curl"],
     }
   }
 }

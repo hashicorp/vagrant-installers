@@ -15,6 +15,7 @@ class ruby::source(
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
+  $installation_dir = hiera("installation_dir")
 
   $lib_short_version = "2.2"
   $lib_long_version = "2.2.0"
@@ -133,5 +134,35 @@ class ruby::source(
       require     => Autotools["ruby"],
       subscribe   => Autotools["ruby"],
     }
+  }
+
+  if $kernel == 'Linux' {
+
+    vagrant_substrate::staging::linux_chrpath{ "${prefix}/bin/ruby":
+      require => Autotools["ruby"],
+      subscribe => Autotools["ruby"],
+    }
+
+    vagrant_substrate::staging::linux_chrpath{ "${prefix}/lib/libruby.so":
+      new_rpath => '$ORIGIN/../lib',
+      require => Autotools["ruby"],
+      subscribe => Autotools["ruby"],
+    }
+
+    exec { "delete-mkmf-logs":
+      command => "find ${prefix}/lib -type f -name '*mkmf.log' -exec rm {} \\;",
+      subscribe => Autotools["ruby"],
+      refreshonly => true,
+    }
+
+    $embedded_include = '/vagrant-substrate/cache/ruby-2.2.5/include'
+    $replacement_include = "${installation_dir}/embedded/include/ruby-2.2.0"
+    exec { "adjust-ruby-include":
+      command => "grep -l -I -R '${embedded_include}' '${prefix}' | xargs sed -i 's@${embedded_include}@${replacement_include}@g'",
+      subscribe => Autotools["ruby"],
+      refreshonly => true,
+      onlyif => "grep -l -I -R '${embedded_include}' '${prefix}'",
+    }
+
   }
 }

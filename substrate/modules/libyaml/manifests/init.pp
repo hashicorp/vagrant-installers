@@ -73,4 +73,15 @@ class libyaml(
       subscribe => Autotools["libyaml"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libyaml_paths = [
+      "${prefix}/lib/libyaml.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libyaml_paths:
+      require => Autotools["libyaml"],
+      subscribe => Autotools["libyaml"],
+    }
+  }
 }

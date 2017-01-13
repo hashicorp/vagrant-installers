@@ -10,13 +10,13 @@ class zlib(
 ) {
   require build_essential
 
-  $source_filename  = "zlib-1.2.8.tar.gz"
+  $source_filename  = "zlib-1.2.11.tar.gz"
   $source_url = "http://zlib.net/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
-  $lib_version = "1.2.8"
+  $lib_version = "1.2.11"
   $lib_short_version = "1"
 
   # Determine if we have an extra environmental variables we need to set
@@ -72,6 +72,17 @@ class zlib(
     vagrant_substrate::staging::darwin_rpath { $libz_paths:
       new_lib_path => $lib_path,
       remove_rpath => $embedded_dir,
+      require => Autotools["libz"],
+      subscribe => Autotools["libz"],
+    }
+  }
+
+  if $kernel == 'Linux' {
+    $libz_paths = [
+      "${prefix}/lib/libz.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libz_paths:
       require => Autotools["libz"],
       subscribe => Autotools["libz"],
     }

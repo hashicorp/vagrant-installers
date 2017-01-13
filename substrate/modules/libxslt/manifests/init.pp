@@ -74,4 +74,16 @@ class libxslt(
       subscribe => Autotools["libxslt"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libxslt_paths = [
+      "${prefix}/bin/xsltproc",
+      "${prefix}/lib/libxslt.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libxslt_paths:
+      require => Autotools["libxslt"],
+      subscribe => Autotools["libxslt"],
+    }
+  }
 }
