@@ -1,3 +1,4 @@
 ---
+installation_dir: "/opt/vagrant"
 vagrant_substrate::build_dir: "/vagrant-substrate"
 vagrant_substrate::installer_version: "2"

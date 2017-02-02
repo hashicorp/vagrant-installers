@@ -93,4 +93,17 @@ class libiconv(
       subscribe => Autotools["libiconv"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libiconv_paths = [
+      "${prefix}/bin/iconv",
+      "${prefix}/lib/libiconv.so",
+      "${prefix}/lib/libcharset.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libiconv_paths:
+      require => Autotools["libiconv"],
+      subscribe => Autotools["libiconv"],
+    }
+  }
 }

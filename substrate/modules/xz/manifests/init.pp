@@ -73,4 +73,15 @@ class xz(
       subscribe => Autotools["xz"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libxz_paths = [
+      "${prefix}/lib/liblzma.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libxz_paths:
+      require => Autotools["xz"],
+      subscribe => Autotools["xz"],
+    }
+  }
 }

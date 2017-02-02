@@ -49,7 +49,7 @@ class libxml2(
   }
 
   autotools { "libxml2":
-    configure_flags  => "--prefix=${prefix} --disable-dependency-tracking --without-python --without-lzma",
+    configure_flags  => "--prefix=${prefix} --disable-dependency-tracking --without-python --without-lzma --with-zlib=${prefix}",
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/lib/libxml2.a",
@@ -71,6 +71,19 @@ class libxml2(
     vagrant_substrate::staging::darwin_rpath { $libxml2_paths:
       new_lib_path => $lib_path,
       remove_rpath => $embedded_dir,
+      require => Autotools["libxml2"],
+      subscribe => Autotools["libxml2"],
+    }
+  }
+
+  if $kernel == 'Linux' {
+    $libxml2_paths = [
+      "${prefix}/lib/libxml2.so",
+      "${prefix}/bin/xmlcatalog",
+      "${prefix}/bin/xmllint",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libxml2_paths:
       require => Autotools["libxml2"],
       subscribe => Autotools["libxml2"],
     }

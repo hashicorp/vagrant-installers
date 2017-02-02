@@ -76,4 +76,15 @@ class libssh2(
       subscribe => Autotools["libssh2"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libssh2_paths = [
+      "${prefix}/lib/libssh2.so",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libssh2_paths:
+      require => Autotools["libssh2"],
+      subscribe => Autotools["libssh2"],
+    }
+  }
 }

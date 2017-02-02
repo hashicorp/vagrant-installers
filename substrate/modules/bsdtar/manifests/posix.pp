@@ -113,4 +113,17 @@ class bsdtar::posix {
       subscribe => Autotools["libarchive"],
     }
   }
+
+  if $kernel == 'Linux' {
+    $libarchive_paths = [
+      "${install_dir}/lib/libarchive.so",
+      "${install_dir}/bin/bsdtar",
+      "${install_dir}/bin/bsdcpio",
+    ]
+
+    vagrant_substrate::staging::linux_chrpath{ $libarchive_paths:
+      require => Autotools["libarchive"],
+      subscribe => Autotools["libarchive"],
+    }
+  }
 }

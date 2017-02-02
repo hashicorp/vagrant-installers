@@ -9,23 +9,17 @@ class vagrant_substrate::staging::posix {
   #------------------------------------------------------------------
   # Calculate variables based on operating system
   #------------------------------------------------------------------
-  $extra_autotools_ldflags = $operatingsystem ? {
-    'Darwin' => "",
-    default  => '',
+  $extra_autotools_ldflags = $kernel ? {
+    "Darwin" => "",
+    "Linux" => "-Wl,-rpath=XORIGIN/../lib:${embedded_dir}/lib",
+    default  => "",
   }
 
   $default_autotools_environment = {
-    "CFLAGS"                   =>
-      "-I${embedded_dir}/include",
-    "LDFLAGS"                  =>
-      "-L${embedded_dir}/lib ${extra_autotools_ldflags}",
+    "CFLAGS" => "-I${embedded_dir}/include",
+    "LDFLAGS" => "-L${embedded_dir}/lib ${extra_autotools_ldflags}",
     "MACOSX_DEPLOYMENT_TARGET" => "10.5",
-  }
-
-  $default_curl_autotools_environment = {
-    "CPPFLAGS"                 => "-I${embedded_dir}/include",
-    "LDFLAGS"                  => "-L${embedded_dir}/lib ${extra_autotools_ldflags}",
-    "MACOSX_DEPLOYMENT_TARGET" => "10.5",
+    "LD_RPATH" => "${embedded_dir}/lib:XORIGIN/../lib",
   }
 
   if $operatingsystem == 'Darwin' {
@@ -78,11 +72,9 @@ class vagrant_substrate::staging::posix {
     }
   } elsif $kernel == 'Linux' {
     $bsdtar_autotools_environment = {
-      "LD_RUN_PATH" => '$ORIGIN/../lib',
     }
 
     $ruby_autotools_environment = {
-      "LD_RUN_PATH" => '\$ORIGIN/../lib',
     }
   }
 
@@ -187,10 +179,11 @@ class vagrant_substrate::staging::posix {
 
   class { "curl":
     autotools_environment => autotools_merge_environments(
-      $default_curl_autotools_environment, $curl_autotools_environment),
+      $default_autotools_environment, $curl_autotools_environment),
     file_cache_dir        => $cache_dir,
     install_dir           => $embedded_dir,
     require               => [
+      Class["libssh2"],
       Class["openssl"],
       Class["zlib"],
     ],
