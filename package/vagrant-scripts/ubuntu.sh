@@ -12,4 +12,5 @@ ln -s /var/lib/gems/1.8/bin/fpm /usr/local/bin/fpm
 chmod 755 /vagrant/package/package.sh
 
 /vagrant/package/package.sh /vagrant/substrate-assets/substrate_ubuntu_$(uname -m).zip master
+mkdir -p /vagrant/pkg
 cp *.deb /vagrant/pkg/

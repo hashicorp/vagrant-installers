@@ -18,4 +18,5 @@ mkdir -p /vagrant/substrate-assets
 chmod 755 /vagrant/package/package.sh
 
 /vagrant/package/package.sh /vagrant/substrate-assets/substrate_centos_$(uname -m).zip master
+mkdir -p /vagrant/pkg
 cp *.rpm /vagrant/pkg/

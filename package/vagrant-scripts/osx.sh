@@ -8,4 +8,5 @@ gem install puppet -v '~> 3.0' --no-ri --no-rdoc
 gem install fpm -v '~> 0.4.0' --no-ri --no-rdoc
 chmod 755 /vagrant/package/package.sh
 /vagrant/package/package.sh /vagrant/substrate-assets/substrate_darwin_x86_64.zip master
+mkdir -p /vagrant/pkg
 cp *.dmg /vagrant/pkg
