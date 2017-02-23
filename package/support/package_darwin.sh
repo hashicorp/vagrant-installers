@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
@@ -28,9 +28,9 @@ echo "Darwin staging dir: ${STAGING_DIR}"
 #-------------------------------------------------------------------------
 echo "Copying installer resources..."
 mkdir -p ${STAGING_DIR}/resources
-cp ${DIR}/darwin/background.png ${STAGING_DIR}/background.png
-cp ${DIR}/darwin/welcome.html ${STAGING_DIR}/welcome.html
-cp ${DIR}/darwin/license.html ${STAGING_DIR}/license.html
+cp "${DIR}/darwin/background.png" ${STAGING_DIR}/background.png
+cp "${DIR}/darwin/welcome.html" ${STAGING_DIR}/welcome.html
+cp "${DIR}/darwin/license.html" ${STAGING_DIR}/license.html
 
 #-------------------------------------------------------------------------
 # Scripts
@@ -113,24 +113,33 @@ EOF
 
 # Build the actual installer.
 echo "Building Vagrant.pkg..."
-productbuild \
-    --distribution ${STAGING_DIR}/vagrant.dist \
-    --resources ${STAGING_DIR}/resources \
-    --package-path ${STAGING_DIR} \
-    --timestamp=none \
-    --sign "Developer ID Installer: Mitchell Hashimoto" \
-    ${STAGING_DIR}/Vagrant.pkg
-
+if [ "${DISABLE_DMG_SIGN}" == "1" ]
+then
+    productbuild \
+        --distribution ${STAGING_DIR}/vagrant.dist \
+        --resources ${STAGING_DIR}/resources \
+        --package-path ${STAGING_DIR} \
+        --timestamp=none \
+        ${STAGING_DIR}/Vagrant.pkg
+else
+    productbuild \
+        --distribution ${STAGING_DIR}/vagrant.dist \
+        --resources ${STAGING_DIR}/resources \
+        --package-path ${STAGING_DIR} \
+        --timestamp=none \
+        --sign "Developer ID Installer: Mitchell Hashimoto" \
+        ${STAGING_DIR}/Vagrant.pkg
+fi
 #-------------------------------------------------------------------------
 # DMG
 #-------------------------------------------------------------------------
 # Stage the files
 mkdir -p ${STAGING_DIR}/dmg
 cp ${STAGING_DIR}/Vagrant.pkg ${STAGING_DIR}/dmg/Vagrant.pkg
-cp ${DIR}/darwin/uninstall.tool ${STAGING_DIR}/dmg/uninstall.tool
+cp "${DIR}/darwin/uninstall.tool" ${STAGING_DIR}/dmg/uninstall.tool
 chmod +x ${STAGING_DIR}/dmg/uninstall.tool
 mkdir ${STAGING_DIR}/dmg/.support
-cp ${DIR}/darwin/background_installer.png ${STAGING_DIR}/dmg/.support/background.png
+cp "${DIR}/darwin/background_installer.png" ${STAGING_DIR}/dmg/.support/background.png
 
 # Create the temporary DMG
 echo "Creating temporary DMG..."

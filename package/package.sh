@@ -31,10 +31,13 @@ cp $SUBSTRATE_PATH ${SUBSTRATE_TMP_DIR}/substrate.zip
 pushd $SUBSTRATE_TMP_DIR
 unzip substrate.zip
 popd
-SUBSTRATE_DIR=$(cd ${SUBSTRATE_TMP_DIR}/substrate; pwd)
+rm -rf /opt/vagrant
+mkdir -p /opt/vagrant
+mv ${SUBSTRATE_TMP_DIR}/substrate/* /opt/vagrant/
+SUBSTRATE_DIR="/opt/vagrant"
 
 # Install Vagrant
-${DIR}/support/install_vagrant.sh \
+"${DIR}/support/install_vagrant.sh" \
     ${SUBSTRATE_DIR} ${VAGRANT_REVISION} ${TMPDIR}/vagrant_version
 VAGRANT_VERSION=$(cat ${TMPDIR}/vagrant_version)
 
@@ -53,7 +56,7 @@ fi
 
 # Darwin
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    ${DIR}/support/package_darwin.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
+    "${DIR}/support/package_darwin.sh" ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
 fi
 
 # Clean up the temporary dir
