@@ -24,6 +24,11 @@ Vagrant.configure("2") do |config|
       provision_script = File.join(script_base, "#{script_name}.#{script_ext}")
 
       box_config.vm.box = "#{box_prefix}/#{box_basename}"
+      if box_basename.include?('osx')
+        box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
+                                                 "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
+                                                 "net.inet.tcp.autosndbufmax=33554432\n"
+      end
       box_config.vm.provision "shell", :path => provision_script
       if script_name.start_with?('win')
         box_config.vm.communicator = 'winrm'
@@ -35,11 +40,6 @@ Vagrant.configure("2") do |config|
           v.vmx["numvcpus"] = "2"
           v.vmx["cpuid.coresPerSocket"] = "1"
         end
-      end
-      if box_basename.include?('osx')
-        box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
-                                                 "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
-                                                 "net.inet.tcp.autosndbufmax=33554432\n"
       end
     end
   end
