@@ -36,6 +36,11 @@ Vagrant.configure("2") do |config|
           v.vmx["cpuid.coresPerSocket"] = "1"
         end
       end
+      if box_basename.include?('osx')
+        box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
+                                                 "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
+                                                 "net.inet.tcp.autosndbufmax=33554432\n"
+      end
     end
   end
 end
