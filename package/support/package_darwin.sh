@@ -113,13 +113,23 @@ EOF
 
 # Build the actual installer.
 echo "Building Vagrant.pkg..."
-if [ "${DISABLE_DMG_SIGN}" == "1" ]
+
+# Check is signing certificate is available. Install
+# and sign if found.
+if [ -f /vagrant/CodeSigning.p12 ]
 then
+    security import /vagrant/CodeSigning.p12 -T /usr/bin/codesign
+    if [ $? -ne 0 ]
+    then
+        echo "Failed to install code signing certificate!"
+        exit 1
+    fi
     productbuild \
         --distribution ${STAGING_DIR}/vagrant.dist \
         --resources ${STAGING_DIR}/resources \
         --package-path ${STAGING_DIR} \
         --timestamp=none \
+        --sign "Developer ID Installer: Mitchell Hashimoto" \
         ${STAGING_DIR}/Vagrant.pkg
 else
     productbuild \
@@ -127,7 +137,6 @@ else
         --resources ${STAGING_DIR}/resources \
         --package-path ${STAGING_DIR} \
         --timestamp=none \
-        --sign "Developer ID Installer: Mitchell Hashimoto" \
         ${STAGING_DIR}/Vagrant.pkg
 fi
 #-------------------------------------------------------------------------
