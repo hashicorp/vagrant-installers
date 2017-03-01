@@ -21,7 +21,7 @@ script_env_vars = Hash[
     if key.start_with?('VAGRANT_INSTALLER_')
       [key.sub('VAGRANT_INSTALLER_', ''), value]
     end
-  end
+  end.compact
 ]
 
 Vagrant.configure("2") do |config|
