@@ -119,15 +119,15 @@ if(!$SubstrateExists){
 Write-Host "Starting package build"
 Set-Location -Path C:\vagrant\pkg
 
-$SignKeyPath = "C:\vagrant\CodeSigning.p12"
+$SignKeyPath = "C:\vagrant\Win_CodeSigning.p12"
 $SignKeyExists = Test-Path -LiteralPath $SignKeyPath
 if($SignKeyExists){
-  if(!$env.SignKeyPassword){
+  if(!$env:SignKeyPassword){
     Write-Host "Error: No password provided for code signing key!"
     exit 1
   }
   savepowershellfromitself
-  Invoke-Expression "C:\vagrant\package\package.ps1 -SubstratePath ${SubstratePath} -VagrantRevision master -SignKey ${SignKeyPath} -SignKeyPassword ${env.SignKeyPassword}"
+  Invoke-Expression "C:\vagrant\package\package.ps1 -SubstratePath ${SubstratePath} -VagrantRevision master -SignKey ${SignKeyPath} -SignKeyPassword ${env:SignKeyPassword}"
 } else {
   savepowershellfromitself
   Invoke-Expression "C:\vagrant\package\package.ps1 -SubstratePath ${SubstratePath} -VagrantRevision master"
