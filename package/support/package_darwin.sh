@@ -23,10 +23,17 @@ STAGING_DIR=$(cd package-staging; pwd)
 pushd $STAGING_DIR
 echo "Darwin staging dir: ${STAGING_DIR}"
 
-# Set identity used for code signing
-SIGN_IDENTITY=${VAGRANT_CODESIGN_IDENTITY:-Developer ID Installer: Mitchell Hashimoto}
-SIGN_CERT_PATH=${VAGRANT_CODESIGN_CERT_PATH:-/vagrant/MacOS_CodeSigning.p12}
+# Set information used for package and code signing
 
+PKG_SIGN_IDENTITY=${VAGRANT_PACKAGE_SIGN_IDENTITY:-Developer ID Installer: Mitchell Hashimoto}
+PKG_SIGN_CERT_PATH=${VAGRANT_PACKAGE_SIGN_CERT_PATH:-/vagrant/MacOS_PkgSigning.cert}
+PKG_SIGN_KEY_PATH=${VAGRANT_PACKAGE_SIGN_KEY_PATH:-/vagrant/MacOS_PkgSigning.key}
+
+CODE_SIGN_IDENTITY=${VAGRANT_CODE_SIGN_IDENTITY:-none}
+CODE_SIGN_CERT_PATH=${VAGRANT_CODE_SIGN_CERT_PATH:-none}
+CODE_SIGN_KEY_PATH=${VAGRANT_CODE_SIGN_KEY_PATH:-none}
+
+SIGN_KEYCHAIN=${VAGRANT_SIGN_KEYCHAIN:-/Library/Keychains/System.keychain}
 #-------------------------------------------------------------------------
 # Resources
 #-------------------------------------------------------------------------
@@ -64,16 +71,30 @@ exit 0
 EOF
 chmod 0755 ${STAGING_DIR}/scripts/postinstall
 
-# Install and enable signing if available
-if [ -f "${SIGN_CERT_PATH}" ]
+# Install and enable package signing if available
+if [[ -f "${PKG_SIGN_CERT_PATH}" && -f "${PKG_SIGN_KEY_PATH}" ]]
 then
-    security import "${SIGN_CERT_PATH}" -T /usr/bin/codesign
-    if [ $? -ne 0 ]
-    then
-        echo "Failed to install code signing certificate!"
-        exit 1
-    fi
+    security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild
+    security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild
+    SIGN_PKG="1"
+fi
+
+# Install and enable code signing if available
+if [[ -f "${CODE_SIGN_CERT_PATH}" && -f "${CODE_SIGN_KEY_PATH}" ]]
+then
+    security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign
+    security import "${CODE_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign
     SIGN_CODE="1"
+fi
+
+#-------------------------------------------------------------------------
+# Code sign
+#-------------------------------------------------------------------------
+# Sign all executables within package
+if [[ "${SIGN_CODE}" -eq "1" ]]
+then
+    echo "Signing all substrate executables..."
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
 fi
 
 #-------------------------------------------------------------------------
@@ -81,11 +102,8 @@ fi
 #-------------------------------------------------------------------------
 # Create the component package using pkgbuild. The component package
 # contains the raw file structure that is installed via the installer package.
-if [ "${SIGN_CODE}" -eq "1" ]
+if [[ "${SIGN_PKG}" -eq "1" ]]
 then
-    echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign -s "${SIGN_IDENTITY}" {} \;
-
     echo "Building core.pkg..."
     pkgbuild \
         --root ${SUBSTRATE_DIR} \
@@ -94,7 +112,7 @@ then
         --install-location "/opt/vagrant" \
         --scripts ${STAGING_DIR}/scripts \
         --timestamp=none \
-        --sign "${SIGN_IDENTITY}" \
+        --sign "${PKG_SIGN_IDENTITY}" \
         ${STAGING_DIR}/core.pkg
 else
     echo "Building core.pkg..."
@@ -148,14 +166,14 @@ echo "Building Vagrant.pkg..."
 
 # Check is signing certificate is available. Install
 # and sign if found.
-if [ "${SIGN_CODE}" -eq "1" ]
+if [[ "${SIGN_PKG}" -eq "1" ]]
 then
     productbuild \
         --distribution ${STAGING_DIR}/vagrant.dist \
         --resources ${STAGING_DIR}/resources \
         --package-path ${STAGING_DIR} \
         --timestamp=none \
-        --sign "${SIGN_IDENTITY}" \
+        --sign "${PKG_SIGN_IDENTITY}" \
         ${STAGING_DIR}/Vagrant.pkg
 else
     productbuild \
