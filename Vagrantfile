@@ -16,6 +16,14 @@ build_type = ENV.fetch('VAGRANT_BUILD_TYPE', 'substrate')
 box_prefix = ENV.fetch('VAGRANT_BUILD_BOX_PREFIX', 'spox')
 script_base = File.join(build_type, "vagrant-scripts")
 
+script_env_vars = Hash[
+  ENV.map do |key, value|
+    if key.start_with?('VAGRANT_INSTALLER_')
+      [key.sub('VAGRANT_INSTALLER_', ''), value]
+    end
+  end
+]
+
 Vagrant.configure("2") do |config|
   build_boxes.each do |box_basename|
     config.vm.define(box_basename) do |box_config|
@@ -29,7 +37,7 @@ Vagrant.configure("2") do |config|
                                                  "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
                                                  "net.inet.tcp.autosndbufmax=33554432\n"
       end
-      box_config.vm.provision "shell", :path => provision_script
+      box_config.vm.provision "shell", path: provision_script, env: script_env_vars
       if script_name.start_with?('win')
         box_config.vm.communicator = 'winrm'
       end
