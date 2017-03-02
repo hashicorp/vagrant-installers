@@ -210,8 +210,15 @@ echo "Mounting and configuring temp DMG..."
 DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "${STAGING_DIR}/temp.dmg" | \
          egrep '^/dev/' | sed 1q | awk '{print $1}')
 
-# The magic to setup the DMG for us
-echo '
+# This may fail a few times trying to setup so retry on failure
+set +e
+attempts=0
+result=1
+while [[ "${result}" -ne "0" ]]
+do
+
+    # The magic to setup the DMG for us
+    echo '
    tell application "Finder"
      tell disk "'Vagrant'"
            open
@@ -230,7 +237,21 @@ echo '
            delay 5
      end tell
    end tell
-' | sudo -u ${SUDO_USER:-$USER} osascript
+' | osascript
+    result=$?
+
+    if [[ "${result}" -ne "0" ]]
+    then
+        attempts=$(($attempts + 1))
+        if [[ "${attempts}" -gt "10" ]]
+        then
+            echo "Failed to setup Finder for DMG creation!"
+            exit 1
+        fi
+        sleep 5
+    fi
+done
+set -e
 
 # Set the permissions and generate the final DMG
 echo "Creating final DMG..."
