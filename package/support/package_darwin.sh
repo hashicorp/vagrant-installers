@@ -264,3 +264,16 @@ hdiutil convert \
     -imagekey zlib-level=9 \
     -o "${OUTPUT_PATH}"
 rm -f ${STAGING_DIR}/temp.dmg
+
+if [[ "${SIGN_PKG}" -ne "1" ]]
+then
+    set +x
+    echo
+    echo "!!!!!!!!!!!! WARNING !!!!!!!!!!!!"
+    echo "! Vagrant installer package is  !"
+    echo "! NOT signed. Rebuild using the !"
+    echo "! signing key for release build !"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo
+    set -x
+fi
