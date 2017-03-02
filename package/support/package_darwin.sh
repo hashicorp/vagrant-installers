@@ -74,8 +74,8 @@ chmod 0755 ${STAGING_DIR}/scripts/postinstall
 # Install and enable package signing if available
 if [[ -f "${PKG_SIGN_CERT_PATH}" && -f "${PKG_SIGN_KEY_PATH}" ]]
 then
-    security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild
-    security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild
+    security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
+    security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
     SIGN_PKG="1"
 fi
 
@@ -230,7 +230,7 @@ echo '
            delay 5
      end tell
    end tell
-' | osascript
+' | sudo -u ${SUDO_USER:-$USER} osascript
 
 # Set the permissions and generate the final DMG
 echo "Creating final DMG..."
