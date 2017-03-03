@@ -14,7 +14,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
-OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}"
+OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_x86_64.dmg"
 
 # Work in a temporary directory
 rm -rf package-staging
@@ -191,79 +191,9 @@ mkdir -p ${STAGING_DIR}/dmg
 cp ${STAGING_DIR}/Vagrant.pkg ${STAGING_DIR}/dmg/Vagrant.pkg
 cp "${DIR}/darwin/uninstall.tool" ${STAGING_DIR}/dmg/uninstall.tool
 chmod +x ${STAGING_DIR}/dmg/uninstall.tool
-mkdir ${STAGING_DIR}/dmg/.support
-cp "${DIR}/darwin/background_installer.png" ${STAGING_DIR}/dmg/.support/background.png
 
-# Create the temporary DMG
-echo "Creating temporary DMG..."
-hdiutil create \
-    -srcfolder "${STAGING_DIR}/dmg" \
-    -volname "Vagrant" \
-    -fs HFS+ \
-    -fsargs "-c c=64,a=16,e=16" \
-    -format UDRW \
-    -size 102400k \
-    ${STAGING_DIR}/temp.dmg
-
-# Attach the temporary DMG and read the device
-echo "Mounting and configuring temp DMG..."
-DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "${STAGING_DIR}/temp.dmg" | \
-         egrep '^/dev/' | sed 1q | awk '{print $1}')
-
-# This may fail a few times trying to setup so retry on failure
-set +e
-attempts=0
-result=1
-while [[ "${result}" -ne "0" ]]
-do
-
-    # The magic to setup the DMG for us
-    echo '
-   tell application "Finder"
-     tell disk "'Vagrant'"
-           open
-           set current view of container window to icon view
-           set toolbar visible of container window to false
-           set statusbar visible of container window to false
-           set the bounds of container window to {100, 100, 605, 540}
-           set theViewOptions to the icon view options of container window
-           set arrangement of theViewOptions to not arranged
-           set icon size of theViewOptions to 72
-           set background picture of theViewOptions to file ".support:'background.png'"
-           delay 5
-           set position of item "'Vagrant.pkg'" of container window to {420, 60}
-           set position of item "uninstall.tool" of container window to {420, 220}
-           update without registering applications
-           delay 5
-     end tell
-   end tell
-' | osascript
-    result=$?
-
-    if [[ "${result}" -ne "0" ]]
-    then
-        attempts=$(($attempts + 1))
-        if [[ "${attempts}" -gt "10" ]]
-        then
-            echo "Failed to setup Finder for DMG creation!"
-            exit 1
-        fi
-        sleep 5
-    fi
-done
-set -e
-
-# Set the permissions and generate the final DMG
-echo "Creating final DMG..."
-chmod -Rf go-w /Volumes/Vagrant
-sync
-hdiutil detach ${DEVICE}
-hdiutil convert \
-    "${STAGING_DIR}/temp.dmg" \
-    -format UDZO \
-    -imagekey zlib-level=9 \
-    -o "${OUTPUT_PATH}"
-rm -f ${STAGING_DIR}/temp.dmg
+echo "Creating DMG"
+dmgbuild -s "${DIR}/darwin/dmgbuild.py" -D srcfolder="${STAGING_DIR}/dmg" -D backgroundimg="${DIR}/darwin/background_installer.png" Vagrant "${OUTPUT_PATH}"
 
 if [[ "${SIGN_PKG}" -ne "1" ]]
 then
