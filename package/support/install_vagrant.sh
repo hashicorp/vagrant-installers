@@ -74,7 +74,7 @@ fi
 ${GEM_COMMAND} install vagrant.gem --no-document
 
 # Install extensions
-${GEM_COMMAND} install vagrant-share --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
+${GEM_COMMAND} install vagrant-share --force --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
 
 # Setup the system plugins
 cat <<EOF >${EMBEDDED_DIR}/plugins.json
