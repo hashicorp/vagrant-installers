@@ -1,8 +1,8 @@
 class Dmgbuild < Formula
   desc "Command-line tool to create OS X disk images"
   homepage "https://bitbucket.org/al45tair/dmgbuild"
-  url "https://pypi.python.org/packages/source/d/dmgbuild/dmgbuild-1.2.1.tar.gz"
-  sha256 "db6277647de89af5fe81b0ec17cb51f54f5f9ea036575edaa871828ff5b65a4d"
+  url "https://pypi.python.org/packages/ea/86/e07bd2c8d3eadf101c7ba120409e2c7076b4f7c2ac6a4b99128cb80ffbfd/dmgbuild-1.2.1.tar.gz"
+  sha256 "569f83f666650cce416f3c38c56808826659f43be1694dce62531166f2285b54"
   head "https://bitbucket.org/al45tair/dmgbuild", :using => :hg
 
   depends_on :python if MacOS.version <= :snow_leopard
