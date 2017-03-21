@@ -1,8 +1,8 @@
 class Dmgbuild < Formula
   desc "Command-line tool to create OS X disk images"
   homepage "https://bitbucket.org/al45tair/dmgbuild"
-  url "https://pypi.python.org/packages/source/d/dmgbuild/dmgbuild-1.1.0.tar.gz"
-  sha256 "44077d7efe155dfc7229a3d21467e59ea3aeeb6e7292757cae6880fa2709709f"
+  url "https://pypi.python.org/packages/source/d/dmgbuild/dmgbuild-1.2.1.tar.gz"
+  sha256 "db6277647de89af5fe81b0ec17cb51f54f5f9ea036575edaa871828ff5b65a4d"
   head "https://bitbucket.org/al45tair/dmgbuild", :using => :hg
 
   depends_on :python if MacOS.version <= :snow_leopard
@@ -13,13 +13,13 @@ class Dmgbuild < Formula
   end
 
   resource "ds_store" do
-    url "https://pypi.python.org/packages/source/d/ds_store/ds_store-1.0.1.tar.gz"
-    sha256 "caaad61d183dfa10600dba5346e4cff144804c91c97422e40e4b6bf7b8f4228f"
+    url "https://pypi.python.org/packages/6f/0a/be913e42817d78277d18efcda1489834eb9294b0274c756c3e8d127faa3e/ds_store-1.1.0.tar.gz"
+    sha256 "2381e7cec7dd4c0b7f59165377ab3f9ae039f4b12b6ed2f20f80bbf6e4b17e0f"
   end
 
   resource "mac_alias" do
-    url "https://pypi.python.org/packages/source/m/mac_alias/mac_alias-1.1.0.tar.gz"
-    sha256 "8b6a2666b58bd0e12d4ae71ee23551198d10a8475abe01d709b0bcb5d1f5c97f"
+    url "https://pypi.python.org/packages/ed/ac/44edb3df422339693cf48348b29ffcb8fc15c63fb13cefba5584b40a2d7a/mac_alias-2.0.0.tar.gz"
+    sha256 "96920d721c64859d53a1ae88616384125078c6b729e66e45e5d93709f7db286c"
   end
 
   # These are already installed in Apple's Python distribution.
