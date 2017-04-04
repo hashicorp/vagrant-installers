@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# use vault to access old packages
+sed -i 's/mirror.centos/vault.centos/g' /etc/yum.repos.d/CentOS-Base.repo
+sed -i 's/#baseurl/baseurl/g' /etc/yum.repos.d/CentOS-Base.repo
+sed -i 's/mirrorlist=.*$//g' /etc/yum.repos.d/CentOS-Base.repo
+
+echo $(awk '{print $3}' /etc/redhat-release) > /etc/yum/vars/releasever
+
 yum install -y nc curl zip unzip
 
 REPO_RPM_URL="http://yum.puppetlabs.com/puppetlabs-release-el-5.noarch.rpm"
