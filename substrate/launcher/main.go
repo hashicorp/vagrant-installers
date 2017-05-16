@@ -94,13 +94,19 @@ func main() {
 
 	// Setup the CPP/LDFLAGS so that native extensions can be
 	// properly compiled into the Vagrant environment.
-	cppflags := "-I" + filepath.Join(embeddedDir, "include")
+	cppflags := "-I" + filepath.Join(embeddedDir, "include") +
+		filepath.Join(embeddedDir, "include", "libxml2")
 	ldflags := "-L" + filepath.Join(embeddedDir, "lib")
 	if original := os.Getenv("CPPFLAGS"); original != "" {
 		cppflags = original + " " + cppflags
 	}
 	if original := os.Getenv("LDFLAGS"); original != "" {
 		ldflags = original + " " + ldflags
+	}
+	cflags := "-I" + filepath.Join(embeddedDir, "include") +
+		filepath.Join(embeddedDir, "include", "libxml2")
+	if original := os.Getenv("CFLAGS"); original != "" {
+		cflags = original + " " + cflags
 	}
 
 	// Set the PATH to include the proper paths into our embedded dir
@@ -126,12 +132,17 @@ func main() {
 		// Setup the environment to prefer our embedded dir over
 		// anything the user might have setup on his/her system.
 		"CPPFLAGS":      cppflags,
+		"CFLAGS":        cflags,
 		"GEM_HOME":      filepath.Join(embeddedDir, "gems"),
 		"GEM_PATH":      filepath.Join(embeddedDir, "gems"),
 		"GEMRC":         filepath.Join(embeddedDir, "etc", "gemrc"),
 		"LDFLAGS":       ldflags,
 		"PATH":          path,
 		"SSL_CERT_FILE": sslCertFile,
+
+		// Instruct nokogiri installations to use libraries provided
+		// by the installer
+		"NOKOGIRI_USE_SYSTEM_LIBRARIES": "true",
 
 		// Environmental variables used by Vagrant itself
 		"VAGRANT_EXECUTABLE":             vagrantExecutable,
