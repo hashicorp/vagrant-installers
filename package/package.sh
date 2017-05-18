@@ -29,7 +29,7 @@ export TMPDIR="${TMP_DIR}"
 SUBSTRATE_TMP_DIR=$(mktemp -d tmp.XXXXXXXXXX)
 cp $SUBSTRATE_PATH ${SUBSTRATE_TMP_DIR}/substrate.zip
 pushd $SUBSTRATE_TMP_DIR
-unzip substrate.zip
+unzip -q substrate.zip
 popd
 rm -rf /opt/vagrant
 mkdir -p /opt/vagrant

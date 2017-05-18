@@ -36,7 +36,7 @@ else
     curl -L -u "${VAGRANT_TOKEN}:x-oauth-basic" ${SOURCE_URL} > vagrant.tar.gz
 fi
 rm -rf ${SOURCE_PREFIX}-*
-tar xvzf vagrant.tar.gz
+tar xzf vagrant.tar.gz
 rm vagrant.tar.gz
 cd ${SOURCE_PREFIX}-*
 
