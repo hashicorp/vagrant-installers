@@ -80,10 +80,11 @@ class bsdtar::posix {
   #------------------------------------------------------------------
   # Create configuration script
   exec { "automake-libarchive":
-    command => "/bin/sh build/autogen.sh",
-    creates => "${source_dir_path}/configure",
-    cwd     => $source_dir_path,
-    require => Exec["untar-libarchive"],
+    command     => "/bin/sh build/autogen.sh",
+    creates     => "${source_dir_path}/configure",
+    environment => ["SED=/usr/bin/sed"],
+    cwd         => $source_dir_path,
+    require     => Exec["untar-libarchive"],
   }
 
   # Build it
