@@ -13,6 +13,14 @@ Param(
 # Get the directory to this script
 $Dir = Split-Path $script:MyInvocation.MyCommand.Path
 
+# Build launcher
+$GoBin = "C:\Go\bin\go.exe"
+$LauncherDir = [System.IO.Path]::Combine($Dir, "launcher")
+Set-Location $LauncherDir
+Start-Process $GoBin "get github.com/mitchellh/osext" -Wait
+Start-Process $GoBin "-o ..\modules\vagrant_substrate\files\launcher.exe main.go"
+Set-Location $Dir
+
 # We need to create a temporary configuration directory because Puppet
 # needs to run on a filesystem that supports NTFS.
 $TmpDir = [System.IO.Path]::GetTempPath()

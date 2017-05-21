@@ -37,7 +37,7 @@ class vagrant_substrate::staging {
 
   # Unix bin file. We include this in Windows too in case mingw/cygwin
   file { "${staging_dir}/bin/vagrant${exe}":
-    source  => "puppet:///modules/vagrant_substrate/launcher_${goos}_${goarch}${exe}",
+    source  => "puppet:///modules/vagrant_substrate/launcher",
     mode    => "0755",
   }
 }

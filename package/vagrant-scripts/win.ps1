@@ -127,7 +127,7 @@ if($SignKeyExists){
     exit 1
   }
   savepowershellfromitself
-  Invoke-Expression "C:\vagrant\package\package.ps1 -SubstratePath ${SubstratePath} -VagrantRevision master -SignKey ${SignKeyPath} -SignKeyPassword ${env:SignKeyPassword} -SignPath 'C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\signtool.exe'"
+  Invoke-Expression "C:\vagrant\package\package.ps1 -SubstratePath ${SubstratePath} -VagrantRevision master -SignKey ${SignKeyPath} -SignKeyPassword ${env:SignKeyPassword} -SignPath 'C:\Program Files (x86)\Windows Kits\8.1\bin\x86\signtool.exe'"
 } else {
   savepowershellfromitself
   Invoke-Expression "C:\vagrant\package\package.ps1 -SubstratePath ${SubstratePath} -VagrantRevision master"

@@ -1,17 +1,6 @@
 #!/bin/sh
 
-relver=$(awk '{print $3}' /etc/redhat-release)
-
-# use vault to access old packages
-sed -i 's/mirror.centos.org\/centos/vault.centos.org/g' /etc/yum.repos.d/CentOS-Base.repo
-sed -i "s/\$releasever/${relver}/g" /etc/yum.repos.d/CentOS-Base.repo
-sed -i 's/#baseurl/baseurl/g' /etc/yum.repos.d/CentOS-Base.repo
-sed -i 's/mirrorlist=.*$//g' /etc/yum.repos.d/CentOS-Base.repo
-
-mkdir -p /etc/yum/vars/
-echo $(awk '{print $3}' /etc/redhat-release) > /etc/yum/vars/releasever
-
-yum install -y nc curl zip unzip
+yum install -y nc zip unzip
 
 REPO_RPM_URL="http://yum.puppetlabs.com/puppetlabs-release-el-5.noarch.rpm"
 rm -f /tmp/puppet.rpm
@@ -19,7 +8,6 @@ curl -o /tmp/puppet.rpm -L $REPO_RPM_URL
 rpm -i /tmp/puppet.rpm
 yum install -y puppet ruby-devel
 
-yum groupinstall -yq "Development Tools"
 gem install json -v '~> 1.8.6' --no-ri --no-rdoc
 gem install fpm -v '~> 0.4.0' --no-ri --no-rdoc
 

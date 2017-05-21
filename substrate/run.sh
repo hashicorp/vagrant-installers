@@ -19,6 +19,11 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+pushd "${DIR}/launcher"
+go get github.com/mitchellh/osext
+go build -o ../modules/vagrant_substrate/files/launcher main.go
+popd
+
 # We need to create a temporary configuration directory because Puppet
 # needs to be able to set the permissions on this and if we call this
 # from a filesystem that doesn't support that (VMWare shared folders),
