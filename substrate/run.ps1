@@ -14,11 +14,21 @@ Param(
 $Dir = Split-Path $script:MyInvocation.MyCommand.Path
 
 # Build launcher
+Write-Host "Building golang launcher"
 $GoBin = "C:\Go\bin\go.exe"
 $LauncherDir = [System.IO.Path]::Combine($Dir, "launcher")
 Set-Location $LauncherDir
-Start-Process $GoBin "get github.com/mitchellh/osext" -Wait
-Start-Process $GoBin "-o ..\modules\vagrant_substrate\files\launcher.exe main.go"
+$result = Start-Process $GoBin "get github.com/mitchellh/osext" -Wait
+if($result.ExitCode -ne 0){
+  Write-Error "Failed to install osext dependency"
+  Exit 1
+}
+$result = Start-Process $GoBin "-o ..\modules\vagrant_substrate\files\launcher main.go" -Wait
+if($result.ExitCode -ne 0){
+  Write-Error "Failed to build launcher"
+  Exit 1
+}
+Write-Host "Completed launcher build"
 Set-Location $Dir
 
 # We need to create a temporary configuration directory because Puppet
