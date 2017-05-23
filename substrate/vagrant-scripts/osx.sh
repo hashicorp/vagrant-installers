@@ -22,6 +22,9 @@ do
     fi
 done
 
+curl -o go.pkg https://storage.googleapis.com/golang/go1.8.1.darwin-amd64.pkg
+sudo installer -pkg ./go.pkg -target /
+
 mkdir -p /vagrant/substrate-assets
 chmod 755 /vagrant/substrate/run.sh
 
