@@ -232,11 +232,16 @@
                     <Order>22</Order>
                     <Description>Disable password expiration for vagrant user</Description>
                 </SynchronousCommand>
-                <!-- WITHOUT WINDOWS UPDATES -->
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\dis-updates.ps1</CommandLine>
                     <Description>Disable Automatic Updates</Description>
                     <Order>23</Order>
+                    <RequiresUserInput>true</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\disable-hibernate.ps1</CommandLine>
+                    <Description>Disable Suspend/Hibernate</Description>
+                    <Order>24</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
@@ -254,37 +259,22 @@
                     <Description>Install build tools</Description>
                     <Order>50</Order>
                 </SynchronousCommand>
-
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"</CommandLine>
+                    <Description>Fully Disable Windows Firewall</Description>
+                    <Order>60</Order>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Restart-Computer -force"</CommandLine>
+                    <Description>Restart Windows to ensure configuration is complete</Description>
+                    <Order>80</Order>
+                </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\openssh.ps1 -AutoStart</CommandLine>
                     <Description>Install OpenSSH</Description>
                     <Order>91</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
-
-                <!-- END WITHOUT WINDOWS UPDATES -->
-                <!-- WITH WINDOWS UPDATES -->
-                <!--
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\dis-updates.ps1</CommandLine>
-                    <Description>Disable Automatic Updates</Description>
-                    <Order>97</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\win-updates.ps1</CommandLine>
-                    <Description>Install Windows Updates</Description>
-                    <Order>100</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                    </SynchronousCommand>
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\openssh.ps1 -AutoStart</CommandLine>
-                    <Description>Install OpenSSH</Description>
-                    <Order>91</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
-                -->
-                <!-- END WITH WINDOWS UPDATES -->
             </FirstLogonCommands>
             <ShowWindowsLive>false</ShowWindowsLive>
         </component>
