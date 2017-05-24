@@ -9,7 +9,7 @@ wget --no-check-certificate -O openssl.tar.gz https://www.openssl.org/source/ope
 tar -zxf openssl.tar.gz
 pushd openssl-*
 ./config -fpic shared && make && make install
-echo "/usr/local/ssl/lib" >> /etc/ld.so.conf
+echo "/usr/local/ssl/lib" > /etc/ld.so.conf.d/new-ssl.conf
 ldconfig
 popd
 
@@ -25,7 +25,7 @@ chmod 755 /etc/profile.d/usr-local-path.sh
 PATH=/usr/local/bin:$PATH; export PATH
 
 # Install wget
-wget --no-check-certificate -O wget.tar.gz https://ftp.gnu.org/gnu/wget/wget-1.19.1.tar.gz
+wget -O wget.tar.gz http://ftp.gnu.org/gnu/wget/wget-1.19.1.tar.gz
 tar -xzf wget.tar.gz
 pushd wget-*
 LDFLAGS=`pkg-config --libs /usr/local/ssl/lib/pkgconfig/openssl.pc` CFLAGS=`pkg-config --cflags /usr/local/ssl/lib/pkgconfig/openssl.pc` ./configure --with-ssl=openssl --with-openssl --with-libssl-prefix=/usr/local/ssl
