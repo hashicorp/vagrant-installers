@@ -1,5 +1,8 @@
 #!/bin/sh
 
+yum install -y epel-release
+yum install -y python-hashlib git
+
 yum install -y nc zip unzip
 
 REPO_RPM_URL="http://yum.puppetlabs.com/puppetlabs-release-el-5.noarch.rpm"
