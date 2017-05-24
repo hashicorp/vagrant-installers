@@ -22,11 +22,11 @@ if not exist "C:\Windows\Temp\windows.iso" (
 )
 
 cmd /c ""C:\Program Files\7-Zip\7z.exe" x "C:\Windows\Temp\windows.iso" -oC:\Windows\Temp\VMWare"
-cmd /c C:\Windows\Temp\VMWare\setup.exe /S /v"/qn REBOOT=R\"
+start /wait C:\Windows\Temp\VMWare\setup.exe /S /v"/qn REBOOT=R\"
 
 rd /Q "C:\Windows\Temp\vmware-tools.tar"
 rd /Q "C:\Windows\Temp\windows.iso"
-rd /S /Q "C:\Windows\Temp\VMware"
+::rd /S /Q "C:\Windows\Temp\VMware"
 goto :done
 
 :virtualbox
