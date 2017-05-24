@@ -34,7 +34,7 @@
       "keep_input_artifact": false,
       "output": "{{user `vm_name`}}-{{user `version`}}.box",
       "type": "vagrant",
-      "vagrantfile_template": "{{ user `vagrantfile_template` }}"
+      "vagrantfile_template": "vagrantfile-linux.template"
     }
   ],
   "provisioners": [
@@ -65,6 +65,7 @@
         "scripts/centos/install-dev-tools.sh",
         "scripts/centos/ssl-update.sh",
         "scripts/centos/go.sh",
+        "scripts/centos/puppet.sh",
         "scripts/centos/motd.sh",
         "scripts/centos/cleanup.sh"
       ],

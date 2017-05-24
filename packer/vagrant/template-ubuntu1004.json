@@ -50,7 +50,7 @@
       "keep_input_artifact": false,
       "output": "{{user `vm_name`}}-{{user `version`}}.box",
       "type": "vagrant",
-      "vagrantfile_template": "{{ user `vagrantfile_template` }}"
+      "vagrantfile_template": "vagrantfile-linux.template"
     }
   ],
   "provisioners": [
@@ -75,6 +75,8 @@
         "scripts/ubuntu/sshd.sh",
         "scripts/ubuntu/vmware.sh",
         "scripts/ubuntu/install-dev-tools.sh",
+        "scripts/ubuntu/puppet.sh",
+        "scripts/ubuntu/ssl-update.sh",
         "scripts/ubuntu/go.sh",
         "scripts/ubuntu/motd.sh",
         "scripts/ubuntu/minimize.sh",
@@ -101,7 +103,6 @@
     "ssh_password": "vagrant",
     "ssh_username": "vagrant",
     "update": "false",
-    "vagrantfile_template": "",
     "version": "0.1.0",
     "vm_name": "ubuntu1004",
     "cpus": "1",

@@ -19,6 +19,7 @@
       "floppy_files": [
         "./answer_files/7/Autounattend.xml",
         "./scripts/windows/dis-updates.ps1",
+        "./scripts/windows/disable-hibernate.ps1",
         "./scripts/windows/win-7-sp1.ps1",
         "./scripts/windows/win-7-dotnet.ps1",
         "./scripts/windows/build-tools.ps1",
@@ -47,6 +48,7 @@
         "./scripts/windows/wix.bat",
         "./scripts/windows/ruby.bat",
         "./scripts/windows/go.bat",
+        "./scripts/windows/git.bat",
         "./scripts/windows/clean-temp.bat",
         "./scripts/windows/compact.bat"
       ]
