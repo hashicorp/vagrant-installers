@@ -1,4 +1,7 @@
 ---
+curl::version: "7.54.0"
+curl::libssh2_version: "1.8.0"
+ruby::version: "2.2.7"
 installation_dir: "/opt/vagrant"
 vagrant_substrate::build_dir: "/vagrant-substrate"
 vagrant_substrate::installer_version: "2"
