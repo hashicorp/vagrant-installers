@@ -1,5 +1,5 @@
-$zipPath = "<%= @source_file_path %>"
-$destination = "<%= @install_dir %>"
+$zipPath = "<%= $zip_path %> "
+$destination = "<%= $install_dir %>"
 
 $shell = New-Object -ComObject "Shell.Application"
 $zip = $shell.NameSpace($zipPath)
