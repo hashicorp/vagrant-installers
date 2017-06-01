@@ -3,3 +3,5 @@ powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://down
 )
 
 powershell -Command "Start-Process 'C:\Windows\Temp\wix.exe' '/quiet /norestart' -Wait"
+
+powershell -Command "$CurPath = [Environment]::GetEnvironmentVariable(\"PATH\"); [Environment]::SetEnvironmentVariable(\"PATH\", \"${CurPath};C:\Program Files (x86)\Wix Toolset v3.10\bin\", \"Machine\")"

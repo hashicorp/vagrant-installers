@@ -255,10 +255,21 @@
                     <Order>40</Order>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c a:\compile-dotnet-assemblies.bat</CommandLine>
+                    <Description>Compile .Net assemblies</Description>
+                    <Order>41</Order>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\powershell-upgrade.ps1</CommandLine>
+                    <Description>Update Powershell</Description>
+                    <Order>42</Order>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\build-tools.ps1</CommandLine>
                     <Description>Install build tools</Description>
                     <Order>50</Order>
                 </SynchronousCommand>
+
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"</CommandLine>
                     <Description>Fully Disable Windows Firewall</Description>

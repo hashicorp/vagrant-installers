@@ -17,12 +17,16 @@
       "vnc_port_min": 5900,
       "vnc_port_max": 5980,
       "floppy_files": [
+        "./floppy/buildtools-adminfile.xml",
+        "./floppy/msys2-install.qs",
         "./answer_files/7/Autounattend.xml",
         "./scripts/windows/dis-updates.ps1",
         "./scripts/windows/disable-hibernate.ps1",
         "./scripts/windows/win-7-sp1.ps1",
         "./scripts/windows/win-7-dotnet.ps1",
         "./scripts/windows/build-tools.ps1",
+        "./scripts/windows/compile-dotnet-assemblies.bat",
+        "./scripts/windows/powershell-upgrade.ps1",
         "./scripts/windows/openssh.ps1"
       ],
       "vmx_data": {
@@ -49,6 +53,8 @@
         "./scripts/windows/ruby.bat",
         "./scripts/windows/go.bat",
         "./scripts/windows/git.bat",
+        "./scripts/windows/msys2.bat",
+        "./scripts/windows/styrene.bat",
         "./scripts/windows/clean-temp.bat",
         "./scripts/windows/compact.bat"
       ]

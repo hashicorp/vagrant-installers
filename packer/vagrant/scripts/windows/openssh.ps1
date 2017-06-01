@@ -86,5 +86,5 @@ netsh advfirewall firewall add rule name="ssh" dir=in action=allow protocol=TCP 
 if ($AutoStart -eq $true) {
     Start-Service "OpenSSHd"
 } else {
-    Set-Service "OpenSSHd" -StartupType Automatic
+    Set-Service "OpenSSHd" -StartupType Delayed
 }
