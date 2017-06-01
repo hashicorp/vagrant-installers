@@ -1,0 +1,24 @@
+[String]$File = "C:\msys64\home\vagrant\styrene\substrate-complete"
+[Int]$MaxRetries = 100
+
+$Retries = 0
+$Found = $false
+
+Start-Process "C:\msys64\usr\bin\bash.exe" "--login /c/vagrant-substrate/cache/substrate_builder.sh" -Wait
+
+while (-not $Found) {
+  if (Test-Path -LiteralPath $File) {
+    $Found = $true
+  }
+  else {
+    if ($Retries -ge $MaxRetries) {
+      throw "Failed to detect substrate build completion!"
+    }
+    else {
+      Start-Sleep 5
+      $Retries++
+    }
+  }
+}
+
+Remove-Item -Path $File

@@ -1,6 +1,8 @@
 $sourcedir = "<%= @staging_dir %>"
 $zipfilename = "<%= @package_path %>"
 
-[Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
 $compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
 [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcedir, $zipfilename, $compressionLevel, $false)

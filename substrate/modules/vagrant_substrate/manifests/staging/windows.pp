@@ -6,37 +6,31 @@ class vagrant_substrate::staging::windows {
   $staging_dir       = $vagrant_substrate::staging_dir
   $installer_version = $vagrant_substrate::installer_version
 
-  #------------------------------------------------------------------
-  # Extra directories
-  #------------------------------------------------------------------
-  # For GnuForWin32 stuff
-  $gnuwin32_dir = "${embedded_dir}\\gnuwin32"
-  util::recursive_directory { $gnuwin32_dir: }
+  $builder_path      = "${cache_dir}\\substrate_builder.sh"
+  $builder_cwd       = "C:\\msys64\\home\\vagrant\\styrene"
+  $builder_config    = "${builder_cwd}\\vagrant.cfg"
 
-  #------------------------------------------------------------------
-  # Dependencies
-  #------------------------------------------------------------------
-  class { "atlas_upload_cli":
-    install_path => "${embedded_dir}\\bin\\atlas-upload",
+  file { $builder_path:
+    source => "puppet:///modules/vagrant_substrate/substrate_builder.sh",
   }
 
-  class { "bsdtar":
-    file_cache_dir => $cache_dir,
-    install_dir    => $gnuwin32_dir,
-    require        => Util::Recursive_Directory[$gnuwin32_dir],
+  file { $builder_config:
+    content => template("vagrant_substrate/vagrant.cfg.erb"),
   }
 
-  class { "curl":
+  powershell { "build-substrate":
+    content => template("vagrant_substrate/substrate_waiter.ps1.erb"),
     file_cache_dir => $cache_dir,
-    install_dir    => "${embedded_dir}\\bin",
-  }
-
-  class { "ruby::windows":
-    file_cache_dir => $cache_dir,
-    install_dir    => $embedded_dir,
+    require => [
+      File[$builder_path],
+      File[$builder_config],
+    ],
   }
 
   class { "rubyencoder::loaders":
     path => $embedded_dir,
+    require => [
+      Powershell["build-substrate"],
+    ],
   }
 }

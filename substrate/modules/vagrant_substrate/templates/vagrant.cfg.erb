@@ -1,0 +1,68 @@
+[bundle]
+
+packages =
+   ruby
+   curl
+   openssh
+   bsdtar
+   rsync
+   libcrypt-devel
+   openssl-devel
+   libffi-devel
+   libyaml-devel
+   libiconv-devel
+   zlib
+   libarchive
+   libxslt
+   libxml2
+   autoconf
+   autoconf2.13
+   autogen
+   automake-wrapper
+   automake1.10
+   automake1.11
+   automake1.12
+   automake1.13
+   automake1.14
+   automake1.15
+   automake1.6
+   automake1.7
+   automake1.8
+   automake1.9
+   diffutils
+   file
+   gawk
+   grep
+   libtool
+   m4
+   make
+   patch
+   pkg-config
+   sed
+   wget
+   {pkg_prefix}binutils
+   {pkg_prefix}crt-git
+   {pkg_prefix}gcc
+   {pkg_prefix}gcc-libs
+   {pkg_prefix}headers-git
+   {pkg_prefix}libmangle-git
+   {pkg_prefix}libwinpthread-git
+   {pkg_prefix}tools-git
+   {pkg_prefix}winpthreads-git
+   {pkg_prefix}winstorecompat-git
+
+version = <%= @installer_version %>
+filename_stub = vagrant
+display_name = Vagrant
+description = Vagrant Installer
+delete =
+  etc*
+  var*
+  tmp*
+  var*
+  usr/share/fish*
+  usr/share/emacs*
+  usr/share/info*
+  usr/share/man*
+  usr/share/terminfo*
+  usr/share/doc*
