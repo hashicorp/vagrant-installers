@@ -12,8 +12,6 @@ mv *.zip substrate/substrate-asset.zip
 pushd substrate
 unzip -q substrate-asset.zip
 rm -rf _scripts etc var tmp usr/var *.zip
-mv usr/* .
-rmdir usr
 mv * /c/vagrant-substrate/staging/embedded/
 popd
 rm -rf substrate
