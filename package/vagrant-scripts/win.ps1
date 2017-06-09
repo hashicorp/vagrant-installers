@@ -7,6 +7,7 @@
 #>
 
 $CurPath = [Environment]::GetEnvironmentVariable("PATH"); [Environment]::SetEnvironmentVariable("PATH", "${CurPath};C:\Program Files (x86)\Wix Toolset v3.10\bin\", "Machine")
+$env:PATH = "${CurPath};C:\Program Files (x86)\Wix Toolset v3.10\bin\"
 
 $TmpDir = [System.IO.Path]::GetTempPath()
 $SubstrateURL = "https://s3.amazonaws.com/hc-ops/vagrant-substrate/substrate_windows_x64.zip"
