@@ -17,5 +17,6 @@ define powershell(
     command => "cmd.exe /C powershell.exe -ExecutionPolicy Bypass -Command \"&\" '${script_path}'",
     creates => $creates,
     require => File[$script_path],
+    timeout => 3600,
   }
 }
