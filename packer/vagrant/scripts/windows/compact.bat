@@ -24,12 +24,9 @@ if not exist "C:\Windows\Temp\sdelete.exe" (
 	cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\SDelete.zip -oC:\Windows\Temp"
 )
 
-msiexec /qb /x C:\Windows\Temp\7z920-x64.msi
-
 net stop wuauserv
 rmdir /S /Q C:\Windows\SoftwareDistribution\Download
 mkdir C:\Windows\SoftwareDistribution\Download
-net start wuauserv
 
 if "%PACKER_BUILDER_TYPE%" neq "hyperv-iso" (
 	cmd /c C:\Windows\Temp\ultradefrag-portable-6.1.0.amd64\udefrag.exe --optimize --repeat C:
