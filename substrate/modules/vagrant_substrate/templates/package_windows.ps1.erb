@@ -1,8 +1,8 @@
 $sourcedir = "<%= @staging_dir %>"
 $zipfilename = "<%= @package_path %>"
 
-Add-Type -AssemblyName System.IO.Compression
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+if(Test-Path -Path $zipfilename) {
+  Remove-Item -Path $zipfilename
+}
 
-$compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
-[System.IO.Compression.ZipFile]::CreateFromDirectory($sourcedir, $zipfilename, $compressionLevel, $false)
+Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\*" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\pack.log
