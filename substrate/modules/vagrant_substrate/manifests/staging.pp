@@ -34,10 +34,4 @@ class vagrant_substrate::staging {
     source => "puppet:///modules/vagrant_substrate/cacert.pem",
     mode   => "0644",
   }
-
-  # Unix bin file. We include this in Windows too in case mingw/cygwin
-  file { "${staging_dir}/bin/vagrant${exe}":
-    source  => "puppet:///modules/vagrant_substrate/launcher",
-    mode    => "0755",
-  }
 }
