@@ -1,0 +1,39 @@
+#!/usr/bin/bash
+
+# If we create the build directory from windows
+# directly and populate it with the build files
+# and attempt to build it will fail even though
+# everything looks happy and cheerful. Then
+# after hours of trying different environment
+# setups, different directory paths, different
+# shells only to continually get failures during
+# configure with permission denied errors on the
+# conftest.exe file we will end up scouring the
+# mailing lists and SO for any hints as to what
+# could possible be the underlying problem. This,
+# of course, will be a fruitless endeavour and we
+# will return to Windows broken, weary, angry,
+# and confused. After more flailing interspersed
+# with quiet sobs of frustration a peculiarity will
+# be noticed. Creating a new directory from within
+# the mingw64 shell, copying the files into the
+# new directory, and building will not result in
+# permission errors. In fact, the build works
+# flawlessly. Thanks Windows.
+
+FILESDIR=`cygpath -pu "<%= @ruby_files_path %>"`
+BUILDDIR=`cygpath -pu "<%= @ruby_build_path %>"`
+
+mkdir -p $BUILDDIR
+cp -r "${FILESDIR}/." $BUILDDIR/
+cd $BUILDDIR
+
+ls | grep "i686*.xz"
+built_686=$?
+ls | grep "x86_64*.xz"
+built_x86_64=$?
+
+if [[ $built_686 -eq 0 && $built_x86_64 -eq 0 ]]
+then
+    makepkg-mingw -sf --noconfirm
+fi
