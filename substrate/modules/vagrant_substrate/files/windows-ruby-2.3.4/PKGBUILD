@@ -7,7 +7,7 @@ pkgdesc="An object-oriented language for quick and easy programming (mingw-w64)"
 arch=('any')
 url="https://www.ruby-lang.org/en"
 license=("BSD, custom")
-makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-pkg-config")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-pkg-config" "patch" "patchutils")
 depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
          "${MINGW_PACKAGE_PREFIX}-gdbm"
          "${MINGW_PACKAGE_PREFIX}-libffi"
@@ -61,6 +61,7 @@ build() {
   cp ${srcdir}/*.ico .
 
   ../${_realname}-${pkgver}/configure \
+    --enable-shared \
     --prefix=${MINGW_PREFIX} \
     --build=${MINGW_CHOST} \
     --host=${MINGW_CHOST} \
