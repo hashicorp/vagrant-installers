@@ -4,7 +4,11 @@
 $Retries = 0
 $Found = $false
 
-Start-Process "C:\msys64\usr\bin\bash.exe" "--login /c/vagrant-substrate/cache/substrate_builder.sh" -Wait
+if (Test-Path -LiteralPath $File) {
+  Remove-Item -Path $File
+}
+
+Start-Process "c:\msys64\msys2_shell.cmd" "-msys2 -where <%= @builder_cwd %> -no-start -f <%= @builder_path %>" -Wait -NoNewWindow
 
 while (-not $Found) {
   if (Test-Path -LiteralPath $File) {
