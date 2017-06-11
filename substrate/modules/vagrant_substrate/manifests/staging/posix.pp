@@ -5,6 +5,7 @@ class vagrant_substrate::staging::posix {
   $embedded_dir      = $vagrant_substrate::embedded_dir
   $staging_dir       = $vagrant_substrate::staging_dir
   $installer_version = $vagrant_substrate::installer_version
+  $launcher_path     = "${cache_dir}/launcher"
 
   #------------------------------------------------------------------
   # Calculate variables based on operating system
@@ -200,6 +201,27 @@ class vagrant_substrate::staging::posix {
       Class["zlib"],
       Class["openssl"],
       Class["readline"],
+    ],
+  }
+
+  file { $launcher_path:
+    source => "puppet:///modules/vagrant_substrate/launcher",
+    path => $launcher_path,
+    recurse => true,
+  }
+
+  # ensure dependency is around
+  exec { "install-osext":
+    command => "go get github.com/mitchellh/osext",
+  }
+
+  # install launcher
+  exec { "install-launcher":
+    command => "go build -o \"${staging_dir}/bin/vagrant\" main.go",
+    cwd => $launcher_path,
+    require => [
+      File[$launcher_path],
+      Exec["install-osext"],
     ],
   }
 
