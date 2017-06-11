@@ -1,20 +1,10 @@
 [bundle]
 
 packages =
-   ruby
-   curl
    openssh
    bsdtar
    rsync
    libcrypt-devel
-   openssl-devel
-   libffi-devel
-   libyaml-devel
-   libiconv-devel
-   zlib
-   libarchive
-   libxslt
-   libxml2
    autoconf
    autoconf2.13
    autogen
@@ -33,17 +23,29 @@ packages =
    file
    gawk
    grep
-   libtool
-   m4
    make
+   m4
    patch
-   pkg-config
    sed
    wget
+   msys2-runtime
+   {pkg_prefix}openssl
+   {pkg_prefix}libffi
+   {pkg_prefix}libyaml
+   {pkg_prefix}libiconv
+   {pkg_prefix}gmp
+   {pkg_prefix}zlib
+   {pkg_prefix}libarchive
+   {pkg_prefix}libxslt
+   {pkg_prefix}libxml2
+   {pkg_prefix}ruby
+   {pkg_prefix}curl
    {pkg_prefix}binutils
    {pkg_prefix}crt-git
    {pkg_prefix}gcc
    {pkg_prefix}gcc-libs
+   {pkg_prefix}libtool
+   {pkg_prefix}pkg-config
    {pkg_prefix}headers-git
    {pkg_prefix}libmangle-git
    {pkg_prefix}libwinpthread-git
@@ -56,10 +58,6 @@ filename_stub = vagrant
 display_name = Vagrant
 description = Vagrant Installer
 delete =
-  etc*
-  var*
-  tmp*
-  var*
   usr/share/fish*
   usr/share/emacs*
   usr/share/info*
