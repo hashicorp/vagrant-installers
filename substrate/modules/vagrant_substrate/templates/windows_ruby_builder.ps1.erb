@@ -1,0 +1,42 @@
+[String]$File_x86 = "<%= @ruby_build_path %>\*i686-ruby-*.xz"
+[String]$File_x64 = "<%= @ruby_build_path %>\*x86_64-ruby-*.xz"
+[Int]$MaxRetries = 720
+
+$Retries = 0
+$Found = $false
+
+Start-Process "c:\msys64\msys2_shell.cmd" "-mingw64 -where <%= @cache_dir %> -no-start -f bash-builder.sh" -Wait -PassThru -NoNewWindow
+Start-Sleep 5
+
+while (-not $Found) {
+  if (Test-Path -Path $File_x64) {
+    $Found = $true
+  }
+  else {
+    if ($Retries -ge $MaxRetries) {
+      throw "Failed to detect ruby x64 build completion!"
+    }
+    else {
+      Start-Sleep 5
+      $Retries++
+    }
+  }
+}
+
+$Retries = 0
+$Found = $false
+
+while (-not $Found) {
+  if (Test-Path -Path $File_x86) {
+    $Found = $true
+  }
+  else {
+    if ($Retries -ge $MaxRetries) {
+      throw "Failed to detect ruby x86 build completion!"
+    }
+    else {
+      Start-Sleep 5
+      $Retries++
+    }
+  }
+}
