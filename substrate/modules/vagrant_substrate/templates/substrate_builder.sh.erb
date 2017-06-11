@@ -1,0 +1,41 @@
+#!/usr/bin/bash
+
+# Create directories for new assets
+rm -rf output/vagrant-w64/output
+rm -rf output/vagrant-w32/output
+
+mkdir -p output/vagrant-w64/output
+mkdir -p output/vagrant-w32/output
+
+# Store ruby packages locally
+mkdir pkgs
+RUBYPKGDIR=`cygpath -pu <%= @ruby_build_path.gsub("\\", "/") %>`
+WORKINGDIR=`pwd`
+
+find $RUBYPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
+
+# Note that we are starting the build
+touch i-am-running
+./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
+
+mkdir substrate
+find output/vagrant-w64/output -name "*.zip" -exec cp {} substrate/substrate-asset.zip \;
+pushd substrate
+unzip -q substrate-asset.zip
+rm -rf _scripts substrate-asset.zip
+
+# The built ruby will have a minimal installation of msys2 and
+# will fall back to having cygwin style path mounts to access
+# the full windows system. This will "trick" ruby into building
+# windows paths using the `/cygdrive` mount instead of the msys2
+# style mounts of `/DRIVE`
+sed -i 's/"target_os".*$/"target_os"] = "cygwin"/' ./mingw64/lib/ruby/<%= @ruby_version.split('.').slice(0,2).join('.') + ".0" %>/x64-mingw32/rbconfig.rb
+
+find ./mingw64/bin -name "*-make.exe" -exec cp {} ./mingw64/bin/make.exe \;
+find ./ -maxdepth 1 -name "*" -exec rm -rf /c/vagrant-substrate/staging/embedded/{} \;
+find ./ -maxdepth 1 -name "*" -exec mv -f {} /c/vagrant-substrate/staging/embedded/ \;
+popd
+rm -rf substrate
+rm i-am-running
+touch substrate-complete
+popd
