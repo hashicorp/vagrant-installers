@@ -24,4 +24,10 @@ function savepowershellfromitself {
 Write-Host "Starting substrate build"
 [System.IO.Directory]::CreateDirectory("C:\vagrant\substrate-assets") | Out-Null
 
+# Force git into the path
+$CurPath = [Environment]::GetEnvironmentVariable("PATH");
+$env:PATH = "${CurPath};C:\Program Files\Git\bin\"
+
+Start-Process "C:\Go\bin\go.exe" "get github.com/mitchellh/osext" -NoNewWindow -Wait
+
 Invoke-Expression "C:\vagrant\substrate\run.ps1 -OutputDir C:\vagrant\substrate-assets"
