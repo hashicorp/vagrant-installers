@@ -29,9 +29,8 @@ rm -rf _scripts substrate-asset.zip
 # the full windows system. This will "trick" ruby into building
 # windows paths using the `/cygdrive` mount instead of the msys2
 # style mounts of `/DRIVE`
-sed -i 's/"target_os".*$/"target_os"] = "cygwin"/' ./mingw64/lib/ruby/<%= @ruby_version.split('.').slice(0,2).join('.') + ".0" %>/x64-mingw32/rbconfig.rb
+sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' ./mingw64/lib/ruby/2.3.0/x64-mingw32/rbconfig.rb
 
-find ./mingw64/bin -name "*-make.exe" -exec cp {} ./mingw64/bin/make.exe \;
 find ./ -maxdepth 1 -name "*" -exec rm -rf /c/vagrant-substrate/staging/embedded/{} \;
 find ./ -maxdepth 1 -name "*" -exec mv -f {} /c/vagrant-substrate/staging/embedded/ \;
 popd
