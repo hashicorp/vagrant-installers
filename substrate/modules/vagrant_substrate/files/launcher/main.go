@@ -94,19 +94,37 @@ func main() {
 
 	// Setup the CPP/LDFLAGS so that native extensions can be
 	// properly compiled into the Vagrant environment.
-	cppflags := "-I" + filepath.Join(embeddedDir, "include") +
-		filepath.Join(embeddedDir, "include", "libxml2")
-	ldflags := "-L" + filepath.Join(embeddedDir, "lib")
-	if original := os.Getenv("CPPFLAGS"); original != "" {
-		cppflags = original + " " + cppflags
-	}
-	if original := os.Getenv("LDFLAGS"); original != "" {
-		ldflags = original + " " + ldflags
-	}
-	cflags := "-I" + filepath.Join(embeddedDir, "include") +
-		filepath.Join(embeddedDir, "include", "libxml2")
-	if original := os.Getenv("CFLAGS"); original != "" {
-		cflags = original + " " + cflags
+	cppflags := ""
+	cflags := ""
+	ldflags := ""
+	if runtime.GOOS == "windows" {
+		cppflags := "-I" + filepath.Join(embeddedDir, "usr", "include")
+		ldflags := "-L" + filepath.Join(embeddedDir, "usr", "lib")
+		if original := os.Getenv("CPPFLAGS"); original != "" {
+			cppflags = original + " " + cppflags
+		}
+		if original := os.Getenv("LDFLAGS"); original != "" {
+			ldflags = original + " " + ldflags
+		}
+		cflags := "-I" + filepath.Join(embeddedDir, "usr", "include")
+		if original := os.Getenv("CFLAGS"); original != "" {
+			cflags = original + " " + cflags
+		}
+	} else {
+		cppflags := "-I" + filepath.Join(embeddedDir, "include") +
+			" -I" + filepath.Join(embeddedDir, "include", "libxml2")
+		ldflags := "-L" + filepath.Join(embeddedDir, "lib")
+		if original := os.Getenv("CPPFLAGS"); original != "" {
+			cppflags = original + " " + cppflags
+		}
+		if original := os.Getenv("LDFLAGS"); original != "" {
+			ldflags = original + " " + ldflags
+		}
+		cflags := "-I" + filepath.Join(embeddedDir, "include") +
+			" -I" + filepath.Join(embeddedDir, "include", "libxml2")
+		if original := os.Getenv("CFLAGS"); original != "" {
+			cflags = original + " " + cflags
+		}
 	}
 
 	// Set the PATH to include the proper paths into our embedded dir
@@ -114,8 +132,8 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = fmt.Sprintf(
 			"%s;%s;%s",
-			filepath.Join(embeddedDir, "bin"),
-			filepath.Join(embeddedDir, "gnuwin32", "bin"),
+			filepath.Join(embeddedDir, "mingw64", "bin"),
+			filepath.Join(embeddedDir, "usr", "bin"),
 			path)
 	} else {
 		path = fmt.Sprintf("%s:%s",
@@ -164,6 +182,11 @@ func main() {
 		newEnv["CONFIGURE_ARGS"] = configure_args
 	}
 
+  if runtime.GOOS == "windows" {
+		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, "mingw64", "lib", "pkgconfig") +
+			":" + filepath.Join(embeddedDir, "usr", "lib", "pkgconfig")
+	}
+
 	// Store the "current" environment so Vagrant can restore it when shelling
 	// out.
 	for _, value := range os.Environ() {
@@ -192,7 +215,7 @@ func main() {
 	}
 
 	// Determine the path to Ruby and then start the Vagrant process
-	rubyPath := filepath.Join(embeddedDir, "bin", "ruby")
+	rubyPath := filepath.Join(embeddedDir, "mingw64", "bin", "ruby")
 	if runtime.GOOS == "windows" {
 		rubyPath += ".exe"
 	}
