@@ -62,7 +62,7 @@ class vagrant_substrate::staging::windows {
 
   # ensure dependency is around
   exec { "install-osext":
-    command => "C:\\Go\\bin\\go.exe get github.com/mitchellh/osext",
+    command => "cmd.exe /c \"C:\\Go\\bin\\go.exe get github.com/mitchellh/osext\""
   }
 
   # install launcher
@@ -72,6 +72,7 @@ class vagrant_substrate::staging::windows {
     require => [
       File[$launcher_path],
       Exec["install-osext"],
+      Powershell["build-substrate"],
     ],
   }
 
