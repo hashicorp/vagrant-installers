@@ -6,3 +6,4 @@ start /wait C:\Windows\Temp\msys2.exe --script A:\msys2-install.qs
 start /wait C:\msys64\usr\bin\bash.exe --login -c "pacman -Syu --noconfirm"
 start /wait C:\msys64\usr\bin\bash.exe --login -c "pacman -Syu --noconfirm"
 start /wait C:\msys64\usr\bin\bash.exe --login -c "pacman -S --noconfirm zip unzip"
+start /wait C:\msys64\usr\bin\bash.exe --login -c "pacman -S --noconfirm base-devel"
