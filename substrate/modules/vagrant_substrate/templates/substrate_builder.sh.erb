@@ -18,6 +18,12 @@ find $RUBYPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
 touch i-am-running
 ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
 
+# Occasionally transient errors can cause a failure so run it again if it failed
+if [[ $? -ne 0 ]]
+then
+    ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
+fi
+
 # Start with the 64 bit build
 mkdir substrate
 find output/vagrant-w64/output -name "*.zip" -exec cp {} substrate/substrate-asset.zip \;
