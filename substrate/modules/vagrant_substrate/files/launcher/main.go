@@ -97,18 +97,33 @@ func main() {
 	cppflags := ""
 	cflags := ""
 	ldflags := ""
+	mingwArchDir := "x86_64-w64-mingw32"
+	mingwDir := "mingw64"
 	if runtime.GOOS == "windows" {
-		cppflags := "-I" + filepath.Join(embeddedDir, "usr", "include")
-		ldflags := "-L" + filepath.Join(embeddedDir, "usr", "lib")
+		// Check if we are in a 32bit or 64bit install
+		mingwTestPath := filepath.Join(embeddedDir, "mingw64")
+		if _, err := os.Stat(mingwTestPath); err != nil {
+			log.Printf("launcher: detected 32bit Windows installation")
+			mingwDir = "mingw32"
+			mingwArchDir = "i686-w64-mingw32"
+		}
+		cflags := "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
+			" -I" + filepath.Join(embeddedDir, mingwDir, "include") +
+			" -I" + filepath.Join(embeddedDir, "usr", "include")
+		cppflags := "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
+			" -I" + filepath.Join(embeddedDir, mingwDir, "include") +
+			" -I" + filepath.Join(embeddedDir, "usr", "include")
+		ldflags := "-L" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "lib") +
+			" -L" + filepath.Join(embeddedDir, mingwDir, "lib") +
+			" -L" + filepath.Join(embeddedDir, "usr", "lib")
+		if original := os.Getenv("CFLAGS"); original != "" {
+			cflags = original + " " + cflags
+		}
 		if original := os.Getenv("CPPFLAGS"); original != "" {
 			cppflags = original + " " + cppflags
 		}
 		if original := os.Getenv("LDFLAGS"); original != "" {
 			ldflags = original + " " + ldflags
-		}
-		cflags := "-I" + filepath.Join(embeddedDir, "usr", "include")
-		if original := os.Getenv("CFLAGS"); original != "" {
-			cflags = original + " " + cflags
 		}
 	} else {
 		cppflags := "-I" + filepath.Join(embeddedDir, "include") +
@@ -132,7 +147,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = fmt.Sprintf(
 			"%s;%s;%s",
-			filepath.Join(embeddedDir, "mingw64", "bin"),
+			filepath.Join(embeddedDir, mingwDir, "bin"),
 			filepath.Join(embeddedDir, "usr", "bin"),
 			path)
 	} else {
@@ -183,7 +198,7 @@ func main() {
 	}
 
   if runtime.GOOS == "windows" {
-		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, "mingw64", "lib", "pkgconfig") +
+		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, mingwDir, "lib", "pkgconfig") +
 			":" + filepath.Join(embeddedDir, "usr", "lib", "pkgconfig")
 	}
 
@@ -215,7 +230,7 @@ func main() {
 	}
 
 	// Determine the path to Ruby and then start the Vagrant process
-	rubyPath := filepath.Join(embeddedDir, "mingw64", "bin", "ruby")
+	rubyPath := filepath.Join(embeddedDir, mingwDir, "bin", "ruby")
 	if runtime.GOOS == "windows" {
 		rubyPath += ".exe"
 	}
