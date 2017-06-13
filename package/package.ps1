@@ -35,6 +35,9 @@ param(
     [string]$ScrubCache="no"
 )
 
+# Default build architecture to 64bit
+$PackageArch = "64"
+
 # Exit if there are any exceptions
 $ErrorActionPreference = "Stop"
 
@@ -107,6 +110,12 @@ If ($UseCache -eq $false) {
 # Set the full path to the substrate
 $SubstrateDir = "$($SubstrateTmpDir)"
 
+$Path32Bit = [System.IO.Path]::Combine($SubstrateDir, "embedded", "mingw32")
+if (Test-Path -Path $Path32Bit) {
+  Write-Host "Detected 32bit substrate. Building 32bit package."
+  $PackageArch = "32"
+}
+
 #--------------------------------------------------------------------
 # Install Vagrant
 #--------------------------------------------------------------------
@@ -155,7 +164,7 @@ $VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
 If ($UseCache -eq $false) {
   Write-Host "Building Vagrant Gem"
   Push-Location $VagrantSourceDir
-  &"$($SubstrateDir)\embedded\mingw64\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw64\bin\gem" build vagrant.gemspec
+  &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
   Copy-Item vagrant-*.gem -Destination vagrant.gem
   Pop-Location
 } Else {
@@ -170,9 +179,16 @@ if (-Not (Test-Path $VagrantVersionFile)) {
 $VagrantVersion=$((Get-Content $VagrantVersionFile) -creplace '\.[^0-9]+(\.[0-9]+)?$', '$1')
 Write-Host "Vagrant version: $VagrantVersion"
 
+if ($PackageArch -eq "64") {
+  $MingArchDir = "x86_64-w64-mingw32"
+} else {
+  $MingArchDir = "i686-w64-mingw32"
+}
+
 if ($UseCache -eq $false) {
   # Install gem. We do this in a sub-shell so we don't have to worry
   # about restoring environmental variables.
+  $env:PackageArch      = $PackageArch
   $env:SubstrateDir     = $SubstrateDir
   $env:VagrantSourceDir = $VagrantSourceDir
   powershell {
@@ -180,19 +196,20 @@ if ($UseCache -eq $false) {
 
       Set-Location $env:VagrantSourceDir
       $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
+      $PackageArch  = $env:PackageArch
       $env:GEM_PATH = "$($EmbeddedDir)\gems"
       $env:GEM_HOME = $env:GEM_PATH
       $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
-      $env:CPPFLAGS = "-I/mingw64/x86_64-w64-mingw32/include -I/mingw64/include -I/usr/include"
-      $env:CFLAGS = "-I/mingw64/x86_64-w64-mingw32/include -I/mingw64/include -I/usr/include"
-      $env:LDFLAGS  = "-L/mingw64/lib -L/mingw64/x86_64-w64-mingw32/lib -L/usr/lib"
-      $env:PKG_CONFIG_PATH = "/mingw64/lib/pkgconfig:/usr/lib/pkgconfig"
-      $env:Path     ="$($EmbeddedDir)\mingw64\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
+      $env:CPPFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
+      $env:CFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
+      $env:LDFLAGS  = "-L/mingw$($PackageArch)/lib -L/mingw$($PackageArch)/$($MingArchDir)/lib -L/usr/lib"
+      $env:PKG_CONFIG_PATH = "/mingw$($PackageArch)/lib/pkgconfig:/usr/lib/pkgconfig"
+      $env:Path     ="$($EmbeddedDir)\mingw$($PackageArch)\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
       $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
-      &"$($EmbeddedDir)\mingw64\bin\ruby.exe" "$($EmbeddedDir)\mingw64\bin\gem" install vagrant.gem --no-ri --no-rdoc
+      &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-ri --no-rdoc
 
       # Extensions
-      &"$($EmbeddedDir)\mingw64\bin\ruby.exe" "$($EmbeddedDir)\mingw64\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+      &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
   }
   Remove-Item Env:SubstrateDir
   Remove-Item Env:VagrantSourceDir
@@ -222,7 +239,11 @@ $contents | Out-File `
 # MSI
 #--------------------------------------------------------------------
 # Final path to output
-$OutputPath = "vagrant_$($VagrantVersion).msi"
+if ( $PackageArch -eq "64") {
+  $OutputPath = "vagrant_$($VagrantVersion)_x86_64.msi"
+} else {
+  $OutputPath = "vagrant_$($VagrantVersion)_i686.msi"
+}
 
 $InstallerTmpDir = [System.IO.Path]::GetTempPath()
 $InstallerTmpDir = [System.IO.Path]::Combine(
