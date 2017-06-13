@@ -189,6 +189,7 @@ if ($UseCache -eq $false) {
   # Install gem. We do this in a sub-shell so we don't have to worry
   # about restoring environmental variables.
   $env:PackageArch      = $PackageArch
+  $env:MingArchDir      = $MingArchDir
   $env:SubstrateDir     = $SubstrateDir
   $env:VagrantSourceDir = $VagrantSourceDir
   powershell {
@@ -197,6 +198,7 @@ if ($UseCache -eq $false) {
       Set-Location $env:VagrantSourceDir
       $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
       $PackageArch  = $env:PackageArch
+      $MingArchDir  = $env:MingArchDir
       $env:GEM_PATH = "$($EmbeddedDir)\gems"
       $env:GEM_HOME = $env:GEM_PATH
       $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
