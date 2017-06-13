@@ -225,6 +225,18 @@ class vagrant_substrate::staging::posix {
     ],
   }
 
+  $gemrc_path = "${embedded_dir}/etc/gemrc"
+
+  file { $gemrc_path:
+    content => template("vagrant_substrate/gemrc.erb"),
+    mode    => "0644",
+  }
+
+  file { "${embedded_dir}/cacert.pem":
+    source => "puppet:///modules/vagrant_substrate/cacert.pem",
+    mode   => "0644",
+  }
+
   class { "rubyencoder::loaders":
     path => $embedded_dir,
   }

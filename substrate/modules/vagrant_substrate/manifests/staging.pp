@@ -19,19 +19,4 @@ class vagrant_substrate::staging {
     'windows': { include vagrant_substrate::staging::windows }
     default:   { fail("Unknown operating system to stage.") }
   }
-
-  #------------------------------------------------------------------
-  # Common
-  #------------------------------------------------------------------
-  $gemrc_path = "${embedded_dir}/etc/gemrc"
-
-  file { $gemrc_path:
-    content => template("vagrant_substrate/gemrc.erb"),
-    mode    => "0644",
-  }
-
-  file { "${embedded_dir}/cacert.pem":
-    source => "puppet:///modules/vagrant_substrate/cacert.pem",
-    mode   => "0644",
-  }
 }

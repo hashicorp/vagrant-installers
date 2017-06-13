@@ -18,6 +18,7 @@ find $RUBYPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
 touch i-am-running
 ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
 
+# Start with the 64 bit build
 mkdir substrate
 find output/vagrant-w64/output -name "*.zip" -exec cp {} substrate/substrate-asset.zip \;
 pushd substrate
@@ -31,10 +32,30 @@ rm -rf _scripts substrate-asset.zip
 # style mounts of `/DRIVE`
 sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' ./mingw64/lib/ruby/2.3.0/x64-mingw32/rbconfig.rb
 
-find ./ -maxdepth 1 -name "*" -exec rm -rf /c/vagrant-substrate/staging/embedded/{} \;
-find ./ -maxdepth 1 -name "*" -exec mv -f {} /c/vagrant-substrate/staging/embedded/ \;
+find ./ -maxdepth 1 -name "*" -exec rm -rf /c/vagrant-substrate/staging/x64/embedded/{} \;
+find ./ -maxdepth 1 -name "*" -exec mv -f {} /c/vagrant-substrate/staging/x64/embedded/ \;
 popd
 rm -rf substrate
+
+# Finish with the 32 bit build
+mkdir substrate
+find output/vagrant-w32/output -name "*.zip" -exec cp {} substrate/substrate-asset.zip \;
+pushd substrate
+unzip -q substrate-asset.zip
+rm -rf _scripts substrate-asset.zip
+
+# The built ruby will have a minimal installation of msys2 and
+# will fall back to having cygwin style path mounts to access
+# the full windows system. This will "trick" ruby into building
+# windows paths using the `/cygdrive` mount instead of the msys2
+# style mounts of `/DRIVE`
+sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' ./mingw32/lib/ruby/2.3.0/i386-mingw32/rbconfig.rb
+
+find ./ -maxdepth 1 -name "*" -exec rm -rf /c/vagrant-substrate/staging/x32/embedded/{} \;
+find ./ -maxdepth 1 -name "*" -exec mv -f {} /c/vagrant-substrate/staging/x32/embedded/ \;
+popd
+rm -rf substrate
+
 rm i-am-running
 touch substrate-complete
 popd

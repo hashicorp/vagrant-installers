@@ -1,8 +1,16 @@
 $sourcedir = "<%= @staging_dir %>"
-$zipfilename = "<%= @package_path %>"
+$zipfilename = "<%= @output_dir %>\substrate_windows_x86_64.zip"
 
 if(Test-Path -Path $zipfilename) {
   Remove-Item -Path $zipfilename
 }
 
-Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\*" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\pack.log
+Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\x64\*" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\pack.log
+
+$zipfilename = "<%= @output_dir %>\substrate_windows_i686.zip"
+
+if(Test-Path -Path $zipfilename) {
+  Remove-Item -Path $zipfilename
+}
+
+Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\x32\*" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\pack.log

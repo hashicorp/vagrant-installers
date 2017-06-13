@@ -6,6 +6,12 @@ class vagrant_substrate::staging::windows {
   $staging_dir       = $vagrant_substrate::staging_dir
   $installer_version = $vagrant_substrate::installer_version
 
+  $staging_dir_32   = "${staging_dir}\\x32"
+  $staging_dir_64   = "${staging_dir}\\x64"
+
+  $embedded_dir_32  = "${staging_dir_32}\\embedded"
+  $embedded_dir_64  = "${staging_dir_64}\\embedded"
+
   $ruby_version      = hiera("ruby::version")
   $ruby_files_path   = "${cache_dir}\\ruby-files"
   $ruby_build_path   = "${cache_dir}\\ruby-build"
@@ -16,6 +22,26 @@ class vagrant_substrate::staging::windows {
   $builder_config    = "${builder_cwd}\\vagrant.cfg"
 
   $launcher_path     = "${cache_dir}\\launcher"
+
+  file { $staging_dir_64:
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { $staging_dir_32:
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { $embedded_dir_64:
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { $embedded_dir_32:
+    ensure => "directory",
+    recurse => true,
+  }
 
   file { $builder_path:
     content => template("vagrant_substrate/substrate_builder.sh.erb"),
@@ -50,6 +76,8 @@ class vagrant_substrate::staging::windows {
     require => [
       File[$builder_path],
       File[$builder_config],
+      File[$embedded_dir_64],
+      File[$embedded_dir_32],
       Powershell["build-ruby"],
     ],
   }
@@ -66,8 +94,8 @@ class vagrant_substrate::staging::windows {
   }
 
   # install launcher
-  exec { "install-launcher":
-    command => "C:\\Go\\bin\\go.exe build -o \"${staging_dir}\\bin\\vagrant.exe\" main.go",
+  exec { "install-launcher-x64":
+    command => "C:\\Go\\bin\\go.exe build -o \"${staging_dir_64}\\bin\\vagrant.exe\" main.go",
     cwd => $launcher_path,
     require => [
       File[$launcher_path],
@@ -76,8 +104,55 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
+  exec { "install-launcher-x32":
+    command => "C:\\Go\\bin\\go.exe build -o \"${staging_dir_32}\\bin\\vagrant.exe\" main.go",
+    cwd => $launcher_path,
+    environment => [
+      "GOARCH=386",
+    ],
+    require => [
+      File[$launcher_path],
+      Exec["install-osext"],
+      Powershell["build-substrate"],
+    ],
+  }
+
+  file { "${embedded_dir_64}\\etc\\gemrc":
+    content => template("vagrant_substrate/gemrc.erb"),
+    mode    => "0644",
+    recurse => true,
+    require => [
+      Powershell["build-substrate"],
+    ],
+  }
+
+  file { "${embedded_dir_32}\\etc\\gemrc":
+    content => template("vagrant_substrate/gemrc.erb"),
+    recurse => true,
+    mode    => "0644",
+    require => [
+      Powershell["build-substrate"],
+    ],
+  }
+
+  file { "${embedded_dir_64}\\cacert.pem":
+    source => "puppet:///modules/vagrant_substrate/cacert.pem",
+    mode   => "0644",
+    require => [
+      Powershell["build-substrate"],
+    ],
+  }
+
+  file { "${embedded_dir_32}\\cacert.pem":
+    source => "puppet:///modules/vagrant_substrate/cacert.pem",
+    mode   => "0644",
+    require => [
+      Powershell["build-substrate"],
+    ],
+  }
+
   class { "rubyencoder::loaders":
-    path => $embedded_dir,
+    path => $staging_dir,
     require => [
       Powershell["build-substrate"],
     ],
