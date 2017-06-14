@@ -46,6 +46,11 @@
       "type": "file"
     },
     {
+      "destination": "/private/tmp/dmgbuild.rb",
+      "source": "scripts/osx/dmgbuild.rb",
+      "type": "file"
+    },
+    {
       "destination": "/private/tmp/set_kcpassword.py",
       "source": "scripts/osx/set_kcpassword.py",
       "type": "file"
