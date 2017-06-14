@@ -10,7 +10,8 @@ class libssh2(
 ) {
   require build_essential
 
-  $source_filename  = "libssh2-1.7.0.tar.gz"
+  $libssh2_version  = hiera("libssh2::version")
+  $source_filename  = "libssh2-${libssh2_version}.tar.gz"
   $source_url = "http://www.libssh2.org/download/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')

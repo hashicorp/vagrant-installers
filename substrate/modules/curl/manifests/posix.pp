@@ -5,7 +5,7 @@ class curl::posix {
   $autotools_environment = $curl::autotools_environment
   $file_cache_dir        = $curl::file_cache_dir
   $install_dir           = $curl::install_dir
-  $version               = $curl::version
+  $version               = hiera("curl::version")
 
   $source_filename  = "curl-${version}.tar.gz"
   $source_url = "http://curl.haxx.se/download/${source_filename}"

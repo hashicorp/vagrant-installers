@@ -10,7 +10,8 @@ class libyaml(
 ) {
   require build_essential
 
-  $source_filename  = "yaml-0.1.6.tar.gz"
+  $libyaml_version  = hiera("libyaml::version")
+  $source_filename  = "yaml-${libyaml_version}.tar.gz"
   $source_url = "http://pyyaml.org/download/libyaml/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')

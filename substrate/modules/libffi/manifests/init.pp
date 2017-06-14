@@ -10,7 +10,8 @@ class libffi (
 ) {
   require build_essential
 
-  $source_filename  = "libffi-3.0.13.tar.gz"
+  $libffi_version   = hiera("libffi::version")
+  $source_filename  = "libffi-${libffi_version}.tar.gz"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"

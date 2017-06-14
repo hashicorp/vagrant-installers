@@ -1,8 +1,8 @@
 class curl::windows {
   $file_cache_dir  = $curl::file_cache_dir
   $install_dir     = $curl::install_dir
-  $curl_version    = $curl::version
-  $libssh2_version = $curl::libssh2_version
+  $curl_version    = hiera("curl::version")
+  $libssh2_version = hiera("libssh2::version")
 
   # curl variables
   curl_filename  = "curl-${curl_version}.zip"

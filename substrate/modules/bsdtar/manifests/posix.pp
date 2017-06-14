@@ -5,9 +5,11 @@ class bsdtar::posix {
   $file_cache_dir        = $bsdtar::file_cache_dir
   $install_dir           = $bsdtar::install_dir
 
-  $source_dir_path = "${file_cache_dir}/libarchive-3.1.2"
+  $libarchive_version = hiera("libarchive::version")
+  $source_dir_path = "${file_cache_dir}/libarchive-${libarchive_version}"
   $source_package_path = "${file_cache_dir}/libarchive.tar.gz"
-  $source_url = "https://github.com/libarchive/libarchive/archive/v3.1.2.tar.gz"
+  $source_url = "https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz"
+
   $lib_version = "13"
 
   $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex"
