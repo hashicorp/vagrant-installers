@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TOOLS_PATH="/Users/$SSH_USERNAME/darwin.iso"
+TOOLS_PATH="/private/tmp/darwin.iso"
 if [ ! -e "$TOOLS_PATH" ]; then
     echo "Couldn't locate uploaded tools iso at $TOOLS_PATH!"
     exit 1

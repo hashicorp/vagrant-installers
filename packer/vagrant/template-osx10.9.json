@@ -41,6 +41,11 @@
   ],
   "provisioners": [
     {
+      "destination": "/private/tmp/darwin.iso",
+      "source": "osx-vmtools-darwin.iso",
+      "type": "file"
+    },
+    {
       "destination": "/private/tmp/set_kcpassword.py",
       "source": "scripts/osx/set_kcpassword.py",
       "type": "file"
