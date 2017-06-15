@@ -156,8 +156,8 @@ class ruby::source(
       refreshonly => true,
     }
 
-    $embedded_include = '/vagrant-substrate/cache/ruby-2.2.5/include'
-    $replacement_include = "${installation_dir}/embedded/include/ruby-2.2.0"
+    $embedded_include = "/vagrant-substrate/cache/${ruby_version}/include"
+    $replacement_include = "${installation_dir}/embedded/include/ruby-${lib_long_version}"
     exec { "adjust-ruby-include":
       command => "grep -l -I -R '${embedded_include}' '${prefix}' | xargs sed -i 's@${embedded_include}@${replacement_include}@g'",
       subscribe => Autotools["ruby"],
