@@ -11,7 +11,7 @@ class ruby::source(
   require build_essential
 
   $ruby_version     = hiera("ruby::version")
-  $lib_short_version = inline_template("<%= @ruby_version.split(".").slice(0,2).join(".") %>")
+  $lib_short_version = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>")
   $lib_long_version = "${lib_short_version}.0"
 
   $source_filename  = "ruby-${version}.tar.gz"

@@ -17,7 +17,7 @@ class readline(
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
-  $lib_version = inline_template("<%= @readline_version.split(".").first %>")
+  $lib_version = inline_template("<%= @readline_version.split('.').first %>")
 
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
