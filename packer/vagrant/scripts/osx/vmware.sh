@@ -22,6 +22,7 @@ installer -pkg "$TMPMOUNT/Install VMware Tools.app/Contents/Resources/VMware Too
 hdiutil detach "$TMPMOUNT"
 rm -rf "$TMPMOUNT"
 rm -f "$TOOLS_PATH"
+rm -f darwin.iso
 
 # Point Linux shared folder root to that used by OS X guests,
 # useful for the Hashicorp vmware_fusion Vagrant provider plugin
