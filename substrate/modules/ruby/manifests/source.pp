@@ -14,7 +14,7 @@ class ruby::source(
   $lib_short_version = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>")
   $lib_long_version = "${lib_short_version}.0"
 
-  $source_filename  = "ruby-${version}.tar.gz"
+  $source_filename  = "ruby-${ruby_version}.tar.gz"
   $source_url = "https://cache.ruby-lang.org/pub/ruby/${lib_short_version}/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
