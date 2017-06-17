@@ -43,6 +43,9 @@ if [ $(ls | wc -w) -gt 16 ]; then
 fi
 popd
 
+yum remove -y autoconf m4
+rm -rf /usr/share/aclocal*
+
 echo "==> Clean up yum cache of metadata and packages to save space"
 yum -y --enablerepo='*' clean all
 
