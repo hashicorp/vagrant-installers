@@ -12,7 +12,7 @@ class bsdtar::posix {
 
   $lib_version = "13"
 
-  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat --without-libregex"
+  $configure_flags = "--prefix=${install_dir} --disable-dependency-tracking --with-zlib --without-bz2lib --without-iconv --without-libiconv-prefix --without-nettle --without-openssl --without-xml2 --without-expat"
 
   # We don't currently support LZMA on Linux. TODO
   $real_configure_flags = $operatingsystem ? {
@@ -77,15 +77,40 @@ class bsdtar::posix {
     require => Download["libarchive"],
   }
 
-  #------------------------------------------------------------------
-  # Compile
-  #------------------------------------------------------------------
-  # Create configuration script
-  exec { "automake-libarchive":
-    command => "/bin/sh build/autogen.sh",
-    creates => "${source_dir_path}/configure",
-    cwd     => $source_dir_path,
-    require => Exec["untar-libarchive"],
+  if $kernel != 'Darwin' {
+    # Even with the --without-xml2 flag set configure will try to expand
+    # a libxml2 macro in the configure script which causes an error. This
+    # scrubs the macro from the configure file allowing it to complete
+    # successfully. This should be removed once the configure script properly
+    # supports disabling of libxml2
+    exec { "remove-libxml2-configure":
+      command => "/bin/bash -c \"cat configure | tr '\\\\n' '\\\\r' | sed -e 's/PKG_PROG_PKG_CONFIG.*LIBXML2_PC.*xmlInitParser)\\\\r *)\\\\r//' | tr '\\\\r' '\\\\n' > configure.tmp && mv -f configure.tmp configure\"",
+      cwd => $source_dir_path,
+      require => Exec["automake-update-libarchive"],
+    }
+
+    #
+    # Update automake files
+    #
+    exec { "automake-update-libarchive":
+      command => "autoreconf -i || autoreconf -i",
+      cwd => $source_dir_path,
+      require => Exec["untar-libarchive"],
+    }
+
+    exec { "automake-libarchive":
+      command => "/bin/sh build/autogen.sh",
+      creates => "${source_dir_path}/configure",
+      cwd     => $source_dir_path,
+      require => Exec["remove-libxml2-configure"],
+    }
+  } else {
+    exec { "automake-libarchive":
+      command => "/bin/sh build/autogen.sh",
+      creates => "${source_dir_path}/configure",
+      cwd     => $source_dir_path,
+      require => Exec["untar-libarchive"],
+    }
   }
 
   # Build it
