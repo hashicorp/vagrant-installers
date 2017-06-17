@@ -90,13 +90,19 @@ class vagrant_substrate::staging::windows {
 
   # ensure dependency is around
   exec { "install-osext":
-    command => "cmd.exe /c \"C:\\Go\\bin\\go.exe get github.com/mitchellh/osext\""
+    command => "cmd.exe /c \"C:\\Go\\bin\\go.exe get github.com/mitchellh/osext\"",
+    environment => [
+      "GOPATH=C:\\Windows\Temp",
+    ],
   }
 
   # install launcher
   exec { "install-launcher-x64":
     command => "C:\\Go\\bin\\go.exe build -o \"${staging_dir_64}\\bin\\vagrant.exe\" main.go",
     cwd => $launcher_path,
+    environment => [
+      "GOPATH=C:\\Windows\Temp",
+    ],
     require => [
       File[$launcher_path],
       Exec["install-osext"],
