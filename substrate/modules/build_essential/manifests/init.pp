@@ -17,7 +17,7 @@ class build_essential {
     }
 
     'CentOS': {
-      package { ["chrpath", "gcc", "make", "perl", "automake", "libtool"]:
+      package { ["chrpath", "gcc", "make", "perl"]:
         ensure => installed,
       }
 
