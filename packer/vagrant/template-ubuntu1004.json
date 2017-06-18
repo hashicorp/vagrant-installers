@@ -79,6 +79,7 @@
         "scripts/ubuntu/ssl-update.sh",
         "scripts/ubuntu/go.sh",
         "scripts/ubuntu/motd.sh",
+        "scripts/ubuntu/fpm.sh",
         "scripts/ubuntu/minimize.sh",
         "scripts/ubuntu/cleanup.sh"
       ],
