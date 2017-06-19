@@ -13,7 +13,7 @@ build_boxes = [
 # Valid types: "substrate", "package"
 build_type = ENV.fetch('VAGRANT_BUILD_TYPE', 'substrate')
 # Box name prefix to allow custom box usage
-box_prefix = ENV.fetch('VAGRANT_BUILD_BOX_PREFIX', 'spox')
+box_prefix = ENV.fetch('VAGRANT_BUILD_BOX_PREFIX', 'hashicorp-vagrant')
 script_base = File.join(build_type, "vagrant-scripts")
 
 script_env_vars = Hash[
