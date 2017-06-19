@@ -25,11 +25,28 @@ class rubyencoder::loaders(
     $mode  = '0644'
   }
 
-  file { "${path}/rgloader":
-    source  => "puppet:///modules/rubyencoder/rgloader",
-    recurse => true,
-    owner   => $owner,
-    group   => $group,
-    mode    => $mode,
+  if $kernel == 'windows' {
+    file { "${path}\\x64\\embedded\\rgloader":
+      source  => "puppet:///modules/rubyencoder/rgloader",
+      recurse => true,
+      owner   => $owner,
+      group   => $group,
+      mode    => $mode,
+    }
+    file { "${path}\\x32\\embedded\\rgloader":
+      source  => "puppet:///modules/rubyencoder/rgloader",
+      recurse => true,
+      owner   => $owner,
+      group   => $group,
+      mode    => $mode,
+    }
+  } else {
+    file { "${path}/rgloader":
+      source  => "puppet:///modules/rubyencoder/rgloader",
+      recurse => true,
+      owner   => $owner,
+      group   => $group,
+      mode    => $mode,
+    }
   }
 }

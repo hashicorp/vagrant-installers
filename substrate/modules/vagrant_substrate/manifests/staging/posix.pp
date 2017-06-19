@@ -5,6 +5,7 @@ class vagrant_substrate::staging::posix {
   $embedded_dir      = $vagrant_substrate::embedded_dir
   $staging_dir       = $vagrant_substrate::staging_dir
   $installer_version = $vagrant_substrate::installer_version
+  $launcher_path     = "${cache_dir}/launcher"
 
   #------------------------------------------------------------------
   # Calculate variables based on operating system
@@ -201,6 +202,45 @@ class vagrant_substrate::staging::posix {
       Class["openssl"],
       Class["readline"],
     ],
+  }
+
+  file { $launcher_path:
+    source => "puppet:///modules/vagrant_substrate/launcher",
+    path => $launcher_path,
+    recurse => true,
+  }
+
+  # ensure dependency is around
+  exec { "install-osext":
+    command => "/usr/local/go/bin/go get github.com/mitchellh/osext",
+    environment => [
+      "GOPATH=/tmp/go",
+    ],
+  }
+
+  # install launcher
+  exec { "install-launcher":
+    command => "/usr/local/go/bin/go build -o \"${staging_dir}/bin/vagrant\" main.go",
+    cwd => $launcher_path,
+    environment => [
+      "GOPATH=/tmp/go",
+    ],
+    require => [
+      File[$launcher_path],
+      Exec["install-osext"],
+    ],
+  }
+
+  $gemrc_path = "${embedded_dir}/etc/gemrc"
+
+  file { $gemrc_path:
+    content => template("vagrant_substrate/gemrc.erb"),
+    mode    => "0644",
+  }
+
+  file { "${embedded_dir}/cacert.pem":
+    source => "puppet:///modules/vagrant_substrate/cacert.pem",
+    mode   => "0644",
   }
 
   class { "rubyencoder::loaders":

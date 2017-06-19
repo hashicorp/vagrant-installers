@@ -10,13 +10,14 @@ class readline(
 ) {
   require build_essential
 
-  $source_filename  = "readline-6.3.tar.gz"
+  $readline_version = hiera("readline::version")
+  $source_filename  = "readline-${readline_version}.tar.gz"
   $source_url = "http://ftpmirror.gnu.org/readline/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
-  $lib_version = "6"
+  $lib_version = inline_template("<%= @readline_version.split('.').first %>")
 
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.

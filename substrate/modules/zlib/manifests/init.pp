@@ -10,14 +10,14 @@ class zlib(
 ) {
   require build_essential
 
-  $source_filename  = "zlib-1.2.11.tar.gz"
+  $lib_version = hiera("zlib::version")
+  $source_filename  = "zlib-${lib_version}.tar.gz"
   $source_url = "http://zlib.net/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
-  $lib_version = "1.2.11"
-  $lib_short_version = "1"
+  $lib_short_version = inline_template("<%= @lib_version.split('.').first %>")
 
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.

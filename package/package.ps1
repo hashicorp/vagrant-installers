@@ -35,6 +35,9 @@ param(
     [string]$ScrubCache="no"
 )
 
+# Default build architecture to 64bit
+$PackageArch = "64"
+
 # Exit if there are any exceptions
 $ErrorActionPreference = "Stop"
 
@@ -99,13 +102,19 @@ Write-Host "Substrate temp dir: $($SubstrateTmpDir)"
 # Unzip
 If ($UseCache -eq $false) {
   Write-Host "Expanding substrate..."
-  Expand-ZipFile -file $SubstratePath -destination $SubstrateTmpDir
+  Start-Process "C:\Program Files\7-Zip\7z.exe" "x -o${SubstrateTmpDir} ${SubstratePath}" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\unpack.log
 } Else {
   Write-Host "Using cached substrate"
 }
 
 # Set the full path to the substrate
 $SubstrateDir = "$($SubstrateTmpDir)"
+
+$Path32Bit = [System.IO.Path]::Combine($SubstrateDir, "embedded", "mingw32")
+if (Test-Path -Path $Path32Bit) {
+  Write-Host "Detected 32bit substrate. Building 32bit package."
+  $PackageArch = "32"
+}
 
 #--------------------------------------------------------------------
 # Install Vagrant
@@ -155,7 +164,7 @@ $VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
 If ($UseCache -eq $false) {
   Write-Host "Building Vagrant Gem"
   Push-Location $VagrantSourceDir
-  &"$($SubstrateDir)\embedded\bin\gem.bat" build vagrant.gemspec
+  &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
   Copy-Item vagrant-*.gem -Destination vagrant.gem
   Pop-Location
 } Else {
@@ -170,9 +179,17 @@ if (-Not (Test-Path $VagrantVersionFile)) {
 $VagrantVersion=$((Get-Content $VagrantVersionFile) -creplace '\.[^0-9]+(\.[0-9]+)?$', '$1')
 Write-Host "Vagrant version: $VagrantVersion"
 
+if ($PackageArch -eq "64") {
+  $MingArchDir = "x86_64-w64-mingw32"
+} else {
+  $MingArchDir = "i686-w64-mingw32"
+}
+
 if ($UseCache -eq $false) {
   # Install gem. We do this in a sub-shell so we don't have to worry
   # about restoring environmental variables.
+  $env:PackageArch      = $PackageArch
+  $env:MingArchDir      = $MingArchDir
   $env:SubstrateDir     = $SubstrateDir
   $env:VagrantSourceDir = $VagrantSourceDir
   powershell {
@@ -180,17 +197,21 @@ if ($UseCache -eq $false) {
 
       Set-Location $env:VagrantSourceDir
       $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
+      $PackageArch  = $env:PackageArch
+      $MingArchDir  = $env:MingArchDir
       $env:GEM_PATH = "$($EmbeddedDir)\gems"
       $env:GEM_HOME = $env:GEM_PATH
       $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
-      $env:CPPFLAGS = "-I$($EmbeddedDir)\include"
-      $env:LDFLAGS  = "-L$($EmbeddedDir)\lib"
-      $env:Path     ="$($EmbeddedDir)\bin;$($env:Path)"
+      $env:CPPFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
+      $env:CFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
+      $env:LDFLAGS  = "-L/mingw$($PackageArch)/lib -L/mingw$($PackageArch)/$($MingArchDir)/lib -L/usr/lib"
+      $env:PKG_CONFIG_PATH = "/mingw$($PackageArch)/lib/pkgconfig:/usr/lib/pkgconfig"
+      $env:Path     ="$($EmbeddedDir)\mingw$($PackageArch)\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
       $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
-      &"$($EmbeddedDir)\bin\gem.bat" install vagrant.gem --no-ri --no-rdoc
+      &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-ri --no-rdoc
 
       # Extensions
-      &"$($EmbeddedDir)\bin\gem.bat" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+      &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
   }
   Remove-Item Env:SubstrateDir
   Remove-Item Env:VagrantSourceDir
@@ -216,44 +237,15 @@ $contents | Out-File `
     -Encoding ASCII `
     -FilePath "$($SubstrateDir)\embedded\plugins.json"
 
-#-------------------------------------------------------------------
-# Patch version info into bsdtar.exe and bsdcpio.exe with verpatch.exe
-# Fix for vagrant issue #3674, MSI Upgrade 1.5 -> 1.6
-#--------------------------------------------------------------------
-# Download verpatch from http://ddverpatch.codeplex.com/
-<#
-$verpatchSourceURL = "http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=ddverpatch&DownloadId=713811&FileTime=130201209882270000&Build=20907"
-$verpatchDest = "$($VagrantTmpDir)\verpatch.zip"
-
-Write-Host "Downloading verpatch 1.0.14"
-(New-Object System.Net.WebClient).DownloadFile($verpatchSourceURL, $verpatchDest)
-
-Write-Host "Unzipping verpatch"
-Expand-ZipFile -file $verpatchDest -destination $VagrantTmpDir
-
-$verpatch = "$($VagrantTmpDir)\verpatch.exe"
-
-$bsdtar = "$($SubstrateDir)\embedded\gnuwin32\bin\bsdtar.exe"
-$bsdcpio = "$($SubstrateDir)\embedded\gnuwin32\bin\bsdcpio.exe"
-
-$version = & $bsdtar --version
-$version -match '([\d.]+)'
-$bsdversion = "$($matches[0]).0"
-
-Write-Host "Patching version $bsdversion into $bsdtar"
-& $verpatch $bsdtar /va $bsdversion /pv $bsdversion
-
-Write-Host "Patching version $bsdversion into $bsdcpio"
-& $verpatch $bsdcpio /va $bsdversion /pv $bsdversion
-
-Write-Host "Done"
-#>
-
 #--------------------------------------------------------------------
 # MSI
 #--------------------------------------------------------------------
 # Final path to output
-$OutputPath = "vagrant_$($VagrantVersion).msi"
+if ( $PackageArch -eq "64") {
+  $OutputPath = "vagrant_$($VagrantVersion)_x86_64.msi"
+} else {
+  $OutputPath = "vagrant_$($VagrantVersion)_i686.msi"
+}
 
 $InstallerTmpDir = [System.IO.Path]::GetTempPath()
 $InstallerTmpDir = [System.IO.Path]::Combine(
@@ -274,18 +266,6 @@ Copy-Item "$($Dir)\support\windows\vagrant.ico" `
     -Destination "$($InstallerTmpDir)\assets\vagrant.ico"
 Copy-Item "$($Dir)\support\windows\vagrant-en-us.wxl" `
     -Destination "$($InstallerTmpDir)\vagrant-en-us.wxl"
-
-# Download the C++ Runtime Redistributable package
-$vcredistSourceURL = "https://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe"
-$vcredistDest = "$($VagrantTmpDir)\vcredist_x86.exe"
-
-If ($UseCache -eq $false) {
-  Write-Host "Downloading C++ Runtime Redistributable"
-  (New-Object System.Net.WebClient).DownloadFile($vcredistSourceURL, $vcredistDest)
-}
-
-# Move runtime redistributable into our package
-Copy-Item "$($vcredistDest)" -Destination "$($InstallerTmpDir)\vcredist_x86.exe"
 
 $contents = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -416,6 +396,8 @@ $contents | Out-File `
 Write-Host "Running heat.exe"
 &$WixHeat dir $SubstrateDir `
     -nologo `
+    -ke `
+    -sreg `
     -srd `
     -gg `
     -cg VagrantDir `
@@ -463,83 +445,8 @@ if ($SignKey) {
         $OutputPath
 }
 
-$BundleOutputPath = "vagrant_$($VagrantVersion).exe"
-
 Copy-Item $OutputPath -Destination "$($InstallerTmpDir)\vagrant.msi"
 
-$contents = @"
-<?xml version="1.0"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-  xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
-  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-    <Bundle Name="VagrantInstaller" Manufacturer="HashiCorp" Version="$($VagrantVersion)" UpgradeCode="a48b8e2d-87a9-4655-8951-41c8a1b254eb">
-        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
-            <bal:WixStandardBootstrapperApplication
-                LicenseFile="$($InstallerTmpDir)\assets\license.rtf"
-                LogoFile="$($InstallerTmpDir)\assets\burn_logo.bmp" />
-        </BootstrapperApplicationRef>
-        <Variable Name="InstallFolder" Type="string" Value="[WindowsVolume]HashiCorp\Vagrant" bal:Overridable="yes" />
-        <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\DevDiv\VC\Servicing\9.0\RED\1033" Value="SP" Variable="vcredist" />
-        <Chain>
-          <MsiPackage SourceFile="$($InstallerTmpDir)\vagrant.msi" Vital="yes" Visible="yes">
-            <MsiProperty Name="INSTALLDIR" Value="[InstallFolder]" />
-          </MsiPackage>
-          <ExePackage
-            SourceFile="$($InstallerTmpDir)\vcredist_x86.exe"
-            InstallCommand="/passive"
-            PerMachine="yes"
-            Permanent="yes"
-            DetectCondition="vcredist AND (vcredist >= 1)" />
-        </Chain>
-    </Bundle>
-</Wix>
-"@
-$contents | Out-File `
-    -Encoding ASCII `
-    -FilePath "$($InstallerTmpDir)\vagrant-bundle.wxs"
-
-Write-Host "Running bundle candle.exe"
-$CandleArgs = @(
-    "-nologo",
-    "-ext WixBalExtension",
-    "-ext WixUtilExtension",
-    "-I$($InstallerTmpDir)",
-    "-out $InstallerTmpDir\",
-    "$($InstallerTmpDir)\vagrant-bundle.wxs"
-)
-Start-Process -NoNewWindow -Wait `
-    -ArgumentList $CandleArgs -FilePath $WixCandle
-
-Write-Host "Running bundle light.exe"
-&$WixLight `
-    -nologo `
-    -ext WixBalExtension `
-    -ext WixUtilExtension `
-    -spdb `
-    -cultures:en-us `
-    -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
-    -out $BundleOutputPath `
-    "$($InstallerTmpDir)\vagrant-bundle.wixobj"
-
-#--------------------------------------------------------------------
-# Sign
-#--------------------------------------------------------------------
-if ($SignKey) {
-    $SignTool = "signtool.exe"
-    if ($SignPath) {
-        $SignTool = $SignPath
-    }
-
-    &$SignTool sign `
-        /t http://timestamp.digicert.com `
-        /f $SignKey `
-        /p $SignKeyPassword `
-        $BundleOutputPath
-}
-
-#--------------------------------------------------------------------
-# Clean up
-#--------------------------------------------------------------------
 Remove-Item -Recurse -Force $InstallerTmpDir
 
 If ($BuildStyle -eq "ephemeral") {
@@ -548,4 +455,3 @@ If ($BuildStyle -eq "ephemeral") {
 }
 
 Write-Host "Installer MSI at: $($OutputPath)"
-Write-Host "Installer bundled EXE at: $($BundleOutputPath)"

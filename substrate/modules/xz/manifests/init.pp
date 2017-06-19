@@ -9,14 +9,14 @@ class xz(
   $prefix = params_lookup('prefix'),
 ) {
   require build_essential
-
-  $source_filename  = "xz-5.2.1.tar.gz"
+  $xz_version       = hiera("xz::version")
+  $source_filename  = "xz-${xz_version}.tar.gz"
   $source_url = "http://tukaani.org/xz/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
-  $lib_version = "5"
+  $lib_version = inline_template("<%= @xz_version.split('.').first %>")
 
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.

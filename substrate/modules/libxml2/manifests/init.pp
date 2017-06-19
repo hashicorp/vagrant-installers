@@ -10,7 +10,8 @@ class libxml2(
 ) {
   require build_essential
 
-  $source_filename  = "libxml2-2.9.2.tar.gz"
+  $libxml2_version  = hiera("libxml2::version")
+  $source_filename  = "libxml2-${libxml2_version}.tar.gz"
   $source_url = "ftp://xmlsoft.org/libxml2/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')

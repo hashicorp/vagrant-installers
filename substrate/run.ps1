@@ -12,6 +12,7 @@ Param(
 
 # Get the directory to this script
 $Dir = Split-Path $script:MyInvocation.MyCommand.Path
+Set-Location $Dir
 
 # We need to create a temporary configuration directory because Puppet
 # needs to run on a filesystem that supports NTFS.

@@ -1,0 +1,28 @@
+[String]$File = "C:\msys64\home\vagrant\styrene\substrate-complete"
+[Int]$MaxRetries = 720
+
+$Retries = 0
+$Found = $false
+
+if (Test-Path -LiteralPath $File) {
+  Remove-Item -Path $File
+}
+
+Start-Process "c:\msys64\msys2_shell.cmd" "-msys2 -where <%= @builder_cwd %> -no-start -f <%= @builder_path %>" -Wait -NoNewWindow
+
+while (-not $Found) {
+  if (Test-Path -LiteralPath $File) {
+    $Found = $true
+  }
+  else {
+    if ($Retries -ge $MaxRetries) {
+      throw "Failed to detect substrate build completion!"
+    }
+    else {
+      Start-Sleep 5
+      $Retries++
+    }
+  }
+}
+
+Remove-Item -Path $File
