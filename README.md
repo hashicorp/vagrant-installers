@@ -21,18 +21,36 @@ since March, 2012.
 
 ## Prerequisites
 
-### Linux (Ubuntu, CentOS):
+The Vagrant Installer Generators use Vagrant to generate both the
+substrate layer and package layer. The boxes used for generating
+these layers can be built using the packer templates located in
+`packer/vagrant`.
 
-* [fpm](https://github.com/jordansissel/fpm)
-* `unzip`
-* `wget`
+## Building Substrates and Packages
 
-### Mac OS X:
+By default, Vagrant will build substrate layers. The result of Vagrant's
+provisioning step is controlled by an environment variable:
 
-* XCode (not just the command-line tools)
-* `unzip`
-* `wget`
+* `VAGRANT_BUILD_TYPE` - `substrate` or `package`
 
-### Windows
+The substrate layers must be built prior to building packages. To
+build substrates:
 
-* [WiX](http://wixtoolset.org/)
+```
+$ VAGRANT_BUILD_TYPE="substrate" vagrant up
+```
+
+Once the generation of the substrate layers has completed, the
+packages can be generated. This can be done by either first destroying
+the running VMs:
+
+```
+$ vagrant destroy --force
+$ VAGRANT_BUILD_TYPE="package" vagrant up
+```
+
+or by simply re-provisioning the running VMs:
+
+```
+$ VAGRANT_BUILD_TYPE="package" vagrant provision
+```
