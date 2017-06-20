@@ -1,6 +1,6 @@
 #!/bin/sh
 
-uname -m | grep x86_64
+uname -m | grep x86_64 > /dev/null
 
 if [[ $? -eq 0 ]]
 then
