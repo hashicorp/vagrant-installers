@@ -230,9 +230,9 @@ func main() {
 	}
 
 	// Determine the path to Ruby and then start the Vagrant process
-	rubyPath := filepath.Join(embeddedDir, mingwDir, "bin", "ruby")
+	rubyPath := filepath.Join(embeddedDir, "bin", "ruby")
 	if runtime.GOOS == "windows" {
-		rubyPath += ".exe"
+		rubyPath = filepath.Join(embeddedDir, mingwDir, "bin", "ruby") + ".exe"
 	}
 
 	// Prior to starting the command, we ignore interrupts. Vagrant itself
