@@ -200,6 +200,8 @@ func main() {
   if runtime.GOOS == "windows" {
 		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, mingwDir, "lib", "pkgconfig") +
 			":" + filepath.Join(embeddedDir, "usr", "lib", "pkgconfig")
+	} else {
+		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, "lib", "pkgconfig")
 	}
 
 	// Store the "current" environment so Vagrant can restore it when shelling
