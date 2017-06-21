@@ -55,6 +55,7 @@
         "./scripts/windows/git.bat",
         "./scripts/windows/msys2.bat",
         "./scripts/windows/styrene.bat",
+        "./scripts/windows/disable-firewall.bat",
         "./scripts/windows/clean-temp.bat",
         "./scripts/windows/compact.bat"
       ]
