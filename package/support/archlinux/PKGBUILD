@@ -1,4 +1,4 @@
-pkgname=vagrant
+pkgname=hashicorp-vagrant
 pkgver=%VERSION%
 pkgrel=1
 pkgdesc="Build and distribute virtualized development environments"
@@ -6,7 +6,7 @@ arch=('x86_64')
 url="https://www.vagrantup.com"
 license=('MIT')
 source=('%VAGRANTPATH%')
-conflicts=('vagrant', 'vagrant-git')
+conflicts=('vagrant', 'vagrant-substrate')
 options=('!emptydirs')
 md5sums=('SKIP')
 
