@@ -1,0 +1,18 @@
+pkgname=vagrant
+pkgver=%VERSION%
+pkgrel=1
+pkgdesc="Build and distribute virtualized development environments"
+arch=('x86_64')
+url="https://www.vagrantup.com"
+license=('MIT')
+source=('%VAGRANTPATH%')
+conflicts=('vagrant', 'vagrant-git')
+options=('!emptydirs')
+md5sums=('SKIP')
+
+
+package() {
+  mv "${srcdir}/opt" "${pkgdir}/opt"
+  mkdir -p "${pkgdir}/usr/bin"
+  ln -s /opt/vagrant/bin/vagrant "${pkgdir}/usr/bin/vagrant"
+}

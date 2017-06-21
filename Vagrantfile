@@ -7,7 +7,8 @@ build_boxes = [
   'osx-10.9',
   'ubuntu-10.04',
   'ubuntu-10.04-i386',
-  'win-7'
+  'win-7',
+  'archlinux'
 ]
 
 # Valid types: "substrate", "package"
