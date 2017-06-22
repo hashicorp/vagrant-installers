@@ -215,8 +215,8 @@ class vagrant_substrate::staging::posix {
     command => "go get github.com/mitchellh/osext",
     environment => [
       "GOPATH=/tmp/go",
-      "PATH=/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
     ],
+    path => "/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
   }
 
   # install launcher
@@ -225,8 +225,8 @@ class vagrant_substrate::staging::posix {
     cwd => $launcher_path,
     environment => [
       "GOPATH=/tmp/go",
-      "PATH=/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
     ],
+    path => "/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
     require => [
       File[$launcher_path],
       Exec["install-osext"],
