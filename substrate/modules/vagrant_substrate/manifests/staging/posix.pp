@@ -225,7 +225,7 @@ class vagrant_substrate::staging::posix {
     cwd => $launcher_path,
     environment => [
       "GOPATH=/tmp/go",
-      "PATH"=$PATH:/usr/local/go/bin",
+      "PATH=$PATH:/usr/local/go/bin",
     ],
     require => [
       File[$launcher_path],
