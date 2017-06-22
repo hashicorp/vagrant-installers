@@ -92,7 +92,8 @@ class vagrant_substrate::staging::windows {
   exec { "install-osext":
     command => "cmd.exe /c \"C:\\Go\\bin\\go.exe get github.com/mitchellh/osext\"",
     environment => [
-      "GOPATH=C:\\Windows\Temp",
+      "GOPATH=C:\\Windows\\Temp",
+      "PATH=C:\\Go\\bin;C:\\Program Files\\Git\\bin;%PATH%",
     ],
   }
 
@@ -101,7 +102,7 @@ class vagrant_substrate::staging::windows {
     command => "C:\\Go\\bin\\go.exe build -o \"${staging_dir_64}\\bin\\vagrant.exe\" main.go",
     cwd => $launcher_path,
     environment => [
-      "GOPATH=C:\\Windows\Temp",
+      "GOPATH=C:\\Windows\\Temp",
     ],
     require => [
       File[$launcher_path],

@@ -212,18 +212,20 @@ class vagrant_substrate::staging::posix {
 
   # ensure dependency is around
   exec { "install-osext":
-    command => "/usr/local/go/bin/go get github.com/mitchellh/osext",
+    command => "go get github.com/mitchellh/osext",
     environment => [
       "GOPATH=/tmp/go",
+      "PATH=$PATH:/usr/local/go/bin",
     ],
   }
 
   # install launcher
   exec { "install-launcher":
-    command => "/usr/local/go/bin/go build -o \"${staging_dir}/bin/vagrant\" main.go",
+    command => "go build -o \"${staging_dir}/bin/vagrant\" main.go",
     cwd => $launcher_path,
     environment => [
       "GOPATH=/tmp/go",
+      "PATH"=$PATH:/usr/local/go/bin",
     ],
     require => [
       File[$launcher_path],
