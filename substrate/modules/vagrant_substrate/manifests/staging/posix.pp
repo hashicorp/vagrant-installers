@@ -215,7 +215,7 @@ class vagrant_substrate::staging::posix {
     command => "go get github.com/mitchellh/osext",
     environment => [
       "GOPATH=/tmp/go",
-      "PATH=$PATH:/usr/local/go/bin",
+      "PATH=/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
     ],
   }
 
@@ -225,7 +225,7 @@ class vagrant_substrate::staging::posix {
     cwd => $launcher_path,
     environment => [
       "GOPATH=/tmp/go",
-      "PATH=$PATH:/usr/local/go/bin",
+      "PATH=/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
     ],
     require => [
       File[$launcher_path],
