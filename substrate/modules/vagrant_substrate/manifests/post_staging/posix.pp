@@ -50,8 +50,14 @@ class vagrant_substrate::post_staging::posix {
   }
 
   $destination_dir = "${installation_dir}/embedded"
+
+  if $operatingsystem == 'Darwin' {
+    $sed_i = "-i ''"
+  } else {
+    $sed_i = "-i"
+  }
+
   exec { "scrub-substrate-paths":
-    command => "grep -l -I -R '${embedded_dir}' '${embedded_dir}' | xargs sed -i 's@${embedded_dir}@${destination_dir}@g'",
-    onlyif => "grep -l -I -R '${embedded_dir}' '${embedded_dir}'",
+    command => "grep --binary-files=without-match -R '${embedded_dir}' '${embedded_dir}' | cut -d: -f1 | xargs sed ${sed_i} 's@${embedded_dir}@${destination_dir}@g'",
   }
 }
