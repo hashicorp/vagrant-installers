@@ -71,6 +71,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     export CONFIGURE_ARGS="-Wl,-rpath,${EMBEDDED_DIR}/lib"
 fi
 
+# Install the pkg-config gem to ensure system can read the bundled *.pc files
+${GEM_COMMAND} install pkg-config --no-document -v "~> 1.1.7"
+
 ${GEM_COMMAND} install vagrant.gem --no-document
 
 # Install extensions
