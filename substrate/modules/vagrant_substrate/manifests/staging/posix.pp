@@ -214,7 +214,7 @@ class vagrant_substrate::staging::posix {
   exec { "install-osext":
     command => "go get github.com/mitchellh/osext",
     environment => [
-      "GOPATH=/tmp/go",
+      "GOPATH=/tmp/go"
     ],
     path => "/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin",
   }
