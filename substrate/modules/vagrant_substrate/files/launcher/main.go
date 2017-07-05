@@ -30,6 +30,9 @@ func main() {
 	if debug {
 		log.Printf("launcher: path = %s", path)
 	}
+	// Retain this path in case we need to re-launch
+	launcher_path := path
+
 	for {
 		fi, err := os.Lstat(path)
 		if err != nil {
@@ -197,11 +200,31 @@ func main() {
 		newEnv["CONFIGURE_ARGS"] = configure_args
 	}
 
-  if runtime.GOOS == "windows" {
+	// Set pkg-config paths
+	if runtime.GOOS == "windows" {
 		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, mingwDir, "lib", "pkgconfig") +
 			":" + filepath.Join(embeddedDir, "usr", "lib", "pkgconfig")
 	} else {
 		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, "lib", "pkgconfig")
+	}
+
+	// Detect custom windows environment (cygwin/msys/etc)
+	if runtime.GOOS == "windows" {
+		// If VAGRANT_DETECTED_OS is provided by the user let that value
+		// take precedence over any discovery.
+		if os.Getenv("VAGRANT_DETECTED_OS") != "" {
+			newEnv["VAGRANT_DETECTED_OS"] = os.Getenv("VAGRANT_DETECTED_OS")
+		} else if os.Getenv("OSTYPE") != "" {
+			newEnv["VAGRANT_DETECTED_OS"] = os.Getenv("OSTYPE")
+		} else {
+			uname, err := exec.Command("uname", "-o").Output()
+			if err == nil {
+				newEnv["VAGRANT_DETECTED_OS"] = strings.ToLower(strings.Replace(fmt.Sprintf("%s", uname), "\n", "", -1))
+			}
+		}
+		if debug && newEnv["VAGRANT_DETECTED_OS"] != "" {
+			log.Printf("launcher: windows detected OS - %s", newEnv["VAGRANT_DETECTED_OS"])
+		}
 	}
 
 	// Store the "current" environment so Vagrant can restore it when shelling
@@ -223,14 +246,6 @@ func main() {
 		}
 	}
 
-	// Set all the environmental variables
-	for k, v := range newEnv {
-		if err := os.Setenv(k, v); err != nil {
-			fmt.Fprintf(os.Stderr, "Error setting env var %s: %s\n", k, err)
-			os.Exit(1)
-		}
-	}
-
 	// Determine the path to Ruby and then start the Vagrant process
 	rubyPath := filepath.Join(embeddedDir, "bin", "ruby")
 	if runtime.GOOS == "windows" {
@@ -241,13 +256,43 @@ func main() {
 	// handles these, so the launcher should just wait until that exits.
 	signal.Ignore(os.Interrupt)
 
-	cmd := exec.Command(rubyPath)
-	cmd.Args = make([]string, len(os.Args)+1)
-	cmd.Args[0] = "ruby"
-	cmd.Args[1] = vagrantExecutable
-	copy(cmd.Args[2:], os.Args[1:])
+	// Check if running within a cygwin or msys type environment on Windows. If
+	// we are, then wrap the execution with winpty to properly provide terminal
+	// support to Vagrant. Without this we get the ever loved "stdin is not a tty"
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" && os.Getenv("VAGRANT_WINPTY_WRAPPED") != "1" &&
+		(newEnv["VAGRANT_DETECTED_OS"] == "msys" || newEnv["VAGRANT_DETECTED_OS"] == "cygwin") {
+		os.Setenv("VAGRANT_WINPTY_WRAPPED", "1")
+		winptyPath := filepath.Join(embeddedDir, "bin", newEnv["VAGRANT_DETECTED_OS"], "winpty.exe")
+		cmd = exec.Command(winptyPath)
+		cmd.Args = make([]string, len(os.Args)+1)
+		cmd.Args[0] = "winpty"
+		cmd.Args[1] = launcher_path
+		copy(cmd.Args[2:], os.Args[1:])
+		if debug {
+			log.Printf("launcher: winpty re-launch (stdin will be a tty!)")
+			log.Printf("launcher: winptyPath = %s", winptyPath)
+		}
+	} else {
+		// Set all the environmental variables
+		for k, v := range newEnv {
+			if err := os.Setenv(k, v); err != nil {
+				fmt.Fprintf(os.Stderr, "Error setting env var %s: %s\n", k, err)
+				os.Exit(1)
+			}
+		}
+
+		cmd = exec.Command(rubyPath)
+		cmd.Args = make([]string, len(os.Args)+1)
+		cmd.Args[0] = "ruby"
+		cmd.Args[1] = vagrantExecutable
+		copy(cmd.Args[2:], os.Args[1:])
+		if debug {
+			log.Printf("launcher: rubyPath = %s", rubyPath)
+		}
+	}
+
 	if debug {
-		log.Printf("launcher: rubyPath = %s", rubyPath)
 		log.Printf("launcher: args = %#v", cmd.Args)
 	}
 

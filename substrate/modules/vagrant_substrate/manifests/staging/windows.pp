@@ -23,6 +23,10 @@ class vagrant_substrate::staging::windows {
 
   $launcher_path     = "${cache_dir}\\launcher"
 
+  $winpty_version        = hiera("vagrant_substrate::winpty_version")
+  $winpty_cygwin_version = hiera("vagrant_substrate::winpty_cygwin_version")
+  $winpty_msys2_version  = hiera("vagrant_substrate::winpty_msys2_version")
+
   file { $staging_dir_64:
     ensure => "directory",
     recurse => true,
@@ -39,6 +43,36 @@ class vagrant_substrate::staging::windows {
   }
 
   file { $embedded_dir_32:
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { "${embedded_dir_64}\\bin":
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { "${embedded_dir_32}\\bin":
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { "${embedded_dir_64}\\bin\\msys":
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { "${embedded_dir_64}\\bin\\cygwin":
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { "${embedded_dir_32}\\bin\\msys":
+    ensure => "directory",
+    recurse => true,
+  }
+
+  file { "${embedded_dir_32}\\bin\\cygwin":
     ensure => "directory",
     recurse => true,
   }
@@ -155,6 +189,160 @@ class vagrant_substrate::staging::windows {
     mode   => "0644",
     require => [
       Powershell["build-substrate"],
+    ],
+  }
+
+  # winpty installations #
+
+  # Local paths
+  $winpty_cygwin_32 = "${cache_dir}\\winpty_cygwin32.tar.gz"
+  $winpty_cygwin_64 = "${cache_dir}\\winpty_cygwin64.tar.gz"
+  $winpty_msys2_32 = "${cache_dir}\\winpty_msys2_32.tar.gz"
+  $winpty_msys2_64 = "${cache_dir}\\winpty_msys2_64.tar.gz"
+  $winpty_cygwin_32_tar = "${cache_dir}\\winpty_cygwin32.tar"
+  $winpty_cygwin_64_tar = "${cache_dir}\\winpty_cygwin64.tar"
+  $winpty_msys2_32_tar = "${cache_dir}\\winpty_msys2_32.tar"
+  $winpty_msys2_64_tar = "${cache_dir}\\winpty_msys2_64.tar"
+
+  # Remote package URLS
+  $winpty_cygwin_32_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32.tar.gz"
+  $winpty_cygwin_64_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64.tar.gz"
+  $winpty_msys2_32_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32.tar.gz"
+  $winpty_msys2_64_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64.tar.gz"
+
+  # Cygwin - 32-bit
+  download { "winpty_cygwin_32":
+    source => $winpty_cygwin_32_url,
+    destination => $winpty_cygwin_32,
+    file_cache_dir => "C:\\Windows\\Temp",
+  }
+
+  exec { "gunzip-${winpty_cygwin_32}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_32} -y",
+    creates => $winpty_cygwin_32_tar,
+    cwd => $cache_dir,
+    require => [
+      Download["winpty_cygwin_32"],
+    ],
+  }
+
+  exec { "untar-${winpty_cygwin_32}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_32_tar} -y",
+    creates => "${cache_dir}\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32",
+    cwd => $cache_dir,
+    require => [
+      Exec["gunzip-${$winpty_cygwin_32}"],
+    ],
+  }
+
+  exec { "install-${winpty_cygwin_32}":
+    command => "cmd /c \"move ${cache_dir}\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32\\bin\\* ${embedded_dir_32}\\bin\\cygwin\"",
+    creates => "${embedded_dir_32}\\bin\\winpty-cygwin.exe",
+    require => [
+      File["${embedded_dir_32}\\bin\\cygwin"],
+      Exec["untar-${$winpty_cygwin_32}"],
+    ],
+  }
+
+  # Cygwin - 64-bit
+  download { "winpty_cygwin_64":
+    source => $winpty_cygwin_64_url,
+    destination => $winpty_cygwin_64,
+    file_cache_dir => "C:\\Windows\\Temp",
+  }
+
+  exec { "gunzip-${winpty_cygwin_64}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_64} -y",
+    creates => $winpty_cygwin_64_tar,
+    cwd => $cache_dir,
+    require => [
+      Download["winpty_cygwin_64"],
+    ],
+  }
+
+  exec { "untar-${winpty_cygwin_64}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_64_tar} -y",
+    creates => "${cache_dir}\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64",
+    cwd => $cache_dir,
+    require => [
+      Exec["gunzip-${$winpty_cygwin_64}"],
+    ],
+  }
+
+  exec { "install-${winpty_cygwin_64}":
+    command => "cmd /c \"move ${cache_dir}\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64\\bin\\* ${embedded_dir_64}\\bin\\cygwin\"",
+    creates => "${embedded_dir_64}\\bin\\winpty-cygwin.exe",
+    require => [
+      File["${embedded_dir_64}\\bin\\cygwin"],
+      Exec["untar-${$winpty_cygwin_64}"],
+    ],
+  }
+
+  # msys2 32-bit
+  download { "winpty_msys2_32":
+    source => $winpty_msys2_32_url,
+    destination => $winpty_msys2_32,
+    file_cache_dir => "C:\\Windows\\Temp",
+  }
+
+  exec { "gunzip-${winpty_msys2_32}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_32} -y",
+    creates => $winpty_msys2_32_tar,
+    cwd => $cache_dir,
+    require => [
+      Download["winpty_msys2_32"],
+    ],
+  }
+
+  exec { "untar-${winpty_msys2_32}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_32_tar} -y",
+    cwd => $cache_dir,
+    creates => "${cache_dir}\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32",
+    require => [
+      Exec["gunzip-${$winpty_msys2_32}"],
+    ],
+  }
+
+  exec { "install-${winpty_msys2_32}":
+    command => "cmd /c \"move ${cache_dir}\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32\\bin\\* ${embedded_dir_32}\\bin\\msys\"",
+    creates => "${embedded_dir_32}\\bin\\winpty-msys2.exe",
+    require => [
+      File["${embedded_dir_32}\\bin\\msys"],
+      Exec["untar-${$winpty_msys2_32}"],
+    ],
+  }
+
+  # msys2 64-bit
+  download { "winpty_msys2_64":
+    source => $winpty_msys2_64_url,
+    destination => $winpty_msys2_64,
+    file_cache_dir => "C:\\Windows\\Temp",
+  }
+
+  exec { "gunzip-${winpty_msys2_64}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_64} -y",
+    creates => $winpty_msys2_64_tar,
+    cwd => $cache_dir,
+    require => [
+      Download["winpty_msys2_64"],
+    ],
+  }
+
+  exec { "untar-${winpty_msys2_64}":
+    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_64_tar} -y",
+    creates => "${cache_dir}\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64",
+    cwd => $cache_dir,
+    require => [
+      Exec["gunzip-${$winpty_msys2_64}"],
+    ],
+  }
+
+  exec { "install-${winpty_msys2_64}":
+    command => "cmd /c \"move ${cache_dir}\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64\\bin\\* ${embedded_dir_64}\\bin\\msys\"",
+    creates => "${embedded_dir_64}\\bin\\winpty-msys.exe",
+    require => [
+      File["${embedded_dir_64}\\bin\\msys"],
+      Exec["untar-${$winpty_msys2_64}"],
     ],
   }
 
