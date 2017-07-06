@@ -106,7 +106,9 @@ func main() {
 		// Check if we are in a 32bit or 64bit install
 		mingwTestPath := filepath.Join(embeddedDir, "mingw64")
 		if _, err := os.Stat(mingwTestPath); err != nil {
-			log.Printf("launcher: detected 32bit Windows installation")
+			if debug {
+				log.Printf("launcher: detected 32bit Windows installation")
+			}
 			mingwDir = "mingw32"
 			mingwArchDir = "i686-w64-mingw32"
 		}
