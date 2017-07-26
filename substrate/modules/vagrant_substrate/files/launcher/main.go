@@ -18,6 +18,9 @@ import (
 const envPrefix = "VAGRANT_OLD_ENV"
 
 func main() {
+	// Define any Windows commands that require an interactive terminal
+	winCmdsInteractive := map[string]bool{"ssh": true}
+
 	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
 
 	// Get the path to the executable. This path doesn't resolve symlinks
@@ -147,19 +150,6 @@ func main() {
 		}
 	}
 
-	// Set the PATH to include the proper paths into our embedded dir
-	path = os.Getenv("PATH")
-	if runtime.GOOS == "windows" {
-		path = fmt.Sprintf(
-			"%s;%s;%s",
-			filepath.Join(embeddedDir, mingwDir, "bin"),
-			filepath.Join(embeddedDir, "usr", "bin"),
-			path)
-	} else {
-		path = fmt.Sprintf("%s:%s",
-			filepath.Join(embeddedDir, "bin"), path)
-	}
-
 	// Allow users to specify a custom SSL cert
 	sslCertFile := os.Getenv("SSL_CERT_FILE")
 	if sslCertFile == "" {
@@ -218,14 +208,33 @@ func main() {
 			newEnv["VAGRANT_DETECTED_OS"] = os.Getenv("VAGRANT_DETECTED_OS")
 		} else if os.Getenv("OSTYPE") != "" {
 			newEnv["VAGRANT_DETECTED_OS"] = os.Getenv("OSTYPE")
-		} else {
-			uname, err := exec.Command("uname", "-o").Output()
+		}
+		if os.Getenv("VAGRANT_DETECTED_ARCH") != "" {
+			newEnv["VAGRANT_DETECTED_ARCH"] = os.Getenv("VAGRANT_DETECTED_ARCH")
+		}
+		if newEnv["VAGRANT_DETECTED_OS"] == "" || newEnv["VAGRANT_DETECTED_ARCH"] == "" {
+			unameOutput, err := exec.Command("uname", "-om").Output()
 			if err == nil {
-				newEnv["VAGRANT_DETECTED_OS"] = strings.ToLower(strings.Replace(fmt.Sprintf("%s", uname), "\n", "", -1))
+				uname := strings.Replace(fmt.Sprintf("%s", unameOutput), "\n", "", -1)
+				if newEnv["VAGRANT_DETECTED_ARCH"] == "" {
+					if strings.Contains(uname, "686") {
+						newEnv["VAGRANT_DETECTED_ARCH"] = "32"
+					} else {
+						newEnv["VAGRANT_DETECTED_ARCH"] = "64"
+					}
+				}
+				detectedOsParts := strings.Split(uname, " ")
+				if newEnv["VAGRANT_DETECTED_OS"] == "" && detectedOsParts[1] != "" {
+					newEnv["VAGRANT_DETECTED_OS"] = strings.ToLower(detectedOsParts[1])
+				}
 			}
 		}
+
 		if debug && newEnv["VAGRANT_DETECTED_OS"] != "" {
 			log.Printf("launcher: windows detected OS - %s", newEnv["VAGRANT_DETECTED_OS"])
+		}
+		if debug && newEnv["VAGRANT_DETECTED_ARCH"] != "" {
+			log.Printf("launcher: windows detected arch - %s", newEnv["VAGRANT_DETECTED_ARCH"])
 		}
 	}
 
@@ -262,10 +271,45 @@ func main() {
 	// we are, then wrap the execution with winpty to properly provide terminal
 	// support to Vagrant. Without this we get the ever loved "stdin is not a tty"
 	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" && os.Getenv("VAGRANT_WINPTY_WRAPPED") != "1" &&
-		(newEnv["VAGRANT_DETECTED_OS"] == "msys" || newEnv["VAGRANT_DETECTED_OS"] == "cygwin") {
+	winInterCmd := false
+
+	if len(os.Args) > 1 && runtime.GOOS == "windows" {
+		winInterCmd, _ = winCmdsInteractive[os.Args[1]]
+	}
+
+	winptyRelaunch := runtime.GOOS == "windows" && os.Getenv("VAGRANT_WINPTY_DISABLE") == "" &&
+		os.Getenv("VAGRANT_WINPTY_WRAPPED") != "1" && winInterCmd &&
+		(newEnv["VAGRANT_DETECTED_OS"] == "msys" || newEnv["VAGRANT_DETECTED_OS"] == "cygwin")
+
+	// Set the PATH to include the proper paths into our embedded dir
+	path = os.Getenv("PATH")
+	if runtime.GOOS == "windows" {
+		if os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "" {
+			if debug {
+				log.Printf("launcher: path modification will prefer system bins.")
+			}
+			path = fmt.Sprintf(
+				"%s;%s;%s",
+				filepath.Join(embeddedDir, mingwDir, "bin"),
+				path,
+				filepath.Join(embeddedDir, "usr", "bin"))
+		} else {
+			path = fmt.Sprintf(
+				"%s;%s;%s",
+				filepath.Join(embeddedDir, mingwDir, "bin"),
+				filepath.Join(embeddedDir, "usr", "bin"),
+				path)
+		}
+	} else {
+		path = fmt.Sprintf("%s:%s",
+			filepath.Join(embeddedDir, "bin"), path)
+	}
+	newEnv["PATH"] = path
+
+	if winptyRelaunch {
 		os.Setenv("VAGRANT_WINPTY_WRAPPED", "1")
-		winptyPath := filepath.Join(embeddedDir, "bin", newEnv["VAGRANT_DETECTED_OS"], "winpty.exe")
+		winptyPath := filepath.Join(embeddedDir, "bin", newEnv["VAGRANT_DETECTED_OS"],
+			newEnv["VAGRANT_DETECTED_ARCH"], "winpty.exe")
 		cmd = exec.Command(winptyPath)
 		cmd.Args = make([]string, len(os.Args)+1)
 		cmd.Args[0] = "winpty"

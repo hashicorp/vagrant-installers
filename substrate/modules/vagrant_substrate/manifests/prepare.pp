@@ -29,23 +29,48 @@ class vagrant_substrate::prepare {
     }
   }
 
+  if $kernel == "windows" {
+    $staging_dir_32   = "${staging_dir}/x32"
+    $staging_dir_64   = "${staging_dir}/x64"
+    $embedded_dir_32  = "${staging_dir_32}/embedded"
+    $embedded_dir_64  = "${staging_dir_64}/embedded"
+
+    $prepare_dirs = [
+      $cache_dir,
+      "${staging_dir_32}/bin",
+      "${staging_dir_64}/bin",
+      "${embedded_dir_32}/bin/msys/32",
+      "${embedded_dir_32}/bin/msys/64",
+      "${embedded_dir_32}/bin/cygwin/32",
+      "${embedded_dir_32}/bin/cygwin/64",
+      "${embedded_dir_64}/bin/msys/32",
+      "${embedded_dir_64}/bin/msys/64",
+      "${embedded_dir_64}/bin/cygwin/32",
+      "${embedded_dir_64}/bin/cygwin/64",
+      $output_dir,
+    ]
+  } else {
+    $prepare_dirs = [
+      $cache_dir,
+      $staging_dir,
+      "${staging_dir}/bin",
+      $embedded_dir,
+      "${embedded_dir}/bin",
+      "${embedded_dir}/etc",
+      "${embedded_dir}/include",
+      "${embedded_dir}/lib",
+      "${embedded_dir}/share",
+      $output_dir,
+    ]
+  }
+
   #--------------------------------------------------------------------
   # Prepare the directories
   #--------------------------------------------------------------------
   # Run deletes prior to creating directories
   Exec <| tag == "prepare-clear" |> -> Util::Recursive_directory <| tag == "prepare" |>
 
-  util::recursive_directory { [
-    $cache_dir,
-    $staging_dir,
-    "${staging_dir}/bin",
-    $embedded_dir,
-    "${embedded_dir}/bin",
-    "${embedded_dir}/etc",
-    "${embedded_dir}/include",
-    "${embedded_dir}/lib",
-    "${embedded_dir}/share",
-    $output_dir,]:
-      tag => "prepare",
+  util::recursive_directory { $prepare_dirs:
+    tag => "prepare",
   }
 }
