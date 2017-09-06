@@ -22,6 +22,7 @@ source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver
         0004-exclude-changelog-from-rdoc.patch
         0006-fix-conversion-warning-win32-powl.patch
         0007-rbinstall-destdir.patch
+        0008-rubygems-2613.patch
         ruby.ico
         rubyw.ico)
 
@@ -34,6 +35,7 @@ sha256sums=('cd9808bb53824d6edb58beaadd3906cb23b987438ce75ab7bb279b2229930e2f'
             '389236bdca5f283adde9b4b56febcfc25e228716e06a0edc21ea8fd7f27b75fa'
             'e7f83bc6e3b7ddadb5e3b14aa7d3a4e30eb97aea02df38796ca78714ad20e9b7'
             '02382ec3b9e42d7dbb58edad3e41c361d98871711bb2f0320082c2acc6a82e2e'
+            '510567a43d57ea9c8c7436b14e78d0a4d33380f410443dcf350b9867c9745748'
             '6c80ba2ca49840e387a08b7fedc6e7acd298ac2ec853155209efb2af20397b22'
             'c30fb04ac0e88ba634daaa811a81ea5a75027646617b895acd14df9518a4a55a')
 
