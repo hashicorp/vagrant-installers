@@ -300,6 +300,21 @@ func main() {
 				filepath.Join(embeddedDir, "usr", "bin"),
 				path)
 		}
+		// Check if the user wants to enable Win32-OpenSSH
+		if os.Getenv("VAGRANT_ENABLE_WINSSH") != "" {
+			if debug {
+				log.Printf("launcher: enabling win32-openssh")
+			}
+			path = fmt.Sprintf("%s;%s",
+				filepath.Join(embeddedDir, "bin"), path)
+			// If using winssh then a winpty relaunch should _never_ happen
+			if winptyRelaunch {
+				if debug {
+					log.Printf("launcher: winpty relaunch not required for win32-openssh. disabling.")
+				}
+				winptyRelaunch = false
+			}
+		}
 	} else {
 		path = fmt.Sprintf("%s:%s",
 			filepath.Join(embeddedDir, "bin"), path)
