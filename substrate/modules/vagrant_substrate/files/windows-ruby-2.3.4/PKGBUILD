@@ -45,6 +45,7 @@ prepare() {
   patch -p1 -i ${srcdir}/0004-exclude-changelog-from-rdoc.patch
   patch -p1 -i ${srcdir}/0006-fix-conversion-warning-win32-powl.patch
   patch -p1 -i ${srcdir}/0007-rbinstall-destdir.patch
+  patch -p0 -i ${srcdir}/0008-rubygems-2613.patch
 
   autoreconf -fi
 }

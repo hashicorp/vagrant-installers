@@ -73,6 +73,21 @@ class ruby::source(
     require => Exec["download-ruby"],
   }
 
+  # This can be removed after upgrading from 2.3
+  file { "rubygems-patch":
+    source => "puppet:///modules/ruby/rubygems-2613.patch",
+    path => "${source_dir_path}/rubygems-2613.patch",
+    mode => "0644",
+    recurse => true,
+    require => Exec["untar-ruby"],
+  }
+
+  exec { "patch-rubygems":
+    command => "patch -p0 -i rubygems-2613.patch",
+    cwd => $source_dir_path,
+    require => File["rubygems-patch"],
+  }
+
   autotools { "ruby":
     configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking --disable-install-doc --enable-shared --with-opt-dir=${prefix} --enable-load-relative${extra_configure_flags}",
     cwd              => $source_dir_path,
@@ -80,7 +95,7 @@ class ruby::source(
     install_sentinel => "${prefix}/bin/ruby",
     make_notify      => $make_notify,
     make_sentinel    => "${source_dir_path}/ruby",
-    require          => Exec["untar-ruby"],
+    require          => Exec["patch-rubygems"],
   }
 
   if $operatingsystem == 'Darwin' {
