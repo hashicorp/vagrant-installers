@@ -21,7 +21,7 @@ if [ "$INSTALL_VAGRANT_KEY" = "true" ] || [ "$INSTALL_VAGRANT_KEY" = "1" ]; then
 
   echo '==> Installing Vagrant SSH key'
   mkdir -pm 700 ${SSH_USER_HOME}/.ssh
-  # https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub
+  # https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub
   echo "${VAGRANT_INSECURE_KEY}" > $SSH_USER_HOME/.ssh/authorized_keys
   chmod 0600 ${SSH_USER_HOME}/.ssh/authorized_keys
   chown -R ${SSH_USER}:${SSH_USER} ${SSH_USER_HOME}/.ssh

@@ -13,7 +13,7 @@ if [ "$INSTALL_VAGRANT_KEYS" = "true" ] || [ "$INSTALL_VAGRANT_KEYS" = "1" ]; th
 	echo "Installing vagrant keys for $SSH_USERNAME user"
 	mkdir "/Users/$SSH_USERNAME/.ssh"
 	chmod 700 "/Users/$SSH_USERNAME/.ssh"
-	curl -L 'https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub' > "/Users/$SSH_USERNAME/.ssh/authorized_keys"
+	curl -L 'https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub' > "/Users/$SSH_USERNAME/.ssh/authorized_keys"
 	chmod 600 "/Users/$SSH_USERNAME/.ssh/authorized_keys"
 	chown -R "$SSH_USERNAME" "/Users/$SSH_USERNAME/.ssh"
 fi

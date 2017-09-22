@@ -9,7 +9,7 @@ chmod 0777 $GENDIR
 cd $GENDIR
 git clone \
     --depth=1 \
-    https://github.com/mitchellh/vagrant-installers.git .
+    https://github.com/hashicorp/vagrant-installers.git .
 
 # Done!
 echo 'Done! Vagrant installer generators are ready.'

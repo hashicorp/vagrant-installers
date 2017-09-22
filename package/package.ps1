@@ -25,7 +25,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$VagrantRevision,
 
-    [string]$VagrantSourceBaseURL="https://github.com/mitchellh/vagrant/archive/",
+    [string]$VagrantSourceBaseURL="https://github.com/hashicorp/vagrant/archive/",
 
     [string]$SignKey="",
     [string]$SignKeyPassword="",
