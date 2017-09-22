@@ -212,7 +212,7 @@ func main() {
 		if os.Getenv("VAGRANT_DETECTED_ARCH") != "" {
 			newEnv["VAGRANT_DETECTED_ARCH"] = os.Getenv("VAGRANT_DETECTED_ARCH")
 		}
-		if newEnv["VAGRANT_DETECTED_OS"] == "" || newEnv["VAGRANT_DETECTED_ARCH"] == "" {
+		if os.Getenv("OSTYPE") != "" && (newEnv["VAGRANT_DETECTED_OS"] == "" || newEnv["VAGRANT_DETECTED_ARCH"] == "") {
 			unameOutput, err := exec.Command("uname", "-om").Output()
 			if err == nil {
 				uname := strings.Replace(fmt.Sprintf("%s", unameOutput), "\n", "", -1)
