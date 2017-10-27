@@ -14,10 +14,10 @@ class ruby::source(
   $lib_short_version = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>")
   $lib_long_version = "${lib_short_version}.0"
 
-  $source_filename  = "ruby-${ruby_version}.tar.gz"
+  $source_filename  = "ruby-${ruby_version}.zip"
   $source_url = "https://cache.ruby-lang.org/pub/ruby/${lib_short_version}/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
-  $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
+  $source_dir_name  = regsubst($source_filename, '^(.+?)\.zip$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
   $installation_dir = hiera("installation_dir")
 
@@ -67,7 +67,7 @@ class ruby::source(
   }
 
   exec { "untar-ruby":
-    command => "tar xvzf ${source_file_path}",
+    command => "unzip ${source_file_path}",
     creates => $source_dir_path,
     cwd     => $file_cache_dir,
     require => Exec["download-ruby"],
