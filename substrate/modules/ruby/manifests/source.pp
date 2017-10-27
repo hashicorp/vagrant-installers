@@ -12,7 +12,7 @@ class ruby::source(
 
   $ruby_version     = hiera("ruby::version")
   $lib_short_version = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>")
-  $lib_long_version = $ruby_version
+  $lib_long_version = "${lib_short_version}.0"
 
   $source_filename  = "ruby-${ruby_version}.tar.gz"
   $source_url = "https://cache.ruby-lang.org/pub/ruby/${lib_short_version}/${source_filename}"
@@ -94,11 +94,9 @@ class ruby::source(
   if $kernel == 'Darwin' {
     $libruby_paths = [
       "${prefix}/lib/libruby.dylib",
-      "${prefix}/lib/libruby.${lib_short_version}.dylib",
-      "${prefix}/lib/libruby.${lib_long_version}.dylib",
     ]
-    $lib_path = "@rpath/libruby.${lib_long_version}.dylib"
-    $original_lib_path = "@executable_path/../lib/libruby.${lib_long_version}.dylib"
+    $lib_path = "@rpath/libruby.${lib_short_version}.dylib"
+    $original_lib_path = "@executable_path/../lib/libruby.${lib_short_version}.dylib"
     $embedded_dir = "${prefix}/lib"
 
     vagrant_substrate::staging::darwin_rpath { $libruby_paths:
