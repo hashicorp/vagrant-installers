@@ -12,7 +12,7 @@ class ruby::source(
 
   $ruby_version     = hiera("ruby::version")
   $lib_short_version = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>")
-  $lib_long_version = "${lib_short_version}.0"
+  $lib_long_version = $ruby_version
 
   $source_filename  = "ruby-${ruby_version}.tar.gz"
   $source_url = "https://cache.ruby-lang.org/pub/ruby/${lib_short_version}/${source_filename}"

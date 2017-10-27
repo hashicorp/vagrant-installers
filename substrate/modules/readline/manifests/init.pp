@@ -49,15 +49,15 @@ class readline(
     require => Wget::Fetch["readline"],
   }
 
-  if $operatingsystem == 'Darwin' {
-    patch { "patch-readline":
-      content     => template('readline/patch.mac.diff'),
-      prefixlevel => "1",
-      cwd         => $source_dir_path,
-      require     => Exec["untar-readline"],
-      before      => Autotools["readline"],
-    }
-  }
+  # if $operatingsystem == 'Darwin' {
+  #   patch { "patch-readline":
+  #     content     => template('readline/patch.mac.diff'),
+  #     prefixlevel => "1",
+  #     cwd         => $source_dir_path,
+  #     require     => Exec["untar-readline"],
+  #     before      => Autotools["readline"],
+  #   }
+  # }
 
   autotools { "readline":
     configure_flags  => "--prefix=${prefix}",
