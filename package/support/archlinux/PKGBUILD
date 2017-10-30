@@ -6,8 +6,9 @@ arch=('x86_64')
 url="https://www.vagrantup.com"
 license=('MIT')
 _pkg_ver="${VAGRANT_VERSION:-master}"
+_installer_ver="${VAGRANT_INSTALLERS_VERSION:-master}"
 source=("vagrant.tar.gz::https://github.com/hashicorp/vagrant/archive/${_pkg_ver}.tar.gz"
-        "installer.tar.gz::https://github.com/hashicorp/vagrant-installers/archive/master.tar.gz")
+        "installer.tar.gz::https://github.com/hashicorp/vagrant-installers/archive/${_installer_ver}.tar.gz")
 conflicts=('vagrant' 'vagrant-substrate')
 options=('!emptydirs')
 md5sums=('SKIP' 'SKIP')
@@ -26,7 +27,7 @@ prepare() {
 }
 
 build() {
-  INSTALLERS_DIR="${srcdir}/vagrant-installers-master"
+  INSTALLERS_DIR="${srcdir}/vagrant-installers-${_installer_ver}"
   VAGRANT_DIR="${srcdir}/vagrant-${_pkg_ver}"
   INSTALL_DIR="${srcdir}/opt/vagrant"
   EMBEDDED_DIR="${INSTALL_DIR}/embedded"
