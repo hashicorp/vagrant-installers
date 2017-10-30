@@ -17,4 +17,4 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 cp "${DIR}/archlinux/PKGBUILD" ./PKGBUILD
 export CLEAN_VAGRANT_VERSION=$(echo $VAGRANT_VERSION | sed 's/^v//' | tr -d ' -')
 
-sudo -E -u vagrant makepkg --syncdeps --force --noconfirm
+makepkg --syncdeps --force --noconfirm

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Ensure the dev tools are installed
-pacman --noconfirm -Suy base-devel
+sudo pacman --noconfirm -Suy base-devel
 
 # Expected file mode
 chmod 755 /vagrant/package/support/package_archlinux.sh
