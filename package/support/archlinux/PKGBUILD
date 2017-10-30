@@ -1,11 +1,11 @@
 pkgname=hashicorp-vagrant
-pkgver=%VERSION%
+pkgver="${CLEAN_VAGRANT_VERSION:-master}"
 pkgrel=1
 pkgdesc="Build and distribute virtualized development environments"
 arch=('x86_64')
 url="https://www.vagrantup.com"
 license=('MIT')
-_pkg_ver="%PKGVERSION%"
+_pkg_ver="${VAGRANT_VERSION:-master}"
 source=("vagrant.tar.gz::https://github.com/hashicorp/vagrant/archive/${_pkg_ver}.tar.gz"
         "installer.tar.gz::https://github.com/hashicorp/vagrant-installers/archive/master.tar.gz")
 conflicts=('vagrant' 'vagrant-substrate')
@@ -14,8 +14,9 @@ md5sums=('SKIP' 'SKIP')
 depends=('libffi>=3.2.1' 'libxml2>=2.9.4' 'libxslt>=1.1.29'
          'libyaml' 'zlib>=1.2.11' 'xz>=5.2.3' 'readline>=6.3'
          'openssl>=1.0.2l' 'libssh2>=1.8.0' 'libarchive' 'curl>=7.54.0' 'ruby>=2.3.4'
-         'rsync', 'base-devel')
-
+         'rsync' 'autoconf' 'automake' 'binutils' 'bison' 'flex' 'gawk' 'gcc' 'gettext'
+         'grep' 'groff' 'gzip' 'libtool' 'm4' 'make' 'patch' 'pkg-config' 'sed' 'util-linux'
+         'which')
 makedepends=('ruby' 'go')
 
 prepare() {
