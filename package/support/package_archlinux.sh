@@ -7,7 +7,7 @@ if [ "$#" -ne "1" ]; then
     exit 1
 fi
 
-VAGRANT_VERSION=$2
+export VAGRANT_VERSION=$1
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -15,8 +15,6 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cp "${DIR}/archlinux/PKGBUILD" ./PKGBUILD
-CLEAN_VAGRANT_VERSION=$(echo $VAGRANT_VERSION | sed 's/^v//')
-sed -i "s/%VERSION%/${CLEAN_VAGRANT_VERSION}/" ./PKGBUILD
-sed -i "s/%PKGVERSION%/${VAGRANT_VERSION}/" ./PKGBUILD
+export CLEAN_VAGRANT_VERSION=$(echo $VAGRANT_VERSION | sed 's/^v//' | tr -d ' -')
 
-sudo -u vagrant makepkg --syncdeps --force --noconfirm
+sudo -E -u vagrant makepkg --syncdeps --force --noconfirm
