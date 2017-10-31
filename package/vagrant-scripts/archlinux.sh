@@ -1,10 +1,15 @@
 #!/bin/sh
 
-pacman --noconfirm -Sy unzip
+# Ensure the dev tools are installed
+sudo pacman --noconfirm -Suy base-devel
 
-mkdir -p /vagrant/substrate-assets
-chmod 755 /vagrant/package/package.sh
+# Expected file mode
+chmod 755 /vagrant/package/support/package_archlinux.sh
 
-/vagrant/package/package.sh /vagrant/substrate-assets/substrate_archlinux_$(uname -m).zip master
+# Call the support script directly for building since
+# there is no substrate to configure
+/vagrant/package/support/package_archlinux.sh ${GIT_BUILD_BRANCH:-master}
+
+# And store our new package
 mkdir -p /vagrant/pkg
 cp *.xz /vagrant/pkg/

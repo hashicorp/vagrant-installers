@@ -155,18 +155,23 @@ func main() {
 	if sslCertFile == "" {
 		sslCertFile = filepath.Join(embeddedDir, "cacert.pem")
 	}
+	curlCaBundle := os.Getenv("CURL_CA_BUNDLE")
+	if curlCaBundle == "" {
+		curlCaBundle = filepath.Join(embeddedDir, "cacert.pem")
+	}
 
 	newEnv := map[string]string{
 		// Setup the environment to prefer our embedded dir over
 		// anything the user might have setup on his/her system.
-		"CPPFLAGS":      cppflags,
-		"CFLAGS":        cflags,
-		"GEM_HOME":      filepath.Join(embeddedDir, "gems"),
-		"GEM_PATH":      filepath.Join(embeddedDir, "gems"),
-		"GEMRC":         filepath.Join(embeddedDir, "etc", "gemrc"),
-		"LDFLAGS":       ldflags,
-		"PATH":          path,
-		"SSL_CERT_FILE": sslCertFile,
+		"CPPFLAGS":       cppflags,
+		"CFLAGS":         cflags,
+		"GEM_HOME":       filepath.Join(embeddedDir, "gems"),
+		"GEM_PATH":       filepath.Join(embeddedDir, "gems"),
+		"GEMRC":          filepath.Join(embeddedDir, "etc", "gemrc"),
+		"LDFLAGS":        ldflags,
+		"PATH":           path,
+		"SSL_CERT_FILE":  sslCertFile,
+		"CURL_CA_BUNDLE": curlCaBundle,
 
 		// Instruct nokogiri installations to use libraries provided
 		// by the installer
@@ -236,6 +241,14 @@ func main() {
 		if debug && newEnv["VAGRANT_DETECTED_ARCH"] != "" {
 			log.Printf("launcher: windows detected arch - %s", newEnv["VAGRANT_DETECTED_ARCH"])
 		}
+	} else {
+		if _, err := os.Stat("/etc/arch-release"); err == nil {
+			newEnv["VAGRANT_DETECTED_OS"] = "archlinux"
+			// No cert bundle is provided for the archlinux installation
+			// so remove them from the newly constructed environment
+			delete(newEnv, "SSL_CERT_FILE")
+			delete(newEnv, "CURL_CA_BUNDLE")
+		}
 	}
 
 	// Store the "current" environment so Vagrant can restore it when shelling
@@ -261,6 +274,8 @@ func main() {
 	rubyPath := filepath.Join(embeddedDir, "bin", "ruby")
 	if runtime.GOOS == "windows" {
 		rubyPath = filepath.Join(embeddedDir, mingwDir, "bin", "ruby") + ".exe"
+	} else if newEnv["VAGRANT_DETECTED_OS"] == "archlinux" {
+		rubyPath = "/usr/bin/ruby"
 	}
 
 	// Prior to starting the command, we ignore interrupts. Vagrant itself

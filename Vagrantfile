@@ -17,6 +17,12 @@ build_type = ENV.fetch('VAGRANT_BUILD_TYPE', 'substrate')
 box_prefix = ENV.fetch('VAGRANT_BUILD_BOX_PREFIX', 'hashicorp-vagrant')
 script_base = File.join(build_type, "vagrant-scripts")
 
+if build_type == 'substrate'
+  build_boxes.delete("archlinux")
+end
+
+unprivileged_provision = ["archlinux"]
+
 script_env_vars = Hash[
   ENV.map do |key, value|
     if key.start_with?('VAGRANT_INSTALLER_')
@@ -38,7 +44,8 @@ Vagrant.configure("2") do |config|
                                                  "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
                                                  "net.inet.tcp.autosndbufmax=33554432\n"
       end
-      box_config.vm.provision "shell", path: provision_script, env: script_env_vars
+      box_config.vm.provision "shell", path: provision_script, env: script_env_vars,
+                              privileged: !unprivileged_provision.include?(box_basename)
       if script_name.start_with?('win')
         box_config.vm.communicator = 'winrm'
       end

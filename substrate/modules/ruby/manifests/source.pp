@@ -38,7 +38,7 @@ class ruby::source(
   # Ruby needs this include path on the include path so that
   # it will properly compile.
   $extra_autotools_environment = {
-    "CFLAGS" => "-I${source_dir_path}/include",
+    "CFLAGS" => "-I${source_dir_path}/include -O3",
   }
 
   $real_autotools_environment = autotools_merge_environments(
