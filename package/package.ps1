@@ -206,7 +206,7 @@ if ($UseCache -eq $false) {
       $env:CFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
       $env:LDFLAGS  = "-L/mingw$($PackageArch)/lib -L/mingw$($PackageArch)/$($MingArchDir)/lib -L/usr/lib"
       $env:PKG_CONFIG_PATH = "/mingw$($PackageArch)/lib/pkgconfig:/usr/lib/pkgconfig"
-      $env:Path     ="$($EmbeddedDir)\mingw$($PackageArch)\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
+      $env:Path     ="$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($EmbeddedDir)\mingw$($PackageArch)\bin;$($env:Path)"
       $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
       &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-ri --no-rdoc
 
