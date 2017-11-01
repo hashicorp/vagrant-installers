@@ -16,6 +16,7 @@ class vagrant_substrate::staging::windows {
   $ruby_files_path   = "${cache_dir}\\ruby-files"
   $ruby_build_path   = "${cache_dir}\\ruby-build"
   $ruby_bash_builder = "${cache_dir}\\bash-builder.sh"
+  $ruby_lib_version  = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>.0")
 
   $builder_path      = "${cache_dir}\\substrate_builder.sh"
   $builder_cwd       = "C:\\msys64\\home\\vagrant\\styrene"
