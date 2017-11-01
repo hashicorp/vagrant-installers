@@ -2,13 +2,13 @@
 # vi: set ft=ruby :
 
 build_boxes = [
+  'archlinux',
   'centos-5.11',
   'centos-5.11-i386',
   'osx-10.9',
   'ubuntu-10.04',
   'ubuntu-10.04-i386',
-  'win-7',
-  'archlinux'
+  'win-7'
 ]
 
 # Valid types: "substrate", "package"
