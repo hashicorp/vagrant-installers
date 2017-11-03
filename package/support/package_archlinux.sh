@@ -18,3 +18,5 @@ cp "${DIR}/archlinux/PKGBUILD" ./PKGBUILD
 export CLEAN_VAGRANT_VERSION=$(echo $VAGRANT_VERSION | sed 's/^v//' | tr -d ' -')
 
 makepkg --syncdeps --force --noconfirm
+
+mv *.xz "vagrant_${CLEAN_VAGRANT_VERSION}_x86_64.tar.xz"
