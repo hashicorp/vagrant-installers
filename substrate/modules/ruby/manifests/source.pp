@@ -119,13 +119,6 @@ class ruby::source(
       subscribe => Autotools["ruby"],
     }
 
-    exec { "remove-ruby-bundle-rpaths":
-      command     => "find ${prefix}/lib/ruby -type f -name '*.bundle' -exec install_name_tool -delete_rpath ${embedded_dir} {} \\;",
-      refreshonly => true,
-      require     => Autotools["ruby"],
-      subscribe   => Autotools["ruby"],
-    }
-
     exec { "modify-ruby-bundle-link-names":
       command     => "find ${prefix}/lib/ruby -type f -name '*.bundle' -exec install_name_tool -change ${original_lib_path} ${lib_path} {} \\;",
       refreshonly => true,
