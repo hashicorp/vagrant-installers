@@ -58,10 +58,8 @@ class ruby::source(
   #------------------------------------------------------------------
   # Compile
   #------------------------------------------------------------------
-  # We use --insecure below because the older systems we run on don't
-  # have the CA certificates. We really need to fix this.
   exec { "download-ruby":
-    command => "curl --insecure -o ${source_file_path} ${source_url}",
+    command => "curl -o ${source_file_path} ${source_url}",
     creates => $source_file_path,
     timeout => 1200,
   }
