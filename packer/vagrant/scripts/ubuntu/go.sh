@@ -6,7 +6,7 @@ ARCH="amd64"
 
 uname -p | grep x86_64 > /dev/null
 
-if [[ $? -eq 0 ]]
+if [ $? -eq 0 ]
 then
     ARCH="amd64"
 else
