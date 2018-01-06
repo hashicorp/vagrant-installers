@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set +e
+
 uname -m | grep x86_64 > /dev/null
 
 if [[ $? -eq 0 ]]
@@ -9,7 +11,9 @@ else
     ARCH="386"
 fi
 
-wget --no-check-certificate -O go.tar.gz "https://storage.googleapis.com/golang/go1.8.1.linux-${ARCH}.tar.gz"
+set -e
+
+wget -O go.tar.gz https://storage.googleapis.com/golang/go1.9.2.linux-${ARCH}.tar.gz
 tar -C /usr/local -xzf go.tar.gz
 
 echo "export PATH=$PATH:/usr/local/go/bin" > /etc/profile.d/go-path.sh

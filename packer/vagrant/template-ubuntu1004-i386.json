@@ -1,8 +1,0 @@
-{
-  "vm_name": "ubuntu1004-i386",
-  "iso_checksum": "780d1feb23bd4888c2550c61b303d2e6a608bf81",
-  "iso_checksum_type": "sha1",
-  "iso_name": "ubuntu-10.04-server-i386.iso",
-  "iso_url": "http://old-releases.ubuntu.com/releases/10.04.4/ubuntu-10.04-server-i386.iso",
-  "vmware_guest_os_type": "ubuntu"
-}
