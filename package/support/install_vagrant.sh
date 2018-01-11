@@ -57,7 +57,7 @@ export NOKOGIRI_USE_SYSTEM_LIBRARIES=1
 
 # Install the gem. Export all these environmental variables so the Gem
 # goes into the proper place.
-export GEM_PATH="${EMBEDDED_DIR}/gems"
+export GEM_PATH="${EMBEDDED_DIR}/gems/${VERSION}"
 export GEM_HOME="${GEM_PATH}"
 export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 export CPPFLAGS="-I${EMBEDDED_DIR}/include -I${EMBEDDED_DIR}/include/libxml2"
@@ -88,6 +88,14 @@ cat <<EOF >${EMBEDDED_DIR}/plugins.json
 }
 EOF
 chmod 0644 ${EMBEDDED_DIR}/plugins.json
+
+# Setup vagrant manifest
+cat <<EOF >${EMBEDDED_DIR}/manifest.json
+{
+    "vagrant_version": "${VERSION}"
+}
+EOF
+chmod 0644 ${EMBEDDED_DIR}/manifest.json
 
 # Exit the temporary directory
 popd

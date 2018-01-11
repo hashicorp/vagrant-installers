@@ -12,3 +12,5 @@ substrate/launcher/launcher.exe
 substrate/terraform/*.tfstate
 substrate/terraform/*.tfvars
 substrate/terraform/output
+pkg
+substrate-assets

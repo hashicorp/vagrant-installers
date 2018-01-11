@@ -50,7 +50,7 @@ build() {
 
   # Install Vagrant and the share plugin
   pushd "${srcdir}"
-  export GEM_PATH="${EMBEDDED_DIR}/gems"
+  export GEM_PATH="${EMBEDDED_DIR}/gems/${VAGRANT_VERSION}"
   export GEM_HOME="${GEM_PATH}"
   export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 
