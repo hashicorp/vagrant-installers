@@ -18,9 +18,6 @@ import (
 const envPrefix = "VAGRANT_OLD_ENV"
 
 func main() {
-	// Define any Windows commands that require an interactive terminal
-	winCmdsInteractive := map[string]bool{"ssh": true}
-
 	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
 
 	// Get the path to the executable. This path doesn't resolve symlinks
@@ -33,8 +30,6 @@ func main() {
 	if debug {
 		log.Printf("launcher: path = %s", path)
 	}
-	// Retain this path in case we need to re-launch
-	launcher_path := path
 
 	for {
 		fi, err := os.Lstat(path)
@@ -274,8 +269,13 @@ func main() {
 	rubyPath := filepath.Join(embeddedDir, "bin", "ruby")
 	if runtime.GOOS == "windows" {
 		rubyPath = filepath.Join(embeddedDir, mingwDir, "bin", "ruby") + ".exe"
-	} else if newEnv["VAGRANT_DETECTED_OS"] == "archlinux" {
-		rubyPath = "/usr/bin/ruby"
+	}
+	_, err = os.Stat(rubyPath)
+	if err != nil {
+		if debug {
+			log.Printf("launcher: no embedded ruby found. falling back to path provided.")
+		}
+		rubyPath = "ruby"
 	}
 
 	// Prior to starting the command, we ignore interrupts. Vagrant itself
@@ -286,15 +286,6 @@ func main() {
 	// we are, then wrap the execution with winpty to properly provide terminal
 	// support to Vagrant. Without this we get the ever loved "stdin is not a tty"
 	var cmd *exec.Cmd
-	winInterCmd := false
-
-	if len(os.Args) > 1 && runtime.GOOS == "windows" {
-		winInterCmd, _ = winCmdsInteractive[os.Args[1]]
-	}
-
-	winptyRelaunch := runtime.GOOS == "windows" && os.Getenv("VAGRANT_WINPTY_DISABLE") == "" &&
-		os.Getenv("VAGRANT_WINPTY_WRAPPED") != "1" && winInterCmd &&
-		(newEnv["VAGRANT_DETECTED_OS"] == "msys" || newEnv["VAGRANT_DETECTED_OS"] == "cygwin")
 
 	// Set the PATH to include the proper paths into our embedded dir
 	path = os.Getenv("PATH")
@@ -304,31 +295,18 @@ func main() {
 				log.Printf("launcher: path modification will prefer system bins.")
 			}
 			path = fmt.Sprintf(
-				"%s;%s;%s",
+				"%s;%s;%s;%s",
 				filepath.Join(embeddedDir, mingwDir, "bin"),
 				path,
+				filepath.Join(embeddedDir, "bin"),
 				filepath.Join(embeddedDir, "usr", "bin"))
 		} else {
 			path = fmt.Sprintf(
-				"%s;%s;%s",
+				"%s;%s;%s;%s",
 				filepath.Join(embeddedDir, mingwDir, "bin"),
+				filepath.Join(embeddedDir, "bin"),
 				filepath.Join(embeddedDir, "usr", "bin"),
 				path)
-		}
-		// Check if the user wants to enable Win32-OpenSSH
-		if os.Getenv("VAGRANT_ENABLE_WINSSH") != "" {
-			if debug {
-				log.Printf("launcher: enabling win32-openssh")
-			}
-			path = fmt.Sprintf("%s;%s",
-				filepath.Join(embeddedDir, "bin"), path)
-			// If using winssh then a winpty relaunch should _never_ happen
-			if winptyRelaunch {
-				if debug {
-					log.Printf("launcher: winpty relaunch not required for win32-openssh. disabling.")
-				}
-				winptyRelaunch = false
-			}
 		}
 	} else {
 		path = fmt.Sprintf("%s:%s",
@@ -336,36 +314,21 @@ func main() {
 	}
 	newEnv["PATH"] = path
 
-	if winptyRelaunch {
-		os.Setenv("VAGRANT_WINPTY_WRAPPED", "1")
-		winptyPath := filepath.Join(embeddedDir, "bin", newEnv["VAGRANT_DETECTED_OS"],
-			newEnv["VAGRANT_DETECTED_ARCH"], "winpty.exe")
-		cmd = exec.Command(winptyPath)
-		cmd.Args = make([]string, len(os.Args)+1)
-		cmd.Args[0] = "winpty"
-		cmd.Args[1] = launcher_path
-		copy(cmd.Args[2:], os.Args[1:])
-		if debug {
-			log.Printf("launcher: winpty re-launch (stdin will be a tty!)")
-			log.Printf("launcher: winptyPath = %s", winptyPath)
+	// Set all the environmental variables
+	for k, v := range newEnv {
+		if err := os.Setenv(k, v); err != nil {
+			fmt.Fprintf(os.Stderr, "Error setting env var %s: %s\n", k, err)
+			os.Exit(1)
 		}
-	} else {
-		// Set all the environmental variables
-		for k, v := range newEnv {
-			if err := os.Setenv(k, v); err != nil {
-				fmt.Fprintf(os.Stderr, "Error setting env var %s: %s\n", k, err)
-				os.Exit(1)
-			}
-		}
+	}
 
-		cmd = exec.Command(rubyPath)
-		cmd.Args = make([]string, len(os.Args)+1)
-		cmd.Args[0] = "ruby"
-		cmd.Args[1] = vagrantExecutable
-		copy(cmd.Args[2:], os.Args[1:])
-		if debug {
-			log.Printf("launcher: rubyPath = %s", rubyPath)
-		}
+	cmd = exec.Command(rubyPath)
+	cmd.Args = make([]string, len(os.Args)+1)
+	cmd.Args[0] = "ruby"
+	cmd.Args[1] = vagrantExecutable
+	copy(cmd.Args[2:], os.Args[1:])
+	if debug {
+		log.Printf("launcher: rubyPath = %s", rubyPath)
 	}
 
 	if debug {
