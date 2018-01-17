@@ -192,6 +192,18 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
+  curl::windows{ "x64":
+    install_dir => $embedded_dir_64,
+    file_cache_dir => $cache_dir,
+    target_arch => "x64",
+  }
+
+  curl::windows{ "x86":
+    install_dir => $embedded_dir_32,
+    file_cache_dir => $cache_dir,
+    target_arch => "x86",
+  }
+
   class { "rubyencoder::loaders":
     path => $staging_dir,
     require => [

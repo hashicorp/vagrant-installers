@@ -1,23 +1,22 @@
 _realname=ruby
-pkgbase=mingw-w64-${_realname}
-pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
-pkgver=2.4.2
+pkgbase=mingw-w64-ruby24
+pkgname="${MINGW_PACKAGE_PREFIX}-ruby24"
+pkgver=2.4.3
 pkgrel=1
 pkgdesc="An object-oriented language for quick and easy programming (mingw-w64)"
 arch=('any')
 url="https://www.ruby-lang.org/en"
 license=("BSD, custom")
-makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-pkg-config" "patch" "patchutils")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-pkg-config")
 depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
          "${MINGW_PACKAGE_PREFIX}-gdbm"
          "${MINGW_PACKAGE_PREFIX}-gmp"
          "${MINGW_PACKAGE_PREFIX}-libffi"
          "${MINGW_PACKAGE_PREFIX}-libyaml"
-         "${MINGW_PACKAGE_PREFIX}-openssl<1.1"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
          "${MINGW_PACKAGE_PREFIX}-zlib")
 options=('staticlibs' 'strip')
 source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver}.tar.bz2"
-        0001-fix-configure-for-libgmp.patch
         0002-use-gnu-printf.patch
         0004-exclude-changelog-from-rdoc.patch
         0006-fix-conversion-warning-win32-powl.patch
@@ -26,8 +25,7 @@ source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver
 
 # To update SHA256 hashs run: ridk exec sh -c "updpkgsums PKGBUILD"
 
-sha256sums=('08e72d0cbe870ed1317493600fbbad5995ea3af2d0166585e7ecc85d04cc50dc'
-            'dd18f9faee7812cbe0e1230f28fe096fe9fd400455a2a1a88b8512ed2093d001'
+sha256sums=('0a703dffb7737f56e979c9ebe2482f07751803c71e307c20446b581e0f12cf30'
             '578bd0830fe96efc7656c732ec46b0658fc436a7a30d8945cf3b8240797809f0'
             '389236bdca5f283adde9b4b56febcfc25e228716e06a0edc21ea8fd7f27b75fa'
             'e7f83bc6e3b7ddadb5e3b14aa7d3a4e30eb97aea02df38796ca78714ad20e9b7'
@@ -36,7 +34,6 @@ sha256sums=('08e72d0cbe870ed1317493600fbbad5995ea3af2d0166585e7ecc85d04cc50dc'
 
 prepare() {
   cd ${srcdir}/${_realname}-${pkgver}
-  patch -p1 -i ${srcdir}/0001-fix-configure-for-libgmp.patch
   patch -p1 -i ${srcdir}/0002-use-gnu-printf.patch
   patch -p1 -i ${srcdir}/0004-exclude-changelog-from-rdoc.patch
   patch -p1 -i ${srcdir}/0006-fix-conversion-warning-win32-powl.patch

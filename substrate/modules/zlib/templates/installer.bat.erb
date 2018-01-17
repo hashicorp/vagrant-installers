@@ -1,0 +1,6 @@
+mkdir "<%= @install_dir %>\lib"
+mkdir "<%= @install_dir %>\include"
+
+copy .\*.h "<%= @install_dir %>\include\"
+copy .\zlib.lib "<%= @install_dir %>\lib\zlib.lib"
+copy .\zlib.lib "<%= @install_dir %>\lib\zlib_a.lib"
