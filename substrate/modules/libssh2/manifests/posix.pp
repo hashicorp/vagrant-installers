@@ -3,6 +3,7 @@ class libssh2::posix {
 
   $autotools_environment = $libssh2::autotools_environment
   $file_cache_dir  = $libssh2::file_cache_dir
+  $prefix = $libssh2::prefix
   $libssh2_version  = hiera("libssh2::version")
   $source_filename  = "libssh2-${libssh2_version}.tar.gz"
   $source_url = "http://www.libssh2.org/download/${source_filename}"
