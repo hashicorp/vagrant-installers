@@ -36,12 +36,19 @@
       "scripts/arch/minimize.sh"
     ]
   }],
-  "post-processors": [{
-    "type": "vagrant",
-    "compression_level": "{{user `compression_level`}}",
-    "output": "archlinux-x86_64-{{.Provider}}.box",
-    "vagrantfile_template": "vagrantfile-linux.template"
-  }],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "compression_level": "{{user `compression_level`}}",
+      "output": "archlinux-{{user `version`}}.{{user `build_timestamp`}}.box",
+      "vagrantfile_template": "vagrantfile-linux.template"
+    },
+    {
+      "type": "vagrant-cloud",
+      "box_tag": "hashicorp-vagrant/archlinux",
+      "version": "{{user `version`}}.{{user `build_timestamp`}}"
+    }
+  ],
   "variables": {
     "compression_level": "6",
     "cpus": "1",
@@ -51,6 +58,8 @@
     "iso_checksum_type": "sha1",
     "memory": "512",
     "mirror": "http://mirrors.kernel.org/archlinux",
-    "ssh_timeout": "60m"
+    "ssh_timeout": "60m",
+    "version": "1.0",
+    "build_timestamp": "{{isotime \"20060102150405\"}}"
   }
 }

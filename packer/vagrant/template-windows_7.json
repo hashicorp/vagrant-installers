@@ -65,8 +65,17 @@
     {
       "type": "vagrant",
       "keep_input_artifact": false,
-      "output": "win-7.box",
+      "output": "win-7-{{user `version`}}.{{user `build_timestamp`}}.box",
       "vagrantfile_template": "vagrantfile-windows_7.template"
+    },
+    {
+      "type": "vagrant-cloud",
+      "box_tag": "hashicorp-vagrant/win-7",
+      "version": "{{user `version`}}.{{user `build_timestamp`}}"
     }
-  ]
+  ],
+  "variables": {
+    "version": "1.0",
+    "build_timestamp":  "{{isotime \"20060102150405\"}}"
+  }
 }

@@ -31,10 +31,15 @@
   ],
   "post-processors": [
     {
-      "output": "{{user `box_basename`}}-{{user `version`}}.box",
+      "output": "{{user `box_basename`}}-{{user `version`}}.{{user `build_timestamp`}}.box",
       "keep_input_artifact": false,
       "type": "vagrant",
       "vagrantfile_template": "vagrantfile-linux.template"
+    },
+    {
+      "type": "vagrant-cloud",
+      "box_tag": "hashicorp-vagrant/{{user `box_basename`}}",
+      "version": "{{user `version`}}.{{user `build_timestamp`}}"
     }
   ],
   "provisioners": [
@@ -81,6 +86,6 @@
     "mirror_directory": "6.9/isos/x86_64",
     "name": "centos6",
     "no_proxy": "{{env `no_proxy`}}",
-    "version": "1.0.0"
+    "version": "1.0"
   }
 }
