@@ -17,7 +17,7 @@ if not exist "C:\Windows\Temp\windows.iso" (
 mkdir "C:\Windows\Temp\VMware"
 pushd "C:\Windows\Temp\VMware"
 cmd /c ""C:\Program Files\7-Zip\7z.exe" x "C:\Windows\Temp\windows.iso""
-start /wait C:\Windows\Temp\VMWare\setup.exe /S /v"/qn REBOOT=R\"
+start /wait .\setup.exe /S /v"/qn REBOOT=R\"
 popd
 
 rd /Q "C:\Windows\Temp\vmware-tools.tar"
