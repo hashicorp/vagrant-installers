@@ -211,9 +211,9 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
-  # The vctip.exe process may be hanging around from msbuild setups. Ensure
-  # all of them are dead so we don't get stuck with an open connection that's
-  # waiting for the process to complete
+  # The vctip.exe / mspdbsrv.exe processes may be hanging around from msbuild
+  # setups. Ensure all of them are dead so we don't get stuck with an open
+  # connection that's waiting for the process to complete
 
   exec { "kill-vctip":
     command => "cmd /c \"taskkill /F /IM vctip.exe /T",
@@ -222,4 +222,13 @@ class vagrant_substrate::staging::windows {
       Curl::Windows["x64"],
     ],
   }
+
+  exec { "kill-mspdbsrv":
+    command => "cmd /c \"taskkill /F /IM mspdbsrv.exe /T",
+    require => [
+      Curl::Windows["x86"],
+      Curl::Windows["x64"],
+    ],
+  }
+
 }
