@@ -80,13 +80,21 @@ define autotools(
     default => autotools_flatten_environment($environment),
   }
 
-  exec { "configure-${name}":
-    command     => "sh -c '${real_configure_file} ${configure_flags}'",
-    creates     => $real_configure_sentinel,
-    cwd         => $cwd,
-    environment => $exec_environment,
+  if $kernel == 'Darwin' {
+    exec { "configure-${name}":
+      command     => "sh -c '${real_configure_file} ${configure_flags}'",
+      creates     => $real_configure_sentinel,
+      cwd         => $cwd,
+      environment => $exec_environment,
+    }
+  } else {
+      exec { "configure-${name}":
+      command     => "sh ${real_configure_file} ${configure_flags}",
+      creates     => $real_configure_sentinel,
+      cwd         => $cwd,
+      environment => $exec_environment,
+    }
   }
-
   exec { "make-${name}":
     command     => $real_make_command,
     creates     => $make_sentinel,
