@@ -7,6 +7,16 @@ mkdir -p /vagrant/substrate-assets
 chmod 755 /vagrant/substrate/run.sh
 
 TRAVIS=1 su vagrant -l -c 'brew update'
+TRAVIS=1 su vagrant -l -c 'brew install wget'
 
+# grab new cacert
+curl -o cacert.pem https://curl.haxx.se/ca/cacert.pem
+chown vagrant:admin /usr/local/etc/openssl
+
+mkdir -p /usr/local/etc/openssl
+
+mv cacert.pem /usr/local/etc/openssl/cacert.pem
+
+export SSL_CERT_FILE=/usr/local/etc/openssl/cacert.pem
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 /vagrant/substrate/run.sh /vagrant/substrate-assets

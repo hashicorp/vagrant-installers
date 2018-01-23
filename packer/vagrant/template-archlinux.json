@@ -2,7 +2,7 @@
   "builders": [{
     "type": "vmware-iso",
     "guest_os_type": "other3xlinux-64",
-    "iso_url": "{{user `mirror`}}/iso/2017.10.01/archlinux-2017.10.01-x86_64.iso",
+    "iso_url": "{{user `mirror`}}/iso/2018.01.01/archlinux-2018.01.01-x86_64.iso",
     "iso_checksum": "{{user `iso_checksum`}}",
     "iso_checksum_type": "{{user `iso_checksum_type`}}",
     "output_directory": "output-archlinux-x86_64-{{build_type}}",
@@ -36,21 +36,30 @@
       "scripts/arch/minimize.sh"
     ]
   }],
-  "post-processors": [{
-    "type": "vagrant",
-    "compression_level": "{{user `compression_level`}}",
-    "output": "archlinux-x86_64-{{.Provider}}.box",
-    "vagrantfile_template": "vagrantfile-linux.template"
-  }],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "compression_level": "{{user `compression_level`}}",
+      "output": "archlinux-{{user `version`}}.{{user `build_timestamp`}}.box",
+      "vagrantfile_template": "vagrantfile-linux.template"
+    },
+    {
+      "type": "vagrant-cloud",
+      "box_tag": "hashicorp-vagrant/archlinux",
+      "version": "{{user `version`}}.{{user `build_timestamp`}}"
+    }
+  ],
   "variables": {
     "compression_level": "6",
     "cpus": "1",
     "disk_size": "40000",
     "headless": "false",
-    "iso_checksum": "99357d28070706be18f02472f062e02347ab0e68",
+    "iso_checksum": "6c98c1932731eff98e430958c3589c4124bafbe9",
     "iso_checksum_type": "sha1",
     "memory": "512",
     "mirror": "http://mirrors.kernel.org/archlinux",
-    "ssh_timeout": "60m"
+    "ssh_timeout": "60m",
+    "version": "1.0",
+    "build_timestamp": "{{isotime \"20060102150405\"}}"
   }
 }

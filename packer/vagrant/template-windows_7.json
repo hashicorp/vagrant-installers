@@ -27,7 +27,8 @@
         "./scripts/windows/build-tools.ps1",
         "./scripts/windows/compile-dotnet-assemblies.bat",
         "./scripts/windows/powershell-upgrade.ps1",
-        "./scripts/windows/openssh.ps1"
+        "./scripts/windows/openssh.ps1",
+        "./scripts/windows/vm-guest-tools.bat"
       ],
       "vmx_data": {
         "RemoteDisplay.vnc.enabled": "false",
@@ -44,7 +45,6 @@
       "remote_path": "/tmp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts": [
-        "./scripts/windows/vm-guest-tools.bat",
         "./scripts/windows/puppet.bat",
         "./scripts/windows/vagrant-ssh.bat",
         "./scripts/windows/enable-rdp.bat",
@@ -65,8 +65,17 @@
     {
       "type": "vagrant",
       "keep_input_artifact": false,
-      "output": "win-7.box",
+      "output": "win-7-{{user `version`}}.{{user `build_timestamp`}}.box",
       "vagrantfile_template": "vagrantfile-windows_7.template"
+    },
+    {
+      "type": "vagrant-cloud",
+      "box_tag": "hashicorp-vagrant/win-7",
+      "version": "{{user `version`}}.{{user `build_timestamp`}}"
     }
-  ]
+  ],
+  "variables": {
+    "version": "1.0",
+    "build_timestamp":  "{{isotime \"20060102150405\"}}"
+  }
 }

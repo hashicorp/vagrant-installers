@@ -4,6 +4,7 @@ apt-get install -yq git-core
 
 ARCH="amd64"
 
+set +e
 uname -p | grep x86_64 > /dev/null
 
 if [ $? -eq 0 ]
@@ -12,6 +13,7 @@ then
 else
     ARCH="386"
 fi
+set -e
 
 wget -O go.tar.gz https://storage.googleapis.com/golang/go1.9.2.linux-${ARCH}.tar.gz
 tar -C /usr/local -xzf go.tar.gz

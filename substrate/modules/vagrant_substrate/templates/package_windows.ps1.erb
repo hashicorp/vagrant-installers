@@ -5,7 +5,7 @@ if(Test-Path -Path $zipfilename) {
   Remove-Item -Path $zipfilename
 }
 
-Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\x64\*" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\pack.log
+$z1 = Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\x64\*" -PassThru
 
 $zipfilename = "<%= @output_dir %>\substrate_windows_i686.zip"
 
@@ -13,4 +13,9 @@ if(Test-Path -Path $zipfilename) {
   Remove-Item -Path $zipfilename
 }
 
-Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\x32\*" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\pack.log
+$z2 = Start-Process "C:\Program Files\7-Zip\7z.exe" "a -r ${zipfilename} ${sourcedir}\x32\*" -PassThru
+
+$z1.WaitForExit()
+$z2.WaitForExit()
+
+exit 0

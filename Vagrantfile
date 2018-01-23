@@ -3,11 +3,11 @@
 
 build_boxes = [
   'archlinux',
-  'centos-5.11',
-  'centos-5.11-i386',
+  'centos-6',
+  'centos-6-i386',
   'osx-10.9',
-  'ubuntu-10.04',
-  'ubuntu-10.04-i386',
+  'ubuntu-14.04',
+  'ubuntu-14.04-i386',
   'win-7'
 ]
 

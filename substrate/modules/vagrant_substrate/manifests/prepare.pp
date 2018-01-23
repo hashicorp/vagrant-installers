@@ -39,14 +39,8 @@ class vagrant_substrate::prepare {
       $cache_dir,
       "${staging_dir_32}/bin",
       "${staging_dir_64}/bin",
-      "${embedded_dir_32}/bin/msys/32",
-      "${embedded_dir_32}/bin/msys/64",
-      "${embedded_dir_32}/bin/cygwin/32",
-      "${embedded_dir_32}/bin/cygwin/64",
-      "${embedded_dir_64}/bin/msys/32",
-      "${embedded_dir_64}/bin/msys/64",
-      "${embedded_dir_64}/bin/cygwin/32",
-      "${embedded_dir_64}/bin/cygwin/64",
+      "${embedded_dir_32}/bin",
+      "${embedded_dir_64}/bin",
       $output_dir,
     ]
   } else {

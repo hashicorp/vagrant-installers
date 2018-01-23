@@ -11,7 +11,7 @@ class openssl(
   require build_essential
 
   $openssl_version  = hiera("openssl::version")
-  $lib_version      = "1.0.0"
+  $lib_version      = regsubst($openssl_version, '\.[0-9a-z]+$', '')
   $source_filename  = "openssl-${openssl_version}.tar.gz"
   $source_url = "http://www.openssl.org/source/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"

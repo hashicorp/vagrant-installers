@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 
 # Create directories for new assets
-rm -rf output/vagrant-w64/output
-rm -rf output/vagrant-w32/output
+rm -rf output/vagrant-w64/
+rm -rf output/vagrant-w32/
 
-mkdir -p output/vagrant-w64/output
-mkdir -p output/vagrant-w32/output
+mkdir -p output/vagrant-w64/
+mkdir -p output/vagrant-w32/
 
 # Store ruby packages locally
 mkdir pkgs
@@ -26,7 +26,7 @@ fi
 
 # Start with the 64 bit build
 mkdir substrate
-find output/vagrant-w64/output -name "*.zip" -exec cp {} substrate/substrate-asset.zip \;
+find output/ -name "*w64*.zip" -exec cp {} substrate/substrate-asset.zip \;
 pushd substrate
 unzip -q substrate-asset.zip
 rm -rf _scripts substrate-asset.zip
@@ -45,7 +45,7 @@ rm -rf substrate
 
 # Finish with the 32 bit build
 mkdir substrate
-find output/vagrant-w32/output -name "*.zip" -exec cp {} substrate/substrate-asset.zip \;
+find output/ -name "*w32*.zip" -exec cp {} substrate/substrate-asset.zip \;
 pushd substrate
 unzip -q substrate-asset.zip
 rm -rf _scripts substrate-asset.zip

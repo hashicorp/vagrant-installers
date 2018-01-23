@@ -17,16 +17,13 @@ class vagrant_substrate::staging::windows {
   $ruby_build_path   = "${cache_dir}\\ruby-build"
   $ruby_bash_builder = "${cache_dir}\\bash-builder.sh"
   $ruby_lib_version  = inline_template("<%= @ruby_version.split('.').slice(0,2).join('.') %>.0")
+  $ruby_package_name = inline_template("ruby<%= @ruby_version.split('.')[0,2].join %>")
 
   $builder_path      = "${cache_dir}\\substrate_builder.sh"
   $builder_cwd       = "C:\\msys64\\home\\vagrant\\styrene"
   $builder_config    = "${builder_cwd}\\vagrant.cfg"
 
   $launcher_path     = "${cache_dir}\\launcher"
-
-  $winpty_version        = hiera("vagrant_substrate::winpty_version")
-  $winpty_cygwin_version = hiera("vagrant_substrate::winpty_cygwin_version")
-  $winpty_msys2_version  = hiera("vagrant_substrate::winpty_msys2_version")
 
   $winssh_version = hiera("vagrant_substrate::winssh_version")
 
@@ -143,232 +140,6 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
-  # TODO: Isolate the wintpy into manifest
-  # winpty installations #
-
-  # Local paths
-  $winpty_cygwin_32 = "${cache_dir}\\winpty_cygwin32.tar.gz"
-  $winpty_cygwin_64 = "${cache_dir}\\winpty_cygwin64.tar.gz"
-  $winpty_msys2_32 = "${cache_dir}\\winpty_msys2_32.tar.gz"
-  $winpty_msys2_64 = "${cache_dir}\\winpty_msys2_64.tar.gz"
-  $winpty_cygwin_32_tar = "${cache_dir}\\winpty_cygwin32.tar"
-  $winpty_cygwin_64_tar = "${cache_dir}\\winpty_cygwin64.tar"
-  $winpty_msys2_32_tar = "${cache_dir}\\winpty_msys2_32.tar"
-  $winpty_msys2_64_tar = "${cache_dir}\\winpty_msys2_64.tar"
-
-  # Remote package URLS
-  $winpty_cygwin_32_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32.tar.gz"
-  $winpty_cygwin_64_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64.tar.gz"
-  $winpty_msys2_32_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32.tar.gz"
-  $winpty_msys2_64_url = "http://github.com/rprichard/winpty/releases/download/${winpty_version}/winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64.tar.gz"
-
-  $cache_dir_32 = "${cache_dir}\\32"
-  $cache_dir_64 = "${cache_dir}\\64"
-
-  # Download all winpty releases
-  download { "winpty_cygwin_32":
-    source => $winpty_cygwin_32_url,
-    destination => $winpty_cygwin_32,
-    file_cache_dir => $cache_dir,
-  }
-
-  download { "winpty_cygwin_64":
-    source => $winpty_cygwin_64_url,
-    destination => $winpty_cygwin_64,
-    file_cache_dir => $cache_dir,
-  }
-
-  download { "winpty_msys2_32":
-    source => $winpty_msys2_32_url,
-    destination => $winpty_msys2_32,
-    file_cache_dir => $cache_dir,
-  }
-
-  download { "winpty_msys2_64":
-    source => $winpty_msys2_64_url,
-    destination => $winpty_msys2_64,
-    file_cache_dir => $cache_dir,
-  }
-
-  # Gunzip all winpty releases
-  exec { "gunzip-${winpty_cygwin_32}":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_32} -y",
-    creates => $winpty_cygwin_32_tar,
-    cwd => $cache_dir,
-    require => [
-      Download["winpty_cygwin_32"],
-    ],
-  }
-
-  exec { "gunzip-${winpty_cygwin_64}":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_64} -y",
-    creates => $winpty_cygwin_64_tar,
-    cwd => $cache_dir,
-    require => [
-      Download["winpty_cygwin_64"],
-    ],
-  }
-
-  exec { "gunzip-${winpty_msys2_32}":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_32} -y",
-    creates => $winpty_msys2_32_tar,
-    cwd => $cache_dir,
-    require => [
-      Download["winpty_msys2_32"],
-    ],
-  }
-
-  exec { "gunzip-${winpty_msys2_64}":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_64} -y",
-    creates => $winpty_msys2_64_tar,
-    cwd => $cache_dir,
-    require => [
-      Download["winpty_msys2_64"],
-    ],
-  }
-
-  # untar winpty for 32bit substrate
-  exec { "untar-${winpty_cygwin_32}-32":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_32_tar} -y -o${cache_dir}\\w32",
-    creates => "${cache_dir}\\w32\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32",
-    cwd => $cache_dir,
-    require => [
-      Exec["gunzip-${$winpty_cygwin_32}"],
-    ],
-  }
-
-  exec { "untar-${winpty_msys2_32}-32":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_32_tar} -y -o${cache_dir}\\w32",
-    cwd => $cache_dir,
-    creates => "${cache_dir}\\w32\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32",
-    require => [
-      Exec["gunzip-${$winpty_msys2_32}"],
-    ],
-  }
-
-  exec { "untar-${winpty_cygwin_64}-32":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_64_tar} -y -o${cache_dir}\\w32",
-    creates => "${cache_dir}\\w32\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64",
-    cwd => $cache_dir,
-    require => [
-      Exec["gunzip-${$winpty_cygwin_64}"],
-    ],
-  }
-
-  exec { "untar-${winpty_msys2_64}-32":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_64_tar} -y -o${cache_dir}\\w32",
-    creates => "${cache_dir}\\w32\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64",
-    cwd => $cache_dir,
-    require => [
-      Exec["gunzip-${$winpty_msys2_64}"],
-    ],
-  }
-
-  # untar winpty for 64bit substrate
-  exec { "untar-${winpty_cygwin_32}-64":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_32_tar} -y -o${cache_dir}\\w64",
-    creates => "${cache_dir}\\w64\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32",
-    cwd => $cache_dir,
-    require => [
-      Exec["gunzip-${$winpty_cygwin_32}"],
-    ],
-  }
-
-  exec { "untar-${winpty_msys2_32}-64":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_32_tar} -y -o${cache_dir}\\w64",
-    cwd => $cache_dir,
-    creates => "${cache_dir}\\w64\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32",
-    require => [
-      Exec["gunzip-${$winpty_msys2_32}"],
-    ],
-  }
-
-  exec { "untar-${winpty_cygwin_64}-64":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_cygwin_64_tar} -y -o${cache_dir}\\w64",
-    creates => "${cache_dir}\\w64\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64",
-    cwd => $cache_dir,
-    require => [
-      Exec["gunzip-${$winpty_cygwin_64}"],
-    ],
-  }
-
-  exec { "untar-${winpty_msys2_64}-64":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winpty_msys2_64_tar} -y -o${cache_dir}\\w64",
-    creates => "${cache_dir}\\w64\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64",
-    cwd => $cache_dir,
-    require => [
-      Exec["gunzip-${$winpty_msys2_64}"],
-    ],
-  }
-
-  # install 32bit winpty
-
-  exec { "install-${winpty_cygwin_32}-32":
-    command => "cmd /c \"move ${cache_dir}\\w32\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32\\bin\\* ${embedded_dir_32}\\bin\\cygwin\\32",
-    creates => "${embedded_dir_32}\\bin\\cygwin\\32\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_cygwin_32}-32"],
-    ],
-  }
-
-  exec { "install-${winpty_cygwin_64}-32":
-    command => "cmd /c \"move ${cache_dir}\\w32\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64\\bin\\* ${embedded_dir_32}\\bin\\cygwin\\64",
-    creates => "${embedded_dir_32}\\bin\\cygwin\\64\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_cygwin_64}-32"],
-    ],
-  }
-
-  exec { "install-${winpty_msys2_32}-32":
-    command => "cmd /c \"move ${cache_dir}\\w32\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32\\bin\\* ${embedded_dir_32}\\bin\\msys\\32",
-    creates => "${embedded_dir_32}\\bin\\msys\\32\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_msys2_32}-32"],
-    ],
-  }
-
-  exec { "install-${winpty_msys2_64}-32":
-    command => "cmd /c \"move ${cache_dir}\\w32\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64\\bin\\* ${embedded_dir_32}\\bin\\msys\\64",
-    creates => "${embedded_dir_32}\\bin\\msys\\64\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_msys2_64}-32"],
-    ],
-  }
-
-  # install 64bit winpty
-
-  exec { "install-${winpty_cygwin_32}-64":
-    command => "cmd /c \"move ${cache_dir}\\w64\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-ia32\\bin\\* ${embedded_dir_64}\\bin\\cygwin\\32",
-    creates => "${embedded_dir_64}\\bin\\cygwin\\32\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_cygwin_32}-64"],
-    ],
-  }
-
-  exec { "install-${winpty_cygwin_64}-64":
-    command => "cmd /c \"move ${cache_dir}\\w64\\winpty-${winpty_version}-cygwin-${winpty_cygwin_version}-x64\\bin\\* ${embedded_dir_64}\\bin\\cygwin\\64",
-    creates => "${embedded_dir_64}\\bin\\cygwin\\64\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_cygwin_64}-64"],
-    ],
-  }
-
-  exec { "install-${winpty_msys2_32}-64":
-    command => "cmd /c \"move ${cache_dir}\\w64\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-ia32\\bin\\* ${embedded_dir_64}\\bin\\msys\\32",
-    creates => "${embedded_dir_64}\\bin\\msys\\32\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_msys2_32}-64"],
-    ],
-  }
-
-  exec { "install-${winpty_msys2_64}-64":
-    command => "cmd /c \"move ${cache_dir}\\w64\\winpty-${winpty_version}-msys2-${winpty_msys2_version}-x64\\bin\\* ${embedded_dir_64}\\bin\\msys\\64",
-    creates => "${embedded_dir_64}\\bin\\msys\\64\\winpty.exe",
-    require => [
-      Exec["untar-${$winpty_msys2_64}-64"],
-    ],
-  }
-
   # Install Win32-OpenSSH
   $winssh32_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v${winssh_version}/OpenSSH-Win32.zip"
   $winssh32_path = "${cache_dir}\\winssh32.zip"
@@ -422,10 +193,45 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
+  # NOTE: Once this is enabled the installer needs to be converted to
+  # an EXE to chain install the required msi for providing vcruntime140.dll
+  # curl::windows{ "x64":
+  #   install_dir => $embedded_dir_64,
+  #   file_cache_dir => $cache_dir,
+  #   target_arch => "x64",
+  # }
+
+  # curl::windows{ "x86":
+  #   install_dir => $embedded_dir_32,
+  #   file_cache_dir => $cache_dir,
+  #   target_arch => "x86",
+  # }
+
   class { "rubyencoder::loaders":
     path => $staging_dir,
     require => [
       Powershell["build-substrate"],
     ],
   }
+
+  # The vctip.exe / mspdbsrv.exe processes may be hanging around from msbuild
+  # setups. Ensure all of them are dead so we don't get stuck with an open
+  # connection that's waiting for the process to complete
+
+  # exec { "kill-vctip":
+  #   command => "cmd /c \"taskkill /F /IM vctip.exe /T",
+  #   require => [
+  #     Curl::Windows["x86"],
+  #     Curl::Windows["x64"],
+  #   ],
+  # }
+
+  # exec { "kill-mspdbsrv":
+  #   command => "cmd /c \"taskkill /F /IM mspdbsrv.exe /T",
+  #   require => [
+  #     Curl::Windows["x86"],
+  #     Curl::Windows["x64"],
+  #   ],
+  # }
+
 }
