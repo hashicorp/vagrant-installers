@@ -193,17 +193,19 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
-  curl::windows{ "x64":
-    install_dir => $embedded_dir_64,
-    file_cache_dir => $cache_dir,
-    target_arch => "x64",
-  }
+  # NOTE: Once this is enabled the installer needs to be converted to
+  # an EXE to chain install the required msi for providing vcruntime140.dll
+  # curl::windows{ "x64":
+  #   install_dir => $embedded_dir_64,
+  #   file_cache_dir => $cache_dir,
+  #   target_arch => "x64",
+  # }
 
-  curl::windows{ "x86":
-    install_dir => $embedded_dir_32,
-    file_cache_dir => $cache_dir,
-    target_arch => "x86",
-  }
+  # curl::windows{ "x86":
+  #   install_dir => $embedded_dir_32,
+  #   file_cache_dir => $cache_dir,
+  #   target_arch => "x86",
+  # }
 
   class { "rubyencoder::loaders":
     path => $staging_dir,
@@ -216,20 +218,20 @@ class vagrant_substrate::staging::windows {
   # setups. Ensure all of them are dead so we don't get stuck with an open
   # connection that's waiting for the process to complete
 
-  exec { "kill-vctip":
-    command => "cmd /c \"taskkill /F /IM vctip.exe /T",
-    require => [
-      Curl::Windows["x86"],
-      Curl::Windows["x64"],
-    ],
-  }
+  # exec { "kill-vctip":
+  #   command => "cmd /c \"taskkill /F /IM vctip.exe /T",
+  #   require => [
+  #     Curl::Windows["x86"],
+  #     Curl::Windows["x64"],
+  #   ],
+  # }
 
-  exec { "kill-mspdbsrv":
-    command => "cmd /c \"taskkill /F /IM mspdbsrv.exe /T",
-    require => [
-      Curl::Windows["x86"],
-      Curl::Windows["x64"],
-    ],
-  }
+  # exec { "kill-mspdbsrv":
+  #   command => "cmd /c \"taskkill /F /IM mspdbsrv.exe /T",
+  #   require => [
+  #     Curl::Windows["x86"],
+  #     Curl::Windows["x64"],
+  #   ],
+  # }
 
 }
