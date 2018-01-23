@@ -27,7 +27,8 @@
         "./scripts/windows/build-tools.ps1",
         "./scripts/windows/compile-dotnet-assemblies.bat",
         "./scripts/windows/powershell-upgrade.ps1",
-        "./scripts/windows/openssh.ps1"
+        "./scripts/windows/openssh.ps1",
+        "./scripts/windows/vm-guest-tools.bat"
       ],
       "vmx_data": {
         "RemoteDisplay.vnc.enabled": "false",
@@ -44,7 +45,6 @@
       "remote_path": "/tmp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts": [
-        "./scripts/windows/vm-guest-tools.bat",
         "./scripts/windows/puppet.bat",
         "./scripts/windows/vagrant-ssh.bat",
         "./scripts/windows/enable-rdp.bat",

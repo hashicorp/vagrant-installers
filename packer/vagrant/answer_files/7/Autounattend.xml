@@ -282,6 +282,12 @@
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c a:\vm-guest-tools.bat</CommandLine>
+                    <Description>Add VMware guest tools</Description>
+                    <Order>75</Order>
+                    <RequiresUserInput>true</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"</CommandLine>
                     <Description>Fully Disable Windows Firewall</Description>
                     <Order>80</Order>
