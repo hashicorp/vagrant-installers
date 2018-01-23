@@ -62,8 +62,8 @@ func main() {
 	}
 
 	// Find the Vagrant gem
-	gemPaths, err := filepath.Glob(
-		filepath.Join(embeddedDir, "gems", "gems", "vagrant-*"))
+	filePath := filepath.Join(embeddedDir, "gems", "gems", "vagrant-*")
+	gemPaths, err := filepath.Glob(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant: %s\n", err)
 		os.Exit(1)
