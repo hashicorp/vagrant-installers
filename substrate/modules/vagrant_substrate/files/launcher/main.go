@@ -282,9 +282,6 @@ func main() {
 	// handles these, so the launcher should just wait until that exits.
 	signal.Ignore(os.Interrupt)
 
-	// Check if running within a cygwin or msys type environment on Windows. If
-	// we are, then wrap the execution with winpty to properly provide terminal
-	// support to Vagrant. Without this we get the ever loved "stdin is not a tty"
 	var cmd *exec.Cmd
 
 	// Set the PATH to include the proper paths into our embedded dir
