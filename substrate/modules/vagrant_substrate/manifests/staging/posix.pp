@@ -36,6 +36,18 @@ class vagrant_substrate::staging::posix {
       "LDFLAGS" => "-Wl,-install_name,@rpath/libffi.dylib",
     }
 
+    $libgmp_autotools_environment = {
+      "LDFLAGS" => "-Wl,-install_name,@rpath/libgmp.dylib",
+    }
+
+    $libgpg_error_autotools_environment = {
+      "LDFLAGS" => "-Wl,-install_name,@rpath/libgpg-error.dylib",
+    }
+
+    $libgcrypt_autotools_environment = {
+      "LDFLAGS" => "-Wl,-install_name,@rpath/libgcrypt.dylib",
+    }
+
     $libiconv_autotools_environment = {
       "LDFLAGS" => "-Wl,-install_name,@rpath/libiconv.dylib",
     }
@@ -125,6 +137,33 @@ class vagrant_substrate::staging::posix {
     file_cache_dir => $cache_dir,
     prefix         => $embedded_dir,
     make_notify    => Exec["reset-ruby"],
+  }
+
+  if $kernel != "Darwin" {
+    class { "libgmp":
+      autotools_environment => autotools_merge_environments(
+        $default_autotools_environment, $libgmp_autotools_environment),
+      file_cache_dir => $cache_dir,
+      prefix         => $embedded_dir,
+      make_notify    => Exec["reset-ruby"],
+    }
+
+    class { "libgpg_error":
+      autotools_environment => autotools_merge_environments(
+        $default_autotools_environment, $libgpg_error_autotools_environment),
+      file_cache_dir => $cache_dir,
+      prefix         => $embedded_dir,
+      make_notify    => Exec["reset-ruby"],
+    }
+
+    class { "libgcrypt":
+      autotools_environment => autotools_merge_environments(
+        $default_autotools_environment, $libgcrypt_autotools_environment),
+      file_cache_dir => $cache_dir,
+      prefix         => $embedded_dir,
+      make_notify    => Exec["reset-ruby"],
+      require        => Class["libgpg_error"],
+    }
   }
 
   class { "zlib":
