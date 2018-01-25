@@ -77,17 +77,13 @@ ${GEM_COMMAND} install pkg-config --no-document -v "~> 1.1.7"
 ${GEM_COMMAND} install vagrant.gem --no-document
 
 # Install extensions
-${GEM_COMMAND} install vagrant-share --force --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
+# ${GEM_COMMAND} install vagrant-share --force --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
 
 # Setup the system plugins
 cat <<EOF >${EMBEDDED_DIR}/plugins.json
 {
     "version": "1",
     "installed": {
-        "vagrant-share": {
-            "ruby_version": "0",
-            "vagrant_version": "${VERSION}"
-        }
     }
 }
 EOF

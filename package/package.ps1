@@ -211,7 +211,7 @@ if ($UseCache -eq $false) {
       &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-ri --no-rdoc
 
       # Extensions
-      &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+      # &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
   }
   Remove-Item Env:SubstrateDir
   Remove-Item Env:VagrantSourceDir
@@ -226,10 +226,6 @@ $contents = @"
 {
     "version": "1",
     "installed": {
-        "vagrant-share": {
-            "ruby_version": "0",
-            "vagrant_version": "$($VagrantVersion)"
-        }
     }
 }
 "@
