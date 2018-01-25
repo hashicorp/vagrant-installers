@@ -15,7 +15,7 @@ else
 fi
 set -e
 
-wget -O go.tar.gz https://storage.googleapis.com/golang/go1.9.2.linux-${ARCH}.tar.gz
+wget -qO go.tar.gz https://storage.googleapis.com/golang/go1.9.2.linux-${ARCH}.tar.gz
 tar -C /usr/local -xzf go.tar.gz
 
 echo "export PATH=$PATH:/usr/local/go/bin" > /etc/profile.d/go-path.sh
@@ -23,3 +23,4 @@ echo "export PATH=$PATH:/usr/local/go/bin" >> /home/vagrant/.bash_profile
 chmod 755 /etc/profile.d/go-path.sh
 
 ln -s /usr/local/go/bin/go /usr/local/bin/
+rm go.tar.gz

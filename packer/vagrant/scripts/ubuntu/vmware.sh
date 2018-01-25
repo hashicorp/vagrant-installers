@@ -20,7 +20,7 @@ tar xzf ${TOOLS_PATH} -C /tmp/vmware-archive;
 if [ "${MAJ_VER}" -lt "10" ]; then
     /tmp/vmware-archive/vmware-tools-distrib/vmware-install.pl --default;
 else
-    /tmp/vmware-archive/vmware-tools-distrib/vmware-install.pl --force-install;
+    /tmp/vmware-archive/vmware-tools-distrib/vmware-install.pl --default --force-install;
 fi
 umount /tmp/vmware;
 rm -rf  /tmp/vmware;

@@ -45,7 +45,8 @@
       "vmx_data": {
         "cpuid.coresPerSocket": "1",
         "memsize": "{{ user `memory` }}",
-        "numvcpus": "{{ user `cpus` }}"
+        "numvcpus": "{{ user `cpus` }}",
+        "tools.upgrade.policy": "manual"
       },
       "vmx_remove_ethernet_interfaces": true
     }
