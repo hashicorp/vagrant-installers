@@ -52,8 +52,8 @@ Vagrant.configure("2") do |config|
 
       ["vmware_fusion", "vmware_workstation"].each do |p|
         config.vm.provider "p" do |v|
-          v.vmx["memsize"] = "4096"
-          v.vmx["numvcpus"] = "2"
+          v.vmx["memsize"] = ENV.fetch("VAGRANT_GUEST_MEMORY_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_MEMORY", "4096"))
+          v.vmx["numvcpus"] = ENV.fetch("VAGRANT_GUEST_CPUS_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_CPUS", "1"))
           v.vmx["cpuid.coresPerSocket"] = "1"
         end
       end
