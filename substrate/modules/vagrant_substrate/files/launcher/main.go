@@ -237,12 +237,23 @@ func main() {
 			log.Printf("launcher: windows detected arch - %s", newEnv["VAGRANT_DETECTED_ARCH"])
 		}
 	} else {
-		if _, err := os.Stat("/etc/arch-release"); err == nil {
-			newEnv["VAGRANT_DETECTED_OS"] = "archlinux"
-			// No cert bundle is provided for the archlinux installation
-			// so remove them from the newly constructed environment
-			delete(newEnv, "SSL_CERT_FILE")
-			delete(newEnv, "CURL_CA_BUNDLE")
+		// Check our cert files to ensure they actually exist. If not
+		// then remove them from the new environment.
+		if _, ok := newEnv["SSL_CERT_FILE"]; ok {
+			if _, err := os.Stat(newEnv["SSL_CERT_FILE"]); err != nil {
+				if debug {
+					log.Printf("launcher: SSL_CERT_FILE not found, removing - %s", newEnv["SSL_CERT_FILE"])
+				}
+				delete(newEnv, "SSL_CERT_FILE")
+			}
+		}
+		if _, ok := newEnv["CURL_CA_BUNDLE"]; ok {
+			if _, err := os.Stat(newEnv["CURL_CA_BUNDLE"]); err != nil {
+				if debug {
+					log.Printf("launcher: CURL_CA_BUNDLE not found, removing - %s", newEnv["CURL_CA_BUNDLE"])
+				}
+				delete(newEnv, "CURL_CA_BUNDLE")
+			}
 		}
 	}
 
