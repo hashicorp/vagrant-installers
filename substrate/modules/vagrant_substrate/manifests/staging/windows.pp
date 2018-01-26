@@ -141,10 +141,12 @@ class vagrant_substrate::staging::windows {
   }
 
   # Install Win32-OpenSSH
-  $winssh32_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v${winssh_version}/OpenSSH-Win32.zip"
+  # NOTE: Dropped `v` prefix from version in URL. This looks like
+  # a one-off issue and will need to be re-added on next version bump.
+  $winssh32_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/${winssh_version}/OpenSSH-Win32.zip"
   $winssh32_path = "${cache_dir}\\winssh32.zip"
 
-  $winssh64_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v${winssh_version}/OpenSSH-Win64.zip"
+  $winssh64_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/${winssh_version}/OpenSSH-Win64.zip"
   $winssh64_path = "${cache_dir}\\winssh64.zip"
 
   download { "winssh-32":
