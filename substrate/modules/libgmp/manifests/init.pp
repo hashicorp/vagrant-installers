@@ -18,6 +18,12 @@ class libgmp(
 
   $lib_version = inline_template("<%= @libgmp_version.split('.')[0,2].join('.') %>")
 
+  if "64" in architecture {
+    $abi_arch = "64"
+  } else {
+    $abi_arch = "32"
+  }
+
   # Determine if we have an extra environmental variables we need to set
   # based on the operating system.
   if $operatingsystem == 'Darwin' {
@@ -49,7 +55,7 @@ class libgmp(
   }
 
   autotools { "libgmp":
-    configure_flags  => "--prefix=${prefix}",
+    configure_flags  => "--prefix=${prefix} ABI=${abi_arch}",
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/lib/libgmp.a",
