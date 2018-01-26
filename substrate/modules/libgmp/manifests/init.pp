@@ -18,7 +18,7 @@ class libgmp(
 
   $lib_version = inline_template("<%= @libgmp_version.split('.')[0,2].join('.') %>")
 
-  if "64" in architecture {
+  if "64" in $architecture {
     $abi_arch = "64"
   } else {
     $abi_arch = "32"
