@@ -47,7 +47,7 @@ class curl::posix {
   }
 
   autotools { "curl":
-    configure_flags    => "--prefix=${install_dir} --disable-dependency-tracking --disable-ldap --with-libssh2",
+    configure_flags    => "--prefix=${install_dir} --disable-dependency-tracking --without-libidn2 --disable-ldap --with-libssh2",
     configure_sentinel => "${source_dir_path}/src/Makefile",
     cwd                => $source_dir_path,
     environment        => $real_autotools_environment,
