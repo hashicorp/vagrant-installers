@@ -68,6 +68,12 @@ build() {
 }
 EOF
   chmod 0644 ${EMBEDDED_DIR}/plugins.json
+  cat <<EOF >${EMBEDDED_DIR}/manifest.json
+{
+    "vagrant_version": "${VAGRANT_VERSION}"
+}
+EOF
+  chmod 0644 ${EMBEDDED_DIR}/manifest.json
   popd
 
 }
