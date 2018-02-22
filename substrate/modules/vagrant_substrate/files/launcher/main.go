@@ -298,7 +298,7 @@ func main() {
 	// Set the PATH to include the proper paths into our embedded dir
 	path = os.Getenv("PATH")
 	if runtime.GOOS == "windows" {
-		if os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "" {
+		if os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "" && os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "0" {
 			if debug {
 				log.Printf("launcher: path modification will prefer system bins.")
 			}
