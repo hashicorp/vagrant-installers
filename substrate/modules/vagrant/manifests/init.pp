@@ -32,8 +32,8 @@ class vagrant(
   }
 
   $extra_environment = {
-    "GEM_HOME" => "${embedded_dir}/gems",
-    "GEM_PATH" => "${embedded_dir}/gems",
+    "GEM_HOME" => "${embedded_dir}/gems/${vagrant_version}",
+    "GEM_PATH" => "${embedded_dir}/gems/${vagrant_version}",
   }
 
   $merged_environment = autotools_merge_environments(

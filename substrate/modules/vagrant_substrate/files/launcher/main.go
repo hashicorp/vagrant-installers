@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -16,6 +18,26 @@ import (
 )
 
 const envPrefix = "VAGRANT_OLD_ENV"
+
+type VagrantConfig struct {
+	Vagrant_version string
+}
+
+func readVagrantManifest(manifestPath string) VagrantConfig {
+	raw, err := ioutil.ReadFile(manifestPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read Vagrant manifest file at %s: %s\n", manifestPath, err)
+		os.Exit(1)
+	}
+
+	var conf VagrantConfig
+	err = json.Unmarshal(raw, &conf)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse json in Vagrant manifest file at %s: %s\n", manifestPath, err)
+		os.Exit(1)
+	}
+	return conf
+}
 
 func main() {
 	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
@@ -61,8 +83,17 @@ func main() {
 		log.Printf("launcher: embeddedDir = %s", embeddedDir)
 	}
 
+	manifestPath := filepath.Join(embeddedDir, "manifest.json")
+	vagrantConfig := readVagrantManifest(manifestPath)
+	vagrantVersion := vagrantConfig.Vagrant_version
+
+	if vagrantVersion == "" {
+		log.Printf("launcher: Failed to set vagrant version from manifest file")
+		os.Exit(1)
+	}
+
 	// Find the Vagrant gem
-	filePath := filepath.Join(embeddedDir, "gems", "gems", "vagrant-*")
+	filePath := filepath.Join(embeddedDir, "gems", vagrantVersion, "gems", "vagrant-*")
 	gemPaths, err := filepath.Glob(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant: %s\n", err)
@@ -160,8 +191,8 @@ func main() {
 		// anything the user might have setup on his/her system.
 		"CPPFLAGS":       cppflags,
 		"CFLAGS":         cflags,
-		"GEM_HOME":       filepath.Join(embeddedDir, "gems"),
-		"GEM_PATH":       filepath.Join(embeddedDir, "gems"),
+		"GEM_HOME":       filepath.Join(embeddedDir, "gems", vagrantVersion),
+		"GEM_PATH":       filepath.Join(embeddedDir, "gems", vagrantVersion),
 		"GEMRC":          filepath.Join(embeddedDir, "etc", "gemrc"),
 		"LDFLAGS":        ldflags,
 		"PATH":           path,

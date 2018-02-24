@@ -35,9 +35,11 @@ cd vagrant-${VAGRANT_REV}
 ${GEM_COMMAND} build vagrant.gemspec
 cp vagrant-*.gem vagrant.gem
 
+VAGRANT_VERSION=$(cat version.txt | sed -e 's/\.[^0-9]*$//')
+
 # Install the gem. Export all these environmental variables so the Gem
 # goes into the proper place.
-export GEM_PATH="${EMBEDDED_DIR}/gems"
+export GEM_PATH="${EMBEDDED_DIR}/gems/${VAGRANT_VERSION}"
 export GEM_HOME="${GEM_PATH}"
 export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 export CPPFLAGS="-I${EMBEDDED_DIR}/include"

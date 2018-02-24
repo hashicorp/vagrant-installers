@@ -192,6 +192,7 @@ if ($UseCache -eq $false) {
   $env:MingArchDir      = $MingArchDir
   $env:SubstrateDir     = $SubstrateDir
   $env:VagrantSourceDir = $VagrantSourceDir
+  $env:VagrantVersion   = $VagrantVersion
   powershell {
       $ErrorActionPreference = "Stop"
 
@@ -199,7 +200,7 @@ if ($UseCache -eq $false) {
       $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
       $PackageArch  = $env:PackageArch
       $MingArchDir  = $env:MingArchDir
-      $env:GEM_PATH = "$($EmbeddedDir)\gems"
+      $env:GEM_PATH = "$($EmbeddedDir)\gems\$($env:VagrantVersion)"
       $env:GEM_HOME = $env:GEM_PATH
       $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
       $env:CPPFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
@@ -232,6 +233,18 @@ $contents = @"
 $contents | Out-File `
     -Encoding ASCII `
     -FilePath "$($SubstrateDir)\embedded\plugins.json"
+
+#--------------------------------------------------------------------
+# Manifest File
+#--------------------------------------------------------------------
+$contents = @"
+{
+    "vagrant_version": "$VagrantVersion"
+}
+"@
+$contents | Out-File `
+    -Encoding ASCII `
+    -FilePath "$($SubstrateDir)\embedded\manifest.json"
 
 #--------------------------------------------------------------------
 # MSI
