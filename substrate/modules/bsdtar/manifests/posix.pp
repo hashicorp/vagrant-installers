@@ -42,18 +42,18 @@ class bsdtar::posix {
     $autotools_environment, $extra_autotools_environment, $ld_path_environment)
 
   if $kernel == 'Darwin' {
-    # Make sure we have a later version of automake/autoconf
-    homebrew::package { "automake":
-      creates => "/usr/local/bin/automake",
-      link    => true,
-      before  => Exec["automake-libarchive"],
-    }
+  #   # Make sure we have a later version of automake/autoconf
+  #   homebrew::package { "automake":
+  #     creates => "/usr/local/bin/automake",
+  #     link    => true,
+  #     before  => Exec["automake-libarchive"],
+  #   }
 
-    homebrew::package { "autoconf":
-      creates => "/usr/local/bin/autoconf",
-      link    => true,
-      before  => Exec["automake-libarchive"],
-    }
+  #   homebrew::package { "autoconf":
+  #     creates => "/usr/local/bin/autoconf",
+  #     link    => true,
+  #     before  => Exec["automake-libarchive"],
+  #   }
 
     homebrew::package { "libtool":
       creates => "/usr/local/bin/glibtoolize",

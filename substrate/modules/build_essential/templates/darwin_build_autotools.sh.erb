@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# This builds the autotools chain for older versions of CentOS.
+set -e
+
+pushd /tmp
+
+# m4
+rm -rf m4*
+wget http://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+tar xvzf m4-1.4.17.tar.gz
+pushd m4*
+./configure
+make
+make install
+popd
+
+# autoconf
+rm -rf autoconf*
+wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+tar xvzf autoconf-2.69.tar.gz
+pushd autoconf*
+./configure
+make
+make install
+popd
+
+# automake
+rm -rf automake*
+wget http://ftp.gnu.org/gnu/automake/automake-1.13.1.tar.gz
+tar xvzf automake-1.13.1.tar.gz
+pushd automake*
+./configure
+make
+make install
+popd
