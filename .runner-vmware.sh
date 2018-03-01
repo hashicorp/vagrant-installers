@@ -19,7 +19,7 @@ declare -A pids
 
 for guest in ${guests}
 do
-    vagrant provision ${guest}
+    vagrant provision ${guest} &
     pids[guest]=$!
 done
 
