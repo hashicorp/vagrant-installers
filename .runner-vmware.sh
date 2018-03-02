@@ -21,6 +21,7 @@ for guest in ${guests}
 do
     vagrant provision ${guest} &
     pids[guest]=$!
+    sleep 60
 done
 
 result=0
