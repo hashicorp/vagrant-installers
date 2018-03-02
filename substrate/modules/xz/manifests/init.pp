@@ -11,7 +11,8 @@ class xz(
   require build_essential
   $xz_version       = hiera("xz::version")
   $source_filename  = "xz-${xz_version}.tar.gz"
-  $source_url = "http://tukaani.org/xz/${source_filename}"
+  # $source_url = "http://tukaani.org/xz/${source_filename}"
+  $source_url = "https://instcache.s3.amazonaws.com/${source_filename}"
   $source_file_path = "${file_cache_dir}/${source_filename}"
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
