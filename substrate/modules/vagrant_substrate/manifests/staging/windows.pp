@@ -140,60 +140,59 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
+  # NOTE: Currently disabled until vagrant supports required key file permission updates
   # Install Win32-OpenSSH
-  # NOTE: Dropped `v` prefix from version in URL. This looks like
-  # a one-off issue and will need to be re-added on next version bump.
-  $winssh32_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/${winssh_version}/OpenSSH-Win32.zip"
-  $winssh32_path = "${cache_dir}\\winssh32.zip"
+  # $winssh32_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v${winssh_version}/OpenSSH-Win32.zip"
+  # $winssh32_path = "${cache_dir}\\winssh32.zip"
 
-  $winssh64_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/${winssh_version}/OpenSSH-Win64.zip"
-  $winssh64_path = "${cache_dir}\\winssh64.zip"
+  # $winssh64_url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v${winssh_version}/OpenSSH-Win64.zip"
+  # $winssh64_path = "${cache_dir}\\winssh64.zip"
 
-  download { "winssh-32":
-    source => $winssh32_url,
-    destination => $winssh32_path,
-    file_cache_dir => $cache_dir,
-  }
+  # download { "winssh-32":
+  #   source => $winssh32_url,
+  #   destination => $winssh32_path,
+  #   file_cache_dir => $cache_dir,
+  # }
 
-  download { "winssh-64":
-    source => $winssh64_url,
-    destination => $winssh64_path,
-    file_cache_dir => $cache_dir,
-  }
+  # download { "winssh-64":
+  #   source => $winssh64_url,
+  #   destination => $winssh64_path,
+  #   file_cache_dir => $cache_dir,
+  # }
 
-  exec { "unzip-winssh-32":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winssh32_path} -y",
-    creates => "$cache_dir\\OpenSSH-Win32",
-    cwd => $cache_dir,
-    require => [
-      Download["winssh-32"],
-    ],
-  }
+  # exec { "unzip-winssh-32":
+  #   command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winssh32_path} -y",
+  #   creates => "$cache_dir\\OpenSSH-Win32",
+  #   cwd => $cache_dir,
+  #   require => [
+  #     Download["winssh-32"],
+  #   ],
+  # }
 
-  exec { "unzip-winssh-64":
-    command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winssh64_path} -y",
-    creates => "$cache_dir\\OpenSSH-Win64",
-    cwd => $cache_dir,
-    require => [
-      Download["winssh-64"],
-    ],
-  }
+  # exec { "unzip-winssh-64":
+  #   command => "\"C:\\Program Files\\7-Zip\\7z.exe\" x ${winssh64_path} -y",
+  #   creates => "$cache_dir\\OpenSSH-Win64",
+  #   cwd => $cache_dir,
+  #   require => [
+  #     Download["winssh-64"],
+  #   ],
+  # }
 
-  exec { "install-winssh-32":
-    command => "cmd /c \"move ${cache_dir}\\OpenSSH-Win32\\* ${embedded_dir_32}\\bin",
-    creates => "${embedded_dir_32}\\bin\\ssh.exe",
-    require => [
-      Exec["unzip-winssh-32"],
-    ],
-  }
+  # exec { "install-winssh-32":
+  #   command => "cmd /c \"move ${cache_dir}\\OpenSSH-Win32\\* ${embedded_dir_32}\\bin",
+  #   creates => "${embedded_dir_32}\\bin\\ssh.exe",
+  #   require => [
+  #     Exec["unzip-winssh-32"],
+  #   ],
+  # }
 
-  exec { "install-winssh-64":
-    command => "cmd /c \"move ${cache_dir}\\OpenSSH-Win64\\* ${embedded_dir_64}\\bin",
-    creates => "${embedded_dir_64}\\bin\\ssh.exe",
-    require => [
-      Exec["unzip-winssh-64"],
-    ],
-  }
+  # exec { "install-winssh-64":
+  #   command => "cmd /c \"move ${cache_dir}\\OpenSSH-Win64\\* ${embedded_dir_64}\\bin",
+  #   creates => "${embedded_dir_64}\\bin\\ssh.exe",
+  #   require => [
+  #     Exec["unzip-winssh-64"],
+  #   ],
+  # }
 
   # NOTE: Once this is enabled the installer needs to be converted to
   # an EXE to chain install the required msi for providing vcruntime140.dll
