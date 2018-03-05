@@ -8,6 +8,8 @@ trap cleanup EXIT
 
 set -ex
 
+guests=$(vagrant status | grep vmware | awk '{print $1}')
+
 vagrant up --no-provision
 
 set +e
