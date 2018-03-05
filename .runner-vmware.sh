@@ -35,7 +35,12 @@ do
 done
 
 mkdir -p assets
-mv -f substrate-assets/* assets/
-mv -f pkg/* assets/
+
+if [ "${VAGRANT_BUILD_TYPE}" = "package" ]
+then
+    mv -f pkg/* assets/
+else
+    mv -f substrate-assets/* assets/
+fi
 
 exit $result
