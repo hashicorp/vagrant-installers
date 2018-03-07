@@ -173,7 +173,7 @@ if (-Not (Test-Path -Path "$($Dir)\vagrant.gem")) {
     Write-Host "Using cached build of Vagrant Gem"
   }
 } else {
-  Copy-Item "$($Dir)\vagrant.gem" -Destination "$(VagrantSourceDir)\vagrant.gem"
+  Copy-Item "$($Dir)\vagrant.gem" -Destination "$($VagrantSourceDir)\vagrant.gem"
 }
 
 # Determine the version
