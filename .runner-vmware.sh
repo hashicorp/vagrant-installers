@@ -6,7 +6,7 @@ function cleanup {
 
 trap cleanup EXIT
 
-GEM_PATH=$(ls vagrant*.gem)
+GEM_PATH=$(ls vagrant-[0-9].[0-9].[0-9]*.gem)
 
 set -ex
 
