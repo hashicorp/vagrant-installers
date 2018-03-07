@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # NOTE: THIS SCRIPT SHOULD NOT BE CALLED DIRECTLY. CALL THE ROOT
-# "build.sh" instead.
+# "package.sh" instead.
 #
 # This is a wrapper that is able to install a version of Vagrant into
 # the substrate. Once this command runs, the substrate directory it is
@@ -22,35 +22,49 @@ VERSION_OUTPUT=$3
 
 GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
 
+# Get our directory
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+VAGRANT_GEM_PATH="${DIR}/../vagrant.gem"
+
 # Work in a temporary directory
 TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
 pushd $TMP_DIR
 
-# Download Vagrant and extract
-SOURCE_REPO=${VAGRANT_REPO:-hashicorp/vagrant}
-SOURCE_PREFIX=${SOURCE_REPO/\//-}
-SOURCE_URL="https://api.github.com/repos/${SOURCE_REPO}/tarball/${VAGRANT_REV}"
-if [ -z "${VAGRANT_TOKEN}" ]; then
-    curl -L ${SOURCE_URL} > vagrant.tar.gz
+if [ -f "${VAGRANT_GEM_PATH}" ]; then
+    # Download Vagrant and extract
+    SOURCE_REPO=${VAGRANT_REPO:-hashicorp/vagrant}
+    SOURCE_PREFIX=${SOURCE_REPO/\//-}
+    SOURCE_URL="https://api.github.com/repos/${SOURCE_REPO}/tarball/${VAGRANT_REV}"
+    if [ -z "${VAGRANT_TOKEN}" ]; then
+        curl -L ${SOURCE_URL} > vagrant.tar.gz
+    else
+        curl -L -u "${VAGRANT_TOKEN}:x-oauth-basic" ${SOURCE_URL} > vagrant.tar.gz
+    fi
+    rm -rf ${SOURCE_PREFIX}-*
+    tar xzf vagrant.tar.gz
+    rm vagrant.tar.gz
+    cd ${SOURCE_PREFIX}-*
+
+    # If we have a version file, use that. Otherwise, use a timestamp
+    # on version 0.1.
+    if [ ! -f "version.txt" ]; then
+        echo -n "0.1.0" > version.txt
+    fi
+    VERSION=$(cat version.txt | sed -e 's/\.[^0-9]*$//')
+    echo -n $VERSION >"${VERSION_OUTPUT}"
+
+    # Build the gem
+    ${GEM_COMMAND} build vagrant.gemspec
+    cp vagrant-*.gem vagrant.gem
 else
-    curl -L -u "${VAGRANT_TOKEN}:x-oauth-basic" ${SOURCE_URL} > vagrant.tar.gz
+    cp "${VAGRANT_GEM_PATH}" ./vagrant.gem
+    gem unpack ./vagrant.gem
+    VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
+    echo -n $VERSION >"${VERSION_OUTPUT}"
 fi
-rm -rf ${SOURCE_PREFIX}-*
-tar xzf vagrant.tar.gz
-rm vagrant.tar.gz
-cd ${SOURCE_PREFIX}-*
-
-# If we have a version file, use that. Otherwise, use a timestamp
-# on version 0.1.
-if [ ! -f "version.txt" ]; then
-    echo -n "0.1.0" > version.txt
-fi
-VERSION=$(cat version.txt | sed -e 's/\.[^0-9]*$//')
-echo -n $VERSION >${VERSION_OUTPUT}
-
-# Build the gem
-${GEM_COMMAND} build vagrant.gemspec
-cp vagrant-*.gem vagrant.gem
 
 # We want to use the system libxml/libxslt for Nokogiri
 export NOKOGIRI_USE_SYSTEM_LIBRARIES=1

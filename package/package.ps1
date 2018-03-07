@@ -143,32 +143,37 @@ Write-Host "Vagrant temp dir: $($VagrantTmpDir)"
 
 $VagrantSourceURL = "$($VagrantSourceBaseURL)/$($VagrantRevision).zip"
 $VagrantDest      = "$($VagrantTmpDir)\vagrant.zip"
+$VagrantSourceDir = $VagrantTmpDir
 
-# Download
-If ($UseCache -eq $false) {
-  Write-Host "Downloading Vagrant: $($VagrantRevision)"
-  $client = New-Object System.Net.WebClient
-  $client.DownloadFile($VagrantSourceURL, $VagrantDest)
+if (-Not (Test-Path -Path "$($Dir)\vagrant.gem")) {
+  # Download
+  If ($UseCache -eq $false) {
+    Write-Host "Downloading Vagrant: $($VagrantRevision)"
+    $client = New-Object System.Net.WebClient
+    $client.DownloadFile($VagrantSourceURL, $VagrantDest)
 
-  # Unzip
-  Write-Host "Unzipping Vagrant"
-  Expand-ZipFile -file $VagrantDest -destination $VagrantTmpDir
-} Else {
-  Write-Host "Using cached Vagrant download: $($VagrantRevision)"
-}
+    # Unzip
+    Write-Host "Unzipping Vagrant"
+    Expand-ZipFile -file $VagrantDest -destination $VagrantTmpDir
+  } Else {
+    Write-Host "Using cached Vagrant download: $($VagrantRevision)"
+  }
 
-# Set the full path to where Vagrant is
-$VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
+  # Set the full path to where Vagrant is
+  $VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
 
-# Build gem
-If ($UseCache -eq $false) {
-  Write-Host "Building Vagrant Gem"
-  Push-Location $VagrantSourceDir
-  &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
-  Copy-Item vagrant-*.gem -Destination vagrant.gem
-  Pop-Location
-} Else {
-  Write-Host "Using cached build of Vagrant Gem"
+  # Build gem
+  If ($UseCache -eq $false) {
+    Write-Host "Building Vagrant Gem"
+    Push-Location $VagrantSourceDir
+    &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
+    Copy-Item vagrant-*.gem -Destination vagrant.gem
+    Pop-Location
+  } Else {
+    Write-Host "Using cached build of Vagrant Gem"
+  }
+} else {
+  Copy-Item "$($Dir)\vagrant.gem" -Destination "$(VagrantSourceDir)\vagrant.gem"
 }
 
 # Determine the version
