@@ -6,7 +6,14 @@ function cleanup {
 
 trap cleanup EXIT
 
+GEM_PATH=$(ls vagrant*.gem)
+
 set -ex
+
+if [ -f "${GEM_PATH}" ]
+then
+    mv "${GEM_PATH}" package/vagrant.gem
+fi
 
 guests=$(vagrant status | grep vmware | awk '{print $1}')
 
