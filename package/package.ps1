@@ -166,14 +166,19 @@ if (-Not (Test-Path -Path "$($Dir)\vagrant.gem")) {
   If ($UseCache -eq $false) {
     Write-Host "Building Vagrant Gem"
     Push-Location $VagrantSourceDir
-    &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
+      &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
     Copy-Item vagrant-*.gem -Destination vagrant.gem
     Pop-Location
   } Else {
     Write-Host "Using cached build of Vagrant Gem"
   }
 } else {
-  Copy-Item "$($Dir)\vagrant.gem" -Destination "$($VagrantSourceDir)\vagrant.gem"
+    Copy-Item "$($Dir)\vagrant.gem" -Destination "$($VagrantSourceDir)\vagrant.gem"
+    Push-Location $VagrantSourceDir
+    &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" unpack vagrant.gem
+    Copy-Item ".\vagrant\version.txt" -Destination ".\version.txt"
+    Remove-Item -Recurse -Force ".\vagrant"
+    Pop-Location
 }
 
 # Determine the version
