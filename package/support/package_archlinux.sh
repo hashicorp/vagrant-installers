@@ -15,6 +15,7 @@ TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
 pushd $TMP_DIR
 
 if [ -f "${VAGRANT_GEM_PATH}" ]; then
+    pacman -S --noconfirm ruby
     cp "${VAGRANT_GEM_PATH}" ./vagrant.gem
     gem unpack ./vagrant.gem
     VAGRANT_VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
