@@ -24,65 +24,6 @@ class vagrant_substrate::staging::posix {
   }
 
   if $operatingsystem == 'Darwin' {
-    $curl_autotools_environment = {
-      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
-    }
-
-    $bsdtar_autotools_environment = {
-      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
-    }
-
-    $libffi_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libffi.dylib",
-    }
-
-    $libgmp_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libgmp.dylib",
-    }
-
-    $libgpg_error_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libgpg-error.dylib",
-    }
-
-    $libgcrypt_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libgcrypt.dylib",
-    }
-
-    $libiconv_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libiconv.dylib",
-    }
-
-    $libxml2_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libxml2.dylib",
-    }
-
-    $libyaml_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libyaml.dylib",
-    }
-
-    $readline_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libreadline.dylib",
-    }
-
-    $ruby_autotools_environment = {
-      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
-    }
-
-    $openssl_autotools_environment = {
-      "LDFLAGS" => "-Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
-    }
-
-    $libssh2_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libssh2.dylib -Wl,-rpath,@loader_path/../lib -Wl,-rpath,@executable_path/../lib",
-    }
-
-    $xz_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/liblzma.dylib",
-    }
-
-    $zlib_autotools_environment = {
-      "LDFLAGS" => "-Wl,-install_name,@rpath/libz.dylib",
-    }
   } elsif $kernel == 'Linux' {
     $bsdtar_autotools_environment = {
     }

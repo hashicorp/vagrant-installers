@@ -162,7 +162,8 @@ func main() {
 	} else {
 		cppflags := "-I" + filepath.Join(embeddedDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "include", "libxml2")
-		ldflags := "-L" + filepath.Join(embeddedDir, "lib")
+		ldflags := "-L" + filepath.Join(embeddedDir, "lib") + " -L" +
+			filepath.Join(embeddedDir, "lib64")
 		if original := os.Getenv("CPPFLAGS"); original != "" {
 			cppflags = original + " " + cppflags
 		}

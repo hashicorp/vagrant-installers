@@ -51,7 +51,7 @@ class libffi (
   # of value to actually use. The files made by compiling libffi are hard to
   # know from Puppet, so this is the best way to do it, seemingly.
   autotools { "libffi":
-    configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking",
+    configure_flags  => "--prefix=${prefix} --disable-debug --disable-dependency-tracking --libdir=${prefix}/lib",
     cwd              => $source_dir_path,
     environment      => $real_autotools_environment,
     install_sentinel => "${prefix}/lib/libffi.a",
@@ -100,6 +100,13 @@ class libffi (
     ]
 
     vagrant_substrate::staging::linux_chrpath{ $libffi_paths:
+      require => Autotools["libffi"],
+      subscribe => Autotools["libffi"],
+    }
+
+    # handle if it ends up in lib64
+    vagrant_substrate::staging::linux_chrpath{ "${prefix}/lib64/libffi.so":
+      new_rpath => '$ORIGIN/../lib64:/opt/vagrant/embedded/lib64',
       require => Autotools["libffi"],
       subscribe => Autotools["libffi"],
     }

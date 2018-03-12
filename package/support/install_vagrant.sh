@@ -9,6 +9,13 @@
 set -e
 set -x
 
+function relpath() {
+    path_to=`readlink -f "$2"`
+    source=`readlink -f "$1"`
+    rel=$(perl -MFile::Spec -e "print File::Spec->abs2rel(q($path_to),q($source))")
+    echo $rel
+}
+
 # Verify arguments
 if [ "$#" -ne "3" ]; then
   echo "Usage: $0 SUBSTRATE-DIR VAGRANT-REVISION VERSION-FILE" >&2
@@ -76,14 +83,10 @@ export GEM_HOME="${GEM_PATH}"
 export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
 export CPPFLAGS="-I${EMBEDDED_DIR}/include -I${EMBEDDED_DIR}/include/libxml2"
 export CFLAGS="${CPPFLAGS}"
-export LDFLAGS="-L${EMBEDDED_DIR}/lib"
+export LDFLAGS="-L${EMBEDDED_DIR}/lib -L${EMBEDDED_DIR}/lib64"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
-
-# Darwin
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    export CONFIGURE_ARGS="-Wl,-rpath,${EMBEDDED_DIR}/lib"
-fi
+export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
 
 # Install the pkg-config gem to ensure system can read the bundled *.pc files
 ${GEM_COMMAND} install pkg-config --no-document -v "~> 1.1.7"
@@ -110,6 +113,30 @@ cat <<EOF >${EMBEDDED_DIR}/manifest.json
 }
 EOF
 chmod 0644 ${EMBEDDED_DIR}/manifest.json
+
+# Darwin
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    for lib_path in $(find "${EMBEDDED_DIR}/gems" -name "*.bundle"); do
+        for scrub_path in $(otool -l "${lib_path}" | grep "^ *path" | awk '{print $2}' | uniq); do
+            install_name_tool -rpath "${scrub_path}" "@executable_path/../lib" "${lib_path}"
+        done
+    done
+else
+    for so_path in $(find "${EMBEDDED_DIR}/gems" -name "*.so"); do
+        set +e
+        chrpath --list "${so_path}"
+        if [ $? -eq 0 ]; then
+            echo "-> ${so_path}"
+            set -e
+            so_dir=$(dirname "${so_path}")
+            rel_embedded=$(relpath "${so_dir}" "${EMBEDDED_DIR}")
+            rpath="\$ORIGIN/${rel_embedded}/lib:\$ORIGIN/${rel_embedded}/lib64"
+            chrpath --replace "${rpath}" "${so_path}"
+            chrpath --convert "${so_path}"
+        fi
+    done
+    set -e
+fi
 
 # Exit the temporary directory
 popd

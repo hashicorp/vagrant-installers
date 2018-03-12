@@ -20,7 +20,7 @@ class curl::posix {
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch x86_64",
-      "LDFLAGS" => "-arch x86_64 -Wl,-rpath,${install_dir}/lib",
+      "LDFLAGS" => "-arch x86_64", #-Wl,-rpath,${install_dir}/lib",
     }
   } else {
     $extra_autotools_environment = {
