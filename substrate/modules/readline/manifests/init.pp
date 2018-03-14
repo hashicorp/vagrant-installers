@@ -68,31 +68,4 @@ class readline(
     make_sentinel    => "${source_dir_path}/libreadline.a",
     require          => Exec["untar-readline"],
   }
-
-  if $kernel == 'Darwin' {
-    $libreadline_paths = [
-      "${prefix}/lib/libreadline.dylib",
-      "${prefix}/lib/libreadline.${lib_version}.dylib",
-    ]
-    $lib_path = "@rpath/libreadline.${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libreadline_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["readline"],
-      subscribe => Autotools["readline"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libreadline_paths = [
-      "${prefix}/lib/libreadline.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libreadline_paths:
-      require => Autotools["readline"],
-      subscribe => Autotools["readline"],
-    }
-  }
 }

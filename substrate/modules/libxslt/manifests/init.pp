@@ -58,33 +58,4 @@ class libxslt(
     make_sentinel    => "${source_dir_path}/libxslt/.libs/libxslt.dylib",
     require          => Exec["untar-libxslt"],
   }
-
-  if $kernel == 'Darwin' {
-    $libxslt_paths = [
-      "${prefix}/lib/libxslt.dylib",
-      "${prefix}/lib/libxslt.${lib_version}.dylib",
-      "${prefix}/bin/xsltproc",
-    ]
-    $lib_path = "@rpath/libxslt.${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libxslt_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libxslt"],
-      subscribe => Autotools["libxslt"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libxslt_paths = [
-      "${prefix}/bin/xsltproc",
-      "${prefix}/lib/libxslt.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libxslt_paths:
-      require => Autotools["libxslt"],
-      subscribe => Autotools["libxslt"],
-    }
-  }
 }

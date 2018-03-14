@@ -55,32 +55,4 @@ class zlib::posix {
     make_sentinel      => "${source_dir_path}/libz.a",
     require            => Exec["untar-libz"],
   }
-
-  if $kernel == 'Darwin' {
-    $libz_paths = [
-      "${prefix}/lib/libz.dylib",
-      "${prefix}/lib/libz.${lib_short_version}.dylib",
-      "${prefix}/lib/libz.${lib_version}.dylib",
-    ]
-    $lib_path = "@rpath/libz.${lib_short_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libz_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libz"],
-      subscribe => Autotools["libz"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libz_paths = [
-      "${prefix}/lib/libz.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libz_paths:
-      require => Autotools["libz"],
-      subscribe => Autotools["libz"],
-    }
-  }
 }

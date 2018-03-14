@@ -77,38 +77,4 @@ class libffi (
     target  => "../lib/${source_dir_name}/include/ffitarget.h",
     require => Autotools["libffi"],
   }
-
-  if $kernel == 'Darwin' {
-    $libffi_paths = [
-      "${prefix}/lib/libffi.dylib",
-      "${prefix}/lib/libffi.${lib_version}.dylib",
-    ]
-    $lib_path = "@rpath/libffi.${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libffi_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libffi"],
-      subscribe => Autotools["libffi"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libffi_paths = [
-      "${prefix}/lib/libffi.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libffi_paths:
-      require => Autotools["libffi"],
-      subscribe => Autotools["libffi"],
-    }
-
-    # handle if it ends up in lib64
-    vagrant_substrate::staging::linux_chrpath{ "${prefix}/lib64/libffi.so":
-      new_rpath => '$ORIGIN/../lib64:/opt/vagrant/embedded/lib64',
-      require => Autotools["libffi"],
-      subscribe => Autotools["libffi"],
-    }
-  }
 }

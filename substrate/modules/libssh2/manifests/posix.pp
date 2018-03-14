@@ -55,31 +55,4 @@ class libssh2::posix {
       Autotools["openssl"],
     ],
   }
-
-  if $kernel == 'Darwin' {
-    $libssh2_paths = [
-      "${prefix}/lib/libssh2.dylib",
-      "${prefix}/lib/libssh2.${lib_version}.dylib",
-    ]
-    $lib_path = "@rpath/libssh2.${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libssh2_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libssh2"],
-      subscribe => Autotools["libssh2"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libssh2_paths = [
-      "${prefix}/lib/libssh2.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libssh2_paths:
-      require => Autotools["libssh2"],
-      subscribe => Autotools["libssh2"],
-    }
-  }
 }

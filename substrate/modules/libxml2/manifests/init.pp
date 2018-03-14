@@ -58,35 +58,4 @@ class libxml2(
     make_sentinel    => "${source_dir_path}/.libs/libxml2.a",
     require          => Exec["untar-libxml2"],
   }
-
-  if $kernel == 'Darwin' {
-    $libxml2_paths = [
-      "${prefix}/lib/libxml2.dylib",
-      "${prefix}/lib/libxml2.${lib_version}.dylib",
-      "${prefix}/bin/xmlcatalog",
-      "${prefix}/bin/xmllint",
-    ]
-    $lib_path = "@rpath/libxml2.${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libxml2_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libxml2"],
-      subscribe => Autotools["libxml2"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libxml2_paths = [
-      "${prefix}/lib/libxml2.so",
-      "${prefix}/bin/xmlcatalog",
-      "${prefix}/bin/xmllint",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libxml2_paths:
-      require => Autotools["libxml2"],
-      subscribe => Autotools["libxml2"],
-    }
-  }
 }

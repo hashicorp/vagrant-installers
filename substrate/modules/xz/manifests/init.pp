@@ -58,31 +58,4 @@ class xz(
     make_sentinel    => "${source_dir_path}/liblzma/.libs/liblzma.a",
     require          => Exec["untar-xz"],
   }
-
-  if $kernel == 'Darwin' {
-    $libxz_paths = [
-      "${prefix}/lib/liblzma.dylib",
-      "${prefix}/lib/liblzma.${lib_version}.dylib",
-    ]
-    $lib_path = "@rpath/liblzma.${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libxz_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["xz"],
-      subscribe => Autotools["xz"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libxz_paths = [
-      "${prefix}/lib/liblzma.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libxz_paths:
-      require => Autotools["xz"],
-      subscribe => Autotools["xz"],
-    }
-  }
 }
