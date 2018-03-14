@@ -20,7 +20,7 @@ class curl::posix {
   if $operatingsystem == 'Darwin' {
     $extra_autotools_environment = {
       "CFLAGS"  => "-arch x86_64",
-      "LDFLAGS" => "-arch x86_64 -Wl,-rpath,${install_dir}/lib",
+      "LDFLAGS" => "-arch x86_64",
     }
   } else {
     $extra_autotools_environment = {
@@ -54,48 +54,5 @@ class curl::posix {
     install_sentinel   => "${install_dir}/bin/curl",
     make_sentinel      => "${source_dir_path}/src/.libs/curl",
     require            => Exec["untar-curl"],
-  }
-
-  if $operatingsystem == 'Darwin' {
-
-    $libcurl_paths = [
-      "${install_dir}/lib/libcurl.dylib",
-      "${install_dir}/lib/libcurl.${lib_version}.dylib"
-    ]
-    $lib_path = "@rpath/libcurl.${lib_version}.dylib"
-    $embedded_libdir = "${install_dir}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libcurl_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_libdir,
-      require => Autotools["curl"],
-      subscribe => Autotools["curl"],
-    }
-
-    vagrant_substrate::staging::darwin_rpath { "${install_dir}/bin/curl":
-      change_install_names => {
-        libcurl => {
-          original => "${install_dir}/lib/libcurl.${lib_version}.dylib",
-          replacement => $lib_path,
-        }
-      },
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_libdir,
-      require => Autotools["curl"],
-      subscribe => Autotools["curl"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    # We need to clean up the rpaths...
-    $libcurl_paths = [
-      "${install_dir}/bin/curl",
-      "${install_dir}/lib/libcurl.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libcurl_paths:
-      require => Autotools["curl"],
-      subscribe => Autotools["curl"],
-    }
   }
 }

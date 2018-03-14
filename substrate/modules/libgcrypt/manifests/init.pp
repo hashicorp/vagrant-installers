@@ -57,30 +57,4 @@ class libgcrypt(
     make_sentinel    => "${source_dir_path}/src/.libs/libgcrypt.a",
     require          => Exec["untar-libgcrypt"],
   }
-
-  if $kernel == 'Darwin' {
-    $libgcrypt_paths = [
-      "${prefix}/lib/libgcrypt.dylib",
-    ]
-    $lib_path = "@rpath/libgcrypt-${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libgcrypt_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libgcrypt"],
-      subscribe => Autotools["libgcrypt"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libgcrypt_paths = [
-      "${prefix}/lib/libgcrypt.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libgcrypt_paths:
-      require => Autotools["libgcrypt"],
-      subscribe => Autotools["libgcrypt"],
-    }
-  }
 }

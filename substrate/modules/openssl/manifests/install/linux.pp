@@ -22,20 +22,4 @@ class openssl::install::linux {
     make_sentinel      => "${source_dir_path}/libssl.a",
     require            => Exec["untar-openssl"],
   }
-
-  $libopenssl_paths = [
-    "${prefix}/lib/libssl.so",
-    "${prefix}/lib/libcrypto.so",
-  ]
-
-  vagrant_substrate::staging::linux_chrpath{ $libopenssl_paths:
-    require => Autotools["openssl"],
-    subscribe => Autotools["openssl"],
-  }
-
-  vagrant_substrate::staging::linux_chrpath{ "${prefix}/bin/openssl":
-    new_rpath => '$ORIGIN/../lib',
-    require => Autotools["openssl"],
-    subscribe => Autotools["openssl"],
-  }
 }

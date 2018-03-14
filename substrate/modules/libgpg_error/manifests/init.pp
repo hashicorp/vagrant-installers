@@ -57,30 +57,4 @@ class libgpg_error(
     make_sentinel    => "${source_dir_path}/src/.libs/libgpg-error.a",
     require          => Exec["untar-libgpg_error"],
   }
-
-  if $kernel == 'Darwin' {
-    $libgpg_error_paths = [
-      "${prefix}/lib/libgpg-error.dylib",
-    ]
-    $lib_path = "@rpath/libgpg-error-${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libgpg_error_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libgpg_error"],
-      subscribe => Autotools["libgpg_error"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libgpg_error_paths = [
-      "${prefix}/lib/libgpg-error.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libgpg_error_paths:
-      require => Autotools["libgpg_error"],
-      subscribe => Autotools["libgpg_error"],
-    }
-  }
 }

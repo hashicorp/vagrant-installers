@@ -63,30 +63,4 @@ class libgmp(
     make_sentinel    => "${source_dir_path}/src/.libs/libgmp.a",
     require          => Exec["untar-libgmp"],
   }
-
-  if $kernel == 'Darwin' {
-    $libgmp_paths = [
-      "${prefix}/lib/libgmp.dylib",
-    ]
-    $lib_path = "@rpath/libgmp-${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libgmp_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libgmp"],
-      subscribe => Autotools["libgmp"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libgmp_paths = [
-      "${prefix}/lib/libgmp.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libgmp_paths:
-      require => Autotools["libgmp"],
-      subscribe => Autotools["libgmp"],
-    }
-  }
 }

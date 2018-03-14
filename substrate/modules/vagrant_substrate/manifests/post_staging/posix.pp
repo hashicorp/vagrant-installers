@@ -1,8 +1,15 @@
 class vagrant_substrate::post_staging::posix {
   include vagrant_substrate
 
+  $cache_dir = $vagrant_substrate::cache_dir
   $embedded_dir = $vagrant_substrate::embedded_dir
   $installation_dir = hiera("installation_dir")
+  $relpath_sh = "${cache_dir}/relpath.sh"
+  if $operatingsystem == 'Darwin' {
+    $relpath_content = "puppet:///modules/vagrant_substrate/darwin_rpath.sh"
+  } else {
+    $relpath_content = "puppet:///modules/vagrant_substrate/linux_rpath.sh"
+  }
 
   exec { "clear-openssl-man":
     command => "rm -rf ${embedded_dir}/ssl/man",
@@ -23,30 +30,19 @@ class vagrant_substrate::post_staging::posix {
   # We have to remove all the '.la' files because they cause issues
   # with libtool later because they have hardcoded temp paths in them.
   exec { "remove-la-files":
-    command => "rm -rf ${embedded_dir}/lib/*.la",
+    command => "find ${embedded_dir}/ -name '*.la' -exec rm {} \\;",
   }
 
-  $new_rpath = "\$ORIGIN/../lib:${installation_dir}/embedded/lib"
-  exec { "replace-so-rpaths":
-    command => "find ${embedded_dir}/{lib64,lib/*}/ -name '*.so' -exec chrpath --replace '${new_rpath}' {} \\;",
-    onlyif => "ls ${embedded_dir}/lib64",
+  file { $relpath_sh:
+    source => $relpath_content,
+    mode => "0755",
   }
 
-  exec { "replace-so-rpaths-constrained":
-    command => "find ${embedded_dir}/lib/*/ -name '*.so' -exec chrpath --replace '${new_rpath}' {} \\;",
-    unless => "ls ${embedded_dir}/lib64",
-  }
-
-  exec { "convert-so-runpaths":
-    command => "find ${embedded_dir}/{lib64,lib/*}/ -name '*.so' -exec chrpath --convert {} \\;",
-    subscribe => Exec["replace-so-rpaths"],
-    refreshonly => true,
-  }
-
-  exec { "convert-so-runpaths-constrained":
-    command => "find ${embedded_dir}/lib/*/ -name '*.so' -exec chrpath --convert {} \\;",
-    subscribe => Exec["replace-so-rpaths-constrained"],
-    refreshonly => true
+  exec { "rpath-update":
+    command => "${relpath_sh} ${embedded_dir}",
+    require => [
+      File[$relpath_sh],
+    ],
   }
 
   $destination_dir = "${installation_dir}/embedded"

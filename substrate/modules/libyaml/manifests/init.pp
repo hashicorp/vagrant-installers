@@ -58,31 +58,4 @@ class libyaml(
     make_sentinel    => "${source_dir_path}/src/.libs/libyaml.a",
     require          => Exec["untar-libyaml"],
   }
-
-  if $kernel == 'Darwin' {
-    $libyaml_paths = [
-      "${prefix}/lib/libyaml.dylib",
-      "${prefix}/lib/libyaml-${lib_version}.dylib",
-    ]
-    $lib_path = "@rpath/libyaml-${lib_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libyaml_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libyaml"],
-      subscribe => Autotools["libyaml"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libyaml_paths = [
-      "${prefix}/lib/libyaml.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libyaml_paths:
-      require => Autotools["libyaml"],
-      subscribe => Autotools["libyaml"],
-    }
-  }
 }

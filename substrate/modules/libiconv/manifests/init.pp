@@ -65,46 +65,4 @@ class libiconv(
     make_sentinel    => "${source_dir_path}/lib/.libs/iconv.o",
     require          => Exec["untar-libiconv"],
   }
-
-  if $kernel == 'Darwin' {
-    $libiconv_paths = [
-      "${prefix}/lib/libiconv.dylib",
-      "${prefix}/lib/libiconv.${lib_iconv_version}.dylib",
-    ]
-    $lib_iconv_path = "@rpath/libiconv.${lib_iconv_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libiconv_paths:
-      new_lib_path => $lib_iconv_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libiconv"],
-      subscribe => Autotools["libiconv"],
-    }
-
-    $libcharset_paths = [
-      "${prefix}/lib/libcharset.dylib",
-      "${prefix}/lib/libcharset.${lib_charset_version}.dylib",
-    ]
-    $lib_charset_path = "@rpath/libcharset.${lib_charset_version}.dylib"
-
-    vagrant_substrate::staging::darwin_rpath { $libcharset_paths:
-      new_lib_path => $lib_charset_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libiconv"],
-      subscribe => Autotools["libiconv"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libiconv_paths = [
-      "${prefix}/bin/iconv",
-      "${prefix}/lib/libiconv.so",
-      "${prefix}/lib/libcharset.so",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libiconv_paths:
-      require => Autotools["libiconv"],
-      subscribe => Autotools["libiconv"],
-    }
-  }
 }

@@ -42,19 +42,6 @@ class bsdtar::posix {
     $autotools_environment, $extra_autotools_environment, $ld_path_environment)
 
   if $kernel == 'Darwin' {
-  #   # Make sure we have a later version of automake/autoconf
-  #   homebrew::package { "automake":
-  #     creates => "/usr/local/bin/automake",
-  #     link    => true,
-  #     before  => Exec["automake-libarchive"],
-  #   }
-
-  #   homebrew::package { "autoconf":
-  #     creates => "/usr/local/bin/autoconf",
-  #     link    => true,
-  #     before  => Exec["automake-libarchive"],
-  #   }
-
     homebrew::package { "libtool":
       creates => "/usr/local/bin/glibtoolize",
       before  => Exec["automake-libarchive"],
@@ -121,36 +108,5 @@ class bsdtar::posix {
     install_sentinel => "${install_dir}/bin/bsdtar",
     make_sentinel    => "${source_dir_path}/bsdtar",
     require          => Exec["automake-libarchive"],
-  }
-
-  if $kernel == 'Darwin' {
-    $libarchive_paths = [
-      "${install_dir}/lib/libarchive.dylib",
-      "${install_dir}/lib/libarchive.${lib_version}.dylib",
-      "${install_dir}/bin/bsdtar",
-      "${install_dir}/bin/bsdcpio",
-    ]
-    $lib_path = "@rpath/libarchive.${lib_version}.dylib"
-    $embedded_dir = "${install_dir}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libarchive_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["libarchive"],
-      subscribe => Autotools["libarchive"],
-    }
-  }
-
-  if $kernel == 'Linux' {
-    $libarchive_paths = [
-      "${install_dir}/lib/libarchive.so",
-      "${install_dir}/bin/bsdtar",
-      "${install_dir}/bin/bsdcpio",
-    ]
-
-    vagrant_substrate::staging::linux_chrpath{ $libarchive_paths:
-      require => Autotools["libarchive"],
-      subscribe => Autotools["libarchive"],
-    }
   }
 }

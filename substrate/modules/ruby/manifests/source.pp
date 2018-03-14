@@ -28,7 +28,6 @@ class ruby::source(
   # OS-specific environment vars
   if $operatingsystem == 'Darwin' {
     $os_autotools_environment = {
-      "LDFLAGS" => "-Wl,-rpath,${prefix}/lib",
     }
   } else {
     $os_autotools_environment = {}
@@ -88,55 +87,7 @@ class ruby::source(
     }
   }
 
-  # On Darwin we have to clean up some paths
-  if $kernel == 'Darwin' {
-    $libruby_paths = [
-      "${prefix}/lib/libruby.dylib",
-    ]
-    $lib_path = "@rpath/libruby.${lib_short_version}.dylib"
-    $original_lib_path = "@executable_path/../lib/libruby.${lib_short_version}.dylib"
-    $embedded_dir = "${prefix}/lib"
-
-    vagrant_substrate::staging::darwin_rpath { $libruby_paths:
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["ruby"],
-      subscribe => Autotools["ruby"],
-    }
-
-    vagrant_substrate::staging::darwin_rpath { "${prefix}/bin/ruby":
-      change_install_names => {
-        libruby => {
-          original => $original_lib_path,
-          replacement => $lib_path,
-        },
-      },
-      new_lib_path => $lib_path,
-      remove_rpath => $embedded_dir,
-      require => Autotools["ruby"],
-      subscribe => Autotools["ruby"],
-    }
-
-    exec { "modify-ruby-bundle-link-names":
-      command     => "find ${prefix}/lib/ruby -type f -name '*.bundle' -exec install_name_tool -change ${original_lib_path} ${lib_path} {} \\;",
-      refreshonly => true,
-      require     => Autotools["ruby"],
-      subscribe   => Autotools["ruby"],
-    }
-  }
-
   if $kernel == 'Linux' {
-
-    vagrant_substrate::staging::linux_chrpath{ "${prefix}/bin/ruby":
-      require => Autotools["ruby"],
-      subscribe => Autotools["ruby"],
-    }
-
-    vagrant_substrate::staging::linux_chrpath{ "${prefix}/lib/libruby.so":
-      new_rpath => '$ORIGIN/../lib',
-      require => Autotools["ruby"],
-      subscribe => Autotools["ruby"],
-    }
 
     exec { "delete-mkmf-logs":
       command => "find ${prefix}/lib -type f -name '*mkmf.log' -exec rm {} \\;",
