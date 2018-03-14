@@ -16,7 +16,7 @@ define vagrant_substrate::staging::darwin_rpath(
   # Always set the header ID. If it is not applicable to the target file
   # given, it will simply be a no-op
   exec { "set-${name}-id":
-    command => "/usr/bin/true" #install_name_tool -id ${new_lib_path} ${target_file_path}",
+    command => "install_name_tool -id ${new_lib_path} ${target_file_path}",
   }
 
   create_resources(
@@ -26,7 +26,7 @@ define vagrant_substrate::staging::darwin_rpath(
   )
 
   exec { "change-${name}-rpath":
-    command => "/usr/bin/true", #install_name_tool -rpath ${remove_rpath} ${add_rpath[0]} ${target_file_path}",
+    command => "install_name_tool -rpath ${remove_rpath} ${add_rpath[0]} ${target_file_path}",
     onlyif => "otool -l ${target_file_path} | grep 'path ${remove_rpath}'"
   }
 
@@ -37,7 +37,7 @@ define vagrant_substrate::staging::darwin_rpath(
   }
 
   exec { "remove-${name}-rpath":
-    command => "/usr/bin/true", #install_name_tool -delete_rpath ${remove_rpath} ${target_file_path}",
+    command => "install_name_tool -delete_rpath ${remove_rpath} ${target_file_path}",
     onlyif => "otool -l ${target_file_path} | grep 'path ${remove_rpath}'"
   }
 }
@@ -48,7 +48,7 @@ define vagrant_substrate::staging::darwin_name_change(
   $target_file_path,
 ) {
   exec { "change-${name}-${original}":
-    command => "/usr/bin/true", #install_name_tool -change ${original} ${replacement} ${target_file_path}",
+    command => "install_name_tool -change ${original} ${replacement} ${target_file_path}",
   }
 }
 
@@ -58,7 +58,7 @@ define vagrant_substrate::staging::darwin_add_rpath(
 ) {
   $clean_rpath = regsubst($new_rpath, regexpescape("<${target_file_path}>"), "")
   exec { "new-rpath-${name}-${target_file_path}":
-    command => "/usr/bin/true", #install_name_tool -add_rpath ${clean_rpath} ${target_file_path}",
+    command => "install_name_tool -add_rpath ${clean_rpath} ${target_file_path}",
     unless => "otool -l ${target_file_path} | grep 'path ${clean_rpath}'"
   }
 }
