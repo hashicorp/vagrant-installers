@@ -1,0 +1,326 @@
+#!/usr/bin/env bash
+
+# NOTE: This is a slimmed down customized version of this script
+#       tailored for building the Vagrant appimage. The original
+#       of this script is located at:
+#       https://github.com/AppImage/AppImages/blob/master/pkg2appimage
+
+# Get our directory
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+# Specify a certain commit if you do not want to use master
+# by using:
+# export PKG2AICOMMIT=<git sha>
+if [ -z "$PKG2AICOMMIT" ] ; then
+    PKG2AICOMMIT=master
+fi
+
+
+usage() {
+    echo "usage:"
+    echo "  $0 YAMLFILE"
+    echo ""
+    exit 1
+}
+
+if [ ! $# -eq 1 ] ; then
+    usage
+fi
+
+# Halt on errors
+set -e
+set -x
+
+# Check dependencies
+which wget >/dev/null 2>&1 || ( echo wget missing && exit 1 )
+which grep >/dev/null 2>&1 || ( echo grep missing && exit 1 )
+which sed >/dev/null 2>&1 || ( echo sed missing && exit 1 )
+which cut >/dev/null 2>&1 || ( echo cut missing && exit 1 )
+
+# If the yaml file doesn't exist locally, get it from GitHub
+if [ ! -f "${!#}" ] ; then
+    echo "ERROR: YAML file not found!"
+    exit 1
+else
+    YAMLFILE=$(readlink -f "${!#}")
+fi
+
+# Lightweight bash-only dpkg-scanpackages replacement
+scanpackages() {
+    for deb in *.deb ; do
+        dpkg -I $deb | sed 's/^ *//g' | grep -i -E '(package|version|installed-size|architecture|depends|priority):'
+        echo "Filename: $(readlink -f $deb)"
+        echo "MD5sum: $(md5sum -b $deb | cut -d' ' -f1)"
+        echo "SHA1: $(sha1sum -b $deb | cut -d' ' -f1)"
+        echo "SHA256: $(sha256sum -b $deb | cut -d' ' -f1)"
+        echo
+    done
+}
+
+# Function to parse yaml
+# https://gist.github.com/epiloque/8cf512c6d64641bde388
+# based on https://gist.github.com/pkuczynski/8665367
+parse_yaml() {
+    local prefix=$2
+    local s
+    local w
+    local fs
+    s='[[:blank:]]*'
+    w='[a-zA-Z0-9_]*'
+    fs="$(echo @|tr @ '\034')"
+    sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s[:-]$s\(.*\)$s\$|\1$fs\2$fs\3|p" "$1" |
+        awk -F"$fs" '{
+    indent = length($1)/2;
+    vname[indent] = $2;
+    for (i in vname) {if (i > indent) {delete vname[i]}}
+        if (length($3) > 0) {
+            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+            printf("%s%s%s=(\"%s\")\n", "'"$prefix"'",vn, $2, $3);
+        }
+    }' | sed 's/_=/+=/g'
+}
+
+# Read yaml file
+parse_yaml $YAMLFILE "_"
+eval $(parse_yaml $YAMLFILE "_")
+
+# Execute multiple script lines together as one
+# shell_execute filename key_of_group_of_commands
+shell_execute() {
+    if [ -f /tmp/recipe_script ] ; then
+        rm /tmp/recipe_script
+    fi
+    parse_yaml $YAMLFILE "_" | grep "^$2+=" > /tmp/recipe_script
+    sed -i -e 's|^'$2'+=("||g' /tmp/recipe_script
+    sed -i -e 's|")$||g' /tmp/recipe_script
+    bash -ex /tmp/recipe_script
+    rm /tmp/recipe_script
+}
+
+APP=$_app
+LOWERAPP=${APP,,}
+if [ ! -z $_lowerapp ] ; then
+    LOWERAPP=$_lowerapp
+fi
+
+mkdir -p ./$APP/$APP.AppDir/usr/lib
+cd ./$APP/
+
+if [ -d "./$APP.AppDir/" ] ; then
+    rm -rf ./$APP.AppDir/
+fi
+
+. "${DIR}/functions.sh"
+
+# If there is an ARCH environment variable, then use that
+# architecture to for apt-get. Not that for the AppImage to be
+# operable, we also need to embed a matching AppImage runtime
+# and ingredients of that architecture. Debian packages
+# should be available for most architectures, e.g., oldstable
+# has "armhf"
+if [ ! -z $ARCH] ; then
+    OPTIONS="$OPTIONS -o APT::Architecture=$ARCH"
+fi
+
+if [ ! -z "${_ingredients_ghreleases[0]}" ] ; then
+    for GHREPO in "${_ingredients_ghreleases[@]}" ; do
+        wget -q "https://github.com/${GHREPO}/releases/" -O /tmp/gh-release.html
+        DEB=$(cat /tmp/gh-release.html | grep ".deb" | grep x86_64 | head -n 1 | cut -d '"' -f 2)
+        if [ -z "$DEB" ] ; then
+            DEB=$(cat /tmp/gh-release.html | grep ".deb" | grep amd64 | head -n 1 | cut -d '"' -f 2)
+        fi
+        if [ -z "$DEB" ] ; then
+            DEB=$(cat /tmp/gh-release.html | grep ".deb" | grep x64 | head -n 1 | cut -d '"' -f 2)
+        fi
+        if [ -z "$DEB" ] ; then
+            DEB=$(cat /tmp/gh-release.html | grep ".deb" | grep linux64 | head -n 1 | cut -d '"' -f 2)
+        fi
+        rm /tmp/gh-release.html
+        wget -c "https://github.com/${DEB}"
+    done
+fi
+
+if [ ! -z "${_ingredients_dist}" ] ; then
+    rm status 2>/dev/null || true
+    generate_status
+
+    # Some packages depend on packages which we do not want to bundle,
+    # in addition to the global excludes defined in excludedeblist.
+    # Use
+    # ingredients:
+    #   exclude:
+    #     - packagename
+    if [ ! -z "${_ingredients_exclude[0]}" ] ; then
+        for PACKAGE in "${_ingredients_exclude[@]}" ; do
+            printf "Package: $PACKAGE\nStatus: install ok installed\nArchitecture: all\nVersion: 9:999.999.999\n\n" >> status
+        done
+    fi
+
+    # Some packages depend on an exact version of a dependency to be installed.
+    # Use
+    # ingredients:
+    #   pretend:
+    #     - packagename version_to_be_pretended
+    if [ ! -z "${_ingredients_pretend[0]}" ] ; then
+        for PRETEND in "${_ingredients_pretend[@]}" ; do
+            P_PKG=$(echo "$PRETEND" | cut -d " " -f 1)
+            P_VER=$(echo "$PRETEND" | cut -d " " -f 2)
+            cat status | tr '\n' '@' | sed -e 's|@@|\n\n|g' | sed -e 's|Package: '"$P_PKG"'@Status: install ok installed@Architecture: all@Version: 9:999.999.999|Package: '"$P_PKG"'@Status: install ok installed@Architecture: all@Version: '"$P_VER"'|g' | sed -e 's|@|\n|g' > status.temp
+            mv status.temp status
+        done
+    fi
+
+    if [ -e sources.list ] ; then
+        rm sources.list
+    fi
+    for SOURCE in "${_ingredients_sources[@]}" ; do
+        echo "${SOURCE}" >> sources.list
+    done
+    for PPA in "${_ingredients_ppas[@]}" ; do
+        echo "deb http://ppa.launchpad.net/${PPA}/ubuntu ${_ingredients_dist} main" >> sources.list
+    done
+    for DEBFILE in "${_ingredients_debs[@]}" ; do
+        cp ${DEBFILE} .
+    done
+fi
+
+if [ ! -z "${_ingredients_script[0]}" ] ; then
+    # Execute extra steps defined in recipe
+    shell_execute $YAMLFILE _ingredients_script
+fi
+
+if [ ! -z "${_ingredients_dist}" ] ; then
+    # Some projects provide raw .deb files without a repository
+    # hence we create our own local repository as part of
+    # the AppImage creation process in order to "install"
+    # the package using apt-get as normal
+    if [ ! -z "${_ingredients_debs[0]}" ] ; then
+        for DEB in "${_ingredients_debs[@]}" ; do
+            if [ ! -f $(basename "$DEB") ] ; then
+                wget -c $DEB
+            fi
+        done
+    fi
+    scanpackages | gzip -9c > Packages.gz
+    echo "deb [trusted=yes] file:$(readlink -e $PWD) ./" >> sources.list
+
+    INSTALL=$LOWERAPP
+    if [ ! -z "${_ingredients_package}" ] ; then
+        INSTALL="${_ingredients_package}"
+    fi
+    if [ ! -z "${_ingredients_packages}" ] ; then
+        INSTALL=""
+    fi
+
+    # If packages are specifically listed, only install these, not a package with the name of the app
+    if [ ! -z "${_ingredients_packages[0]}" ] ; then
+        INSTALL=${_ingredients_packages[@]}
+    fi
+
+    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Languages="none" -o Acquire::AllowDowngradeToInsecureRepositories=true $OPTIONS update || true
+    URLS=$(apt-get --allow-unauthenticated -o Apt::Get::AllowUnauthenticated=true $OPTIONS -y install --print-uris $INSTALL | cut -d "'" -f 2 | grep -e "^http")
+    if which aria2c &>/dev/null; then
+        dltool=aria2c
+    else
+        dltool=wget
+    fi
+
+    $dltool -c -i- <<<"$URLS"
+fi
+
+if [ ! -z "${_ingredients_post_script[0]}" ] ; then
+    # Execute extra steps defined in recipe
+    shell_execute $YAMLFILE _ingredients_post_script
+fi
+
+mkdir -p ./$APP.AppDir/
+cd ./$APP.AppDir/
+
+mkdir -p usr/bin usr/lib
+find ../*.deb -exec dpkg -x {} . \; || true
+
+if [ -z "${_union}" ] ; then
+    get_apprun
+else
+    cat > AppRun <<\EOF
+#!/bin/sh
+HERE="$(dirname "$(readlink -f "${0}")")"
+export UNION_PRELOAD="${HERE}"
+export LD_PRELOAD="${HERE}/libunionpreload.so"
+export PATH="${HERE}"/usr/bin/:"${HERE}"/usr/sbin/:"${HERE}"/usr/games/:"${HERE}"/bin/:"${HERE}"/sbin/:"${PATH}"
+export LD_LIBRARY_PATH="${HERE}"/usr/lib/:"${HERE}"/usr/lib/i386-linux-gnu/:"${HERE}"/usr/lib/x86_64-linux-gnu/:"${HERE}"/usr/lib32/:"${HERE}"/usr/lib64/:"${HERE}"/lib/:"${HERE}"/lib/i386-linux-gnu/:"${HERE}"/lib/x86_64-linux-gnu/:"${HERE}"/lib32/:"${HERE}"/lib64/:"${LD_LIBRARY_PATH}"
+export PYTHONPATH="${HERE}"/usr/share/pyshared/:"${PYTHONPATH}"
+export PYTHONHOME="${HERE}"/usr/
+export XDG_DATA_DIRS="${HERE}"/usr/share/:"${XDG_DATA_DIRS}"
+export PERLLIB="${HERE}"/usr/share/perl5/:"${HERE}"/usr/lib/perl5/:"${PERLLIB}"
+export GSETTINGS_SCHEMA_DIR="${HERE}"/usr/share/glib-2.0/schemas/:"${GSETTINGS_SCHEMA_DIR}"
+export QT_PLUGIN_PATH="${HERE}"/usr/lib/qt4/plugins/:"${HERE}"/usr/lib/i386-linux-gnu/qt4/plugins/:"${HERE}"/usr/lib/x86_64-linux-gnu/qt4/plugins/:"${HERE}"/usr/lib32/qt4/plugins/:"${HERE}"/usr/lib64/qt4/plugins/:"${HERE}"/usr/lib/qt5/plugins/:"${HERE}"/usr/lib/i386-linux-gnu/qt5/plugins/:"${HERE}"/usr/lib/x86_64-linux-gnu/qt5/plugins/:"${HERE}"/usr/lib32/qt5/plugins/:"${HERE}"/usr/lib64/qt5/plugins/:"${QT_PLUGIN_PATH}"
+EXEC=$(grep -e '^Exec=.*' "${HERE}"/*.desktop | head -n 1 | cut -d "=" -f 2- | sed -e 's|%.||g')
+exec ${EXEC} $@
+EOF
+    chmod a+x AppRun
+fi
+
+get_desktop
+
+# Execute extra steps defined in recipe
+if [ ! -z "${_script}" ] ; then
+    shell_execute $YAMLFILE _script
+fi
+
+DESKTOP=$(find . -name '*.desktop' | sort | head -n 1)
+
+# desktop-file-validate complains about missing trailing semicolons for some
+# keys although the format definition says that they are optional
+fix_desktop "$DESKTOP"
+
+# Compile GLib schemas if the subdirectory is present in the AppImage
+# AppRun has to export GSETTINGS_SCHEMA_DIR for this to work
+if [ -d usr/share/glib-2.0/schemas/ ] ; then
+    ( cd usr/share/glib-2.0/schemas/ ; glib-compile-schemas . )
+fi
+
+if [ -f ../VERSION ] ; then
+    VERSION=$(cat ../VERSION)
+else
+    get_version || true
+fi
+
+# patch_usr
+# Patching only the executable files seems not to be enough for some apps
+if [ ! -z "${_binpatch}" ] ; then
+    find usr/ -type f -exec sed -i -e 's|/usr|././|g' {} \;
+    find usr/ -type f -exec sed -i -e 's@././/bin/env@/usr/bin/env@g' {} \;
+fi
+
+# Don't suffer from NIH; use LD_PRELOAD to override calls to /usr paths
+if [ ! -z "${_union}" ] ; then
+    mkdir -p usr/src/
+    wget -q "https://raw.githubusercontent.com/mikix/deb2snap/master/src/preload.c" -O - | \
+        sed -e 's|SNAPPY|UNION|g' | sed -e 's|SNAPP|UNION|g' | sed  -e 's|SNAP|UNION|g' | \
+        sed -e 's|snappy|union|g' > usr/src/libunionpreload.c
+    gcc -shared -fPIC usr/src/libunionpreload.c -o libunionpreload.so -ldl -DUNION_LIBNAME=\"libunionpreload.so\"
+    strip libunionpreload.so
+fi
+
+delete_blacklisted
+
+# Fix desktop files that have file endings for icons
+sed -i -e 's|\.png||g' *.desktop || true
+sed -i -e 's|\.svg||g' *.desktop || true
+sed -i -e 's|\.svgz||g' *.desktop || true
+sed -i -e 's|\.xpm||g' *.desktop || true
+
+# Execute extra steps defined in recipe
+if [ ! -z "${_post}" ] ; then
+    shell_execute $YAMLFILE _post
+fi
+
+# Go out of AppImage
+cd ..
+
+generate_type2_appimage
+ls -lh ../out/*.AppImage

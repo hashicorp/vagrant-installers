@@ -8,8 +8,14 @@ build_boxes = [
   'osx-10.9',
   'ubuntu-14.04',
   'ubuntu-14.04-i386',
-  'win-7'
+  'win-7',
+  'appimage',
 ]
+
+box_mappings = {
+  'appimage' => 'ubuntu-14.04',
+  'appimage-i386' => 'ubuntu-14.04-i386',
+}
 
 # Valid types: "substrate", "package"
 build_type = ENV.fetch('VAGRANT_BUILD_TYPE', 'substrate')
@@ -19,6 +25,7 @@ script_base = File.join(build_type, "vagrant-scripts")
 
 if build_type == 'substrate'
   build_boxes.delete("archlinux")
+  build_boxes.delete("appimage")
 end
 
 unprivileged_provision = ["archlinux"]
@@ -38,7 +45,8 @@ Vagrant.configure("2") do |config|
       script_ext = script_name.start_with?('win') ? 'ps1' : 'sh'
       provision_script = File.join(script_base, "#{script_name}.#{script_ext}")
 
-      box_config.vm.box = "#{box_prefix}/#{box_basename}"
+      box_config.vm.box = "#{box_prefix}/#{box_mappings.fetch(box_basename, box_basename)}"
+
       if box_basename.include?('osx')
         box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
                                                  "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
@@ -50,13 +58,11 @@ Vagrant.configure("2") do |config|
         box_config.vm.communicator = 'winrm'
       end
 
-      ["vmware_fusion", "vmware_workstation"].each do |p|
-        config.vm.provider "p" do |v|
-          v.vmx["memsize"] = ENV.fetch("VAGRANT_GUEST_MEMORY_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_MEMORY", "4096"))
-          v.vmx["numvcpus"] = ENV.fetch("VAGRANT_GUEST_CPUS_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_CPUS", "1"))
-          v.vmx["tools.upgrade.policy"] = "manual"
-          v.vmx["cpuid.coresPerSocket"] = "1"
-        end
+      config.vm.provider :vmware_desktop do |v|
+        v.vmx["memsize"] = ENV.fetch("VAGRANT_GUEST_MEMORY_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_MEMORY", "4096"))
+        v.vmx["numvcpus"] = ENV.fetch("VAGRANT_GUEST_CPUS_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_CPUS", "1"))
+        v.vmx["tools.upgrade.policy"] = "manual"
+        v.vmx["cpuid.coresPerSocket"] = "1"
       end
     end
   end
