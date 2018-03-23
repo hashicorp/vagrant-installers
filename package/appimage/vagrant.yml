@@ -1,5 +1,5 @@
 app: vagrant
-binpatch: true
+union: true
 
 ingredients:
   dist: trusty
