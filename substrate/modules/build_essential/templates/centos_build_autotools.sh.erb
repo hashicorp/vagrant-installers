@@ -44,3 +44,14 @@ pushd libtool*
 make
 make install
 popd
+
+# patchelf
+
+rm -rf patchelf*
+wget https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
+tar xvzf patchelf-0.9.tar.gz
+pushd patchelf*
+./configure
+make
+make install
+popd

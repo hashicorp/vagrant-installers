@@ -24,15 +24,20 @@ for so_path in $(find "${embedded_dir}" -name "*.so"); do
     fi
 done
 
-for exe_path in $(find "${embedded_dir}" -type f); do
-    chrpath --list "${exe_path}"
+for exe_path in $(find "${embedded_dir}" -executable -type f); do
+    file "${exe_path}" | grep "ELF"
     if [ $? -eq 0 ]; then
-        set -e
-        exe_dir=$(dirname "${exe_path}")
-        rel_embedded=$(relpath "${exe_dir}" "${embedded_dir}")
-        rpath="\$ORIGIN/${rel_embedded}/lib:\$ORIGIN/${rel_embedded}/lib64"
-        chrpath --replace "${rpath}" "${exe_path}"
-        set +e
+        chrpath --list "${exe_path}"
+        if [ $? -eq 0 ]; then
+            set -e
+            exe_dir=$(dirname "${exe_path}")
+            rel_embedded=$(relpath "${exe_dir}" "${embedded_dir}")
+            rpath="\$ORIGIN/${rel_embedded}/lib:\$ORIGIN/${rel_embedded}/lib64"
+            chrpath --replace "${rpath}" "${exe_path}"
+            set +e
+        fi
+    else
+        patchelf --set-rpath "${rpath}" "${exe_path}"
     fi
 done
 
