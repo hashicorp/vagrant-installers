@@ -329,8 +329,9 @@ func main() {
 
 	// Set the PATH to include the proper paths into our embedded dir
 	path = os.Getenv("PATH")
+	preferSystem := os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "" && os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "0"
 	if runtime.GOOS == "windows" {
-		if os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "" && os.Getenv("VAGRANT_PREFER_SYSTEM_BIN") != "0" {
+		if preferSystem {
 			if debug {
 				log.Printf("launcher: path modification will prefer system bins.")
 			}
@@ -349,8 +350,13 @@ func main() {
 				path)
 		}
 	} else {
-		path = fmt.Sprintf("%s:%s",
-			filepath.Join(embeddedDir, "bin"), path)
+		if preferSystem {
+			path = fmt.Sprintf("%s:%s",
+				path, filepath.Join(embeddedDir, "bin"))
+		} else {
+			path = fmt.Sprintf("%s:%s",
+				filepath.Join(embeddedDir, "bin"), path)
+		}
 	}
 	newEnv["PATH"] = path
 
