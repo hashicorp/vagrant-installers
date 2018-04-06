@@ -1,0 +1,29 @@
+app: vagrant
+union: true
+
+ingredients:
+  dist: trusty
+  sources:
+    - deb http://us.archive.ubuntu.com/ubuntu/ trusty main universe
+  ppas:
+    - brightbox/ruby-ng
+  debs:
+    - "${DEB_FILE}"
+
+script:
+  - echo "[Desktop Entry]" > vagrant.desktop
+  - echo "Type=Application" >> vagrant.desktop
+  - echo "Name=vagrant" >> vagrant.desktop
+  - echo "Icon=app.png" >> vagrant.desktop
+  - echo "Exec=vagrant" >> vagrant.desktop
+  - touch app.png
+  - rm -f lib/x86_64-linux-gnu/libtinfo.so*
+  - mkdir -p etc/ssl
+  - cp /etc/ssl/certs/ca-certificates.crt etc/ssl/ca-certificates.crt
+  - mkdir rgloader
+  - cp "${WORK_DIR}/rgloader/"* rgloader/
+  - mkdir -p usr/gembundle
+  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.4 install rubygems-update --no-document
+  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.4 install "${WORK_DIR}/vagrant.gem" --no-document
+  - mv "${WORK_DIR}/vagrant_wrapper.sh" usr/bin/vagrant
+  - chmod a+x usr/bin/vagrant
