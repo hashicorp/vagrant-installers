@@ -251,7 +251,11 @@ generate_status()
     mkdir -p ./tmp/archives/
     mkdir -p ./tmp/lists/partial
     touch tmp/pkgcache.bin tmp/srcpkgcache.bin
-    wget -q -c "https://github.com/AppImage/AppImages/raw/${PKG2AICOMMIT}/excludedeblist"
+    SOURCE="${BASH_SOURCE[0]}"
+    while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    cp "${DIR}/excludedeblist" excludedeblist
+
     rm status 2>/dev/null || true
     for PACKAGE in $(cat excludedeblist | cut -d "#" -f 1) ; do
         printf "Package: $PACKAGE\nStatus: install ok installed\nArchitecture: all\nVersion: 9:999.999.999\n\n" >> status
