@@ -279,9 +279,10 @@ fix_desktop "$DESKTOP"
 
 # Compile GLib schemas if the subdirectory is present in the AppImage
 # AppRun has to export GSETTINGS_SCHEMA_DIR for this to work
-if [ -d usr/share/glib-2.0/schemas/ ] ; then
-    ( cd usr/share/glib-2.0/schemas/ ; glib-compile-schemas . )
-fi
+# NOTE: We don't need this and can just ignore
+#if [ -d usr/share/glib-2.0/schemas/ ] ; then
+#    ( cd usr/share/glib-2.0/schemas/ ; glib-compile-schemas . )
+#fi
 
 if [ -f ../VERSION ] ; then
     VERSION=$(cat ../VERSION)
