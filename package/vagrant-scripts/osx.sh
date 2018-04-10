@@ -6,6 +6,8 @@ export PATH="/usr/local/bin:$PATH"
 
 chmod 755 /vagrant/package/package.sh
 
+set -e
+
 /vagrant/package/package.sh /vagrant/substrate-assets/substrate_darwin_x86_64.zip master
 
 mkdir -p /vagrant/pkg
