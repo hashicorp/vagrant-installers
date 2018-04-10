@@ -59,7 +59,7 @@ class build_essential {
 
     'Ubuntu': {
       package {
-        ["build-essential", "autoconf", "automake", "chrpath", "libtool", "patchelf"]:
+        ["build-essential", "autoconf", "automake", "chrpath", "libtool"]:
           ensure => installed,
       }
 
