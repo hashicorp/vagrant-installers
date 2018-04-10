@@ -442,6 +442,7 @@ Write-Host "Running light.exe"
     -ext WixUIExtension `
     -ext WixUtilExtension `
     -spdb `
+    -v `
     -cultures:en-us `
     -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
     -out $OutputPath `
