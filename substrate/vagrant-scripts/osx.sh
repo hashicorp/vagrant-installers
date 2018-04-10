@@ -19,4 +19,7 @@ mv cacert.pem /usr/local/etc/openssl/cacert.pem
 
 export SSL_CERT_FILE=/usr/local/etc/openssl/cacert.pem
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
+
+set -e
+
 /vagrant/substrate/run.sh /vagrant/substrate-assets
