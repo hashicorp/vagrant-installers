@@ -40,7 +40,7 @@ VAGRANT_GEM_PATH="${DIR}/../vagrant.gem"
 TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
 pushd $TMP_DIR
 
-if [ -f "${VAGRANT_GEM_PATH}" ]; then
+if [ ! -f "${VAGRANT_GEM_PATH}" ]; then
     # Download Vagrant and extract
     SOURCE_REPO=${VAGRANT_REPO:-hashicorp/vagrant}
     SOURCE_PREFIX=${SOURCE_REPO/\//-}
