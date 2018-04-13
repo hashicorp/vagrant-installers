@@ -13,6 +13,8 @@ class curl::posix {
   $source_dir_name  = regsubst($source_filename, '^(.+?)\.tar\.gz$', '\1')
   $source_dir_path  = "${file_cache_dir}/${source_dir_name}"
 
+  $curl_patch_file  = "${source_dir_path}/curl-7.59.0-file-url.patch"
+
   $lib_version = "4"
 
   # Determine if we have an extra environmental variables we need to set
@@ -44,6 +46,19 @@ class curl::posix {
     creates => $source_dir_path,
     cwd     => $file_cache_dir,
     require => Wget::Fetch["curl"],
+  }
+
+  file { $curl_patch_file:
+    source => "puppet:///modules/curl/curl-7.59.0-file-url.patch",
+    require => Exec["untar-curl"],
+  }
+
+  exec { "patch-curl":
+    command => "patch -p1 -i ${curl_patch_file}",
+    cwd => $source_dir_path,
+    require => [
+      File[$curl_patch_file],
+    ],
   }
 
   autotools { "curl":

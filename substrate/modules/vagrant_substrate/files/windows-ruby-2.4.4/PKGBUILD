@@ -26,7 +26,7 @@ source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver
 
 # To update SHA256 hashs run: ridk exec sh -c "updpkgsums PKGBUILD"
 
-sha256sums=('0a703dffb7737f56e979c9ebe2482f07751803c71e307c20446b581e0f12cf30'
+sha256sums=('45a8de577471b90dc4838c5ef26aeb253a56002896189055a44dc680644243f1'
             '578bd0830fe96efc7656c732ec46b0658fc436a7a30d8945cf3b8240797809f0'
             'c8f6c493c480e7eb00da39b6d1cf8634b470ce58f3af1ce7891a6d6a7967435f'
             '389236bdca5f283adde9b4b56febcfc25e228716e06a0edc21ea8fd7f27b75fa'

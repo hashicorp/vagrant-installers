@@ -1,0 +1,23 @@
+#!/usr/bin/bash
+
+# NOTE: this should only be used for the 7.59 version
+# of curl because we need to apply a custom patch.
+
+FILESDIR=`cygpath -pu "<%= @curl_files_path %>"`
+BUILDDIR=`cygpath -pu "<%= @curl_build_path %>"`
+
+mkdir -p $BUILDDIR
+cp -r "${FILESDIR}/." $BUILDDIR/
+cd $BUILDDIR
+
+ls | grep "i686"
+built_686=$?
+ls | grep "x86_64"
+built_x86_64=$?
+
+if [[ $built_686 -eq 0 && $built_x86_64 -eq 0 ]]
+then
+    echo "skipping build"
+else
+    makepkg-mingw -sf --noconfirm
+fi

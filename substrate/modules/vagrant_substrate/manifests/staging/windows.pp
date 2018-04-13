@@ -27,6 +27,11 @@ class vagrant_substrate::staging::windows {
 
   $winssh_version = hiera("vagrant_substrate::winssh_version")
 
+  # TODO: Remove these after curl upgrade
+  $curl_files_path   = "${cache_dir}\\curl-files"
+  $curl_build_path   = "${cache_dir}\\curl-build"
+  $curl_bash_builder = "${cache_dir}\\curl-bash-builder.sh"
+
   file { $builder_path:
     content => template("vagrant_substrate/substrate_builder.sh.erb"),
   }
@@ -54,6 +59,26 @@ class vagrant_substrate::staging::windows {
     ],
   }
 
+  file { $curl_files_path:
+    source => "puppet:///modules/vagrant_substrate/windows-curl",
+    path => $curl_files_path,
+    recurse => true,
+  }
+
+  file { $curl_bash_builder:
+    content => template("vagrant_substrate/curl-bash-builder.sh.erb")
+  }
+
+  powershell { "build-curl":
+    content => template("vagrant_substrate/windows_curl_builder.ps1.erb"),
+    file_cache_dir => $cache_dir,
+    require => [
+      File[$curl_bash_builder],
+      File[$curl_files_path],
+      Powershell["build-ruby"],
+    ],
+  }
+
   powershell { "build-substrate":
     content => template("vagrant_substrate/substrate_waiter.ps1.erb"),
     file_cache_dir => $cache_dir,
@@ -61,6 +86,7 @@ class vagrant_substrate::staging::windows {
       File[$builder_path],
       File[$builder_config],
       Powershell["build-ruby"],
+      Powershell["build-curl"],
     ],
   }
 

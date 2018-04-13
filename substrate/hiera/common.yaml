@@ -1,5 +1,5 @@
 ---
-curl::version: "7.57.0"
+curl::version: "7.59.0"
 libarchive::version: "3.3.2"
 libffi::version: "3.2.1"
 libiconv::version: "1.15"

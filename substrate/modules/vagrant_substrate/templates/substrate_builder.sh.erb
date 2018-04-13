@@ -14,6 +14,9 @@ WORKINGDIR=`pwd`
 
 find $RUBYPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
 
+CURLPKGDIR=`cygpath -pu <%= @curl_build_path.gsub("\\", "/") %>`
+find $CURLPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
+
 # Note that we are starting the build
 touch i-am-running
 ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
