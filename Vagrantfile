@@ -26,6 +26,7 @@ script_base = File.join(build_type, "vagrant-scripts")
 if build_type == 'substrate'
   build_boxes.delete("archlinux")
   build_boxes.delete("appimage")
+  build_boxes.reverse!
 end
 
 unprivileged_provision = ["archlinux"]
