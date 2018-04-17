@@ -4,6 +4,8 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+mkdir -p ${DIR}/pkgs
+
 pushd ${DIR}/packer/vagrant
 
 DEFAULT_LIST=$(ls template*.json)
@@ -32,3 +34,7 @@ do
         echo packer build ${box}
     fi
 done
+
+mv *.box ${DIR}/pkgs/
+
+popd
