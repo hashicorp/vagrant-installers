@@ -4,7 +4,7 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-mkdir -p ${DIR}/pkgs
+mkdir -p ${DIR}/assets
 
 pushd ${DIR}/packer/vagrant
 
@@ -35,6 +35,6 @@ do
     fi
 done
 
-mv *.box ${DIR}/pkgs/
+mv *.box ${DIR}/assets/
 
 popd
