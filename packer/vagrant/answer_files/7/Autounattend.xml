@@ -250,7 +250,13 @@
                     <Description>Install Service Pack 1</Description>
                     <Order>30</Order>
                     <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
+                 </SynchronousCommand>
+                <!--  <SynchronousCommand wcm:action="add"> -->
+                <!--     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\win-7-sp2.ps1</CommandLine> -->
+                <!--     <Description>Install Service Pack 2</Description> -->
+                <!--     <Order>31</Order> -->
+                <!--     <RequiresUserInput>true</RequiresUserInput> -->
+                <!-- </SynchronousCommand> -->
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\win-7-dotnet.ps1</CommandLine>
                     <Description>Install .Net upgrade</Description>
@@ -267,6 +273,12 @@
                     <CommandLine>cmd.exe /c a:\compile-dotnet-assemblies.bat</CommandLine>
                     <Description>Compile .Net assemblies</Description>
                     <Order>60</Order>
+                    <RequiresUserInput>true</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <CommandLine>cmd.exe /c a:\enable-tls.bat</CommandLine>
+                    <Description>Enable TLS 1.1 and 1.2</Description>
+                    <Order>61</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">

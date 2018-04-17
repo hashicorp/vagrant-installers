@@ -2,7 +2,7 @@
   "builders": [
     {
       "type": "vmware-iso",
-      "iso_url": "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso",
+      "iso_url": "/home/spox/Downloads/7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso",
       "iso_checksum_type": "md5",
       "iso_checksum": "1d0d239a252cb53e466d39e752b17c28",
       "headless": false,
@@ -23,7 +23,9 @@
         "./scripts/windows/dis-updates.ps1",
         "./scripts/windows/disable-hibernate.ps1",
         "./scripts/windows/win-7-sp1.ps1",
+        "./scripts/windows/win-7-sp2.ps1",
         "./scripts/windows/win-7-dotnet.ps1",
+        "./scripts/windows/enable-tls.bat",
         "./scripts/windows/build-tools.ps1",
         "./scripts/windows/compile-dotnet-assemblies.bat",
         "./scripts/windows/powershell-upgrade.ps1",
