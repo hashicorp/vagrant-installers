@@ -282,7 +282,7 @@
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\build-tools.ps1</CommandLine>
+                    <CommandLine>cmd.exe /c a:\build-tools.bat</CommandLine>
                     <Description>Install build tools</Description>
                     <Order>70</Order>
                     <RequiresUserInput>true</RequiresUserInput>
