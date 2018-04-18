@@ -3,9 +3,9 @@ if "%PACKER_BUILDER_TYPE:~0,6%"=="hyperv" (
   goto :eof
 )
 if not exist "C:\Windows\Temp\7z920-x64.msi" (
-	powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://www.7-zip.org/a/7z920-x64.msi', 'C:\Windows\Temp\7z920-x64.msi')" <NUL
+	powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('http://www.7-zip.org/a/7z920-x64.msi', 'C:\Windows\Temp\7z920-x64.msi')" <NUL
+  msiexec /qb /i C:\Windows\Temp\7z920-x64.msi
 )
-msiexec /qb /i C:\Windows\Temp\7z920-x64.msi
 
 if not exist "C:\Windows\Temp\ultradefrag.zip" (
 	powershell -Command "(New-Object System.Net.WebClient).DownloadFile('http://downloads.sourceforge.net/project/ultradefrag/stable-release/6.1.0/ultradefrag-portable-6.1.0.bin.amd64.zip', 'C:\Windows\Temp\ultradefrag.zip')" <NUL

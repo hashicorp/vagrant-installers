@@ -1,7 +1,7 @@
 if not exist "C:\Windows\Temp\7z920-x64.msi" (
     powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('http://www.7-zip.org/a/7z920-x64.msi', 'C:\Windows\Temp\7z920-x64.msi')" <NUL
+    msiexec /qb /i C:\Windows\Temp\7z920-x64.msi
 )
-msiexec /qb /i C:\Windows\Temp\7z920-x64.msi
 
 if exist "C:\Users\vagrant\windows.iso" (
     move /Y C:\Users\vagrant\windows.iso C:\Windows\Temp
@@ -15,7 +15,7 @@ if not exist "C:\Windows\Temp\windows.iso" (
 )
 
 powershell -Command "Start-Process 'C:\Program Files\7-Zip\7z.exe' -ArgumentList @('x', 'C:\Windows\Temp\windows.iso', '-oC:\Windows\Temp\VMware') -Wait"
-powershell -Command "Start-Process 'C:\Windows\Temp\VMware\setup64.exe' -ArgumentList @('/s', '/v/qn REBOOT=F') -Wait"
+powershell -Command "Start-Process 'C:\Windows\Temp\VMware\setup64.exe' -ArgumentList @('/s', '/v/qn REBOOT=R') -Wait"
 
 rd /Q "C:\Windows\Temp\vmware-tools.tar"
 rd /Q "C:\Windows\Temp\windows.iso"

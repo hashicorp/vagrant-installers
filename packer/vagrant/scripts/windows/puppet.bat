@@ -3,6 +3,6 @@ if not exist "C:\Windows\Temp\puppet.msi" (
 )
 
 :: http://docs.puppetlabs.com/pe/latest/install_windows.html
-msiexec /qn /i C:\Windows\Temp\puppet.msi /log C:\Windows\Temp\puppet.log
+start /wait msiexec /qn /norestart /i C:\Windows\Temp\puppet.msi /log C:\Windows\Temp\puppet.log
 
-powershell -Command "$CurPath = [Environment]::GetEnvironmentVariable(\"PATH\"); [Environment]::SetEnvironmentVariable(\"PATH\", \"${CurPath};C:\Program Files (x86)\Puppet Labs\Puppet\bin\", \"Machine\")"
+setx PATH "%PATH%;C:\Program Files (x86)\Puppet Labs\Puppet\bin" /m

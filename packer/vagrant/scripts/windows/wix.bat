@@ -2,6 +2,6 @@ if not exist "C:\Windows\Temp\wix.exe" (
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('https://github.com/wixtoolset/wix3/releases/download/wix3104rtm/wix310.exe', 'C:\Windows\Temp\wix.exe')" <NUL
 )
 
-powershell -Command "Start-Process 'C:\Windows\Temp\wix.exe' '/quiet /norestart' -Wait"
+start /wait C:\Windows\Temp\wix.exe /quiet /norestart
 
-powershell -Command "$CurPath = [Environment]::GetEnvironmentVariable(\"PATH\"); [Environment]::SetEnvironmentVariable(\"PATH\", \"${CurPath};C:\Program Files (x86)\Wix Toolset v3.10\bin\", \"Machine\")"
+setx PATH "%PATH%;C:\Program Files (x86)\Wix Toolset v3.10\bin" /m
