@@ -44,7 +44,7 @@
   "provisioners": [
     {
       "type": "windows-restart",
-      "restart_command": "shutdown /r /f /t 240",
+      "restart_command": "shutdown /r /f /t 120",
       "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
     },
     {
