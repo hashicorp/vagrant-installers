@@ -26,7 +26,7 @@
         "./scripts/windows/win-7-sp2.ps1",
         "./scripts/windows/win-7-dotnet.ps1",
         "./scripts/windows/enable-tls.bat",
-        "./scripts/windows/build-tools.ps1",
+        "./scripts/windows/build-tools.bat",
         "./scripts/windows/compile-dotnet-assemblies.bat",
         "./scripts/windows/powershell-upgrade.ps1",
         "./scripts/windows/openssh.ps1",
@@ -42,6 +42,11 @@
     }
   ],
   "provisioners": [
+    {
+      "type": "windows-restart",
+      "restart_command": "shutdown /r /f /t 240",
+      "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
+    },
     {
       "type": "windows-shell",
       "remote_path": "C:/Windows/Temp/script.bat",
