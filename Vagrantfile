@@ -17,6 +17,9 @@ box_mappings = {
   'appimage-i386' => 'ubuntu-14.04-i386',
 }
 
+skip_boxes = ENV['VAGRANT_SKIP_BOXES'].to_s.split(',')
+build_boxes.delete_if{|b| skip_boxes.include?(b) }
+
 # Valid types: "substrate", "package"
 build_type = ENV.fetch('VAGRANT_BUILD_TYPE', 'substrate')
 # Box name prefix to allow custom box usage
