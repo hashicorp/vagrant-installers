@@ -245,18 +245,12 @@
                     <Order>24</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
-                 <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\win-7-sp1.bat</CommandLine>
-                    <Description>Install Service Pack 1</Description>
-                    <Order>30</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                 </SynchronousCommand>
-                <!--  <SynchronousCommand wcm:action="add"> -->
-                <!--     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\win-7-sp2.ps1</CommandLine> -->
-                <!--     <Description>Install Service Pack 2</Description> -->
-                <!--     <Order>31</Order> -->
-                <!--     <RequiresUserInput>true</RequiresUserInput> -->
-                <!-- </SynchronousCommand> -->
+                <SynchronousCommand wcm:action="add">
+                  <CommandLine>cmd.exe /c a:\win-7-sp1.bat</CommandLine>
+                  <Description>Install Service Pack 1</Description>
+                  <Order>30</Order>
+                  <RequiresUserInput>true</RequiresUserInput>
+                </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -File a:\win-7-dotnet.ps1</CommandLine>
                     <Description>Install .Net upgrade</Description>
