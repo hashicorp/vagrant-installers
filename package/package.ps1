@@ -424,6 +424,11 @@ Write-Host "Running heat.exe"
     -var 'var.VagrantSourceDir' `
     -out "$($InstallerTmpDir)\vagrant-files.wxs"
 
+if(!$?) {
+    Write-Host "Error: Failed running heat.exe"
+    exit 1
+}
+
 Write-Host "Running candle.exe"
 $CandleArgs = @(
     "-nologo",
@@ -435,6 +440,11 @@ $CandleArgs = @(
 )
 Start-Process -NoNewWindow -Wait `
     -ArgumentList $CandleArgs -FilePath $WixCandle
+
+if(!$?) {
+    Write-Host "Error: Failed running candle.exe"
+    exit 1
+}
 
 Write-Host "Running light.exe"
 &$WixLight `
@@ -449,6 +459,11 @@ Write-Host "Running light.exe"
     "$($InstallerTmpDir)\vagrant-files.wixobj" `
     "$($InstallerTmpDir)\vagrant-main.wixobj"
 
+if(!$?) {
+    Write-Host "Error: Failed running light.exe"
+    exit 1
+}
+
 #--------------------------------------------------------------------
 # Sign
 #--------------------------------------------------------------------
@@ -458,11 +473,21 @@ if ($SignKey) {
         $SignTool = $SignPath
     }
 
-    &$SignTool sign `
+    & $SignTool sign `
         /t http://timestamp.digicert.com `
         /f $SignKey `
         /p $SignKeyPassword `
         $OutputPath
+
+    if(!$?) {
+        Write-Host "Error: Failed to sign package"
+        exit 1
+    }
+} else {
+    Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    Write-Host "!      This package is unsigned        !"
+    Write-Host "! Rebuild with signing key for release !"
+    Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 }
 
 Copy-Item $OutputPath -Destination "$($InstallerTmpDir)\vagrant.msi"
