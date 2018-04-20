@@ -23,7 +23,6 @@
         "./scripts/windows/dis-updates.ps1",
         "./scripts/windows/disable-hibernate.ps1",
         "./scripts/windows/win-7-sp1.bat",
-        "./scripts/windows/win-7-sp2.ps1",
         "./scripts/windows/win-7-dotnet.ps1",
         "./scripts/windows/enable-tls.bat",
         "./scripts/windows/build-tools.bat",
