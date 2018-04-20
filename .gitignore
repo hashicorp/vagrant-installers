@@ -2,7 +2,7 @@
 *.pyc
 .tmp/
 .vagrant
-Gemfile.lock
+Gemfile*
 Thumbs.db
 cache
 dist
