@@ -48,6 +48,17 @@ cp "${DIR}/darwin/license.html" ${STAGING_DIR}/license.html
 #-------------------------------------------------------------------------
 echo "Copying installer scripts.."
 mkdir -p ${STAGING_DIR}/scripts
+
+cat <<EOF >${STAGING_DIR}/scripts/preinstall
+#!/usr/bin/env bash
+
+[ -d /opt/vagrant ] && rm -rf /opt/vagrant/
+
+exit 0
+
+EOF
+chmod 0755 ${STAGING_DIR}/scripts/preinstall
+
 cat <<EOF >${STAGING_DIR}/scripts/postinstall
 #!/usr/bin/env bash
 
