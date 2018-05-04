@@ -42,11 +42,6 @@ if($SignKeyExists) {
         "SignKey"="${SignKeyPath}";
         "SignKeyPassword"="${env:SignKeyPassword}"
     }
-    & $PackageScript @PackageArgs
-    if(!$?){
-        Write-Host "Error: Packaging failed!"
-        exit 1
-    }
 } else {
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
@@ -73,11 +68,6 @@ if($SignKeyExists) {
         "VagrantRevision"="master";
         "SignKey"="${SignKeyPath}";
         "SignKeyPassword"="${env:SignKeyPassword}"
-    }
-    & $PackageScript @PackageArgs
-    if(!$?){
-        Write-Host "Error: Packaging failed!"
-        exit 1
     }
 } else {
     $PackageArgs = @{
