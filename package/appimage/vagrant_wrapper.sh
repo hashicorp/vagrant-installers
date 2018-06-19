@@ -19,6 +19,7 @@ export LDFLAGS="-L${DIR}/../lib/x86_64-linux-gnu -L${DIR}/../../lib/x86_64-linux
 export CFLAGS="-I${DIR}/../include ${CFLAGS}"
 export CPPFLAGS="-I${DIR}/../include ${CPPFLAGS}"
 export VAGRANT_INSTALLER_ENV="1"
+export VAGRANT_APPIMAGE="1"
 export VAGRANT_INSTALLER_EMBEDDED_DIR="${DIR}/../.."
 export NOKOGIRI_USE_SYSTEM_LIBRARIES="1"
 
