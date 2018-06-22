@@ -21,13 +21,19 @@ function savepowershellfromitself {
     $field2.SetValue( $consoleHost, [Console]::Out )
 }
 
-Write-Host "Starting substrate build"
-[System.IO.Directory]::CreateDirectory("C:\vagrant\substrate-assets") | Out-Null
+$SignKeyPath = "C:\vagrant\Win_CodeSigning.p12"
+$SignKeyPassword = $env:SignKeyPassword
+$SignKeyExists = Test-Path -LiteralPath $SignKeyPath
+$SubstrateArgs = @{
+    "OutputDir"="C:\vagrant\substrate-assets";
+}
+if($SignKeyExists -and $SignKeyPassword) {
+    $SubstrateArgs["SignKeyFile"] = $SignKeyPath
+    $SubstrateArgs["SignKeyPassword"] = $SignKeyPassword
+}
 
-# Force git into the path
-$CurPath = [Environment]::GetEnvironmentVariable("PATH");
-$env:PATH = "${CurPath};C:\Program Files\Git\bin\"
+& C:\vagrant\substrate\run.ps1 @SubstrateArgs
 
-Start-Process "C:\Go\bin\go.exe" "get github.com/mitchellh/osext" -NoNewWindow -Wait
-
-Invoke-Expression "C:\vagrant\substrate\run.ps1 -OutputDir C:\vagrant\substrate-assets"
+if(!$?) {
+    Write-Error "Substrate build failed"
+}
