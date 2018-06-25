@@ -173,6 +173,10 @@ if($LauncherProc.ExitCode -ne 0) {
 
 Pop-Location
 
+Write-Output "Installing gemrc file..."
+Copy-Item "$($CacheDir)\gemrc" -Destination "$($Stage32Dir)\embedded\etc\gemrc"
+Copy-Item "$($CacheDir)\gemrc" -Destination "$($Stage64Dir)\embedded\etc\gemrc"
+
 if($SignKeyFile -and !$SignKeyPassword) {
     Write-Warning "SignKey path provided but no SignKeyPassword given. Embedded binaries will be unsigned!"
 } elseif(!$SignKeyFile -and $SignKeyPassword) {

@@ -46,6 +46,8 @@ rm -rf _scripts substrate-asset.zip
 # windows paths using the `/cygdrive` mount instead of the msys2
 # style mounts of `/DRIVE`
 find ./mingw64/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' {} \;
+# Copy CA certs into expected location
+cp /usr/ssl/cert.pem cacert.pem
 
 find ./ -maxdepth 1 -name "*" -exec rm -rf $STAGE64/embedded/{} \;
 find ./ -maxdepth 1 -name "*" -exec mv -f {} $STAGE64/embedded/ \;
@@ -65,6 +67,8 @@ rm -rf _scripts substrate-asset.zip
 # windows paths using the `/cygdrive` mount instead of the msys2
 # style mounts of `/DRIVE`
 find ./mingw32/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' {} \;
+# Copy CA certs into expected location
+cp /usr/ssl/cert.pem cacert.pem
 
 find ./ -maxdepth 1 -name "*" -exec rm -rf $STAGE32/embedded/{} \;
 find ./ -maxdepth 1 -name "*" -exec mv -f {} $STAGE32/embedded/ \;
