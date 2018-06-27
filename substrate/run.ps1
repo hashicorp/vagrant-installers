@@ -177,6 +177,16 @@ Write-Output "Installing gemrc file..."
 Copy-Item "$($CacheDir)\gemrc" -Destination "$($Stage32Dir)\embedded\etc\gemrc"
 Copy-Item "$($CacheDir)\gemrc" -Destination "$($Stage64Dir)\embedded\etc\gemrc"
 
+Write-Output "Install rgloader files..."
+$Rgloader32Dir = [System.IO.Path]::Combine($Embed32Dir, "rgloader")
+$Rgloader64Dir = [System.IO.Path]::Combine($Embed64Dir, "rgloader")
+
+[System.IO.Directory]::CreateDirectory($Rgloader32Dir) | Out-Null
+[System.IO.Directory]::CreateDirectory($Rgloader64Dir) | Out-Null
+
+Copy-Item "$($CacheDir)\rgloader*.so" -Destination "$($Rgloader32Dir)"
+Copy-Item "$($CacheDir)\rgloader*.so" -Destination "$($Rgloader64Dir)"
+
 if($SignKeyFile -and !$SignKeyPassword) {
     Write-Warning "SignKey path provided but no SignKeyPassword given. Embedded binaries will be unsigned!"
 } elseif(!$SignKeyFile -and $SignKeyPassword) {
