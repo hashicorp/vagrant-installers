@@ -164,7 +164,7 @@ if($LauncherProc.ExitCode -ne 0) {
 }
 
 $env:GOARCH = "386"
-$LauncherProc = Create-Process go.exe "build -o $($Stage64Bin)\vagrant.exe main.go" "$($LauncherDir)"
+$LauncherProc = Create-Process go.exe "build -o $($Stage32Bin)\vagrant.exe main.go" "$($LauncherDir)"
 $LauncherProc.WaitForExit()
 
 if($LauncherProc.ExitCode -ne 0) {
