@@ -48,7 +48,7 @@ Vagrant.configure("2") do |config|
       script_ext = script_name.start_with?('win') ? 'ps1' : 'sh'
       provision_script = File.join(script_base, "#{script_name}.#{script_ext}")
 
-      box_config.vm.box = "win-7" #{}"#{box_prefix}/#{box_mappings.fetch(box_basename, box_basename)}"
+      box_config.vm.box = "#{box_prefix}/#{box_mappings.fetch(box_basename, box_basename)}"
 
       if box_basename.include?('osx')
         box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
