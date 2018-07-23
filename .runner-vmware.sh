@@ -41,6 +41,8 @@ do
     then
         echo "Provision failure for: ${guest}"
         result=1
+    else
+        echo "Provision complete for: ${guest}"
     fi
 done
 
