@@ -44,7 +44,7 @@ Version: ${VAGRANT_VERSION}-1
 Section:
 Priority: optional
 Architecture: amd64
-Depends: ruby2.4, ruby2.4-dev, libssl1.0.0, libssl-dev, libgnutls28, libgnutls-dev, curl, libcurl4-gnutls-dev, bsdtar, libxml2-dev, libxslt1-dev, libffi-dev, libkeyutils1, openssh-client
+Depends: ruby2.4, ruby2.4-dev, libssl1.0.0, libssl-dev, libgnutls28, libgnutls-dev, curl, libcurl4-gnutls-dev, bsdtar, libxml2-dev, libxslt1-dev, libffi-dev, libkeyutils1, openssh-client, libp11-kit-dev, zlib1g
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
