@@ -29,4 +29,6 @@ else
     export PATH="${DIR}:${PATH}"
 fi
 
+export VAGRANT_APPIMAGE_LD_LIBRARY_PATH=$(ldconfig -N -X -v 2>&1 | grep "^/.*:$" | tr -d ":" | tr "\n" ":")
+
 "${DIR}/ruby2.4" -- "${DIR}/../gembundle/bin/vagrant" "$@"
