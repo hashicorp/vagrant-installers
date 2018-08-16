@@ -352,7 +352,7 @@ export GOPATH="$(mktemp -d)"
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 mkdir launcher
-cp /vagrant/substrate/modules/vagrant_substrate/files/launcher/main.go launcher/
+cp /vagrant/substrate/launcher/main.go launcher/
 pushd launcher
 go get github.com/mitchellh/osext
 go build -o "${build_dir}/bin/vagrant" main.go
@@ -371,8 +371,8 @@ cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
 # rubyencoder
 echo " -> Installing rubyencoder loader..."
 mkdir -p "${embed_dir}/rgloader"
-cp /vagrant/substrate/modules/rubyencoder/files/rgloader/loader.rb "${embed_dir}/rgloader/loader.rb"
-cp /vagrant/substrate/modules/rubyencoder/files/rgloader/rgloader24.linux*.so "${embed_dir}/rgloader"/
+cp /vagrant/substrate/common/rgloader/* "${embed_dir}/rgloader"/
+cp /vagrant/substrate/${host_os}/rgloader/* "${embed_dir}/rgloader"/
 
 echo " -> Cleaning cruft..."
 rm -rf "${embed_dir}"/{certs,misc,private,openssl.cnf,openssl.cnf.dist}
