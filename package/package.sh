@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Builds the package for Vagrant unix-like systems (Mac OS X and Linux).
-set -e
+set -ex
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
@@ -33,7 +33,8 @@ unzip -q substrate.zip
 popd
 rm -rf /opt/vagrant
 mkdir -p /opt/vagrant
-mv ${SUBSTRATE_TMP_DIR}/substrate/* /opt/vagrant/
+rm ${SUBSTRATE_TMP_DIR}/*.zip
+mv ${SUBSTRATE_TMP_DIR}/* /opt/vagrant/
 SUBSTRATE_DIR="/opt/vagrant"
 
 # Install Vagrant
