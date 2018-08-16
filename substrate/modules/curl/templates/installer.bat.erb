@@ -1,7 +1,0 @@
-mkdir "<%= @install_dir %>\bin
-mkdir "<%= @install_dir %>\lib
-mkdir "<%= @install_dir %>\include\curl
-
-copy .\builds\libcurl-vc-<%= @target_arch %>-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\bin\* "<%= @install_dir %>\bin"
-copy .\builds\libcurl-vc-<%= @target_arch %>-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\lib\* "<%= @install_dir %>\lib"
-copy .\builds\libcurl-vc-<%= @target_arch %>-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\include\curl\* "<%= @install_dir %>\include\curl"
