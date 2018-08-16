@@ -10,4 +10,8 @@ chmod 755 /vagrant/substrate/run.sh
 
 set -e
 
-/vagrant/substrate/run.sh /vagrant/substrate-assets
+if [ "${VAGRANT_BUILD_DEBUG}" = "1" ]; then
+    /vagrant/substrate/run.sh /vagrant/substrate-assets
+else
+    /vagrant/substrate/run.sh /vagrant/substrate-assets > /dev/null
+fi

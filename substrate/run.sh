@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
 
-set -ex
+function echo_stderr {
+    (>&2 echo "$@")
+}
+
+set -e
 
 # Verify arguments
 if [ "$#" -ne "1" ]; then
-    echo "Usage: $0 OUTPUT-DIR" >&2
+    echo_stderr "Usage: $0 OUTPUT-DIR"
     exit 1
 fi
 
 output_dir=$1
 
-echo "Building Vagrant substrate..."
+echo_stderr "Building Vagrant substrate..."
 
-echo " -> Performing setup..."
-echo -n "  -> Detecting host system... "
+echo_stderr " -> Performing setup..."
+echo_stderr -n "  -> Detecting host system... "
 uname=$(uname -a)
 
 if [[ "${uname}" = *"86_64"* ]]; then
@@ -36,8 +40,8 @@ else
     export MACOSX_DEPLOYMENT_TARGET="10.5"
 fi
 
-echo "${host_ident}"
-echo "  -> Readying build directories..."
+echo_stderr "${host_ident}"
+echo_stderr "  -> Readying build directories..."
 
 cache_dir=$(mktemp -d vagrant-substrate.XXXXX)
 build_dir="/opt/vagrant"
@@ -57,7 +61,7 @@ export LD_LIBRARY_PATH="${embed_dir}/lib"
 setupdir=$(mktemp -d vagrant-substrate-setup.XXXXX)
 pushd "${setupdir}"
 
-echo "  -> Installing any required packages..."
+echo_stderr "  -> Installing any required packages..."
 if [[ "${linux_os}" = "ubuntu" ]]; then
     apt-get install -qy build-essential autoconf automake chrpath libtool
 fi
@@ -70,13 +74,13 @@ if [[ "${linux_os}" = "centos" ]]; then
 fi
 
 if [[ "${linux_os}" != "ubuntu" ]]; then
-    echo "  -> Build and install custom host tools..."
+    echo_stderr "  -> Build and install custom host tools..."
 
     PATH=/usr/local/bin:$PATH
     export PATH=/usr/local/bin:$PATH
 
     # m4
-    echo "   -> Installing custom m4..."
+    echo_stderr "   -> Installing custom m4..."
     curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
     tar xzf m4.tar.gz
     pushd m4*
@@ -85,7 +89,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     popd
 
     # autoconf
-    echo "   -> Installing custom autoconf..."
+    echo_stderr "   -> Installing custom autoconf..."
     curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
     tar xzf autoconf.tar.gz
     pushd autoconf*
@@ -94,7 +98,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     popd
 
     # automake
-    echo "   -> Installing custom automake..."
+    echo_stderr "   -> Installing custom automake..."
     curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.13.1.tar.gz
     tar xzf automake.tar.gz
     pushd automake*
@@ -104,7 +108,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
 
     if [[ "${linux_os}" = "centos" ]]; then
         # libtool
-        echo "   -> Installing custom libtool..."
+        echo_stderr "   -> Installing custom libtool..."
         curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz
         tar xzf libtool.tar.gz
         pushd libtool*
@@ -113,7 +117,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         popd
 
         # patchelf
-        echo "   -> Installing custom patchelf..."
+        echo_stderr "   -> Installing custom patchelf..."
         curl -L -s -o patchelf.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
         tar xzf patchelf.tar.gz
         pushd patchelf*
@@ -133,10 +137,10 @@ popd
 
 pushd "${cache_dir}"
 
-echo " -> Building substrate requirements..."
+echo_stderr " -> Building substrate requirements..."
 
 # libffi
-echo "   -> Building libffi..."
+echo_stderr "   -> Building libffi..."
 libffi_version="3.2.1"
 libffi_url="ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz"
 curl -L -s -o libffi.tar.gz "${libffi_url}"
@@ -147,7 +151,7 @@ make && make install
 popd
 
 # libiconv
-echo "   -> Building libiconv..."
+echo_stderr "   -> Building libiconv..."
 libiconv_version="1.15"
 libiconv_url="http://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz"
 curl -L -s -o libiconv.tar.gz "${libiconv_url}"
@@ -158,7 +162,7 @@ make && make install
 popd
 
 # xz
-echo "   -> Building xz..."
+echo_stderr "   -> Building xz..."
 xz_version="5.2.3"
 xz_url="https://tukaani.org/xz/xz-${xz_version}.tar.gz"
 curl -L -s -o xz.tar.gz "${xz_url}"
@@ -169,7 +173,7 @@ make && make install
 popd
 
 # libxml2
-echo "   -> Building libxml2..."
+echo_stderr "   -> Building libxml2..."
 libxml2_version="2.9.7"
 libxml2_url="ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz"
 curl -L -s -o libxml2.tar.gz "${libxml2_url}"
@@ -180,7 +184,7 @@ make && make install
 popd
 
 # libxslt
-echo "   -> Building libxslt..."
+echo_stderr "   -> Building libxslt..."
 libxslt_version="1.1.32"
 libxslt_url="ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz"
 curl -L -s -o libxslt.tar.gz "${libxslt_url}"
@@ -191,7 +195,7 @@ make && make install
 popd
 
 # libyaml
-echo "   -> Building libyaml..."
+echo_stderr "   -> Building libyaml..."
 libyaml_version="0.1.7"
 libyaml_url="http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz"
 curl -L -s -o libyaml.tar.gz "${libyaml_url}"
@@ -204,7 +208,7 @@ popd
 ## Start - Linux only
 if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
-    echo "   -> Building libgmp..."
+    echo_stderr "   -> Building libgmp..."
     libgmp_version="6.1.2"
     libgmp_url="https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2"
     curl -L -s -o libgmp.tar.bz2 "${libgmp_url}"
@@ -220,7 +224,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     popd
 
     # libgpg_error
-    echo "   -> Building libgpg_error..."
+    echo_stderr "   -> Building libgpg_error..."
     libgpg_error_version="1.27"
     libgpg_error_url="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2"
     curl -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
@@ -231,7 +235,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     popd
 
     # libgcrypt
-    echo "   -> Building libgcrypt..."
+    echo_stderr "   -> Building libgcrypt..."
     libgcrypt_version="1.8.2"
     libgcrypt_url="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2"
     curl -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
@@ -244,7 +248,7 @@ fi
 ## End - Linux only
 
 # zlib
-echo "   -> Building zlib..."
+echo_stderr "   -> Building zlib..."
 zlib_version="1.2.11"
 zlib_url="http://zlib.net/zlib-${zlib_version}.tar.gz"
 curl -L -s -o zlib.tar.gz "${zlib_url}"
@@ -255,7 +259,7 @@ make && make install
 popd
 
 # readline
-echo "   -> Building readline..."
+echo_stderr "   -> Building readline..."
 readline_version="7.0"
 readline_url="http://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz"
 curl -L -s -o readline.tar.gz "${readline_url}"
@@ -266,7 +270,7 @@ make && make install
 popd
 
 # openssl
-echo "   -> Building openssl..."
+echo_stderr "   -> Building openssl..."
 openssl_version="1.1.0g"
 openssl_url="http://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
 curl -L -s -o openssl.tar.gz "${openssl_url}"
@@ -277,7 +281,7 @@ make && make install
 popd
 
 # libssh2
-echo "   -> Building libssh2..."
+echo_stderr "   -> Building libssh2..."
 libssh2_version="1.8.0"
 libssh2_url="http://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz"
 curl -L -s -o libssh2.tar.gz "${libssh2_url}"
@@ -288,7 +292,7 @@ make && make install
 popd
 
 # bsdtar / libarchive
-echo "   -> Building bsdtar / libarchive..."
+echo_stderr "   -> Building bsdtar / libarchive..."
 libarchive_version="3.3.2"
 libarchive_url="https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz"
 curl -L -s -o libarchive.tar.gz "${libarchive_url}"
@@ -323,7 +327,7 @@ unset ACLOCAL_PATH
 popd
 
 # curl
-echo "   -> Building curl..."
+echo_stderr "   -> Building curl..."
 curl_version="7.61.0"
 curl_url="https://curl.haxx.se/download/curl-${curl_version}.tar.gz"
 curl -L -s -o curl.tar.gz "${curl_url}"
@@ -334,7 +338,7 @@ make && make install
 popd
 
 # ruby
-echo "   -> Building ruby..."
+echo_stderr "   -> Building ruby..."
 ruby_version="2.4.4"
 ruby_short_version=$(echo $ruby_version | awk -F. '{print $1"."$2}')
 ruby_url="https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip"
@@ -347,7 +351,7 @@ CFLAGS="-I./include -O3" make && make install
 popd
 
 # go launcher
-echo "   -> Building vagrant launcher..."
+echo_stderr "   -> Building vagrant launcher..."
 export GOPATH="$(mktemp -d)"
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
@@ -359,34 +363,34 @@ go build -o "${build_dir}/bin/vagrant" main.go
 popd
 
 # gemrc
-echo " -> Writing default gemrc file..."
+echo_stderr " -> Writing default gemrc file..."
 mkdir -p "${embed_dir}/etc"
-echo "gem: --no-document --no-user-install" > "${embed_dir}/etc/gemrc"
+echo_stderr "gem: --no-document --no-user-install" > "${embed_dir}/etc/gemrc"
 
 # cacert
-echo " -> Writing cacert.pem..."
+echo_stderr " -> Writing cacert.pem..."
 curl --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.haxx.se/ca/cacert.pem
 cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
 
 # rubyencoder
-echo " -> Installing rubyencoder loader..."
+echo_stderr " -> Installing rubyencoder loader..."
 mkdir -p "${embed_dir}/rgloader"
 cp /vagrant/substrate/common/rgloader/* "${embed_dir}/rgloader"/
 cp /vagrant/substrate/${host_os}/rgloader/* "${embed_dir}/rgloader"/
 
-echo " -> Cleaning cruft..."
+echo_stderr " -> Cleaning cruft..."
 rm -rf "${embed_dir}"/{certs,misc,private,openssl.cnf,openssl.cnf.dist}
 rm -rf "${embed_dir}/share"/{info,man,doc,gtk-doc}
 
 # package up the substrate
-echo " -> Packaging substrate..."
+echo_stderr " -> Packaging substrate..."
 output_file="${output_dir}/substrate_${host_ident}.zip"
 pushd "${build_dir}"
 zip -q -r "${output_file}" .
 popd
 
-echo " -> Cleaning up..."
+echo_stderr " -> Cleaning up..."
 rm -rf "${cache_dir}"
 rm -rf "${build_dir}"
 
-echo "Substrate build complete: ${output_file}"
+echo_stderr "Substrate build complete: ${output_file}"

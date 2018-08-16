@@ -22,4 +22,8 @@ export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 set -e
 
-/vagrant/substrate/run.sh /vagrant/substrate-assets
+if [ "${VAGRANT_BUILD_DEBUG}" = "1" ]; then
+    /vagrant/substrate/run.sh /vagrant/substrate-assets
+else
+    /vagrant/substrate/run.sh /vagrant/substrate-assets > /dev/null
+fi
