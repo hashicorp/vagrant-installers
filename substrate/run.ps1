@@ -44,6 +44,20 @@ function Create-Process {
     return $process
 }
 
+$CurlVersion = "7.61.0"
+$Libssh2Version = "1.8.0"
+$ZlibVersion = "1.2.11"
+
+$CurlVersionUnderscore = ($CurlVersion -Replace "\.", "_")
+$CurlRemoteFilename = "curl-${CurlVersion}.zip"
+
+$ZlibURL = "https://github.com/madler/zlib/archive/v${ZlibVersion}.zip"
+$CurlURL = "https://github.com/curl/curl/releases/download/curl-${CurlVersionUnderscore}/${CurlRemoteFilename}"
+$Libssh2URL = "https://github.com/libssh2/libssh2/archive/libssh2-${Libssh2Version}.zip"
+
+# Allow HTTPS connections to work
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
+
 Write-Host "Starting substrate build"
 
 # Create required directories
@@ -186,6 +200,202 @@ $Rgloader64Dir = [System.IO.Path]::Combine($Embed64Dir, "rgloader")
 
 Copy-Item "$($CacheDir)\*loader*" -Destination "$($Rgloader32Dir)"
 Copy-Item "$($CacheDir)\*loader*" -Destination "$($Rgloader64Dir)"
+
+Write-Output "Preparing native curl build..."
+
+$CurlBuildDir32 = [System.IO.Path]::Combine($CacheDir, "curl32")
+$CurlBuildDir64 = [System.IO.Path]::Combine($CacheDir, "curl64")
+[System.IO.Directory]::CreateDirectory($CurlBuildDir32) | Out-Null
+[System.IO.Directory]::CreateDirectory($CurlBuildDir64) | Out-Null
+
+Write-Output "Downloading curl..."
+$CurlAsset = [System.IO.Path]::Combine($CacheDir, "curl.zip")
+(New-Object System.Net.WebClient).DownloadFile("${CurlURL}", "${CurlAsset}")
+
+Write-Output "Unpacking curl..."
+$CurlUnpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${CurlAsset} -y" "${CurlBuildDir32}"
+$CurlUnpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${CurlAsset} -y" "${CurlBuildDir64}"
+$CurlUnpack32Proc.WaitForExit()
+$CurlUnpack64Proc.WaitForExit()
+
+Move-Item "${CurlBuildDir32}\curl-*\*" "${CurlBuildDir32}\"
+Move-Item "${CurlBuildDir64}\curl-*\*" "${CurlBuildDir64}\"
+
+Write-Output "Installing curl dependency zlib..."
+$ZlibDir32 = [System.IO.Path]::Combine($CacheDir, "zlib32")
+$ZlibDir64 = [System.IO.Path]::Combine($CacheDir, "zlib64")
+[System.IO.Directory]::CreateDirectory($ZlibDir32)
+[System.IO.Directory]::CreateDirectory($ZlibDir64)
+
+$ZlibDepsDir32 = [System.IO.Path]::Combine($CurlBuildDir32, "deps")
+$ZlibDepsIncDir32 = [System.IO.Path]::Combine($ZlibDepsDir32, "include")
+$ZlibDepsLibDir32 = [System.IO.Path]::Combine($ZlibDepsDir32, "lib")
+$ZlibDepsDir64 = [System.IO.Path]::Combine($CurlBuildDir64, "deps")
+$ZlibDepsIncDir64 = [System.IO.Path]::Combine($ZlibDepsDir64, "include")
+$ZlibDepsLibDir64 = [System.IO.Path]::Combine($ZlibDepsDir64, "lib")
+
+[System.IO.Directory]::CreateDirectory($ZlibDepsIncDir32)
+[System.IO.Directory]::CreateDirectory($ZlibDepsLibDir32)
+[System.IO.Directory]::CreateDirectory($ZlibDepsIncDir64)
+[System.IO.Directory]::CreateDirectory($ZlibDepsLibDir64)
+
+Write-Output "Downloading zlib..."
+
+$ZlibAsset = [System.IO.Path]::Combine($CacheDir, "zlib.zip")
+(New-Object System.Net.WebClient).DownloadFile($ZlibURL, $ZlibAsset)
+
+Write-Output "Unpacking zlib..."
+$ZlibUnpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${ZlibAsset} -y" "${ZlibDir32}"
+$ZlibUnpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${ZlibAsset} -y" "${ZlibDir64}"
+$ZlibUnpack32Proc.WaitForExit()
+$ZlibUnpack64Proc.WaitForExit()
+
+Move-Item "${ZlibDir32}\zlib-*\*" "${ZlibDir32}\"
+Move-Item "${ZlibDir64}\zlib-*\*" "${ZlibDir64}\"
+
+Write-Output "Building 32bit zlib..."
+
+$ZlibBuilderScript = [System.IO.Path]::Combine($ZlibDir32, "zlib-builder.bat")
+Copy-Item "$($CacheDir)\zlib-builder.bat" -Destination "${ZlibBuilderScript}"
+$env:ZlibArch = "x86"
+$ZlibBuild32Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir32}"
+
+Write-Output "Building 64bit zlib..."
+$ZlibBuilderScript = [System.IO.Path]::Combine($ZlibDir64, "zlib-builder.bat")
+Copy-Item "$($CacheDir)\zlib-builder.bat" -Destination "${ZlibBuilderScript}"
+$env:ZlibArch = "x64"
+$ZlibBuild64Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir64}"
+
+$ZlibBuild32Proc.WaitForExit()
+if($ZlibBuild32Proc.ExitCode -ne 0) {
+    Write-Error "Failed to build 32-bit zlib for curl!"
+}
+
+$ZlibBuild64Proc.WaitForExit()
+if($ZlibBuild64Proc.ExitCode -ne 0) {
+    Write-Error "Failed to build 64-bit zlib for curl!"
+}
+
+Push-Location "${ZlibDir32}"
+Copy-Item ".\*.h" "${ZlibDepsIncDir32}\"
+Copy-Item ".\zlib.lib" "${ZlibDepsLibDir32}\zlib.lib"
+Copy-Item ".\zlib.lib" "${ZlibDepsLibDir32}\zlib_a.lib"
+Pop-Location
+
+Push-Location "${ZlibDir64}"
+Copy-Item ".\*.h" "${ZlibDepsIncDir64}\"
+Copy-Item ".\zlib.lib" "${ZlibDepsLibDir64}\zlib.lib"
+Copy-Item ".\zlib.lib" "${ZlibDepsLibDir64}\zlib_a.lib"
+Pop-Location
+
+Write-Output "Installing curl dependency libssh2..."
+$Libssh2Dir32 = [System.IO.Path]::Combine($CacheDir, "libssh232")
+$Libssh2Dir64 = [System.IO.Path]::Combine($CacheDir, "libssh264")
+[System.IO.Directory]::CreateDirectory($Libssh2Dir32)
+[System.IO.Directory]::CreateDirectory($Libssh2Dir64)
+
+$Libssh2DepsDir32 = [System.IO.Path]::Combine($CurlBuildDir32, "deps")
+$Libssh2DepsIncDir32 = [System.IO.Path]::Combine($Libssh2DepsDir32, "include")
+$Libssh2DepsLibDir32 = [System.IO.Path]::Combine($Libssh2DepsDir32, "lib")
+$Libssh2DepsDir64 = [System.IO.Path]::Combine($CurlBuildDir64, "deps")
+$Libssh2DepsIncDir64 = [System.IO.Path]::Combine($Libssh2DepsDir64, "include")
+$Libssh2DepsLibDir64 = [System.IO.Path]::Combine($Libssh2DepsDir64, "lib")
+
+[System.IO.Directory]::CreateDirectory($Libssh2DepsIncDir32)
+[System.IO.Directory]::CreateDirectory($Libssh2DepsLibDir32)
+[System.IO.Directory]::CreateDirectory($Libssh2DepsIncDir64)
+[System.IO.Directory]::CreateDirectory($Libssh2DepsLibDir64)
+
+Write-Output "Downloading libssh2..."
+$Libssh2Asset = [System.IO.Path]::Combine($CacheDir, "libssh2.zip")
+(New-Object System.Net.WebClient).DownloadFile($Libssh2URL, $Libssh2Asset)
+
+Write-Output "Unpacking libssh2..."
+$Libssh2Unpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${Libssh2Asset} -y" "${Libssh2Dir32}"
+$Libssh2Unpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${Libssh2Asset} -y" "${Libssh2Dir64}"
+$Libssh2Unpack32Proc.WaitForExit()
+$Libssh2Unpack64Proc.WaitForExit()
+
+Move-Item "${Libssh2Dir32}\libssh2-*\*" "${Libssh2Dir32}\"
+Move-Item "${Libssh2Dir64}\libssh2-*\*" "${Libssh2Dir64}\"
+
+Write-Output "Building libssh2..."
+$Libssh2Builder32Script = [System.IO.Path]::Combine($Libssh2Dir32, "libssh2-builder.bat")
+Copy-Item "$($CacheDir)\libssh2-builder.bat" -Destination "${Libssh2Builder32Script}"
+$env:Libssh2Arch = "x86"
+$Libssh2Build32Proc = Create-Process "${Libssh2Builder32Script}" -Cwd "${Libssh2Dir32}"
+$Libssh2Builder64Script = [System.IO.Path]::Combine($Libssh2Dir64, "libssh2-builder.bat")
+Copy-Item "$($CacheDir)\libssh2-builder.bat" -Destination "${Libssh2Builder64Script}"
+$env:Libssh2Arch = "x64"
+$Libssh2Build64Proc = Create-Process "${Libssh2Builder64Script}" -Cwd "${Libssh2Dir64}"
+
+$Libssh2Build32Proc.WaitForExit()
+if($Libssh2Build32Proc.ExitCode -ne 0) {
+    Write-Error "Failed to build 32-bit libssh2 for curl!"
+}
+
+$Libssh2Build64Proc.WaitForExit()
+if($Libssh2Build64Proc.ExitCode -ne 0) {
+    Write-Error "Failed to build 64-bit libssh2 for curl!"
+}
+
+Push-Location "${Libssh2Dir32}"
+Copy-Item ".\include\*" "${Libssh2DepsIncDir32}\"
+Copy-Item ".\Release\src\libssh2.lib" "${Libssh2DepsLibDir32}\libssh2.lib"
+Copy-Item ".\Release\src\libssh2.lib" "${Libssh2DepsLibDir32}\libssh2_a.lib"
+Pop-Location
+
+Push-Location "${Libssh2Dir64}"
+Copy-Item ".\include\*" "${Libssh2DepsIncDir64}\"
+Copy-Item ".\Release\src\libssh2.lib" "${Libssh2DepsLibDir64}\libssh2.lib"
+Copy-Item ".\Release\src\libssh2.lib" "${Libssh2DepsLibDir64}\libssh2_a.lib"
+Pop-Location
+
+Write-Output "Building native curl..."
+
+$CurlBuilder32 = [System.IO.Path]::Combine($CurlBuildDir32, "winbuild\builder.bat")
+Copy-Item "${CacheDir}\curl-builder.bat" "${CurlBuilder32}"
+$env:CurlArch = "x86"
+$CurlBuild32Proc = Create-Process "${CurlBuilder32}" -Cwd "${CurlBuildDir32}\winbuild"
+
+$CurlBuilder64 = [System.IO.Path]::Combine($CurlBuildDir64, "winbuild\builder.bat")
+Copy-Item "${CacheDir}\curl-builder.bat" "${CurlBuilder64}"
+$env:CurlArch = "x64"
+$CurlBuild64Proc = Create-Process "${CurlBuilder64}" -Cwd "${CurlBuildDir64}\winbuild"
+
+$CurlBuild32Proc.WaitForExit()
+if($CurlBuild32Proc.ExitCode -ne 0) {
+    Write-Error "Failed to build 32-bit curl!"
+}
+
+$CurlBuild64Proc.WaitForExit()
+if($CurlBuild64Proc.ExitCode -ne 0) {
+    Write-Error "Failed to build 64-bit curl!"
+}
+
+Push-Location "${CurlBuildDir32}\winbuild"
+[System.IO.Directory]::CreateDirectory("${Embed32Dir}\bin")
+[System.IO.Directory]::CreateDirectory("${Embed32Dir}\lib")
+[System.IO.Directory]::CreateDirectory("${Embed32Dir}\include\curl")
+Pop-Location
+
+Push-Location "${CurlBuildDir32}"
+Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\bin\*" "${Embed32Dir}\bin\"
+Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\lib\*" "${Embed32Dir}\lib\"
+Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\include\curl\*" "${Embed32Dir}\include\curl\"
+Copy-Item "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\vcruntime140.dll" "${Embed32Dir}\bin\"
+Pop-Location
+
+[System.IO.Directory]::CreateDirectory("${Embed64Dir}\bin")
+[System.IO.Directory]::CreateDirectory("${Embed64Dir}\lib")
+[System.IO.Directory]::CreateDirectory("${Embed64Dir}\include\curl")
+
+Push-Location "${CurlBuildDir64}"
+Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\bin\*" "${Embed64Dir}\bin\"
+Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\lib\*" "${Embed64Dir}\lib\"
+Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\include\curl\*" "${Embed64Dir}\include\curl\"
+Copy-Item "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\vcruntime140.dll" "${Embed64Dir}\bin\"
+Pop-Location
 
 if($SignKeyFile -and !$SignKeyPassword) {
     Write-Warning "SignKey path provided but no SignKeyPassword given. Embedded binaries will be unsigned!"
