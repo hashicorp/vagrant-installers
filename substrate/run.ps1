@@ -79,7 +79,7 @@ $LauncherDir            = [System.IO.Path]::Combine($CacheDir, "launcher")
 Write-Output "Copying in required file assets..."
 
 Copy-Item "C:\vagrant\substrate\windows\*" -Destination "$($CacheDir)" -Recurse
-Copy-Item "C:\vagrant\substrate\modules\vagrant_substrate\files\launcher" -Destination "$($CacheDir)\launcher" -Recurse
+Copy-Item "C:\vagrant\substrate\launcher\*" -Destination "$($CacheDir)\launcher" -Recurse
 
 # Start the Ruby build
 Write-Output "Starting Ruby build..."
@@ -174,8 +174,8 @@ if($LauncherProc.ExitCode -ne 0) {
 Pop-Location
 
 Write-Output "Installing gemrc file..."
-Copy-Item "$($CacheDir)\gemrc" -Destination "$($Stage32Dir)\embedded\etc\gemrc"
-Copy-Item "$($CacheDir)\gemrc" -Destination "$($Stage64Dir)\embedded\etc\gemrc"
+Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "$($Stage32Dir)\embedded\etc\gemrc"
+Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "$($Stage64Dir)\embedded\etc\gemrc"
 
 Write-Output "Install rgloader files..."
 $Rgloader32Dir = [System.IO.Path]::Combine($Embed32Dir, "rgloader")
@@ -184,8 +184,10 @@ $Rgloader64Dir = [System.IO.Path]::Combine($Embed64Dir, "rgloader")
 [System.IO.Directory]::CreateDirectory($Rgloader32Dir) | Out-Null
 [System.IO.Directory]::CreateDirectory($Rgloader64Dir) | Out-Null
 
-Copy-Item "$($CacheDir)\*loader*" -Destination "$($Rgloader32Dir)"
-Copy-Item "$($CacheDir)\*loader*" -Destination "$($Rgloader64Dir)"
+Copy-Item "C:\vagrant\substrate\common\rgloader\*" -Destination "$($Rgloader32Dir)"
+Copy-Item "C:\vagrant\substrate\common\rgloader\*" -Destination "$($Rgloader64Dir)"
+Copy-Item "C:\vagrant\substrate\windows\rgloader\*" -Destination "$($Rgloader32Dir)"
+Copy-Item "C:\vagrant\substrate\windows\rgloader\*" -Destination "$($Rgloader64Dir)"
 
 if($SignKeyFile -and !$SignKeyPassword) {
     Write-Warning "SignKey path provided but no SignKeyPassword given. Embedded binaries will be unsigned!"
