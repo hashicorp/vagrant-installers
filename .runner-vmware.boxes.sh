@@ -10,7 +10,7 @@ pushd ${DIR}/packer/vagrant
 
 DEFAULT_LIST=$(ls template*.json)
 BUILD_BOXES=${BUILD_BOXES:-$DEFAULT_LIST}
-PACKER_VERSION=${PACKER_VERSION:-1.2.6}
+PACKER_VERSION=${PACKER_VERSION:-1.2.5}
 
 set -e
 
