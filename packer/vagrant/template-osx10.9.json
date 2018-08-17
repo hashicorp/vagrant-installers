@@ -4,6 +4,7 @@
       "boot_wait": "2s",
       "disk_size": "{{ user `disk_size` }}",
       "guest_os_type": "{{ user `vmware_guest_os_type` }}",
+      "headless": true,
       "iso_checksum_type": "none",
       "iso_url": "{{ user `iso_url` }}",
       "output_directory": "output-{{ user `vm_name` }}-vmware-iso",
