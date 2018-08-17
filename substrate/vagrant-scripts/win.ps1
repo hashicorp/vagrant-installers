@@ -32,8 +32,13 @@ if($SignKeyExists -and $SignKeyPassword) {
     $SubstrateArgs["SignKeyPassword"] = $SignKeyPassword
 }
 
-& C:\vagrant\substrate\run.ps1 @SubstrateArgs
-
-if(!$?) {
-    Write-Error "Substrate build failed"
+try {
+    & C:\vagrant\substrate\run.ps1 @SubstrateArgs
+    if(!$?) {
+        Write-Error "Substrate build failed"
+        exit 1
+    }
+} catch {
+    Write-Error "Unexpected substrate build error!"
+    exit 1
 }
