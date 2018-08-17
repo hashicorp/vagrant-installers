@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 
+#### Software versions
+#### Update these as required
+
+curl_version="7.61.0"
+libarchive_version="3.3.2"
+libffi_version="3.2.1"
+libgcrypt_version="1.8.2"
+libgmp_version="6.1.2"
+libgpg_error_version="1.27"
+libiconv_version="1.15"
+libssh2_version="1.8.0"
+libxml2_version="2.9.7"
+libxslt_version="1.1.32"
+libyaml_version="0.1.7"
+openssl_version="1.1.0g"
+readline_version="7.0"
+ruby_version="2.4.4"
+xz_version="5.2.3"
+zlib_version="1.2.11"
+
 function echo_stderr {
     (>&2 echo "$@")
 }
@@ -141,7 +161,6 @@ echo_stderr " -> Building substrate requirements..."
 
 # libffi
 echo_stderr "   -> Building libffi..."
-libffi_version="3.2.1"
 libffi_url="ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz"
 curl -L -s -o libffi.tar.gz "${libffi_url}"
 tar -xzf libffi.tar.gz
@@ -152,7 +171,6 @@ popd
 
 # libiconv
 echo_stderr "   -> Building libiconv..."
-libiconv_version="1.15"
 libiconv_url="http://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz"
 curl -L -s -o libiconv.tar.gz "${libiconv_url}"
 tar -xzf libiconv.tar.gz
@@ -163,7 +181,6 @@ popd
 
 # xz
 echo_stderr "   -> Building xz..."
-xz_version="5.2.3"
 xz_url="https://tukaani.org/xz/xz-${xz_version}.tar.gz"
 curl -L -s -o xz.tar.gz "${xz_url}"
 tar -xzf xz.tar.gz
@@ -174,7 +191,6 @@ popd
 
 # libxml2
 echo_stderr "   -> Building libxml2..."
-libxml2_version="2.9.7"
 libxml2_url="ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz"
 curl -L -s -o libxml2.tar.gz "${libxml2_url}"
 tar -xzf libxml2.tar.gz
@@ -185,7 +201,6 @@ popd
 
 # libxslt
 echo_stderr "   -> Building libxslt..."
-libxslt_version="1.1.32"
 libxslt_url="ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz"
 curl -L -s -o libxslt.tar.gz "${libxslt_url}"
 tar -xzf libxslt.tar.gz
@@ -196,7 +211,6 @@ popd
 
 # libyaml
 echo_stderr "   -> Building libyaml..."
-libyaml_version="0.1.7"
 libyaml_url="http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz"
 curl -L -s -o libyaml.tar.gz "${libyaml_url}"
 tar -xzf libyaml.tar.gz
@@ -209,7 +223,6 @@ popd
 if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
     echo_stderr "   -> Building libgmp..."
-    libgmp_version="6.1.2"
     libgmp_url="https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2"
     curl -L -s -o libgmp.tar.bz2 "${libgmp_url}"
     tar -xjf libgmp.tar.bz2
@@ -225,7 +238,6 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
 
     # libgpg_error
     echo_stderr "   -> Building libgpg_error..."
-    libgpg_error_version="1.27"
     libgpg_error_url="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2"
     curl -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
     tar -xjf libgpg-error.tar.bz2
@@ -236,7 +248,6 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
 
     # libgcrypt
     echo_stderr "   -> Building libgcrypt..."
-    libgcrypt_version="1.8.2"
     libgcrypt_url="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2"
     curl -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
     tar -xjf libgcrypt.tar.bz2
@@ -249,7 +260,6 @@ fi
 
 # zlib
 echo_stderr "   -> Building zlib..."
-zlib_version="1.2.11"
 zlib_url="http://zlib.net/zlib-${zlib_version}.tar.gz"
 curl -L -s -o zlib.tar.gz "${zlib_url}"
 tar -xzf zlib.tar.gz
@@ -260,7 +270,6 @@ popd
 
 # readline
 echo_stderr "   -> Building readline..."
-readline_version="7.0"
 readline_url="http://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz"
 curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
@@ -271,7 +280,6 @@ popd
 
 # openssl
 echo_stderr "   -> Building openssl..."
-openssl_version="1.1.0g"
 openssl_url="http://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
 curl -L -s -o openssl.tar.gz "${openssl_url}"
 tar -xzf openssl.tar.gz
@@ -282,7 +290,6 @@ popd
 
 # libssh2
 echo_stderr "   -> Building libssh2..."
-libssh2_version="1.8.0"
 libssh2_url="http://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz"
 curl -L -s -o libssh2.tar.gz "${libssh2_url}"
 tar -xzf libssh2.tar.gz
@@ -293,7 +300,6 @@ popd
 
 # bsdtar / libarchive
 echo_stderr "   -> Building bsdtar / libarchive..."
-libarchive_version="3.3.2"
 libarchive_url="https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz"
 curl -L -s -o libarchive.tar.gz "${libarchive_url}"
 tar -xzf libarchive.tar.gz
@@ -328,7 +334,6 @@ popd
 
 # curl
 echo_stderr "   -> Building curl..."
-curl_version="7.61.0"
 curl_url="https://curl.haxx.se/download/curl-${curl_version}.tar.gz"
 curl -L -s -o curl.tar.gz "${curl_url}"
 tar -xzf curl.tar.gz
@@ -339,7 +344,6 @@ popd
 
 # ruby
 echo_stderr "   -> Building ruby..."
-ruby_version="2.4.4"
 ruby_short_version=$(echo $ruby_version | awk -F. '{print $1"."$2}')
 ruby_url="https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip"
 curl -L -s -o ruby.zip "${ruby_url}"
