@@ -12,7 +12,7 @@ DEFAULT_LIST=$(ls template*.json)
 BUILD_BOXES=${BUILD_BOXES:-$DEFAULT_LIST}
 PACKER_VERSION=${PACKER_VERSION:-1.2.2}
 
-set -ex
+set -e
 
 if [ "${INSTALL_PACKER}" != "" ]
 then
@@ -23,15 +23,11 @@ fi
 
 for box in ${BUILD_BOXES}
 do
-    set +ex
-    echo "${box}" | grep i386
-    set -ex
-    if [ $? -eq 0 ]
-    then
+    if [[ "${box}" = *"i386"* ]]; then
         base=$(echo "${box}" | sed 's/-i386//')
-        echo packer build -var-file=${box} ${base}
+        packer build -var-file=${box} ${base}
     else
-        echo packer build ${box}
+        packer build ${box}
     fi
 done
 
