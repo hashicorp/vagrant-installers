@@ -101,7 +101,7 @@
     "mirror": "http://old-releases.ubuntu.com/releases",
     "mirror_directory": "14.04.1",
     "name": "ubuntu1404",
-    "box_basename": "ubuntu1404",
+    "box_basename": "ubuntu-14.04",
     "no_proxy": "{{env `no_proxy`}}",
     "preseed_path": "preseed.cfg",
     "version": "1.0",
