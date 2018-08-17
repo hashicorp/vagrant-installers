@@ -93,7 +93,8 @@ $LauncherDir            = [System.IO.Path]::Combine($CacheDir, "launcher")
 Write-Output "Copying in required file assets..."
 
 Copy-Item "C:\vagrant\substrate\windows\*" -Destination "$($CacheDir)" -Recurse
-Copy-Item "C:\vagrant\substrate\launcher\*" -Destination "$($CacheDir)\launcher" -Recurse
+[System.IO.Directory]::CreateDirectory($LauncherDir) | Out-Null
+Copy-Item "C:\vagrant\substrate\launcher\*" -Destination $LauncherDir -Recurse
 
 # Start the Ruby build
 Write-Output "Starting Ruby build..."
