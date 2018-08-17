@@ -51,7 +51,6 @@
       "remote_path": "C:/Windows/Temp/script.bat",
       "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
       "scripts": [
-        "./scripts/windows/puppet.bat",
         "./scripts/windows/vagrant-ssh.bat",
         "./scripts/windows/enable-rdp.bat",
         "./scripts/windows/wix.bat",

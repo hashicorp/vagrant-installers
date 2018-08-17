@@ -81,7 +81,6 @@
         "scripts/ubuntu/vmware.sh",
         "scripts/ubuntu/install-dev-tools.sh",
         "scripts/ubuntu/ruby.sh",
-        "scripts/ubuntu/puppet.sh",
         "scripts/ubuntu/go.sh",
         "scripts/ubuntu/motd.sh",
         "scripts/ubuntu/fpm.sh",

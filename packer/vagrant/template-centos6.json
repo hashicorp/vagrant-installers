@@ -60,7 +60,6 @@
         "scripts/centos/install-dev-tools.sh",
         "scripts/centos/ruby.sh",
         "scripts/centos/go.sh",
-        "scripts/centos/puppet.sh",
         "scripts/centos/motd.sh",
         "scripts/centos/fpm.sh",
         "scripts/centos/cleanup.sh"
