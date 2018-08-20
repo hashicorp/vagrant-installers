@@ -36,7 +36,7 @@
       "scripts/arch/minimize.sh"
     ]
   }],
-  "post-processors": [
+  "post-processors": [[
     {
       "type": "vagrant",
       "compression_level": "{{user `compression_level`}}",
@@ -48,7 +48,7 @@
       "box_tag": "hashicorp-vagrant/archlinux",
       "version": "{{user `version`}}.{{user `build_timestamp`}}"
     }
-  ],
+  ]],
   "variables": {
     "compression_level": "6",
     "cpus": "1",

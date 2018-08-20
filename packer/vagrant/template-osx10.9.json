@@ -32,7 +32,7 @@
       }
     }
   ],
-  "post-processors": [
+  "post-processors": [[
     {
       "keep_input_artifact": false,
       "output": "{{user `vm_name`}}-{{user `version`}}.{{user `build_timestamp}}.box",
@@ -44,7 +44,7 @@
       "box_tag": "hashicorp-vagrant/osx-10.9",
       "version": "{{user `version`}.{{user `build_timestamp`}}"
     }
-  ],
+  ]],
   "provisioners": [
     {
       "destination": "/private/tmp/darwin.iso",

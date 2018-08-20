@@ -29,7 +29,7 @@
       "vmx_remove_ethernet_interfaces": true
     }
   ],
-  "post-processors": [
+  "post-processors": [[
     {
       "output": "{{user `box_basename`}}-{{user `version`}}.{{user `build_timestamp`}}.box",
       "keep_input_artifact": false,
@@ -41,7 +41,7 @@
       "box_tag": "hashicorp-vagrant/{{user `box_basename`}}",
       "version": "{{user `version`}}.{{user `build_timestamp`}}"
     }
-  ],
+  ]],
   "provisioners": [
     {
       "environment_vars": [
