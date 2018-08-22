@@ -115,28 +115,28 @@ EOF
 chmod 0644 ${EMBEDDED_DIR}/manifest.json
 
 # Darwin
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    for lib_path in $(find "${EMBEDDED_DIR}/gems" -name "*.bundle"); do
-        for scrub_path in $(otool -l "${lib_path}" | grep "^ *path" | awk '{print $2}' | uniq); do
-            install_name_tool -rpath "${scrub_path}" "@executable_path/../lib" "${lib_path}"
-        done
-    done
-else
-    for so_path in $(find "${EMBEDDED_DIR}/gems" -name "*.so"); do
-        set +e
-        chrpath --list "${so_path}"
-        if [ $? -eq 0 ]; then
-            echo "-> ${so_path}"
-            set -e
-            so_dir=$(dirname "${so_path}")
-            rel_embedded=$(relpath "${so_dir}" "${EMBEDDED_DIR}")
-            rpath="\$ORIGIN/${rel_embedded}/lib:\$ORIGIN/${rel_embedded}/lib64"
-            chrpath --replace "${rpath}" "${so_path}"
-            chrpath --convert "${so_path}"
-        fi
-    done
-    set -e
-fi
+# if [[ "$OSTYPE" == "darwin"* ]]; then
+#     for lib_path in $(find "${EMBEDDED_DIR}/gems" -name "*.bundle"); do
+#         for scrub_path in $(otool -l "${lib_path}" | grep "^ *path" | awk '{print $2}' | uniq); do
+#             install_name_tool -rpath "${scrub_path}" "@executable_path/../lib" "${lib_path}"
+#         done
+#     done
+# else
+#     for so_path in $(find "${EMBEDDED_DIR}/gems" -name "*.so"); do
+#         set +e
+#         chrpath --list "${so_path}"
+#         if [ $? -eq 0 ]; then
+#             echo "-> ${so_path}"
+#             set -e
+#             so_dir=$(dirname "${so_path}")
+#             rel_embedded=$(relpath "${so_dir}" "${EMBEDDED_DIR}")
+#             rpath="\$ORIGIN/${rel_embedded}/lib:\$ORIGIN/${rel_embedded}/lib64"
+#             chrpath --replace "${rpath}" "${so_path}"
+#             chrpath --convert "${so_path}"
+#         fi
+#     done
+#     set -e
+# fi
 
 # Exit the temporary directory
 popd
