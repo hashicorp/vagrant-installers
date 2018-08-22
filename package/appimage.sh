@@ -29,7 +29,8 @@ cp "${gem_path}" vagrant.gem
 cp "${appimg_dir}/vagrant.yml" vagrant.yml
 cp "${appimg_dir}/vagrant_wrapper.sh" vagrant_wrapper.sh
 mkdir rgloader
-cp "${DIR}/../substrate/modules/rubyencoder/files/rgloader/"* ./rgloader/
+cp "${DIR}/../substrate/common/rgloader/"* ./rgloader/
+cp "${DIR}/../substrate/linux/rgloader/"* ./rgloader/
 
 # Get vagrant version
 gem unpack ./vagrant.gem
