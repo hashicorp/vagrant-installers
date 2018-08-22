@@ -32,11 +32,12 @@ build() {
   EMBEDDED_DIR="${INSTALL_DIR}/embedded"
 
   # Install the required substrate items
-  cp "${SUBSTRATE_DIR}/modules/vagrant_substrate/templates/gemrc.erb" "${EMBEDDED_DIR}/etc/gemrc"
-  cp "${SUBSTRATE_DIR}/modules/rubyencoder/files/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
+  cp "${SUBSTRATE_DIR}/common/gemrc" "${EMBEDDED_DIR}/etc/gemrc"
+  cp "${SUBSTRATE_DIR}/substrate/common/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
+  cp "${SUBSTRATE_DIR}/substrate/linux/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
 
   # Install vagrant launcher
-  pushd "${SUBSTRATE_DIR}/modules/vagrant_substrate/files/launcher"
+  pushd "${SUBSTRATE_DIR}/launcher"
   go get github.com/mitchellh/osext
   go build -o "${INSTALL_DIR}/bin/vagrant"
   popd
