@@ -369,7 +369,7 @@ popd
 # gemrc
 echo_stderr " -> Writing default gemrc file..."
 mkdir -p "${embed_dir}/etc"
-echo_stderr "gem: --no-document --no-user-install" > "${embed_dir}/etc/gemrc"
+cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
 
 # cacert
 echo_stderr " -> Writing cacert.pem..."
