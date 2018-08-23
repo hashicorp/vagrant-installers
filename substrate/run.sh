@@ -57,7 +57,6 @@ if [[ "${uname}" = *"Linux"* ]]; then
 else
     host_os="darwin"
     host_ident="darwin_${host_arch}"
-    export MACOSX_DEPLOYMENT_TARGET="10.5"
 fi
 
 echo_stderr "${host_ident}"
@@ -73,10 +72,6 @@ rm -rf "${build_dir}"
 mkdir -p "${base_bindir}"
 mkdir -p "${embed_bindir}"
 mkdir -p "${output_dir}"
-
-export CFLAGS="-I${embed_dir}/include"
-export LDFLAGS="-L${embed_dir}/lib"
-export LD_LIBRARY_PATH="${embed_dir}/lib"
 
 setupdir=$(mktemp -d vagrant-substrate-setup.XXXXX)
 pushd "${setupdir}"
@@ -102,55 +97,65 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     export PATH=/usr/local/bin:$PATH
 
     # m4
-    echo_stderr "   -> Installing custom m4..."
-    curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
-    tar xzf m4.tar.gz
-    pushd m4*
-    ./configure
-    make
-    make install
-    popd
+    if [[ ! -f "/usr/local/bin/m4" ]]; then
+        echo_stderr "   -> Installing custom m4..."
+        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+        tar xzf m4.tar.gz
+        pushd m4*
+        ./configure
+        make
+        make install
+        popd
+    fi
 
     # autoconf
-    echo_stderr "   -> Installing custom autoconf..."
-    curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
-    tar xzf autoconf.tar.gz
-    pushd autoconf*
-    ./configure
-    make
-    make install
-    popd
+    if [[ ! -f "/usr/local/bin/autoconf" ]]; then
+        echo_stderr "   -> Installing custom autoconf..."
+        curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+        tar xzf autoconf.tar.gz
+        pushd autoconf*
+        ./configure
+        make
+        make install
+        popd
+    fi
 
     # automake
-    echo_stderr "   -> Installing custom automake..."
-    curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.13.1.tar.gz
-    tar xzf automake.tar.gz
-    pushd automake*
-    ./configure
-    make
-    make install
-    popd
+    if [[ ! -f "/usr/local/bin/automake" ]]; then
+        echo_stderr "   -> Installing custom automake..."
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.13.1.tar.gz
+        tar xzf automake.tar.gz
+        pushd automake*
+        ./configure
+        make
+        make install
+        popd
+    fi
 
     if [[ "${linux_os}" = "centos" ]]; then
         # libtool
-        echo_stderr "   -> Installing custom libtool..."
-        curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz
-        tar xzf libtool.tar.gz
-        pushd libtool*
-        ./configure
-        make
-        make install
-        popd
+        if [[ ! -f "/usr/local/bin/libtool" ]]; then
+            echo_stderr "   -> Installing custom libtool..."
+            curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz
+            tar xzf libtool.tar.gz
+            pushd libtool*
+            ./configure
+            make
+            make install
+            popd
+        fi
 
         # patchelf
-        echo_stderr "   -> Installing custom patchelf..."
-        curl -L -s -o patchelf.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
-        tar xzf patchelf.tar.gz
-        pushd patchelf*
-        ./configure
-        make
-        make install
-        popd
+        if [[ ! -f "/usr/local/bin/patchelf" ]]; then
+            echo_stderr "   -> Installing custom patchelf..."
+            curl -L -s -o patchelf.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
+            tar xzf patchelf.tar.gz
+            pushd patchelf*
+            ./configure
+            make
+            make install
+            popd
+        fi
     fi
 fi
 
@@ -165,6 +170,18 @@ popd
 pushd "${cache_dir}"
 
 echo_stderr " -> Building substrate requirements..."
+
+export CFLAGS="-I${embed_dir}/include"
+export CPPFLAGS="-I${embed_dir}/include"
+export LDFLAGS="-L${embed_dir}/lib"
+if [[ "${host_os}" = "darwin" ]]; then
+    export MACOSX_DEPLOYMENT_TARGET="10.5"
+    export LD_RPATH="XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+    libtool="glibtool"
+else
+    export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+    libtool="libtool"
+fi
 
 # libffi
 echo_stderr "   -> Building libffi..."
@@ -188,6 +205,8 @@ make
 make install
 popd
 
+$libtool --finish "${embed_dir}/lib"
+
 # xz
 echo_stderr "   -> Building xz..."
 xz_url="https://tukaani.org/xz/xz-${xz_version}.tar.gz"
@@ -205,7 +224,7 @@ libxml2_url="ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz"
 curl -L -s -o libxml2.tar.gz "${libxml2_url}"
 tar -xzf libxml2.tar.gz
 pushd libxml2-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python --without-lzma --with-zlib="${embed_dir}"
+./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python --without-lzma --with-zlib="${embed_dir}/lib"
 make
 make install
 popd
@@ -304,7 +323,7 @@ tar -xzf openssl.tar.gz
 pushd openssl-*
 ./config --prefix="${embed_dir}" --openssldir="${embed_dir}" shared
 make
-make install
+make install_sw
 popd
 
 # libssh2
@@ -358,7 +377,7 @@ curl_url="https://curl.haxx.se/download/curl-${curl_version}.tar.gz"
 curl -L -s -o curl.tar.gz "${curl_url}"
 tar -xzf curl.tar.gz
 pushd curl-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 --disable-ldap --with-libssh2
+./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 --disable-ldap --with-libssh2 --with-ssl
 make
 make install
 popd
@@ -394,7 +413,7 @@ cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
 
 # cacert
 echo_stderr " -> Writing cacert.pem..."
-curl --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.haxx.se/ca/cacert.pem
+curl -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.haxx.se/ca/cacert.pem
 cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
 
 # rubyencoder
