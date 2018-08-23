@@ -90,6 +90,8 @@ if [[ "${linux_os}" = "centos" ]]; then
     set +e
     yum -d 0 -e 0 -y install chrpath gcc make perl
     yum -d 0 -e 0 -y install perl-Data-Dumper
+    # Remove openssl dev files to prevent any conflicts when building
+    yum -d 0 -e 0 -y remove openssl-devel
     set -e
 fi
 
@@ -105,7 +107,8 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     tar xzf m4.tar.gz
     pushd m4*
     ./configure
-    make && make install
+    make
+    make install
     popd
 
     # autoconf
@@ -114,7 +117,8 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     tar xzf autoconf.tar.gz
     pushd autoconf*
     ./configure
-    make && make install
+    make
+    make install
     popd
 
     # automake
@@ -123,7 +127,8 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     tar xzf automake.tar.gz
     pushd automake*
     ./configure
-    make && make install
+    make
+    make install
     popd
 
     if [[ "${linux_os}" = "centos" ]]; then
@@ -133,7 +138,8 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         tar xzf libtool.tar.gz
         pushd libtool*
         ./configure
-        make && make install
+        make
+        make install
         popd
 
         # patchelf
@@ -142,7 +148,8 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         tar xzf patchelf.tar.gz
         pushd patchelf*
         ./configure
-        make && make install
+        make
+        make install
         popd
     fi
 fi
@@ -166,7 +173,8 @@ curl -L -s -o libffi.tar.gz "${libffi_url}"
 tar -xzf libffi.tar.gz
 pushd libffi-*
 ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --libdir="${embed_dir}/lib"
-make && make install
+make
+make install
 popd
 
 # libiconv
@@ -176,7 +184,8 @@ curl -L -s -o libiconv.tar.gz "${libiconv_url}"
 tar -xzf libiconv.tar.gz
 pushd libiconv-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking
-make && make install
+make
+make install
 popd
 
 # xz
@@ -186,7 +195,8 @@ curl -L -s -o xz.tar.gz "${xz_url}"
 tar -xzf xz.tar.gz
 pushd xz-*
 ./configure --prefix="${embed_dir}" --disable-xz --disable-xzdec --disable-dependency-tracking --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts
-make && make install
+make
+make install
 popd
 
 # libxml2
@@ -196,7 +206,8 @@ curl -L -s -o libxml2.tar.gz "${libxml2_url}"
 tar -xzf libxml2.tar.gz
 pushd libxml2-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python --without-lzma --with-zlib="${embed_dir}"
-make && make install
+make
+make install
 popd
 
 # libxslt
@@ -206,7 +217,8 @@ curl -L -s -o libxslt.tar.gz "${libxslt_url}"
 tar -xzf libxslt.tar.gz
 pushd libxslt-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-libxml-prefix="${embed_dir}"
-make && make install
+make
+make install
 popd
 
 # libyaml
@@ -216,7 +228,8 @@ curl -L -s -o libyaml.tar.gz "${libyaml_url}"
 tar -xzf libyaml.tar.gz
 pushd yaml-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking
-make && make install
+make
+make install
 popd
 
 ## Start - Linux only
@@ -233,7 +246,8 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
         ABI=64
     fi
     ./configure --prefix="${embed_dir}" ABI=$ABI
-    make && make install
+    make
+    make install
     popd
 
     # libgpg_error
@@ -243,7 +257,8 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     tar -xjf libgpg-error.tar.bz2
     pushd libgpg-error-*
     ./configure --prefix="${embed_dir}" --enable-static
-    make && make install
+    make
+    make install
     popd
 
     # libgcrypt
@@ -253,7 +268,8 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     tar -xjf libgcrypt.tar.bz2
     pushd libgcrypt-*
     ./configure --prefix="${embed_dir}" --enable-static --with-libgpg-error-prefix="${embed_dir}"
-    make && make install
+    make
+    make install
     popd
 fi
 ## End - Linux only
@@ -265,7 +281,8 @@ curl -L -s -o zlib.tar.gz "${zlib_url}"
 tar -xzf zlib.tar.gz
 pushd zlib-*
 ./configure --prefix="${embed_dir}"
-make && make install
+make
+make install
 popd
 
 # readline
@@ -275,7 +292,8 @@ curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
 ./configure --prefix="${embed_dir}"
-make && make install
+make
+make install
 popd
 
 # openssl
@@ -285,7 +303,8 @@ curl -L -s -o openssl.tar.gz "${openssl_url}"
 tar -xzf openssl.tar.gz
 pushd openssl-*
 ./config --prefix="${embed_dir}" --openssldir="${embed_dir}" shared
-make && make install
+make
+make install
 popd
 
 # libssh2
@@ -295,7 +314,8 @@ curl -L -s -o libssh2.tar.gz "${libssh2_url}"
 tar -xzf libssh2.tar.gz
 pushd libssh2-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-libssl-prefix="${embed_dir}"
-make && make install
+make
+make install
 popd
 
 # bsdtar / libarchive
@@ -339,7 +359,8 @@ curl -L -s -o curl.tar.gz "${curl_url}"
 tar -xzf curl.tar.gz
 pushd curl-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 --disable-ldap --with-libssh2
-make && make install
+make
+make install
 popd
 
 # ruby
@@ -366,7 +387,7 @@ go get github.com/mitchellh/osext
 go build -o "${build_dir}/bin/vagrant" main.go
 popd
 
-# gemrc
+# install gemrc file
 echo_stderr " -> Writing default gemrc file..."
 mkdir -p "${embed_dir}/etc"
 cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
