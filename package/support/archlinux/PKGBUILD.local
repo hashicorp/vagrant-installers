@@ -33,8 +33,8 @@ build() {
 
   # Install the required substrate items
   cp "${SUBSTRATE_DIR}/common/gemrc" "${EMBEDDED_DIR}/etc/gemrc"
-  cp "${SUBSTRATE_DIR}/substrate/common/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
-  cp "${SUBSTRATE_DIR}/substrate/linux/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
+  cp "${SUBSTRATE_DIR}/common/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
+  cp "${SUBSTRATE_DIR}/linux/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
 
   # Install vagrant launcher
   pushd "${SUBSTRATE_DIR}/launcher"
