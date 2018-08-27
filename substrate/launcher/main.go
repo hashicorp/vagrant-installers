@@ -229,7 +229,8 @@ func main() {
 		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, mingwDir, "lib", "pkgconfig") +
 			":" + filepath.Join(embeddedDir, "usr", "lib", "pkgconfig")
 	} else {
-		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, "lib", "pkgconfig")
+		newEnv["PKG_CONFIG_PATH"] = filepath.Join(embeddedDir, "lib", "pkgconfig") +
+			":" + filepath.Join(embeddedDir, "lib64", "pkgconfig")
 	}
 
 	// Detect custom windows environment (cygwin/msys/etc)
