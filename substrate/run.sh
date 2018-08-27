@@ -207,6 +207,48 @@ popd
 
 $libtool --finish "${embed_dir}/lib"
 
+## Start - Linux only
+if [[ "$(uname -a)" = *"Linux"* ]]; then
+    # libgmp
+    echo_stderr "   -> Building libgmp..."
+    libgmp_url="https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2"
+    curl -L -s -o libgmp.tar.bz2 "${libgmp_url}"
+    tar -xjf libgmp.tar.bz2
+    pushd gmp-*
+    if [[ "${host_arch}" = "i686" ]]; then
+        ABI=32
+    else
+        ABI=64
+    fi
+    ./configure --prefix="${embed_dir}" ABI=$ABI
+    make
+    make install
+    popd
+
+    # libgpg_error
+    echo_stderr "   -> Building libgpg_error..."
+    libgpg_error_url="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2"
+    curl -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
+    tar -xjf libgpg-error.tar.bz2
+    pushd libgpg-error-*
+    ./configure --prefix="${embed_dir}" --enable-static
+    make
+    make install
+    popd
+
+    # libgcrypt
+    echo_stderr "   -> Building libgcrypt..."
+    libgcrypt_url="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2"
+    curl -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
+    tar -xjf libgcrypt.tar.bz2
+    pushd libgcrypt-*
+    ./configure --prefix="${embed_dir}" --enable-static --with-libgpg-error-prefix="${embed_dir}"
+    make
+    make install
+    popd
+fi
+## End - Linux only
+
 # xz
 echo_stderr "   -> Building xz..."
 xz_url="https://tukaani.org/xz/xz-${xz_version}.tar.gz"
@@ -250,48 +292,6 @@ pushd yaml-*
 make
 make install
 popd
-
-## Start - Linux only
-if [[ "$(uname -a)" = *"Linux"* ]]; then
-    # libgmp
-    echo_stderr "   -> Building libgmp..."
-    libgmp_url="https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2"
-    curl -L -s -o libgmp.tar.bz2 "${libgmp_url}"
-    tar -xjf libgmp.tar.bz2
-    pushd gmp-*
-    if [[ "${host_arch}" = "i686" ]]; then
-        ABI=32
-    else
-        ABI=64
-    fi
-    ./configure --prefix="${embed_dir}" ABI=$ABI
-    make
-    make install
-    popd
-
-    # libgpg_error
-    echo_stderr "   -> Building libgpg_error..."
-    libgpg_error_url="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2"
-    curl -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
-    tar -xjf libgpg-error.tar.bz2
-    pushd libgpg-error-*
-    ./configure --prefix="${embed_dir}" --enable-static
-    make
-    make install
-    popd
-
-    # libgcrypt
-    echo_stderr "   -> Building libgcrypt..."
-    libgcrypt_url="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2"
-    curl -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
-    tar -xjf libgcrypt.tar.bz2
-    pushd libgcrypt-*
-    ./configure --prefix="${embed_dir}" --enable-static --with-libgpg-error-prefix="${embed_dir}"
-    make
-    make install
-    popd
-fi
-## End - Linux only
 
 # zlib
 echo_stderr "   -> Building zlib..."
