@@ -78,7 +78,7 @@ pushd "${setupdir}"
 
 echo_stderr "  -> Installing any required packages..."
 if [[ "${linux_os}" = "ubuntu" ]]; then
-    apt-get install -qy build-essential autoconf automake chrpath libtool
+    DEBIAN_FRONTEND=noninteractive apt-get install -qy build-essential autoconf automake chrpath libtool
 fi
 
 if [[ "${linux_os}" = "centos" ]]; then
