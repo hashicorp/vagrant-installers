@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -qy software-properties-common
 DEBIAN_FRONTEND=noninteractive apt-add-repository -y ppa:brightbox/ruby-ng
 DEBIAN_FRONTEND=noninteractive apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -qy ruby2.4 ruby2.4-dev build-essential zip unzip
