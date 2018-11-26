@@ -1,7 +1,8 @@
 #!/bin/sh
 
 apt-get update -yq
-apt-get install -yq nc
+# NOTE: `nc` package may be available as `netcat`
+apt-get install -yq nc || apt-get install -yq netcat
 
 # if the proxy is around, use it
 nc -z -w3 192.168.1.1 8123 && export http_proxy="http://192.168.1.1:8123"
