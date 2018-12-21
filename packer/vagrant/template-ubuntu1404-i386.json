@@ -3,6 +3,6 @@
   "iso_name": "ubuntu-14.04.1-server-i386.iso",
   "mirror_directory": "14.04.1",
   "name": "ubuntu1404-i386",
-  "box_basename": "ubuntu14.04-i386",
+  "box_basename": "ubuntu-14.04-i386",
   "vm_name": "ubuntu-14.04-i386"
 }
