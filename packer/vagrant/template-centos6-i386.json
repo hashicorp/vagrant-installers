@@ -1,7 +1,7 @@
 {
-  "box_basename": "centos6-i386",
+  "box_basename": "centos-6-i386",
   "iso_checksum": "25d95b3f178e59bd672fa97e043a9191cbf73bb6cd12f5df9b540fa88076cae8",
   "iso_name": "CentOS-6.10-i386-bin-DVD1.iso",
   "mirror_directory": "6/isos/i386",
-  "name": "centos6-i386"
+  "name": "centos-6-i386"
 }
