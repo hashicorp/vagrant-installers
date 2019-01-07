@@ -80,7 +80,7 @@
   ]],
   "variables": {
     "version": "1.0",
-    "build_timestamp":  "{{isotime \"20060102150405\"}}"
+    "build_timestamp":  "{{isotime \"20060102150405\"}}",
     "iso_url": "{{env `PACKER_VAR_iso_url`}}",
     "iso_checksum_type": "md5",
     "iso_checksum": "1d0d239a252cb53e466d39e752b17c28"
