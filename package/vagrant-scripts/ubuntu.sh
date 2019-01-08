@@ -5,6 +5,9 @@ nc -z -w3 192.168.1.1 8123 && export http_proxy="http://192.168.1.1:8123"
 
 chmod 755 /vagrant/package/package.sh
 apt-get update -yq
+if [[ $? -ne 0 ]]; then
+    apt-get update -yq
+fi
 apt-get install -yq build-essential chrpath
 
 # Ensure we can get to fpm
