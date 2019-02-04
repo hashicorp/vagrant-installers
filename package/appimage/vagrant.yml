@@ -5,6 +5,9 @@ ingredients:
   dist: trusty
   sources:
     - deb http://us.archive.ubuntu.com/ubuntu/ trusty main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ trusty-backports main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ trusty-security main universe
   ppas:
     - brightbox/ruby-ng
   debs:
@@ -16,6 +19,8 @@ script:
   - echo "Name=vagrant" >> vagrant.desktop
   - echo "Icon=app.png" >> vagrant.desktop
   - echo "Exec=vagrant" >> vagrant.desktop
+  - echo "Categories=Development" >> vagrant.desktop
+  - echo "Terminal=true" >> vagrant.desktop
   - touch app.png
   - rm -f lib/x86_64-linux-gnu/libtinfo.so*
   - mkdir -p etc/ssl
