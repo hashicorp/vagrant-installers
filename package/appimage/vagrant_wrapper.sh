@@ -58,6 +58,7 @@ if [ "${extra_ld_path}" != "" ]; then
     new_ld_library_path="${new_ld_library_path}:${extra_ld_path}"
 fi
 
+export VAGRANT_APPIMAGE_HOST_LD_LIBRARY_PATH="${extra_ld_path}:${LD_LIBRARY_PATH}"
 export VAGRANT_APPIMAGE_LD_LIBRARY_PATH="${new_ld_library_path}"
 
 # Python variables will be set but we don't want them
