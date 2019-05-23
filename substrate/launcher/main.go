@@ -189,7 +189,7 @@ func main() {
 
 	newEnv := map[string]string{
 		// Setup the environment to prefer our embedded dir over
-		// anything the user might have setup on his/her system.
+		// anything the user might have setup on their system.
 		"CPPFLAGS":       cppflags,
 		"CFLAGS":         cflags,
 		"GEM_HOME":       filepath.Join(embeddedDir, "gems", vagrantVersion),
