@@ -82,13 +82,12 @@ if [[ "${linux_os}" = "ubuntu" ]]; then
 fi
 
 if [[ "${linux_os}" = "centos" ]]; then
+    set +e
     # need newer gcc to build libxcrypt-compat package
     echo_stderr "      -> Installing custom gcc..."
     sudo yum install -y centos-release-scl
     sudo yum install -y devtoolset-8-toolchain
     source /opt/rh/devtoolset-8/enable
-
-    set +e
 
     yum -d 0 -e 0 -y install chrpath gcc make perl
     yum -d 0 -e 0 -y install perl-Data-Dumper
