@@ -82,7 +82,14 @@ if [[ "${linux_os}" = "ubuntu" ]]; then
 fi
 
 if [[ "${linux_os}" = "centos" ]]; then
+    # need newer gcc to build libxcrypt-compat package
+    echo_stderr "      -> Installing custom gcc..."
+    sudo yum install -y centos-release-scl
+    sudo yum install -y devtoolset-8-toolchain
+    source /opt/rh/devtoolset-8/enable
+
     set +e
+
     yum -d 0 -e 0 -y install chrpath gcc make perl
     yum -d 0 -e 0 -y install perl-Data-Dumper
     # Remove openssl dev files to prevent any conflicts when building
@@ -123,7 +130,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.13.1.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure
@@ -156,6 +163,26 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
             make install
             popd
         fi
+
+        # libxcrypt-compat
+        export PATH="/usr/local/bin:$PATH"
+        echo_stderr "   -> Installing libxcrypt-compat..."
+
+        source /opt/rh/devtoolset-8/enable
+
+        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.6.tar.gz
+        tar xzf libxcrypt.tar.gz
+        pushd libxcrypt*
+
+        CFLAGSORG=$CFLAGS
+        export CFLAGS="-Wno-conversion"
+        ./bootstrap
+        ./configure --prefix="${embed_dir}"
+        make
+        make install
+        export CFLAGS=$CFLAGSORG
+        popd
+
     fi
 fi
 
