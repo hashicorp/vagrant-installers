@@ -1,7 +1,7 @@
 _realname=ruby
 pkgbase=mingw-w64-ruby24
 pkgname="${MINGW_PACKAGE_PREFIX}-ruby24"
-pkgver=2.4.4
+pkgver=2.4.6
 pkgrel=1
 pkgdesc="An object-oriented language for quick and easy programming (mingw-w64)"
 arch=('any')
@@ -18,7 +18,6 @@ depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
 options=('staticlibs' 'strip')
 source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver}.tar.bz2"
         0002-use-gnu-printf.patch
-        0003-Fix-path-checks-for-case-insensitive-filesystem.patch
         0004-exclude-changelog-from-rdoc.patch
         0006-fix-conversion-warning-win32-powl.patch
         ruby.ico
@@ -26,9 +25,8 @@ source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver
 
 # To update SHA256 hashs run: ridk exec sh -c "updpkgsums PKGBUILD"
 
-sha256sums=('45a8de577471b90dc4838c5ef26aeb253a56002896189055a44dc680644243f1'
+sha256sums=('909f360debed1f22fdcfc9f5335c6eaa0713198db4a6c13bab426f8b89b28b02'
             '578bd0830fe96efc7656c732ec46b0658fc436a7a30d8945cf3b8240797809f0'
-            'c8f6c493c480e7eb00da39b6d1cf8634b470ce58f3af1ce7891a6d6a7967435f'
             '389236bdca5f283adde9b4b56febcfc25e228716e06a0edc21ea8fd7f27b75fa'
             'e7f83bc6e3b7ddadb5e3b14aa7d3a4e30eb97aea02df38796ca78714ad20e9b7'
             '6c80ba2ca49840e387a08b7fedc6e7acd298ac2ec853155209efb2af20397b22'
@@ -37,7 +35,6 @@ sha256sums=('45a8de577471b90dc4838c5ef26aeb253a56002896189055a44dc680644243f1'
 prepare() {
   cd ${srcdir}/${_realname}-${pkgver}
   patch -p1 -i ${srcdir}/0002-use-gnu-printf.patch
-  patch -p1 -i ${srcdir}/0003-Fix-path-checks-for-case-insensitive-filesystem.patch
   patch -p1 -i ${srcdir}/0004-exclude-changelog-from-rdoc.patch
   patch -p1 -i ${srcdir}/0006-fix-conversion-warning-win32-powl.patch
 

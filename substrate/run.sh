@@ -16,7 +16,7 @@ libxslt_version="1.1.32"
 libyaml_version="0.1.7"
 openssl_version="1.1.0g"
 readline_version="7.0"
-ruby_version="2.4.4"
+ruby_version="2.4.6"
 xz_version="5.2.3"
 zlib_version="1.2.11"
 
@@ -105,7 +105,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
         echo_stderr "   -> Installing custom m4..."
-        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
         tar xzf m4.tar.gz
         pushd m4*
         ./configure
@@ -129,7 +129,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure
@@ -142,7 +142,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         # libtool
         if [[ ! -f "/usr/local/bin/libtool" ]]; then
             echo_stderr "   -> Installing custom libtool..."
-            curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz
+            curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
             tar xzf libtool.tar.gz
             pushd libtool*
             ./configure

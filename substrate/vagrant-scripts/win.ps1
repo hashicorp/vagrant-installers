@@ -21,11 +21,17 @@ function savepowershellfromitself {
     $field2.SetValue( $consoleHost, [Console]::Out )
 }
 
+if($env:VAGRANT_SUBSTRATE_OUTPUT_DIR) {
+    $out_dir = $env:VAGRANT_SUBSTRATE_OUTPUT_DIR
+} else {
+    $out_dir = "substrate-assets"
+}
+
 $SignKeyPath = "C:\vagrant\Win_CodeSigning.p12"
 $SignKeyPassword = $env:SignKeyPassword
 $SignKeyExists = Test-Path -LiteralPath $SignKeyPath
 $SubstrateArgs = @{
-    "OutputDir"="C:\vagrant\substrate-assets";
+    "OutputDir"="C:\vagrant\${out_dir}";
 }
 if($SignKeyExists -and $SignKeyPassword) {
     $SubstrateArgs["SignKeyFile"] = $SignKeyPath

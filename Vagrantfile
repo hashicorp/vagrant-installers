@@ -20,6 +20,11 @@ box_mappings = {
 skip_boxes = ENV['VAGRANT_SKIP_BOXES'].to_s.split(',')
 build_boxes.delete_if{|b| skip_boxes.include?(b) }
 
+only_boxes = ENV['VAGRANT_ONLY_BOXES'].to_s.split(',')
+if !only_boxes.empty?
+  build_boxes.delete_if{|b| !only_boxes.include?(b) }
+end
+
 # Valid types: "substrate", "package"
 build_type = ENV.fetch('VAGRANT_BUILD_TYPE', 'substrate')
 # Box name prefix to allow custom box usage

@@ -10,5 +10,6 @@ set -e
 
 /vagrant/package/package.sh /vagrant/substrate-assets/substrate_darwin_x86_64.zip master
 
-mkdir -p /vagrant/pkg
-cp *.dmg /vagrant/pkg
+pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
+mkdir -p /vagrant/${pkg_dir}
+cp *.dmg /vagrant/${pkg_dir}

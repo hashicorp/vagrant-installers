@@ -9,10 +9,16 @@
 $TmpDir = [System.IO.Path]::GetTempPath()
 $SubstrateDestination = [System.IO.Path]::Combine($TmpDir, "substrate_windows_x64.zip")
 
+if(!$env:VAGRANT_PACKAGE_OUTPUT_DIR){
+    $pkg_dir = "pkg"
+} else {
+    $pkg_dir = $env:VAGRANT_PACKAGE_OUTPUT_DIR
+}
+
 # http://www.leeholmes.com/blog/2008/07/30/workaround-the-os-handles-position-is-not-what-filestream-expected/
 # http://stackoverflow.com/questions/8978052/powershell-2-0-redirection-file-handle-exception
 [System.IO.Directory]::CreateDirectory("C:\vagrant\substrate-assets") | Out-Null
-[System.IO.Directory]::CreateDirectory("C:\vagrant\pkg") | Out-Null
+[System.IO.Directory]::CreateDirectory("C:\vagrant\${pkg_dir}") | Out-Null
 
 $SubstratePath = "C:\vagrant\substrate-assets\substrate_windows_x86_64.zip"
 $SubstrateExists = Test-Path -LiteralPath $SubstratePath
@@ -23,9 +29,13 @@ if(!$SubstrateExists) {
 }
 
 Write-Host "Starting package build"
-Set-Location -Path C:\vagrant\pkg
+Set-Location -Path "C:\vagrant\${pkg_dir}"
 
-$SignKeyPath = "C:\vagrant\Win_CodeSigning.p12"
+if(!$env:SignKeyPath) {
+    $SignKeyPath = "C:\vagrant\Win_CodeSigning.p12"
+} else {
+    $SignKeyPath = $env:SignKeyPath
+}
 $SignKeyExists = Test-Path -LiteralPath $SignKeyPath
 $PackageScript = "C:\vagrant\package\package.ps1"
 

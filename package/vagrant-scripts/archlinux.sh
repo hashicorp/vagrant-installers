@@ -12,6 +12,7 @@ set -e
 # there is no substrate to configure
 /vagrant/package/support/package_archlinux.sh ${GIT_BUILD_BRANCH:-master}
 
+pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 # And store our new package
-mkdir -p /vagrant/pkg
-cp *.xz /vagrant/pkg/
+mkdir -p /vagrant/${pkg_dir}
+cp *.xz /vagrant/${pkg_dir}/
