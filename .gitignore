@@ -14,3 +14,4 @@ substrate/terraform/*.tfvars
 substrate/terraform/output
 pkg
 substrate-assets
+cacert.pem
