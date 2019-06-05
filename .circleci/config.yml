@@ -5,17 +5,17 @@ reference:
       - image: $BUILDER_IMAGE
         auth:
           username: $BUILDER_IMAGE_USERNAME
-          password: $BUILD_IMAGE_PASSWORD
+          password: $BUILDER_IMAGE_PASSWORD
   environment: &ENVIRONMENT
     SLACK_USERNAME: Vagrant
     SLACK_ICON: https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png
     SLACK_TITLE: Vagrant Packaging
-    BUILDER_PERSIST: 1
-    BUILDER_DEVICE_NAME: installers
-    BUILDER_DEVICE_SIZE: baremetal_1
-    BUILDER_PREFER_FACILITIES: ewr1,iad1,ord1,dfw1,ams1,atl1,lax1,sea1
-    BUILDER_OPERATING_SYSTEM: ubuntu_18_04
-    BUILDER_PRE_BUILTINS: InstallVmware,InstallVagrant,InstallVagrantVmware
+    PACKET_EXEC_PERSIST: 1
+    PACKET_EXEC_DEVICE_NAME: installers
+    PACKET_EXEC_DEVICE_SIZE: baremetal_1
+    PACKET_EXEC_PREFER_FACILITIES: ewr1,iad1,ord1,dfw1,ams1,atl1,lax1,sea1
+    PACKET_EXEC_OPERATING_SYSTEM: ubuntu_18_04
+    PACKET_EXEC_PRE_BUILTINS: InstallVmware,InstallVagrant,InstallVagrantVmware
   copypasta:
     default_workflow: &DEFAULT_WORKFLOW
       context: vagrant-test
@@ -35,9 +35,9 @@ reference:
       set +e
       echo -e -n "${PACKET_SSH_KEY}" > /tmp/packet-key
       chmod 600 /tmp/packet-key
-      export BUILDER_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
+      export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
       packet-exec run -ssh-key /tmp/packet-key -- touch .complete
-      unset BUILDER_PERSIST
+      unset PACKET_EXEC_PERSIST
       export PKT_VAGRANT_BUILD_TYPE="package"
       packet-exec run -ssh-key /tmp/packet-key -- "if [ -f Vagrantfile ]; then vagrant destroy --force; fi" > /tmp/cmd-output 2>&1 &
       pid=$!
@@ -82,7 +82,7 @@ reference:
               echo -e -n "${PACKET_SSH_KEY}" > /tmp/packet-key
               chmod 600 /tmp/packet-key
               export PKT_VAGRANT_BUILD_TYPE="substrate"
-              export BUILDER_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
+              export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
               pkg_dir="${CIRCLE_BUILD_NUM}"
               export PKT_VAGRANT_INSTALLER_VAGRANT_SUBSTRATE_OUTPUT_DIR="${pkg_dir}"
               packet-exec run -ssh-key /tmp/packet-key -download "./${pkg_dir}/*:./substrate-assets" -- ./.runner-vmware.sh > /tmp/cmd-output 2>&1 &
@@ -133,7 +133,7 @@ reference:
               pkg_dir="${CIRCLE_BUILD_NUM}"
               export PKT_VAGRANT_BUILD_TYPE="package"
               export PKT_VAGRANT_INSTALLER_VAGRANT_PACKAGE_OUTPUT_DIR="${pkg_dir}"
-              export BUILDER_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
+              export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
               packet-exec run -ssh-key /tmp/packet-key -download "./${pkg_dir}/*:./assets" -- ./.runner-vmware.sh > /tmp/cmd-output 2>&1 &
               pid=$!
               until [ -f /tmp/cmd-output ]; do
@@ -369,7 +369,7 @@ jobs:
             chmod 600 /tmp/packet-key
             rm -rf ./substrate-assets ./assets
             # package type will start all available guests
-            export BUILDER_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
+            export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
             export PKT_VAGRANT_ONLY_BOXES="${guests/$'\n'/,}"
             export PKT_VAGRANT_BUILD_TYPE="substrate"
             packet-exec run -ssh-key /tmp/packet-key -upload -- vagrant up --no-provision > /tmp/cmd-output 2>&1 &
@@ -414,7 +414,7 @@ jobs:
             fi
             aws s3 sync --exclude "*vagrant_*" "${s3_dst}" ./substrate-assets/
             # package type will start all available guests
-            export BUILDER_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
+            export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
             export PKT_VAGRANT_BUILD_TYPE="package"
             packet-exec run -ssh-key /tmp/packet-key -upload -- vagrant destroy --force > /tmp/cmd-output 2>&1 &
             pid=$!
@@ -455,8 +455,8 @@ jobs:
             echo -e -n "${PACKET_SSH_KEY}" > /tmp/packet-key
             chmod 600 /tmp/packet-key
             export PKT_VAGRANT_BUILD_TYPE="package"
-            export BUILDER_PRE_BUILTINS="LoadSecrets"
-            export BUILDER_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
+            export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+            export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_WORKFLOW_ID}"
             packet-exec run -ssh-key /tmp/packet-key -- "until [ -f .complete ]; do echo -n .; sleep 1; done"
   clean_guests:
     environment:
@@ -508,8 +508,8 @@ jobs:
               exit 1
             fi
             unset PACKET_PERSIST
-            export BUILDER_PRE_BUILTINS="LoadSecrets"
-            export BUILDER_REMOTE_DIRECTORY="${CIRCLE_BUILD_NUM}"
+            export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+            export PACKET_EXEC_REMOTE_DIRECTORY="${CIRCLE_BUILD_NUM}"
             packet-exec run -ssh-key /tmp/packet-key -upload -download "./pkg/dist/*SHA256SUMS*:./assets" -- ./scripts/sign.sh ${VERSION}
             mv ./assets/* ../assets/
             ls -l ../assets
