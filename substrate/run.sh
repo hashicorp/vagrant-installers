@@ -16,7 +16,7 @@ libxslt_version="1.1.32"
 libyaml_version="0.1.7"
 openssl_version="1.1.0g"
 readline_version="7.0"
-ruby_version="2.4.4"
+ruby_version="2.4.6"
 xz_version="5.2.3"
 zlib_version="1.2.11"
 
@@ -105,7 +105,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
         echo_stderr "   -> Installing custom m4..."
-        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
         tar xzf m4.tar.gz
         pushd m4*
         ./configure
@@ -129,7 +129,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure
@@ -142,7 +142,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         # libtool
         if [[ ! -f "/usr/local/bin/libtool" ]]; then
             echo_stderr "   -> Installing custom libtool..."
-            curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz
+            curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
             tar xzf libtool.tar.gz
             pushd libtool*
             ./configure
@@ -163,25 +163,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
             popd
         fi
 
-        # libxcrypt-compat
         export PATH="/usr/local/bin:$PATH"
-        echo_stderr "   -> Installing libxcrypt-compat..."
-
-        source /opt/rh/devtoolset-8/enable
-
-        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.6.tar.gz
-        tar xzf libxcrypt.tar.gz
-        pushd libxcrypt*
-
-        CFLAGSORG=$CFLAGS
-        export CFLAGS="-Wno-conversion"
-        ./bootstrap
-        ./configure --prefix="${embed_dir}"
-        make
-        make install
-        export CFLAGS=$CFLAGSORG
-        popd
-
     fi
 fi
 
@@ -207,6 +189,23 @@ if [[ "${host_os}" = "darwin" ]]; then
 else
     export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
     libtool="libtool"
+fi
+
+# libxcrypt-compat
+# We can't upgrade gcc on 32bit so don't attempt to build libxcrypt
+if [ "${linux_os}" = "centos" ]; then
+    if [ "${host_arch}" != "i686" ]; then
+        echo_stderr "   -> Installing libxcrypt-compat..."
+        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.6.tar.gz
+        tar xzf libxcrypt.tar.gz
+        pushd libxcrypt*
+
+        ./bootstrap
+        ./configure --prefix="${embed_dir}" --libdir="${embed_dir}/lib"
+        make
+        make install
+        popd
+    fi
 fi
 
 # libffi

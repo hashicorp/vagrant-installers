@@ -9,6 +9,7 @@ apt-get install -yq libcairo2-dev
 
 /vagrant/package/appimage.sh
 
-mkdir -p /vagrant/pkg
+pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
+mkdir -p /vagrant/${pkg_dir}
 chown vagrant:vagrant *.zip
-mv *.zip /vagrant/pkg
+mv *.zip /vagrant/${pkg_dir}
