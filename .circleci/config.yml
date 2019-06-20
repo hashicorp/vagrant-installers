@@ -113,7 +113,8 @@ reference:
               s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
             fi
           else
-            s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/"
+            sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+            s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
           fi
           mkdir -p assets
           pushd ./assets
@@ -278,7 +279,8 @@ jobs:
                 s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
               fi
             else
-              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/"
+              sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
             fi
             mkdir -p assets
             touch "./assets/stub-${CIRCLE_BUILD_NUM}"
@@ -559,7 +561,8 @@ jobs:
                 s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
               fi
             else
-              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/"
+              sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
             fi
             aws s3 sync "${s3_dst}" ./assets/
             rm -f ./assets/stub-*
@@ -601,7 +604,8 @@ jobs:
                 s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
               fi
             else
-              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/"
+              sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
             fi
             aws s3 sync "${s3_dst}" ./assets/
             export AWS_ACCESS_KEY_ID="${RELEASE_AWS_ACCESS_KEY_ID}"
@@ -721,8 +725,10 @@ jobs:
             else
               s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
             fi
+            TAG_NAME="${CIRCLE_TAG}"
           else
-            s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/"
+            sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+            s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
           fi
           mkdir -p ./assets
           pushd assets
@@ -738,14 +744,22 @@ jobs:
           ls -lh ./assets
           echo "Start pre-release asset uploading..."
           export GITHUB_TOKEN="${HASHIBOT_TOKEN}"
-          ghr -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -prerelease -replace ${CIRCLE_TAG} ./assets/ > .output 2>&1
+          if [ "${TAG_NAME}" = "" ]; then
+            v=(assets/vagrant*64.deb)
+            v="${v#*_}"
+            v="${v%%_*}"
+            TAG_NAME="v${v}+${CIRCLE_BRANCH}"
+            ghr -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -prerelease -delete -replace ${TAG_NAME} ./assets/ > .output 2>&1
+          else
+            ghr -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -prerelease -replace ${TAG_NAME} ./assets/ > .output 2>&1
+          fi
           result=$?
           cat .output
           if [ $result -ne 0 ]; then
-            slack -s error -m "Failed to upload installers assets to prerelease version ${CIRCLE_TAG}"
+            slack -s error -m "Failed to upload installers assets to prerelease version ${TAG_NAME}"
             exit $result
           fi
-          slack -m "New Vagrant development installers available:\n> https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/${CIRCLE_TAG}"
+          slack -m "New Vagrant development installers available:\n> https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/${TAG_NAME}"
           exit
 workflows:
   version: 2
