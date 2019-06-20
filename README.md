@@ -2,7 +2,7 @@
 
 This project is able to build installers for Vagrant. The installers
 contain the full-stack of Vagrant dependencies: Ruby, RubyGems, Vagrant,
-etc.
+ etc.
 
 **Current status:** Production quality. This project has generated the
 installers and packages in use by Vagrant on Linux, Windows, and Mac OS X
