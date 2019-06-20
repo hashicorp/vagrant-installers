@@ -19,21 +19,21 @@ reference:
     PACKET_EXEC_SSH_KEY: /tmp/packet-ssh-key
   copypasta:
     default_workflow: &DEFAULT_WORKFLOW
-      context: vagrant-test
+      context: vagrant
       filters:
         branches:
           only: /build.*/
         tags:
           only: /.*/
     prerelease_workflow: &PRERELEASE_WORKFLOW
-      context: vagrant-test
+      context: vagrant
       filters:
         branches:
           only: /build.*/
         tags:
           only: /^v.+\+[a-z0-9]+$/
     release_workflow: &RELEASE_WORKFLOW
-      context: vagrant-test
+      context: vagrant
       filters:
         branches:
           ignore: /.*/
