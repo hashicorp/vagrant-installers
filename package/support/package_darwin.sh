@@ -34,6 +34,8 @@ CODE_SIGN_CERT_PATH=${VAGRANT_CODE_SIGN_CERT_PATH:-none}
 CODE_SIGN_KEY_PATH=${VAGRANT_CODE_SIGN_KEY_PATH:-none}
 
 SIGN_KEYCHAIN=${VAGRANT_SIGN_KEYCHAIN:-/Library/Keychains/System.keychain}
+
+SIGN_REQUIRED="${VAGRANT_PACKAGE_SIGNING_REQUIRED}"
 #-------------------------------------------------------------------------
 # Resources
 #-------------------------------------------------------------------------
@@ -208,6 +210,11 @@ dmgbuild -s "${DIR}/darwin/dmgbuild.py" -D srcfolder="${STAGING_DIR}/dmg" -D bac
 
 if [[ "${SIGN_PKG}" -ne "1" ]]
 then
+    if [[ "${SIGN_REQUIRED}" -eq "1" ]]
+    then
+        echo "Error: Package signing is required but package is not signed"
+        exit 1
+    fi
     set +x
     echo
     echo "!!!!!!!!!!!! WARNING !!!!!!!!!!!!"
