@@ -521,7 +521,7 @@ jobs:
             packet-exec run -- "shopt -s nullglob; mkdir -p '/tmp/${CIRCLE_WORKFLOW_ID}'; f=(/tmp/${CIRCLE_WORKFLOW_ID}/*); until [ -f '/tmp/${CIRCLE_WORKFLOW_ID}/.halt' ] && [ \"${#f[*]}\" -eq 0 ]; do i=\$((i+1)); if [ \${i} -gt 120 ]; then i=0; echo -n '.'; fi; sleep 1; f=(/tmp/${CIRCLE_WORKFLOW_ID}/*); done"
             unset PACKET_EXEC_PERSIST
             unset PACKET_EXEC_PRE_BUILTINS
-            packet-exec run -- "rm -rf '/tmp/${CIRCLE_WORKFLOW_ID}'; if [ -f Vagrantfile ]; then vagrant destroy -f; fi"
+            packet-exec run -- "rm -rf '/tmp/${CIRCLE_WORKFLOW_ID}'; if [ -f Vagrantfile ]; then vagrant destroy -f; fi exit 0"
   clean_guests:
     environment:
       <<: *ENVIRONMENT
