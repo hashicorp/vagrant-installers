@@ -567,6 +567,8 @@ jobs:
             fi
             aws s3 sync "${s3_dst}" ./assets/
             rm -f ./assets/stub-*
+            # If there are cached SHASUM files, remove them
+            rm -f ./assets/*SHA256SUM*
             git clone https://github.com/hashicorp/vagrant vagrant
             mkdir -p vagrant/pkg/dist/
             mv assets/* vagrant/pkg/dist/
