@@ -583,6 +583,86 @@ jobs:
             mv ./assets/* ../assets/
             ls -l ../assets
       - *UPLOAD_ASSETS
+  validate_shasums:
+    environment:
+      <<: *ENVIRONMENT
+    docker: *builder
+    steps:
+      - run:
+          name: Import Assets
+          command: |
+            set +e
+            if [ "${CIRCLE_TAG}" != "" ]; then
+              if [[ "${CIRCLE_TAG}" = *"+"* ]]; then
+                s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
+              else
+                s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
+              fi
+            else
+              sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
+            fi
+            mkdir -p ./assets/
+            aws s3 sync "${s3_dst}" ./assets/
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to import installer assets!"
+              exit 1
+            fi
+      - run:
+          name: Checksum Validation
+          command: |
+            set +e
+            pushd ./assets
+            sha256sum -c vagrant_*_SHA256SUMS
+            result=$?
+            if [ $result -ne 0 ]; then
+              slack -s error -m "Vagrant installer packages failed checksum validation!"
+              exit $result
+            fi
+  validate_shasums_signature:
+    environment:
+      <<: *ENVIRONMENT
+    docker: *builder
+    steps:
+      - run:
+          name: Import Assets
+          command: |
+            set +e
+            if [ "${CIRCLE_TAG}" != "" ]; then
+              if [[ "${CIRCLE_TAG}" = *"+"* ]]; then
+                s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
+              else
+                s3_dst="${ASSETS_PRIVATE_BUCKET}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_TAG}/"
+              fi
+            else
+              sha=$(git rev-parse --short "${CIRCLE_SHA1}")
+              s3_dst="${ASSETS_PRIVATE_LONGTERM}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/${sha}/"
+            fi
+            mkdir ./assets
+            aws s3 sync "${s3_dst}" ./assets/ --include "*SHA256SUMS*"
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to import assets for validation"
+              exit 1
+            fi
+      - run:
+          name: Import Public Key
+          command: |
+            set +e
+            echo -e "${HASHICORP_PUBLIC_GPG_KEY}" > hashicorp.asc
+            gpg --batch --import hashicorp.asc
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to import HashiCorp public GPG key for signature validation!"
+              exit 1
+            fi
+      - run:
+          name: Validate Signature
+          command: |
+            set +e
+            gpg --batch --verify vagrant_*_SHA256SUMS.sig vagrant_*_SHA256SUMS
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Vagrant installer SHA256SUMS signature validation failed!"
+              exit 1
+            fi
   release_packages:
     environment:
       <<: *ENVIRONMENT
@@ -886,11 +966,20 @@ workflows:
             - package_ubuntu-14.04
             - package_ubuntu-14.04-i386
             - package_win-7
+      - validate_shasums:
+          <<: *RELEASE_WORKFLOW
+          requires:
+            - sign_packages
+      - validate_shasums_signature:
+          <<: *RELEASE_WORKFLOW
+          requires:
+            - sign_packages
       - approve_release:
           <<: *RELEASE_WORKFLOW
           type: approval
           requires:
-            - sign_packages
+            - validate_shasums
+            - validate_shasums_signature
       - release_packages:
           <<: *RELEASE_WORKFLOW
           requires:
