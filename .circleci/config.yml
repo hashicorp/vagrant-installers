@@ -762,6 +762,63 @@ jobs:
           fi
           slack -m "New Vagrant development installers available:\n> https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/${TAG_NAME}"
           exit
+  update_website:
+    environment:
+      <<: *ENVIRONMENT
+    docker: *builder
+    steps:
+      - run:
+          name: Configure Git
+          command: |
+            git config --local user.email "${HASHIBOT_EMAIL}" && git config --local user.name "${HASHIBOT_USERNAME}"
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to configure git client for website update"
+              exit 1
+            fi
+      - run:
+          name: Checkout Vagrant
+          command: |
+            set +e
+            git clone "https://${HASHIBOT_TOKEN}@github.com/hashicorp/vagrant.git"
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to clone Vagrant git repository for website update"
+              exit 1
+            fi
+      - run:
+          name: Update Website Version
+          command: |
+            set +e
+            pushd vagrant
+            version="${CIRCLE_TAG#v}"
+            sed -Ei "s/h.version      = \"[[:digit:]]+.[[:digit:]]+.[[:digit:]]+\"/h.version      = \"${version}\"/" website/config.rb
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to update website configuration file for version update"
+              exit 1
+            fi
+      - run:
+          name: Push to GitHub
+          command: |
+            set +e
+            pushd vagrant
+            version="${CIRCLE_TAG}"
+            git commit website/config.rb -m "Update website download version to ${version}"
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to commit website configuration update"
+              exit 1
+            fi
+            git push origin master
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to push website configuration update to master"
+              exit 1
+            fi
+            git branch -D stable-website
+            git checkout -b stable-website
+            git push -f origin stable-website
+            if [ $? -ne 0 ]; then
+              slack -s error -m "Failed to push stable-website branch for version update"
+              exit 1
+            fi
+            slack -m "Website download version has been updated to ${version}"
 workflows:
   version: 2
   package:
@@ -910,3 +967,7 @@ workflows:
             - package_ubuntu-14.04
             - package_ubuntu-14.04-i386
             - package_win-7
+      - update_website:
+          <<: *RELEASE_WORKFLOW
+          requires:
+            - release_packages
