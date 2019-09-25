@@ -773,35 +773,47 @@ workflows:
               only:
                 - master
     jobs:
-      - load_gem
-      - packet_device
-      - fetch_existing_substrates
+      - load_gem:
+          context: vagrant
+      - packet_device:
+          context: vagrant
+      - fetch_existing_substrates:
+          context: vagrant
       - secrets_and_cleaner:
+          context: vagrant
           requires:
             - packet_device
       - required_substrate_guests:
+          context: vagrant
           requires:
             -fetch_existing_substrates
       - start_substrate_guests:
+          context: vagrant
           requires:
             - packet_device
             - required_substrate_guests
       - substrate_centos-6:
+          context: vagrant
           requires:
             - start_substrate_guests
       - substrate_centos-6-i386:
+          context: vagrant
           requires:
             - start_substrate_guests
       - substrate_osx-10.9:
+          context: vagrant
           requires:
             - start_substrate_guests
       - substrate_ubuntu-14.04-i386:
+          context: vagrant
           requires:
             - start_substrate_guests
       - substrate_ubuntu-14.04:
+          context: vagrant
           requires:
             - start_substrate_guests
       - substrate_win-7:
+          context: vagrant
           requires:
             - start_substrate_guests
   nightly_package:
@@ -813,46 +825,62 @@ workflows:
               only:
                 - master
     jobs:
-      - load_gem
-      - packet_device
-      - fetch_existing_substrates
-      - fetch_existing_packages
+      - load_gem:
+          context: vagrant
+      - packet_device:
+          context: vagrant
+      - fetch_existing_substrates:
+          context: vagrant
+      - fetch_existing_packages:
+          context: vagrant
       - required_package_guests:
+          context: vagrant
           requires:
             - fetch_existing_packages
       - secrets_and_cleaner:
+          context: vagrant
           requires:
             - packet_device
       - start_package_guests:
+          context: vagrant
           requires:
             - load_gem
             - packet_device
             - required_package_guests
       - package_appimage:
+          context: vagrant
           requires:
             - start_package_guests
       - package_archlinux:
+          context: vagrant
           requires:
             - start_package_guests
       - package_centos-6:
+          context: vagrant
           requires:
             - start_package_guests
       - package_centos-6-i386:
+          context: vagrant
           requires:
             - start_package_guests
       - package_osx-10.9:
+          context: vagrant
           requires:
             - start_package_guests
       - package_ubuntu-14.04-i386:
+          context: vagrant
           requires:
             - start_package_guests
       - package_ubuntu-14.04:
+          context: vagrant
           requires:
             - start_package_guests
       - package_win-7:
+          context: vagrant
           requires:
             - start_package_guests
       - prerelease_publish:
+          context: vagrant
           requires:
             - package_appimage
             - package_archlinux
