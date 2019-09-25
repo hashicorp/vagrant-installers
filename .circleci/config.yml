@@ -764,6 +764,104 @@ jobs:
           exit
 workflows:
   version: 2
+  nightly_substrate:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - load_gem
+      - packet_device
+      - fetch_existing_substrates
+      - secrets_and_cleaner:
+          requires:
+            - packet_device
+      - required_substrate_guests:
+          requires:
+            -fetch_existing_substrates
+      - start_substrate_guests:
+          requires:
+            - packet_device
+            - required_substrate_guests
+      - substrate_centos-6:
+          requires:
+            - start_substrate_guests
+      - substrate_centos-6-i386:
+          requires:
+            - start_substrate_guests
+      - substrate_osx-10.9:
+          requires:
+            - start_substrate_guests
+      - substrate_ubuntu-14.04-i386:
+          requires:
+            - start_substrate_guests
+      - substrate_ubuntu-14.04:
+          requires:
+            - start_substrate_guests
+      - substrate_win-7:
+          requires:
+            - start_substrate_guests
+  nightly_package:
+    triggers:
+      - schedule:
+          cron: "0 4 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - load_gem
+      - packet_device
+      - fetch_existing_substrates
+      - fetch_existing_packages
+      - required_package_guests:
+          requires:
+            - fetch_existing_packages
+      - secrets_and_cleaner:
+          requires:
+            - packet_device
+      - start_package_guests:
+          requires:
+            - load_gem
+            - packet_device
+            - required_package_guests
+      - package_appimage:
+          requires:
+            - start_package_guests
+      - package_archlinux:
+          requires:
+            - start_package_guests
+      - package_centos-6:
+          requires:
+            - start_package_guests
+      - package_centos-6-i386:
+          requires:
+            - start_package_guests
+      - package_osx-10.9:
+          requires:
+            - start_package_guests
+      - package_ubuntu-14.04-i386:
+          requires:
+            - start_package_guests
+      - package_ubuntu-14.04:
+          requires:
+            - start_package_guests
+      - package_win-7:
+          requires:
+            - start_package_guests
+      - prerelease_publish:
+          requires:
+            - package_appimage
+            - package_archlinux
+            - package_centos-6
+            - package_centos-6-i386
+            - package_osx-10.9
+            - package_ubuntu-14.04
+            - package_ubuntu-14.04-i386
+            - package_win-7
   package:
     jobs:
       - load_gem:
