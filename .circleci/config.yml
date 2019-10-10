@@ -786,7 +786,7 @@ workflows:
       - required_substrate_guests:
           context: vagrant
           requires:
-            -fetch_existing_substrates
+            - fetch_existing_substrates
       - start_substrate_guests:
           context: vagrant
           requires:
