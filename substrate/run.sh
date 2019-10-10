@@ -16,7 +16,7 @@ libxslt_version="1.1.32"
 libyaml_version="0.1.7"
 openssl_version="1.1.0g"
 readline_version="7.0"
-ruby_version="2.4.6"
+ruby_version="2.4.9"
 xz_version="5.2.3"
 zlib_version="1.2.11"
 
