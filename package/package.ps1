@@ -30,6 +30,7 @@ param(
     [string]$SignKey="",
     [string]$SignKeyPassword="",
     [string]$SignPath="",
+    [string]$SignRequired="",
 
     [string]$BuildStyle="ephemeral",
     [string]$ScrubCache="no"
@@ -484,6 +485,10 @@ if ($SignKey) {
         exit 1
     }
 } else {
+    if ($SignRequired -eq "1") {
+        Write-Host "Error: Package signing is required but package is not signed"
+        exit 1
+    }
     Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     Write-Host "!      This package is unsigned        !"
     Write-Host "! Rebuild with signing key for release !"

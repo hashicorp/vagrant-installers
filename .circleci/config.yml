@@ -17,6 +17,7 @@ reference:
     PACKET_EXEC_OPERATING_SYSTEM: ubuntu_18_04
     PACKET_EXEC_PRE_BUILTINS: InstallVmware,InstallVagrant,InstallVagrantVmware
     PACKET_EXEC_SSH_KEY: /tmp/packet-ssh-key
+    PKT_VAGRANT_INSTALLERS_VAGRANT_PACKAGE_SIGNING_REQUIRED: 1
   copypasta:
     default_workflow: &DEFAULT_WORKFLOW
       context: vagrant
