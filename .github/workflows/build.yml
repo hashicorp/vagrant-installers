@@ -1,0 +1,19 @@
+on:
+  push:
+    branches:
+      - 'build-*'
+    tags: '*'
+
+jobs:
+  build:
+    name: Build Vagrant Installers
+    runs-on: self-hosted
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v1
+      - name: Build and Release
+        run: ./.ci/build-packages.sh
+        working-directory: ${{github.workspace}}
+      - name: Clean Workspace
+        if: always()
+        run: rm -rf ${{ github.workspace }}
