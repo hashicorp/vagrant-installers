@@ -1,0 +1,23 @@
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  sync-installers:
+    if: github.repository == "hashicorp/vagrant-builders"
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v1
+      - name: Sync Installers Repository
+        run: ./.ci/sync.sh
+
+  sync-builders:
+    if: github.repository == "hashicorp/vagrant-installers"
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v1
+      - name: Sync Builders Repository
+        run: ./.ci/sync.sh
