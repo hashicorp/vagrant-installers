@@ -20,15 +20,13 @@ echo "Updating repository origin to mirror repository `${remote_repository}`..."
 wrap git remote set-url origin "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
      "Failed to update repository origin to `${remote_repository}` for sync"
 
-echo "Currently configured remotes:"
-git remote -v
-warn "$(git remote -v)"
-
 echo "Updating configured remotes..."
 wrap_stream git remote update \
             "Failed to update mirror repository (${remote_repository}) for sync"
-echo "Currently loaded refs:"
-git branch -a
+
+echo "Pulling master from mirror..."
+wrap_stream git pull origin master \
+            "Failed to pull master from mirror repository (${remote_repository}) for sync"
 
 echo "Pushing master to mirror..."
 wrap_stream git push origin master \
