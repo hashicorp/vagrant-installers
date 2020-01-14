@@ -17,6 +17,7 @@ jobs:
           ruby-version: '2.6'
       - name: Sync Installers Repository
         run: ./.ci/sync.sh
+        working-directory: ${{github.workspace}}
         env:
           HASHIBOT_TOKEN: ${{ secrets.HASHIBOT_TOKEN }}
           HASHIBOT_USERNAME: ${{ secrets.HASHIBOT_USERNAME }}
@@ -35,6 +36,7 @@ jobs:
           ruby-version: '2.6'
       - name: Sync Builders Repository
         run: ./.ci/sync.sh
+        working-directory: ${{github.workspace}}
         env:
           HASHIBOT_TOKEN: ${{ secrets.HASHIBOT_TOKEN }}
           HASHIBOT_USERNAME: ${{ secrets.HASHIBOT_USERNAME }}

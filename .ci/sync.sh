@@ -21,6 +21,7 @@ wrap_stream git remote add mirror "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN
             "Failed to add mirror repository (${remote_repository}) for sync"
 echo "Currently configured remotes:"
 git remote -v
+warn "$(git remote -v)"
 
 echo "Updating configured remotes..."
 wrap_stream git remote update \
