@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    if: github.repository == "hashicorp/vagrant-builders"
     name: Build Vagrant Installers
     runs-on: self-hosted
     steps:
