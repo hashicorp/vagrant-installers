@@ -16,18 +16,18 @@ else
     remote_repository="hashicorp/vagrant-installers"
 fi
 
-echo "Updating repository origin to mirror repository `${remote_repository}`..."
-wrap git remote set-url origin "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
-     "Failed to update repository origin to `${remote_repository}` for sync"
+echo "Adding remote mirror repository `${remote_repository}`..."
+wrap git remote add mirror "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
+     "Failed to add mirror `${remote_repository}` for sync"
 
 echo "Updating configured remotes..."
 wrap_stream git remote update \
             "Failed to update mirror repository (${remote_repository}) for sync"
 
 echo "Pulling master from mirror..."
-wrap_stream git pull origin master \
+wrap_stream git pull mirror master \
             "Failed to pull master from mirror repository (${remote_repository}) for sync"
 
 echo "Pushing master to mirror..."
-wrap_stream git push origin master \
+wrap_stream git push mirror master \
             "Failed to sync mirror repository (${remote_repository})"
