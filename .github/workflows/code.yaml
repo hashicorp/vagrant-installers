@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Code Checkout
         uses: actions/checkout@v2
-        run: git fetch --prune --unshallow
+      - run: git fetch --prune --unshallow
       - name: Set Ruby
         uses: actions/setup-ruby@v1
         with:
