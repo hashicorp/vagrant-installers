@@ -18,7 +18,7 @@ fi
 
 wrap git remote add mirror "https://${HASHIBOT_USER}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
      "Failed to add mirror repository (${remote_repository}) for sync"
-wrap git update \
+wrap git remote update \
      "Failed to update mirror repository (${remote_repository}) for sync"
 wrap git push mirror master \
      "Failed to sync mirror repository (${remote_repository})"
