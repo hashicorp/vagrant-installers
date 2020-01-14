@@ -16,7 +16,7 @@ else
     remote_repository="hashicorp/vagrant-installers"
 fi
 
-wrap git remote add mirror "https://${HASHIBOT_USER}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
+wrap git remote add mirror "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
      "Failed to add mirror repository (${remote_repository}) for sync"
 wrap git remote update \
      "Failed to update mirror repository (${remote_repository}) for sync"
