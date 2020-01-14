@@ -10,7 +10,7 @@ export PATH="${PATH}:${root}/.ci"
 
 pushd "${root}" > "${output}"
 
-if [ "${repo_name}" = "${vagrant-installers}" ]; then
+if [ "${repo_name}" = "vagrant-installers" ]; then
     remote_repository="hashicorp/vagrant-builders"
 else
     remote_repository="hashicorp/vagrant-installers"
