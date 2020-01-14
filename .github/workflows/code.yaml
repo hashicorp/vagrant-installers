@@ -12,6 +12,10 @@ jobs:
         uses: actions/checkout@v1
       - name: Sync Installers Repository
         run: ./.ci/sync.sh
+        env:
+          HASHIBOT_TOKEN: ${{ secrets.HASHIBOT_TOKEN }}
+          HASHIBOT_USERNAME: ${{ secrets.HASHIBOT_USERNAME }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
   sync-builders:
     if: github.repository == 'hashicorp/vagrant-installers'
@@ -21,3 +25,7 @@ jobs:
         uses: actions/checkout@v1
       - name: Sync Builders Repository
         run: ./.ci/sync.sh
+        env:
+          HASHIBOT_TOKEN: ${{ secrets.HASHIBOT_TOKEN }}
+          HASHIBOT_USERNAME: ${{ secrets.HASHIBOT_USERNAME }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

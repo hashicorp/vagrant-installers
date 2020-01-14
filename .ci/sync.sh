@@ -6,6 +6,8 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/common.sh"
 
+export PATH="${PATH}:${root}/.ci"
+
 pushd "${root}" > "${output}"
 
 if [ "${repo_name}" = "${vagrant-installers}" ]; then
