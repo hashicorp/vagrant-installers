@@ -20,10 +20,6 @@ echo "Updating repository origin to mirror repository `${remote_repository}`..."
 wrap git remote set-url origin "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
      "Failed to update repository origin to `${remote_repository}` for sync"
 
-echo "Clear any set credentials..."
-wrap git credential-store erase \
-     "Failed to erase the git credentials store"
-
 echo "Currently configured remotes:"
 git remote -v
 warn "$(git remote -v)"

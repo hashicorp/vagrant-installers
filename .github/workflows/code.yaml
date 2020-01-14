@@ -10,7 +10,8 @@ jobs:
     steps:
       - name: Code Checkout
         uses: actions/checkout@v2
-      - run: git fetch --prune --unshallow
+        with:
+          persist-credentials: false
       - name: Set Ruby
         uses: actions/setup-ruby@v1
         with:
@@ -29,7 +30,8 @@ jobs:
     steps:
       - name: Code Checkout
         uses: actions/checkout@v2
-      - run: git fetch --prune --unshallow
+        with:
+          persist-credentials: false
       - name: Set Ruby
         uses: actions/setup-ruby@v1
         with:
