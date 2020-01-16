@@ -3,21 +3,21 @@
 #### Software versions
 #### Update these as required
 
-curl_version="7.61.0"
-libarchive_version="3.3.2"
+curl_version="7.68.0"
+libarchive_version="3.4.1"
 libffi_version="3.2.1"
-libgcrypt_version="1.8.2"
+libgcrypt_version="1.8.5"
 libgmp_version="6.1.2"
-libgpg_error_version="1.27"
-libiconv_version="1.15"
-libssh2_version="1.8.0"
-libxml2_version="2.9.7"
-libxslt_version="1.1.32"
-libyaml_version="0.1.7"
-openssl_version="1.1.0g"
-readline_version="7.0"
+libgpg_error_version="1.36"
+libiconv_version="1.16"
+libssh2_version="1.9.0"
+libxml2_version="2.9.10"
+libxslt_version="1.1.34"
+libyaml_version="0.2.2"
+openssl_version="1.1.1d"
+readline_version="8.0"
 ruby_version="2.4.9"
-xz_version="5.2.3"
+xz_version="5.2.4"
 zlib_version="1.2.11"
 
 function echo_stderr {
@@ -54,6 +54,7 @@ if [[ "${uname}" = *"Linux"* ]]; then
         linux_os="centos"
     fi
     host_ident="${linux_os}_${host_arch}"
+    install_prefix=""
 else
     host_os="darwin"
     host_ident="darwin_${host_arch}"
@@ -72,6 +73,10 @@ rm -rf "${build_dir}"
 mkdir -p "${base_bindir}"
 mkdir -p "${embed_bindir}"
 mkdir -p "${output_dir}"
+
+if [ "${host_os}" = "darwin" ]; then
+    su vagrant -l -c 'brew install automake autoconf pkg-config'
+fi
 
 setupdir=$(mktemp -d vagrant-substrate-setup.XXXXX)
 pushd "${setupdir}"
@@ -94,9 +99,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # Remove openssl dev files to prevent any conflicts when building
     yum -d 0 -e 0 -y remove openssl-devel
     set -e
-fi
 
-if [[ "${linux_os}" != "ubuntu" ]]; then
     echo_stderr "  -> Build and install custom host tools..."
 
     PATH=/usr/local/bin:$PATH
@@ -108,7 +111,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
         tar xzf m4.tar.gz
         pushd m4*
-        ./configure
+        ./configure --prefix "/usr/local"
         make
         make install
         popd
@@ -120,7 +123,7 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
         tar xzf autoconf.tar.gz
         pushd autoconf*
-        ./configure
+        ./configure --prefix "/usr/local"
         make
         make install
         popd
@@ -132,39 +135,37 @@ if [[ "${linux_os}" != "ubuntu" ]]; then
         curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
-        ./configure
+        ./configure --prefix "/usr/local"
         make
         make install
         popd
     fi
 
-    if [[ "${linux_os}" = "centos" ]]; then
-        # libtool
-        if [[ ! -f "/usr/local/bin/libtool" ]]; then
-            echo_stderr "   -> Installing custom libtool..."
-            curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
-            tar xzf libtool.tar.gz
-            pushd libtool*
-            ./configure
-            make
-            make install
-            popd
-        fi
-
-        # patchelf
-        if [[ ! -f "/usr/local/bin/patchelf" ]]; then
-            echo_stderr "   -> Installing custom patchelf..."
-            curl -L -s -o patchelf.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
-            tar xzf patchelf.tar.gz
-            pushd patchelf*
-            ./configure
-            make
-            make install
-            popd
-        fi
-
-        export PATH="/usr/local/bin:$PATH"
+    # libtool
+    if [[ ! -f "/usr/local/bin/libtool" ]]; then
+        echo_stderr "   -> Installing custom libtool..."
+        curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
+        tar xzf libtool.tar.gz
+        pushd libtool*
+        ./configure --prefix "/usr/local"
+        make
+        make install
+        popd
     fi
+
+    # patchelf
+    if [[ ! -f "/usr/local/bin/patchelf" ]]; then
+        echo_stderr "   -> Installing custom patchelf..."
+        curl -L -s -o patchelf.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
+        tar xzf patchelf.tar.gz
+        pushd patchelf*
+        ./configure --prefix "/usr/local"
+        make
+        make install
+        popd
+    fi
+
+    export PATH="/usr/local/bin:$PATH"
 fi
 
 if [[ "${host_os}" = "darwin" ]]; then
