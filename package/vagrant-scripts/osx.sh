@@ -1,8 +1,13 @@
 #!/bin/bash
-# if the proxy is around, use it
-nc -z -w3 192.168.1.1 8123 && export http_proxy="http://192.168.1.1:8123"
 
 export PATH="/usr/local/bin:$PATH"
+
+sudo pip3 install dmgbuild
+curl -Lo gon.zip https://github.com/mitchellh/gon/releases/download/v0.2.2/gon_0.2.2_macos.zip
+unzip gon.zip
+chown root:wheel gon
+chmod 755 gon
+mv gon /System/Volumes/Data/usr/local/bin/gon
 
 chmod 755 /vagrant/package/package.sh
 
