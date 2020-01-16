@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Ensure keys are up-to-date
+sudo pacman-key --refresh-keys
 # Ensure the dev tools are installed
 sudo pacman --noconfirm -Suy base-devel ruby
 

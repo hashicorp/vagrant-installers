@@ -11,6 +11,7 @@ export PACKET_EXEC_PRE_BUILTINS="${PACKET_EXEC_PRE_BUILTINS:-InstallVmware,Insta
 export PACKET_EXEC_ATTACH_VOLUME="1"
 export PACKET_EXEC_QUIET="1"
 export PKT_VAGRANT_HOME="/mnt/data"
+export PKT_VAGRANT_CLOUD_TOKEN="${VAGRANT_CLOUD_TOKEN}"
 
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
@@ -23,14 +24,8 @@ pushd "${root}" > "${output}"
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
 function cleanup() {
-    (>&2 echo "Cleaning up any guests on packet device")
-    if [ "${PKG_VAGRANT_BUILD_TYPE}" = "package" ]; then
-        export PKT_VAGRANT_BUILD_TYPE="substrate"
-        packet-exec run -- vagrant destroy -f
-    fi
     unset PACKET_EXEC_PERSIST
-    export PKT_VAGRANT_BUILD_TYPE="package"
-    packet-exec run -- vagrant destroy -f
+    packet-exec run -- pkill -f vmware-vmx
 }
 
 trap cleanup EXIT
@@ -48,7 +43,7 @@ declare -A substrate_list=(
 
 declare -A package_list=(
     [*amd64.zip]="appimage"
-    [*x86_64.tar.xz]="archlinux"
+#    [*x86_64.tar.xz]="archlinux"
     [*x86_64.rpm]="centos-6"
     [*i686.rpm]="centos-6-i386"
     [*x86_64.dmg]="osx-10.15"
@@ -86,9 +81,12 @@ else
 fi
 
 # Extract out Vagrant version information from gem
-
 vagrant_version="$(gem specification vagrant-*.gem version)"
 vagrant_version="${vagrant_version##*version: }"
+
+# Place gem into package directory for packaging
+wrap mv vagrant-*.gem package/vagrant.gem \
+     "Failed to move vagrant RubyGem for packaging"
 
 # Ensure we have a packet device to connect
 echo "Creating packet device if needed..."
@@ -131,39 +129,59 @@ substrates_needed="${substrates_needed#,}"
 if [ "${substrates_needed}" = "" ]; then
     echo "All substrates currently exist. No build required."
 else
+
     export PKT_VAGRANT_ONLY_BOXES="${substrates_needed}"
     export PKT_VAGRANT_BUILD_TYPE="substrate"
 
     echo "Starting Vagrant substrate guests..."
     pkt_wrap_stream vagrant up --no-provision \
                     "Failed to start builder guests on packet device for substrates"
-
     echo "Start Vagrant substrate builds..."
-    wrap_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- vagrant provision
-    result=$?
 
-    # If the command failed, run something known to succeed so any available substrate
-    # assets can be pulled back in and stored
-    if [ $result -ne 0 ]; then
-        # backup provision failure output
-        mv "$(output_file)" /tmp/.provision-failure
-        wrap_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- /bin/true
-    fi
+    pids=()
+    for p in "${!substrate_list[@]}"; do
+        path=(substrate-assets/${p})
+        if [ -f "${path}" ]; then
+            continue
+        fi
+        guest="${substrate_list[${p}]}"
+        export PKT_VAGRANT_ONLY_BOXES="${guest}"
+        packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
+        pid=$!
+        until [ -f "${guest}.log" ]; do
+            sleep 0.1
+        done
+        tail -f --quiet --pid "${pid}" "${guest}.log" &
+        pids+=("${pid}")
+    done
+
+    # Wait for all the background provisions to complete
+    # NOTE: We don't check pid success since substrate file check
+    #       below will catch any errors
+    for pid in "${pids[@]}"; do
+        wait "${pid}"
+    done
+
+    # Run simple command to pull any built substrates
+    wrap_stream_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- /bin/true
 
     echo "Storing any built substrates... "
     # Store all built substrates
-    wrap_stream_raw aws sync ./substrate-assets/ "${s3_substrate_dst}"
-
-    # Now we can bail if the substrate build generated an error
-    if [ $result -ne 0 ]; then
-        mv /tmp/.provision-failure "$(output_file)"
-        fail "Failure encountered during substrate build"
-    fi
+    wrap_stream_raw aws s3 sync ./substrate-assets/ "${s3_substrate_dst}"
 
     echo "Destroying existing Vagrant guests..."
     # Clean up the substrate VMs
     pkt_wrap_stream_raw vagrant destroy -f
 fi
+
+# Validate all substrates are available
+for p in "${!substrate_list[@]}"; do
+    path=(substrate-assets/${p})
+    if [ ! -f "${path}" ]; then
+        fail "Missing expected substrate at '${path}'"
+    fi
+done
+
 
 for p in "${!package_list[@]}"; do
     path=(pkg/${p})
@@ -182,28 +200,36 @@ else
     echo "Starting Vagrant package guests... "
     pkt_wrap_stream vagrant up --no-provision \
                     "Failed to start builder guests on packet device for packaging"
-
     echo "Start Vagrant package builds..."
-    wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- vagrant provision
-    result=$?
 
-    # If the command failed, run something known to succeed so any available package
-    # assets can be pulled back in and stored
-    if [ $result -ne 0 ]; then
-        # backup provision failure output
-        mv "$(output_file)" /tmp/.provision-failure
-        packet-exec run -download "./pkg/*:./pkg" -- /bin/true > "${output}" 2>&1
-    fi
+    pids=()
+    for p in "${!package_list[@]}"; do
+        path=(pkg/${p})
+        if [ -f "${path}" ]; then
+            continue
+        fi
+        guest="${package_list[${p}]}"
+        export PKT_VAGRANT_ONLY_BOXES="${guest}"
+        packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
+        pid=$!
+        until [ -f "${guest}.log" ]; do
+            sleep 0.1
+        done
+        tail -f --quiet --pid "${pid}" "${guest}.log" &
+        pids+=("${pid}")
+    done
 
-    # Store all built substrates
+    # Wait for all the background provisions to complete
+    for pid in "${pids[@]}"; do
+        wait "${pid}"
+    done
+
+    # Fetch any built packages
+    wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
+
+    # Store all built packages
     echo "Storing any built packages... "
-    wrap_stream_raw aws sync ./pkg/ "${s3_package_dst}"
-
-    # Now we can bail if the package build generated an error
-    if [ $result -ne 0 ]; then
-        mv /tmp/.provision-failure "$(output_file)"
-        fail "Failure encountered during package build"
-    fi
+    wrap_stream_raw aws s3 sync ./pkg/ "${s3_package_dst}"
 
     echo "Destroying existing Vagrant guests..."
     pkt_wrap_stream_raw vagrant destroy -f

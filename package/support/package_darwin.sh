@@ -24,15 +24,12 @@ pushd $STAGING_DIR
 echo "Darwin staging dir: ${STAGING_DIR}"
 
 # Set information used for package and code signing
+PKG_SIGN_IDENTITY=${VAGRANT_PACKAGE_SIGN_IDENTITY:-D38WU7D763}
+PKG_SIGN_CERT_PATH=${VAGRANT_PACKAGE_SIGN_CERT_PATH:-"/Users/vagrant/MacOS_PackageSigning.cert"}
+PKG_SIGN_KEY_PATH=${VAGRANT_PACKAGE_SIGN_KEY_PATH:-"/Users/vagrant/MacOS_PackageSigning.key"}
 
-PKG_SIGN_IDENTITY=${VAGRANT_PACKAGE_SIGN_IDENTITY:-Developer ID Installer: Hashicorp, Inc.}
-PKG_SIGN_CERT_PATH=${VAGRANT_PACKAGE_SIGN_CERT_PATH:-/vagrant/MacOS_PkgSigning.cert}
-PKG_SIGN_KEY_PATH=${VAGRANT_PACKAGE_SIGN_KEY_PATH:-/vagrant/MacOS_PkgSigning.key}
-
-CODE_SIGN_IDENTITY=${VAGRANT_CODE_SIGN_IDENTITY:-none}
-CODE_SIGN_CERT_PATH=${VAGRANT_CODE_SIGN_CERT_PATH:-none}
-CODE_SIGN_KEY_PATH=${VAGRANT_CODE_SIGN_KEY_PATH:-none}
-
+CODE_SIGN_IDENTITY=${VAGRANT_CODE_SIGN_IDENTITY:-D38WU7D763}
+CODE_SIGN_CERT_PATH=${VAGRANT_CODE_SIGN_CERT_PATH:-"/Users/vagrant/MacOS_CodeSigning.p12"}
 SIGN_KEYCHAIN=${VAGRANT_SIGN_KEYCHAIN:-/Library/Keychains/System.keychain}
 
 SIGN_REQUIRED="${VAGRANT_PACKAGE_SIGNING_REQUIRED}"
@@ -93,10 +90,10 @@ then
 fi
 
 # Install and enable code signing if available
-if [[ -f "${CODE_SIGN_CERT_PATH}" && -f "${CODE_SIGN_KEY_PATH}" ]]
+if [[ -f "${CODE_SIGN_CERT_PATH}" && "${CODE_SIGN_PASS}" != "" ]]
 then
-    security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign
-    security import "${CODE_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign
+    echo "==> Installing code signing key..."
+    security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign
     SIGN_CODE="1"
 fi
 
@@ -107,7 +104,8 @@ fi
 if [[ "${SIGN_CODE}" -eq "1" ]]
 then
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${stage}" -type f -perm +0111 -exec ls -lh {} \;
+    find "${stage}" -type f -perm +0111 -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
 fi
 
 #-------------------------------------------------------------------------
@@ -224,4 +222,29 @@ then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo
     set -x
+else
+    echo "==> Signing DMG..."
+    codesign -s "${PKG_SIGN_IDENTITY}" --timestamp "${OUTPUT_PATH}"
+fi
+
+if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME}" != "" ]; then
+    echo "==> Notarizing DMG..."
+    export AC_USERNAME="${NOTARIZE_USERNAME}"
+    export AC_PASSWORD="${NOTARIZE_PASSWORD}"
+    cat <<EOF > config.hcl
+notarize {
+  path = "${OUTPUT_PATH}"
+  bundle_id = "com.hashicorp.vagrant"
+  staple = true
+}
+EOF
+    gon ./config.hcl
+else
+    echo
+    echo "!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!"
+    echo "! Vagrant installer package is NOT  !"
+    echo "! notarized. Rebuild with proper    !"
+    echo "! signing and credentials to enable !"
+    echo "! package notarization.             !"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 fi
