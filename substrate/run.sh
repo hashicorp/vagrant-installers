@@ -4,18 +4,18 @@
 #### Update these as required
 
 curl_version="7.68.0"
-libarchive_version="3.4.1"
+libarchive_version="3.3.2"
 libffi_version="3.2.1"
 libgcrypt_version="1.8.5"
 libgmp_version="6.1.2"
-libgpg_error_version="1.36"
-libiconv_version="1.16"
-libssh2_version="1.9.0"
-libxml2_version="2.9.10"
-libxslt_version="1.1.34"
-libyaml_version="0.2.2"
+libgpg_error_version="1.27"
+libiconv_version="1.15"
+libssh2_version="1.8.0"
+libxml2_version="2.9.7"
+libxslt_version="1.1.32"
+libyaml_version="0.1.7"
 openssl_version="1.1.1d"
-readline_version="8.0"
+readline_version="7.0"
 ruby_version="2.4.9"
 xz_version="5.2.4"
 zlib_version="1.2.11"
@@ -73,6 +73,11 @@ rm -rf "${build_dir}"
 mkdir -p "${base_bindir}"
 mkdir -p "${embed_bindir}"
 mkdir -p "${output_dir}"
+mkdir -p "${embed_dir}/lib64"
+
+if [ "${host_os}" = "darwin" ]; then
+    su vagrant -l -c 'brew install automake autoconf pkg-config'
+fi
 
 if [ "${host_os}" = "darwin" ]; then
     su vagrant -l -c 'brew install automake autoconf pkg-config'
@@ -183,9 +188,11 @@ echo_stderr " -> Building substrate requirements..."
 export CFLAGS="-I${embed_dir}/include"
 export CPPFLAGS="-I${embed_dir}/include"
 export LDFLAGS="-L${embed_dir}/lib"
+ORIGINAL_LDFLAGS="${LDFLAGS}"
 if [[ "${host_os}" = "darwin" ]]; then
     export MACOSX_DEPLOYMENT_TARGET="10.5"
     export LD_RPATH="XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+    ORIGINAL_LD_RPATH="${LD_RPATH}"
     libtool="glibtool"
 else
     export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
@@ -347,9 +354,20 @@ openssl_url="http://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
 curl -L -s -o openssl.tar.gz "${openssl_url}"
 tar -xzf openssl.tar.gz
 pushd openssl-*
+if [ "${LD_RPATH}" != "" ]; then
+    export LD_RPATH="/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+else
+    CURRENT_LDFLAGS="${LDFLAGS}"
+    export LDFLAGS="${ORIGINAL_LDFLAGS} -Wl,-rpath=/opt/vagrant/embedded/lib"
+fi
 ./config --prefix="${embed_dir}" --openssldir="${embed_dir}" shared
 make
 make install_sw
+if [ "${LD_RPATH}" != "" ]; then
+    export LD_RPATH="${ORIGINAL_LD_RPATH}"
+else
+    export LDFLAGS="${CURRENT_LDFLAGS}"
+fi
 popd
 
 # libssh2

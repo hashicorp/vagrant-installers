@@ -10,9 +10,8 @@ su vagrant -l -c 'brew install wget'
 
 # grab new cacert
 curl -o cacert.pem https://curl.haxx.se/ca/cacert.pem
-chown vagrant:admin /usr/local/etc/openssl
-
 mkdir -p /usr/local/etc/openssl
+chown vagrant:admin /usr/local/etc/openssl
 
 mv cacert.pem /usr/local/etc/openssl/cacert.pem
 

@@ -24,10 +24,13 @@ echo "Updating configured remotes..."
 wrap_stream git remote update mirror \
             "Failed to update mirror repository (${remote_repository}) for sync"
 
-echo "Pulling master from mirror..."
-wrap_stream git pull mirror master \
-            "Failed to pull master from mirror repository (${remote_repository}) for sync"
+rb=$(git branch -r --list "mirror/${ident_ref}")
 
-echo "Pushing master to mirror..."
-wrap_stream git push mirror master \
+if [ "${rb}" != "" ]; then
+    echo "Pulling ${ident_ref} from mirror..."
+    wrap_stream git pull mirror "${ident_ref}" \
+            "Failed to pull ${ident_ref} from mirror repository (${remote_repository}) for sync"
+
+echo "Pushing ${ident_ref} to mirror..."
+wrap_stream git push mirror "${ident_ref}" \
             "Failed to sync mirror repository (${remote_repository})"
