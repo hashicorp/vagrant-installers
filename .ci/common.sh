@@ -1,3 +1,4 @@
+# last-modified: Tue Jan 14 20:55:41 UTC 2020
 #!/usr/bin/env bash
 
 # Path to file used for output redirect
@@ -253,8 +254,11 @@ function release_validate() {
 # $2: Asset file or directory of assets
 function release() {
     release_validate "${@}"
-    wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${1}" -delete \
-         -replace "${1}" "${2}" "Failed to create release for version ${1}"
+    wrap_raw ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${1}" -delete
+    if [ $? -ne 0 ]; then
+        wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${1}" \
+             "${1}" "${2}" "Failed to create release for version ${1}"
+    fi
 }
 
 # Generate a GitHub prerelease
@@ -269,9 +273,13 @@ function prerelease() {
         ptag="${1}"
     fi
 
-    wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${ptag}" \
-         -delete -replace -prerelease "${ptag}" "${2}" \
-         "Failed to create prerelease for version ${1}"
+    wrap_raw ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${ptag}" \
+             -delete -prerelease "${ptag}" "${2}"
+    if [ $? -ne 0 ]; then
+        wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${ptag}" \
+             -prerelease "${ptag}" "${2}" \
+             "Failed to create prerelease for version ${1}"
+    fi
     echo -n "${ptag}"
 }
 
@@ -357,6 +365,16 @@ function hashicorp_release() {
     export AWS_SECRET_ACCESS_KEY="${okey}"
 }
 
+# Configures git for hashibot usage
+function hashibot_git() {
+    wrap git config user.name "${HASHIBOT_USERNAME}" \
+         "Failed to setup git for hashibot usage (username)"
+    wrap git config user.email "${HASHIBOT_EMAIL}" \
+         "Failed to setup git for hashibot usage (email)"
+    wrap git remote set-url origin "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${repository}" \
+         "Failed to setup git for hashibot usage (remote)"
+}
+
 # Stub cleanup method which can be redefined
 # within actual script
 function cleanup() {
@@ -373,7 +391,7 @@ trap cleanup EXIT
 # If repository is public, FORCE_PUBLIC_DEBUG environment
 # variable must also be set.
 
-is_private=$(curl -s "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq .private)
+is_private=$(curl -H "Authorization: token ${HASHIBOT_TOKEN}" -s "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq .private)
 
 if [ "${DEBUG}" != "" ]; then
     if [ "${is_private}" = "false" ]; then
@@ -392,7 +410,7 @@ else
 fi
 
 # Check if we are running a public repository on private runners
-if [ "${VAGRANT_PRIVATE}" != "" ] && [ "${is_private}" != "true" ]; then
+if [ "${VAGRANT_PRIVATE}" != "" ] && [ "${is_private}" = "false" ]; then
     fail "Cannot run public repositories on private Vagrant runners. Disable runners now!"
 fi
 
