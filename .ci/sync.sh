@@ -29,7 +29,8 @@ rb=$(git branch -r --list "mirror/${ident_ref}")
 if [ "${rb}" != "" ]; then
     echo "Pulling ${ident_ref} from mirror..."
     wrap_stream git pull mirror "${ident_ref}" \
-            "Failed to pull ${ident_ref} from mirror repository (${remote_repository}) for sync"
+                "Failed to pull ${ident_ref} from mirror repository (${remote_repository}) for sync"
+fi
 
 echo "Pushing ${ident_ref} to mirror..."
 wrap_stream git push mirror "${ident_ref}" \
