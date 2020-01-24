@@ -199,7 +199,7 @@ fi
 #-------------------------------------------------------------------------
 # Stage the files
 mkdir -p ${STAGING_DIR}/dmg
-cp ${STAGING_DIR}/Vagrant.pkg ${STAGING_DIR}/dmg/Vagrant.pkg
+cp ${STAGING_DIR}/Vagrant.pkg ${STAGING_DIR}/dmg/vagrant.pkg
 cp "${DIR}/darwin/uninstall.tool" ${STAGING_DIR}/dmg/uninstall.tool
 chmod +x ${STAGING_DIR}/dmg/uninstall.tool
 
