@@ -59,11 +59,19 @@ Vagrant.configure("2") do |config|
         box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
                                                  "-w net.inet.tcp.autorcvbufmax=33554432\nsysctl -w " \
                                                  "net.inet.tcp.autosndbufmax=33554432\n"
+        ["MacOS_CodeSigning.p12", "MacOS_PackageSigning.cert", "MacOS_PackageSigning.key"].each do |path|
+          if File.exist?(path)
+            box_config.vm.provision "file", source: path, destination: "/Users/vagrant/#{path}"
+          end
+        end
       end
       box_config.vm.provision "shell", path: provision_script, env: script_env_vars,
                               privileged: !unprivileged_provision.include?(box_basename)
       if script_name.start_with?('win')
         box_config.vm.communicator = 'winrm'
+        if File.exist?("Win_CodeSigning.p12")
+          box_config.vm.provision "file", source: "Win_CodeSigning.p12", destination: "C:/Users/vagrant/Win_CodeSigning.p12"
+        end
       end
 
       config.vm.provider :vmware_desktop do |v|

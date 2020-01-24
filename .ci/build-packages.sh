@@ -196,6 +196,7 @@ if [ "${packages_needed}" = "" ]; then
 else
     export PKT_VAGRANT_ONLY_BOXES="${packages_needed}"
     export PKT_VAGRANT_BUILD_TYPE="package"
+    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
 
     echo "Starting Vagrant package guests... "
     pkt_wrap_stream vagrant up --no-provision \
