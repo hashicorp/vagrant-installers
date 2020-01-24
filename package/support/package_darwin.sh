@@ -104,8 +104,8 @@ fi
 if [[ "${SIGN_CODE}" -eq "1" ]]
 then
     echo "Signing all substrate executables..."
-    find "${stage}" -type f -perm +0111 -exec ls -lh {} \;
-    find "${stage}" -type f -perm +0111 -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec ls -lh {} \;
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
 fi
 
 #-------------------------------------------------------------------------
