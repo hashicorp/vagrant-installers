@@ -97,6 +97,11 @@ then
     SIGN_CODE="1"
 fi
 
+# Perform library scrubbing to remove files which will fail notarization
+rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/cache/"*
+rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rubyzip-"*/test/
+rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/bin/
+
 #-------------------------------------------------------------------------
 # Code sign
 #-------------------------------------------------------------------------
@@ -104,8 +109,11 @@ fi
 if [[ "${SIGN_CODE}" -eq "1" ]]
 then
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec ls -lh {} \;
     find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    echo "Finding all substate bundles..."
+    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    echo "Finding all substrate shared library objects..."
+    find "${SUBSTRATE_DIR}" -name "*.so" -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
 fi
 
 #-------------------------------------------------------------------------
@@ -238,7 +246,12 @@ notarize {
   staple = true
 }
 EOF
+    # right now this will fail due to old .bundles we can't upgrade yet
+    set +e
     gon ./config.hcl
+    set -e
+    # now if the staple fails, we know we're in trouble
+    xcrun stapler staple "${OUTPUT_PATH}"
 else
     echo
     echo "!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!"
