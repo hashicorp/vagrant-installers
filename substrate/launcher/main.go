@@ -126,9 +126,11 @@ func main() {
 
 	// Setup the CPP/LDFLAGS so that native extensions can be
 	// properly compiled into the Vagrant environment.
+	cxxflags := ""
 	cppflags := ""
 	cflags := ""
 	ldflags := ""
+	configure_args := ""
 	mingwArchDir := "x86_64-w64-mingw32"
 	mingwDir := "mingw64"
 	if runtime.GOOS == "windows" {
@@ -141,40 +143,39 @@ func main() {
 			mingwDir = "mingw32"
 			mingwArchDir = "i686-w64-mingw32"
 		}
-		cflags := "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
+		cflags = "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
 			" -I" + filepath.Join(embeddedDir, mingwDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "usr", "include")
-		cppflags := "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
+		cppflags = "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
 			" -I" + filepath.Join(embeddedDir, mingwDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "usr", "include")
-		ldflags := "-L" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "lib") +
+		ldflags = "-L" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "lib") +
 			" -L" + filepath.Join(embeddedDir, mingwDir, "lib") +
 			" -L" + filepath.Join(embeddedDir, "usr", "lib")
-		if original := os.Getenv("CFLAGS"); original != "" {
-			cflags = original + " " + cflags
-		}
-		if original := os.Getenv("CPPFLAGS"); original != "" {
-			cppflags = original + " " + cppflags
-		}
-		if original := os.Getenv("LDFLAGS"); original != "" {
-			ldflags = original + " " + ldflags
-		}
 	} else {
-		cppflags := "-I" + filepath.Join(embeddedDir, "include") +
+		cppflags = "-I" + filepath.Join(embeddedDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "include", "libxml2")
-		ldflags := "-L" + filepath.Join(embeddedDir, "lib") + " -L" +
+		ldflags = "-L" + filepath.Join(embeddedDir, "lib") + " -L" +
 			filepath.Join(embeddedDir, "lib64")
-		if original := os.Getenv("CPPFLAGS"); original != "" {
-			cppflags = original + " " + cppflags
-		}
-		if original := os.Getenv("LDFLAGS"); original != "" {
-			ldflags = original + " " + ldflags
-		}
-		cflags := "-I" + filepath.Join(embeddedDir, "include") +
+		cflags = "-I" + filepath.Join(embeddedDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "include", "libxml2")
-		if original := os.Getenv("CFLAGS"); original != "" {
-			cflags = original + " " + cflags
-		}
+	}
+
+	// Include any original flags
+	if original := os.Getenv("CFLAGS"); original != "" {
+		cflags = original + " " + cflags
+	}
+	if original := os.Getenv("CPPFLAGS"); original != "" {
+		cppflags = original + " " + cppflags
+	}
+	if original := os.Getenv("LDFLAGS"); original != "" {
+		ldflags = original + " " + ldflags
+	}
+	if original := os.Getenv("CXXFLAGS"); original != "" {
+		cxxflags = original + " " + cxxflags
+	}
+	if original := os.Getenv("CONFIGURE_ARGS"); original != "" {
+		configure_args = original + " " + configure_args
 	}
 
 	// Allow users to specify a custom SSL cert
@@ -190,6 +191,8 @@ func main() {
 	newEnv := map[string]string{
 		// Setup the environment to prefer our embedded dir over
 		// anything the user might have setup on their system.
+		"CONFIGURE_ARGS": configure_args,
+		"CXXFLAGS":       cxxflags,
 		"CPPFLAGS":       cppflags,
 		"CFLAGS":         cflags,
 		"GEM_HOME":       filepath.Join(embeddedDir, "gems", vagrantVersion),
@@ -217,11 +220,8 @@ func main() {
 	newEnv["RUBYLIB"] = ""
 
 	if runtime.GOOS == "darwin" {
-		configure_args := "-Wl,rpath," + filepath.Join(embeddedDir, "lib")
-		if original_configure_args := os.Getenv("CONFIGURE_ARGS"); original_configure_args != "" {
-			configure_args = original_configure_args + " " + configure_args
-		}
-		newEnv["CONFIGURE_ARGS"] = configure_args
+		newEnv["CONFIGURE_ARGS"] = newEnv["CONFIGURE_ARGS"] +
+			" -Wl,rpath," + filepath.Join(embeddedDir, "lib")
 	}
 
 	// Set pkg-config paths
