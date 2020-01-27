@@ -274,6 +274,10 @@ if [ ! -z "${release}" ]; then
     echo "Storing release packages into asset store..."
     upload_assets pkg/
 
+    # TODO: Remove after first successful run
+    slack -m  "New Vagrant release is ready for upload! - v${vagrant_version}\n\nAssets: $(asset_location)"
+    exit
+
     echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
     hashicorp_release pkg/
 
