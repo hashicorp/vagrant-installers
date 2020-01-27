@@ -198,6 +198,10 @@ else
     export PKT_VAGRANT_BUILD_TYPE="package"
     export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
 
+    if [ ! -z "${release}" ]; then
+        export PKT_VAGRANT_INSTALLER_VAGRANT_PACKAGE_SIGNING_REQUIRED="1"
+    fi
+
     echo "Starting Vagrant package guests... "
     pkt_wrap_stream vagrant up --no-provision \
                     "Failed to start builder guests on packet device for packaging"
@@ -251,10 +255,7 @@ fi
 
 # If this is a release build sign our package assets and then upload
 # via the hc-releases binary
-if [ "${release}" = "1" ]; then
-    # TODO: REMOVE
-    fail "Release is currently stubbed"
-
+if [ ! -z "${release}" ]; then
     echo -n "Cloning Vagrant repository for signing process... "
     wrap git clone git://github.com/hashicorp/vagrant vagrant \
          "Failed to clone Vagrant repository"
@@ -270,10 +271,13 @@ if [ "${release}" = "1" ]; then
 
     mv vagrant/pkg/dist/* pkg/
 
+    echo "Storing release packages into asset store..."
+    upload_assets pkg/
+
     echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
     hashicorp_release pkg/
 
-    slack -m "New Vagrant release has been published! - *${vagrant_version}*\n\nAssets: https://releases.hashicorp.com/vagrant/${vagrant_version}"
+    slack -m "New Vagrant release has been published! - *${vagrant_version}*\n\nAssets: https://releases.hashicorp.com/vagrant/${vagrant_version}\nStore: $(asset_location)"
 else
     if [ "${tag}" != "" ]; then
         prerelease_version="${tag}"
