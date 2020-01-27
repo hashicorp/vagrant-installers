@@ -76,7 +76,7 @@ if [ "${tag}" = "" ]; then
          "Failed to download Vagrant RubyGem"
 else
     url=$(curl -SsL -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${repository}/releases/tags/${tag}" | jq -r '.assets[] | select(.name | contains(".gem")) | .url')
-    wrap curl -H "Accept: application/octet-stream" -SsL -o "vagrant-${tag}.gem" "${url}" \
+    wrap curl -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Accept: application/octet-stream" -SsL -o "vagrant-${tag}.gem" "${url}" \
          "Failed to download Vagrant RubyGem"
 fi
 
