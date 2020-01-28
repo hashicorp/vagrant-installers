@@ -171,6 +171,7 @@ else
 
     echo "Destroying existing Vagrant guests..."
     # Clean up the substrate VMs
+    unset PKT_VAGRANT_ONLY_BOXES
     pkt_wrap_stream_raw vagrant destroy -f
 fi
 
@@ -240,6 +241,7 @@ else
     wrap_stream_raw aws s3 sync --no-progress ./pkg/ "${s3_package_dst}"
 
     echo "Destroying existing Vagrant guests..."
+    unset PKT_VAGRANT_ONLY_BOXES
     pkt_wrap_stream_raw vagrant destroy -f
 fi
 
