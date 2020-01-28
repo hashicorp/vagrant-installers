@@ -63,7 +63,7 @@ if [ "${tag}" != "" ]; then
 else
     s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}/${short_sha}"
 fi
-job_id=$(uuidgen)
+
 export PACKET_EXEC_REMOTE_DIRECTORY="${job_id}"
 export PACKET_EXEC_PERSIST="1"
 export PKT_VAGRANT_INSTALLERS_VAGRANT_PACKAGE_SIGNING_REQUIRED=1
