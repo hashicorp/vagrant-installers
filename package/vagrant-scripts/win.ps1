@@ -32,7 +32,7 @@ Write-Host "Starting package build"
 Set-Location -Path "C:\vagrant\${pkg_dir}"
 
 if(!$env:SignKeyPath) {
-    $SignKeyPath = "C:\vagrant\Win_CodeSigning.p12"
+    $SignKeyPath = "C:\users\vagrant\Win_CodeSigning.p12"
 } else {
     $SignKeyPath = $env:SignKeyPath
 }

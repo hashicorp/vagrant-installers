@@ -196,7 +196,6 @@ if [ "${packages_needed}" = "" ]; then
 else
     export PKT_VAGRANT_ONLY_BOXES="${packages_needed}"
     export PKT_VAGRANT_BUILD_TYPE="package"
-    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
 
     if [ ! -z "${release}" ]; then
         export PKT_VAGRANT_INSTALLER_VAGRANT_PACKAGE_SIGNING_REQUIRED="1"
@@ -206,6 +205,8 @@ else
     pkt_wrap_stream vagrant up --no-provision \
                     "Failed to start builder guests on packet device for packaging"
     echo "Start Vagrant package builds..."
+
+    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
 
     pids=()
     for p in "${!package_list[@]}"; do
@@ -223,6 +224,8 @@ else
         tail -f --quiet --pid "${pid}" "${guest}.log" &
         pids+=("${pid}")
     done
+
+    unset PACKET_EXEC_PRE_BUILTINS
 
     # Wait for all the background provisions to complete
     for pid in "${pids[@]}"; do
