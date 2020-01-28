@@ -104,8 +104,8 @@ mkdir -p substrate-assets pkg
 echo "Fetching any prebuilt substrates and/or packages... "
 
 # If there are existing substrates or packages already built, download them
-aws s3 sync "${s3_substrate_dst}/" ./substrate-assets/ > "${output}" 2>&1
-aws s3 sync "${s3_package_dst}/" ./pkg/ > "${output}" 2>&1
+aws s3 sync --no-progress "${s3_substrate_dst}/" ./substrate-assets/ > "${output}" 2>&1
+aws s3 sync --no-progress "${s3_package_dst}/" ./pkg/ > "${output}" 2>&1
 
 # Make signing files available before upload
 secrets=$(load-signing) || fail "Failed to load signing files"
@@ -167,7 +167,7 @@ else
 
     echo "Storing any built substrates... "
     # Store all built substrates
-    wrap_stream_raw aws s3 sync ./substrate-assets/ "${s3_substrate_dst}"
+    wrap_stream_raw aws s3 sync --no-progress ./substrate-assets/ "${s3_substrate_dst}"
 
     echo "Destroying existing Vagrant guests..."
     # Clean up the substrate VMs
@@ -237,7 +237,7 @@ else
 
     # Store all built packages
     echo "Storing any built packages... "
-    wrap_stream_raw aws s3 sync ./pkg/ "${s3_package_dst}"
+    wrap_stream_raw aws s3 sync --no-progress ./pkg/ "${s3_package_dst}"
 
     echo "Destroying existing Vagrant guests..."
     pkt_wrap_stream_raw vagrant destroy -f
