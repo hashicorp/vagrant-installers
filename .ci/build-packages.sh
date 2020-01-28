@@ -270,8 +270,10 @@ if [ ! -z "${release}" ]; then
     pushd vagrant > "${output}"
 
     echo "Generating checksums and signing result for Vagrant version ${vagrant_version}..."
+    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
     wrap_stream packet-exec run -upload -download "./pkg/dist/*SHA256SUMS*:./pkg/dist" -- ./scripts/sign.sh "${vagrant_version}" \
                 "Checksum generation and signing failed for release"
+    unset PACKET_EXEC_PRE_BUILTINS
     popd > "${output}"
 
     mv vagrant/pkg/dist/* pkg/
