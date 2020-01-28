@@ -1,4 +1,4 @@
-# last-modified: Tue Jan 14 20:55:41 UTC 2020
+# last-modified: Mon Jan 27 23:25:42 UTC 2020
 #!/usr/bin/env bash
 
 # Path to file used for output redirect
@@ -288,7 +288,7 @@ function prerelease() {
 # $1: Version
 # Returns: 0 if valid, 1 if invalid
 function valid_release_version() {
-    if [[ "${1}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    if [[ "${1}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         return 0
     else
         return 1
