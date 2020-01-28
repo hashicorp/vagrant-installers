@@ -7,6 +7,8 @@ if [ "$#" -ne "2" ]; then
   exit 1
 fi
 
+export MACOSX_DEPLOYMENT_TARGET="10.15"
+
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
@@ -15,6 +17,11 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
 OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_x86_64.dmg"
+
+echo "Rebuild rb-fsevent bin executable..."
+pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*
+rake -f ext/rakefile.rb replace_exe
+popd
 
 # Work in a temporary directory
 rm -rf package-staging
@@ -81,6 +88,7 @@ exit 0
 EOF
 chmod 0755 ${STAGING_DIR}/scripts/postinstall
 
+
 # Install and enable package signing if available
 if [[ -f "${PKG_SIGN_CERT_PATH}" && -f "${PKG_SIGN_KEY_PATH}" ]]
 then
@@ -100,7 +108,6 @@ fi
 # Perform library scrubbing to remove files which will fail notarization
 rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/cache/"*
 rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rubyzip-"*/test/
-rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/bin/
 
 #-------------------------------------------------------------------------
 # Code sign
@@ -109,11 +116,11 @@ rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/bin
 if [[ "${SIGN_CODE}" -eq "1" ]]
 then
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
     echo "Finding all substate bundles..."
-    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
     echo "Finding all substrate shared library objects..."
-    find "${SUBSTRATE_DIR}" -name "*.so" -exec codesign --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -name "*.so" -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
 fi
 
 #-------------------------------------------------------------------------
