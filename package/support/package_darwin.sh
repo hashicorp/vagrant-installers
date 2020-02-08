@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+set -e
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
@@ -88,20 +88,29 @@ exit 0
 EOF
 chmod 0755 ${STAGING_DIR}/scripts/postinstall
 
-
 # Install and enable package signing if available
 if [[ -f "${PKG_SIGN_CERT_PATH}" && -f "${PKG_SIGN_KEY_PATH}" ]]
 then
-    security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
-    security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
+    set +e
+    security find-identity | grep "Installer.*${PKG_SIGN_IDENTITY}"
+    if [ $? -ne 0 ]; then
+        security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
+        security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
+    fi
     SIGN_PKG="1"
+    set -e
 fi
 
 # Install and enable code signing if available
 if [[ -f "${CODE_SIGN_CERT_PATH}" && "${CODE_SIGN_PASS}" != "" ]]
 then
-    echo "==> Installing code signing key..."
-    security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign
+    set +e
+    security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}"
+    if [ $? -ne 0 ]; then
+        echo "==> Installing code signing key..."
+        security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign
+    fi
+    set -e
     SIGN_CODE="1"
 fi
 
@@ -115,12 +124,23 @@ rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rubyzip-"*/test/
 # Sign all executables within package
 if [[ "${SIGN_CODE}" -eq "1" ]]
 then
+    echo <<EOF >entitlements.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>com.apple.security.cs.disable-library-validation</key>
+<true/>
+</dict>
+</plist>
+EOF
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --options=runtime --entitlements entitlements.plist -s "${CODE_SIGN_IDENTITY}" {} \;
     echo "Finding all substate bundles..."
     find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
     echo "Finding all substrate shared library objects..."
     find "${SUBSTRATE_DIR}" -name "*.so" -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
+    rm entitlements.plist
 fi
 
 #-------------------------------------------------------------------------
@@ -253,12 +273,7 @@ notarize {
   staple = true
 }
 EOF
-    # right now this will fail due to old .bundles we can't upgrade yet
-    set +e
     gon ./config.hcl
-    set -e
-    # now if the staple fails, we know we're in trouble
-    xcrun stapler staple "${OUTPUT_PATH}"
 else
     echo
     echo "!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!"
