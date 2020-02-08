@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Builds the package for Vagrant unix-like systems (Mac OS X and Linux).
-set -ex
+set -e
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
