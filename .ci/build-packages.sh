@@ -104,8 +104,8 @@ mkdir -p substrate-assets pkg
 echo "Fetching any prebuilt substrates and/or packages... "
 
 # If there are existing substrates or packages already built, download them
-aws s3 sync --no-progress "${s3_substrate_dst}/" ./substrate-assets/ > "${output}" 2>&1
-aws s3 sync --no-progress "${s3_package_dst}/" ./pkg/ > "${output}" 2>&1
+aws s3 sync --no-progress "${s3_substrate_dst}/" ./substrate-assets/
+aws s3 sync --no-progress "${s3_package_dst}/" ./pkg/
 
 # Make signing files available before upload
 secrets=$(load-signing) || fail "Failed to load signing files"
