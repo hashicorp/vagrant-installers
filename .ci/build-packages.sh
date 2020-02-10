@@ -224,9 +224,8 @@ else
         done
         tail -f --quiet --pid "${pid}" "${guest}.log" &
         pids+=("${pid}")
+        unset PACKET_EXEC_PRE_BUILTINS
     done
-
-    unset PACKET_EXEC_PRE_BUILTINS
 
     # Wait for all the background provisions to complete
     for pid in "${pids[@]}"; do
