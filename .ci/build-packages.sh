@@ -303,5 +303,5 @@ else
     export GITHUB_TOKEN="${HASHIBOT_TOKEN}"
     prerelease "${prerelease_version}" pkg/
 
-    slack -m "New Vagrant development installers available:\n> https://github.com/${respository}/releases/${prerelease_version}"
+    slack -m "New Vagrant development installers available:\n> https://github.com/${repository}/releases/${prerelease_version}"
 fi
