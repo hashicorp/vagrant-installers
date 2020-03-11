@@ -28,8 +28,8 @@ script:
   - mkdir rgloader
   - cp "${WORK_DIR}/rgloader/"* rgloader/
   - mkdir -p usr/gembundle
-  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.4 install rubygems-update --no-document
-  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.4 install "${WORK_DIR}/vagrant.gem" --no-document
-  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.4 install pkg-config --no-document
+  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.6 install rubygems-update --no-document
+  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.6 install "${WORK_DIR}/vagrant.gem" --no-document
+  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.6 install pkg-config --no-document
   - mv "${WORK_DIR}/vagrant_wrapper.sh" usr/bin/vagrant
   - chmod a+x usr/bin/vagrant

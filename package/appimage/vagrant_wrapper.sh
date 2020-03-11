@@ -12,7 +12,7 @@ export VAGRANT_USR_DIR="$( cd -P "$( dirname "$VAGRANT_BIN_DIR" )" && pwd )"
 export VAGRANT_ROOT_DIR="$( cd -P "$( dirname "$VAGRANT_USR_DIR" )" && pwd )"
 export GEM_HOME="${VAGRANT_USR_DIR}/gembundle"
 export GEM_PATH="${VAGRANT_USR_DIR}/gembundle"
-export RUBYLIB="$( "${VAGRANT_BIN_DIR}/ruby2.4" -e "puts $:.map{|x| ENV['VAGRANT_ROOT_DIR'] + x}.join(':')" )"
+export RUBYLIB="$( "${VAGRANT_BIN_DIR}/ruby2.6" -e "puts $:.map{|x| ENV['VAGRANT_ROOT_DIR'] + x}.join(':')" )"
 if [ "${SSL_CERT_FILE}" = "" ]; then
     export SSL_CERT_FILE="${VAGRANT_ROOT_DIR}/etc/ssl/ca-certificates.crt"
 fi
@@ -65,4 +65,4 @@ export VAGRANT_APPIMAGE_LD_LIBRARY_PATH="${new_ld_library_path}"
 unset PYTHONHOME
 unset PYTHONPATH
 
-"${VAGRANT_BIN_DIR}/ruby2.4" -- "${VAGRANT_USR_DIR}/gembundle/bin/vagrant" "$@"
+"${VAGRANT_BIN_DIR}/ruby2.6" -- "${VAGRANT_USR_DIR}/gembundle/bin/vagrant" "$@"
