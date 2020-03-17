@@ -126,7 +126,7 @@ if($RubyProc64.ExitCode -ne 0) {
 }
 
 # Relocate packages
-Copy-Item .\ruby-build-*\*.xz -Destination "$($PackageDir)\"
+Copy-Item .\ruby-build-*\*.zst -Destination "$($PackageDir)\"
 
 Pop-Location
 

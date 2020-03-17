@@ -20,7 +20,7 @@ WORKINGDIR=`pwd`
 STAGE32=`cygpath -pu $2`
 STAGE64=`cygpath -pu $3`
 
-find $RUBYPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
+find $RUBYPKGDIR -name "*.zst" -exec cp {} pkgs/ \;
 
 ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
 
