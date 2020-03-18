@@ -10,4 +10,4 @@ cp -r ruby-build/. "${build_dir}/"
 
 pushd "${build_dir}"
 
-MINGW_INSTALLS=$arch makepkg-mingw --nodeps --force --noconfirm
+PKGEXT=".pkg.tar.xz" MINGW_INSTALLS=$arch makepkg-mingw --nodeps --force --noconfirm
