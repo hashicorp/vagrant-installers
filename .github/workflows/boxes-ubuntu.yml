@@ -18,7 +18,7 @@ jobs:
         run: ./.ci/build-boxes.sh
         working-directory: ${{github.workspace}}
         env:
-          PKT_PACKER_BUILDS="ubuntu-14.04"
+          PKT_PACKER_BUILDS: "ubuntu-14.04"
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}

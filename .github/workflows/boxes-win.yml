@@ -18,7 +18,7 @@ jobs:
         run: ./.ci/build-boxes.sh
         working-directory: ${{github.workspace}}
         env:
-          PKT_PACKER_BUILDS="win-8"
+          PKT_PACKER_BUILDS: "win-8"
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}
