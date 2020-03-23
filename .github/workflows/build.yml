@@ -4,6 +4,9 @@ on:
       - 'master'
       - 'build-*'
     tags: '*'
+    paths:
+      - 'substrate/**'
+      - 'package/**'
   schedule:
     - cron: '15 1 * * *'
 
