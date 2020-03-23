@@ -9,7 +9,7 @@ build_boxes = [
   'osx-10.15',
   'ubuntu-14.04',
   'ubuntu-14.04-i386',
-  'win-7',
+  'win-8',
 ]
 
 box_mappings = {
