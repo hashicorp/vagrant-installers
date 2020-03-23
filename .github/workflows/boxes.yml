@@ -1,0 +1,18 @@
+on:
+  schedule:
+    - cron: '30 2 1 * *'
+
+jobs:
+  build:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build Vagrant Installer Boxes
+    runs-on: self-hosted
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v1
+      - name: Build Boxes
+        run: ./.ci/build-boxes.sh
+        working-directory: ${{github.workspace}}
+      - name: Clean Workspace
+        if: always()
+        run: rm -rf ${{ github.workspace }}

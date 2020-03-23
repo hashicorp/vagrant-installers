@@ -1,0 +1,24 @@
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'packer/vagrant/template_ubuntu-14.04-i386.json'
+      - 'packer/vagrant/scripts/ubuntu/**'
+
+jobs:
+  build:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build Vagrant Installer Boxes (ubuntu 386)
+    runs-on: self-hosted
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v1
+      - name: Build Box
+        run: ./.ci/build-boxes.sh
+        working-directory: ${{github.workspace}}
+        env:
+          PKT_PACKER_BUILDS="ubuntu-14.04-i386"
+      - name: Clean Workspace
+        if: always()
+        run: rm -rf ${{ github.workspace }}
