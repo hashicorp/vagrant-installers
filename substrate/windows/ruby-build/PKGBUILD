@@ -50,11 +50,11 @@ build() {
   make showflags main
 }
 
-check() {
-  cd "${srcdir}/build-${MINGW_CHOST}"
-  echo $PATH
-  make -l "TESTOPTS=-q" btest test-basic
-}
+#check() {
+#  cd "${srcdir}/build-${MINGW_CHOST}"
+#  echo $PATH
+#  make -l "TESTOPTS=-q" btest test-basic
+#}
 
 package() {
   cd "${srcdir}/build-${MINGW_CHOST}"
