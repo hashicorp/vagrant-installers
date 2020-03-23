@@ -35,7 +35,7 @@
       "vm_name": "{{user `vm_name`}}",
       "winrm_username": "vagrant",
       "winrm_password": "vagrant",
-      "winrm_timeout": "10000s"
+      "winrm_timeout": "3h"
     }
   ],
   "post-processors": [
