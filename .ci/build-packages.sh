@@ -37,8 +37,8 @@ declare -A substrate_list=(
     [*darwin_x86_64.zip]="osx-10.15"
     [*ubuntu_x86_64.zip]="ubuntu-14.04"
     [*ubuntu_i686.zip]="ubuntu-14.04-i386"
-    [*windows_x86_64.zip]="win-7"
-    [*windows_i686.zip]="win-7"
+    [*windows_x86_64.zip]="win-8"
+    [*windows_i686.zip]="win-8"
 )
 
 declare -A package_list=(
@@ -49,8 +49,8 @@ declare -A package_list=(
     [*x86_64.dmg]="osx-10.15"
     [*x86_64.deb]="ubuntu-14.04"
     [*i686.deb]="ubuntu-14.04-i386"
-    [*x86_64.msi]="win-7"
-    [*i686.msi]="win-7"
+    [*x86_64.msi]="win-8"
+    [*i686.msi]="win-8"
 )
 
 s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${short_sha}"
