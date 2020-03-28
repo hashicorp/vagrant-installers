@@ -1,4 +1,4 @@
-# last-modified: Mon Jan 27 23:25:42 UTC 2020
+# last-modified: Thu Feb 20 04:00:25 UTC 2020
 #!/usr/bin/env bash
 
 # Path to file used for output redirect
@@ -128,8 +128,8 @@ function pkt_wrap_stream_raw() {
 # Generates location within the asset storage
 # bucket to retain built assets.
 function asset_location() {
-    if [ "${tag}" = "" ]; then
-        dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}/${short_sha}"
+    if [ ! -z "${tag}" ]; then
+        dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}"
     else
         if [[ "${tag}" = *"+"* ]]; then
             dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${tag}"
@@ -288,7 +288,7 @@ function prerelease() {
 # $1: Version
 # Returns: 0 if valid, 1 if invalid
 function valid_release_version() {
-    if [[ "${1}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    if [[ "${1}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         return 0
     else
         return 1
@@ -312,10 +312,10 @@ function hashicorp_release_validate() {
     fi
 
     # SHASUMS checks
-    if [ ! -e "${directory}/"*SHASUMS ]; then
+    if [ ! -e "${directory}/"*SHA256SUMS ]; then
         fail "Asset directory is missing SHASUMS file"
     fi
-    if [ ! -e "${directory}/"*SHASUMS.sig ]; then
+    if [ ! -e "${directory}/"*SHA256SUMS.sig ]; then
         fail "Asset directory is missing SHASUMS signature file"
     fi
 }
@@ -334,7 +334,7 @@ function hashicorp_release_verify() {
     # Next check that the signature is valid
     gpghome=$(mktemp -qd)
     export GNUPGHOME="${gpghome}"
-    wrap gpg --import "${HASHICORP_PUBLIC_GPG_KEY}" \
+    wrap gpg --keyserver keyserver.ubuntu.com --recv "${HASHICORP_PUBLIC_GPG_KEY_ID}" \
          "Failed to import HashiCorp public GPG key"
     wrap gpg --verify *SHA256SUMS.sig *SHA256SUMS \
          "Validation of SHA256SUMS signature failed"
@@ -429,4 +429,5 @@ repository="${GITHUB_REPOSITORY}"
 repo_owner="${repository%/*}"
 repo_name="${repository#*/}"
 asset_cache="${ASSETS_PRIVATE_SHORTTERM}/${repository}/${GITHUB_ACTION}"
-job_id="${GITHUB_ACTION}"
+job_id="${GITHUB_ACTION}-${GITHUB_RUN_ID}"
+run_number="${GITHUB_RUN_NUMBER}"
