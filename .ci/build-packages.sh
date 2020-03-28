@@ -138,6 +138,11 @@ else
                     "Failed to start builder guests on packet device for substrates"
     echo "Start Vagrant substrate builds..."
 
+    # Load secrets and persist for use
+    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+    packet-exec run -quiet -- sleep 500 &
+    unset PACKET_EXEC_PRE_BUILTINS
+
     pids=()
     for p in "${!substrate_list[@]}"; do
         path=(substrate-assets/${p})
@@ -145,6 +150,7 @@ else
             continue
         fi
         guest="${substrate_list[${p}]}"
+        echo "Running substrate build for ${guest}..."
         export PKT_VAGRANT_ONLY_BOXES="${guest}"
         packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
         pid=$!
@@ -207,7 +213,10 @@ else
                     "Failed to start builder guests on packet device for packaging"
     echo "Start Vagrant package builds..."
 
+    # Load secrets and persist for use
     export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+    packet-exec run -quiet -- sleep 500 &
+    unset PACKET_EXEC_PRE_BUILTINS
 
     pids=()
     for p in "${!package_list[@]}"; do
@@ -216,6 +225,7 @@ else
             continue
         fi
         guest="${package_list[${p}]}"
+        echo "Running package build for ${guest}..."
         export PKT_VAGRANT_ONLY_BOXES="${guest}"
         packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
         pid=$!
