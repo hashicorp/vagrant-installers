@@ -273,7 +273,17 @@ notarize {
   staple = true
 }
 EOF
-    gon ./config.hcl
+    if [ -z "${DISABLE_NOTARIZATION}" ]; then
+        gon ./config.hcl
+    else
+        echo
+        echo "!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!"
+        echo "! Vagrant installer package is NOT   !"
+        echo "! notarized. Notarization has been   !"
+        echo "! expliticly disabled. Please enable !"
+        echo "! package notarization and rebuild.  !"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    fi
 else
     echo
     echo "!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!"
