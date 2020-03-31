@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Force a DNS update
+echo "dns-nameservers 1.1.1.1" >> /etc/network/interfaces
+service network-interface restart INTERFACE=eth0
+
 apt-get update -yq
 apt-get install -yq nc
 
