@@ -124,7 +124,7 @@ rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rubyzip-"*/test/
 # Sign all executables within package
 if [[ "${SIGN_CODE}" -eq "1" ]]
 then
-    echo <<EOF >entitlements.plist
+    cat <<EOF >entitlements.plist
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -134,12 +134,14 @@ then
 </dict>
 </plist>
 EOF
+    echo "Validating plist format..."
+    plutil -lint entitlements.plist
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --options=runtime --entitlements entitlements.plist -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --timestamp --options=runtime --entitlements entitlements.plist -s "${CODE_SIGN_IDENTITY}" {} \;
     echo "Finding all substate bundles..."
-    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
     echo "Finding all substrate shared library objects..."
-    find "${SUBSTRATE_DIR}" -name "*.so" -exec codesign -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
     rm entitlements.plist
 fi
 
