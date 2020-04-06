@@ -350,8 +350,12 @@ popd
 
 # openssl
 echo_stderr "   -> Building openssl..."
-openssl_url="http://www.openssl.org/source/old/${openssl_version::-1}/openssl-${openssl_version}.tar.gz"
-curl -L -s -o openssl.tar.gz "${openssl_url}"
+openssl_url="http://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
+curl -L -f -s -o openssl.tar.gz "${openssl_url}"
+if [ $? -ne 0 ]; then
+    openssl_url="http://www.openssl.org/source/old/${openssl_version::-1}/openssl-${openssl_version}.tar.gz"
+    curl -L -s -o openssl.tar.gz "${openssl_url}"
+fi
 tar -xzf openssl.tar.gz
 pushd openssl-*
 if [ "${LD_RPATH}" != "" ]; then
