@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Force a DNS update
+echo "dns-nameservers 8.8.8.8" >> /etc/network/interfaces
+service network-interface restart INTERFACE=eth0
+
 # if the proxy is around, use it
 nc -z -w3 192.168.1.1 8123 && export http_proxy="http://192.168.1.1:8123"
 
