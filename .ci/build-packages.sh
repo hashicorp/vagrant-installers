@@ -131,6 +131,7 @@ substrates_needed="${substrates_needed#,}"
 if [ "${substrates_needed}" = "" ]; then
     echo "All substrates currently exist. No build required."
 else
+    declare -A substrate_builds
 
     export PKT_VAGRANT_ONLY_BOXES="${substrates_needed}"
     export PKT_VAGRANT_BUILD_TYPE="substrate"
@@ -145,28 +146,27 @@ else
     packet-exec run -quiet -- sleep 500 &
     unset PACKET_EXEC_PRE_BUILTINS
 
-    pids=()
     for p in "${!substrate_list[@]}"; do
         path=(substrate-assets/${p})
-        if [ -f "${path}" ]; then
+        guest="${substrate_list[${p}]}"
+        if [ -f "${path}" ] || [ ! -z "${substrate_builds[${guest}]}" ]; then
             continue
         fi
-        guest="${substrate_list[${p}]}"
         echo "Running substrate build for ${guest}..."
         export PKT_VAGRANT_ONLY_BOXES="${guest}"
         packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
         pid=$!
+        substrate_builds["${guest}"]="${pid}"
         until [ -f "${guest}.log" ]; do
             sleep 0.1
         done
         tail -f --quiet --pid "${pid}" "${guest}.log" &
-        pids+=("${pid}")
     done
 
     # Wait for all the background provisions to complete
     # NOTE: We don't check pid success since substrate file check
     #       below will catch any errors
-    for pid in "${pids[@]}"; do
+    for pid in "${substrate_builds[@]}"; do
         wait "${pid}"
     done
 
@@ -203,6 +203,8 @@ packages_needed="${packages_needed#,}"
 if [ "${packages_needed}" = "" ]; then
     echo "All packages currently exist. No build required."
 else
+    declare -A package_builds
+
     export PKT_VAGRANT_ONLY_BOXES="${packages_needed}"
     export PKT_VAGRANT_BUILD_TYPE="package"
 
@@ -220,27 +222,26 @@ else
     packet-exec run -quiet -- sleep 500 &
     unset PACKET_EXEC_PRE_BUILTINS
 
-    pids=()
     for p in "${!package_list[@]}"; do
         path=(pkg/${p})
-        if [ -f "${path}" ]; then
+        guest="${package_list[${p}]}"
+        if [ -f "${path}" ] || [ ! -z "${package_builds[${guest}]}" ]; then
             continue
         fi
-        guest="${package_list[${p}]}"
         echo "Running package build for ${guest}..."
         export PKT_VAGRANT_ONLY_BOXES="${guest}"
         packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
         pid=$!
+        package_builds["${guest}"]="${pid}"
         until [ -f "${guest}.log" ]; do
             sleep 0.1
         done
         tail -f --quiet --pid "${pid}" "${guest}.log" &
-        pids+=("${pid}")
         unset PACKET_EXEC_PRE_BUILTINS
     done
 
     # Wait for all the background provisions to complete
-    for pid in "${pids[@]}"; do
+    for pid in "${package_builds[@]}"; do
         wait "${pid}"
     done
 
