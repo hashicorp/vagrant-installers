@@ -53,21 +53,6 @@ declare -A package_list=(
     [*i686.msi]="win-8"
 )
 
-s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${short_sha}"
-if [ "${tag}" != "" ]; then
-    if [[ "${tag}" = *"+"* ]]; then
-        s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${tag}"
-    else
-        s3_package_dst="${ASSETS_PRIVATE_BUCKET}/${repository}/${tag}"
-    fi
-else
-    s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}/${short_sha}"
-fi
-
-export PACKET_EXEC_REMOTE_DIRECTORY="${job_id}"
-export PACKET_EXEC_PERSIST="1"
-export PKT_VAGRANT_INSTALLERS_VAGRANT_PACKAGE_SIGNING_REQUIRED=1
-
 # Grab the vagrant gem the installer is building around
 echo "Fetching Vagrant RubyGem for installer build..."
 
@@ -79,6 +64,23 @@ else
     wrap curl -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Accept: application/octet-stream" -SsL -o "vagrant-${tag}.gem" "${url}" \
          "Failed to download Vagrant RubyGem"
 fi
+
+gem_short_sha=$(sha256sum vagrant-*.gem)
+
+s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${short_sha}"
+if [ "${tag}" != "" ]; then
+    if [[ "${tag}" = *"+"* ]]; then
+        s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${tag}"
+    else
+        s3_package_dst="${ASSETS_PRIVATE_BUCKET}/${repository}/${tag}-${gem_short_sha}"
+    fi
+else
+    s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}/${short_sha}-${gem_short_sha}"
+fi
+
+export PACKET_EXEC_REMOTE_DIRECTORY="${job_id}"
+export PACKET_EXEC_PERSIST="1"
+export PKT_VAGRANT_INSTALLERS_VAGRANT_PACKAGE_SIGNING_REQUIRED=1
 
 # Extract out Vagrant version information from gem
 vagrant_version="$(gem specification vagrant-*.gem version)"
