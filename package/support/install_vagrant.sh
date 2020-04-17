@@ -27,7 +27,7 @@ EMBEDDED_DIR="$1/embedded"
 VAGRANT_REV=$2
 VERSION_OUTPUT=$3
 
-GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
+export GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -68,7 +68,7 @@ if [ ! -f "${VAGRANT_GEM_PATH}" ]; then
     cp vagrant-*.gem vagrant.gem
 else
     cp "${VAGRANT_GEM_PATH}" ./vagrant.gem
-    gem unpack ./vagrant.gem
+    ${GEM_COMMAND} unpack ./vagrant.gem
     VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
     echo -n $VERSION >"${VERSION_OUTPUT}"
 fi

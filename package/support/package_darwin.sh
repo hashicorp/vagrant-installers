@@ -7,7 +7,14 @@ if [ "$#" -ne "2" ]; then
   exit 1
 fi
 
-export MACOSX_DEPLOYMENT_TARGET="10.15"
+export MACOSX_DEPLOYMENT_TARGET="10.9"
+export SDKROOT="/Users/vagrant/SDKs/MacOSX10.9.sdk" #"$(xcrun --sdk macosx --show-sdk-path)"
+export ISYSROOT="-isysroot ${SDKROOT}"
+export SYSLIBROOT="-syslibroot ${SDKROOT}"
+export SYS_ROOT="${SDKROOT}"
+export CFLAGS="-mmacosx-version-min=10.9 ${ISYSROOT}"
+export CXXFLAGS="${CFLAGS}"
+export LDFLAGS="-mmacosx-version-min=10.9 ${SYSLIBROOT}"
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -18,8 +25,24 @@ SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
 OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_x86_64.dmg"
 
+EMBEDDED_DIR="$1/embedded"
+GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
+export GEM_PATH="${EMBEDDED_DIR}/gems/${VERSION}"
+export GEM_HOME="${GEM_PATH}"
+export GEMRC="${EMBEDDED_DIR}/etc/gemrc"
+export CPPFLAGS="${CXXFLAGS} -I${EMBEDDED_DIR}/include -I${EMBEDDED_DIR}/include/libxml2"
+export CXXFLAGS="${CPPFLAGS}"
+export CFLAGS="${CPPFLAGS}"
+export LDFLAGS="${LDFLAGS} -L${EMBEDDED_DIR}/lib -L${EMBEDDED_DIR}/lib64"
+export PATH="${EMBEDDED_DIR}/bin:${PATH}"
+export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
+
 echo "Rebuild rb-fsevent bin executable..."
+"${GEM_COMMAND}" install --no-document rake
 pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*
+pushd ext
+sed -ibak "s|.*SDK_INFO =.*\$|\$SDK_INFO = \{'Path' => '${SDKROOT}', 'ProductBuildVersion' => '${MACOSX_DEPLOYMENT_TARGET}'\}; next|" rakefile.rb
+popd
 rake -f ext/rakefile.rb replace_exe
 popd
 
