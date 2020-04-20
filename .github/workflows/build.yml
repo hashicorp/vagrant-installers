@@ -7,6 +7,8 @@ on:
     paths:
       - 'substrate/**'
       - 'package/**'
+      - '.ci/build-packages.sh'
+      - '.github/workflows/build.yml'
   schedule:
     - cron: '15 1 * * *'
 
