@@ -120,6 +120,10 @@ echo "Setting up remote packet device for current job... "
 wrap_stream packet-exec run -upload -- /bin/true \
             "Failed to setup project on remote packet instance"
 
+# Always ensure boxes are up to date
+pkt_wrap_stream vagrant box update \
+                "Failed to update local build boxes"
+
 for p in "${!substrate_list[@]}"; do
     path=(substrate-assets/${p})
     if [ ! -f "${path}" ]; then
