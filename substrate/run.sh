@@ -3,7 +3,7 @@
 #### Software versions
 #### Update these as required
 
-curl_version="7.68.0"
+curl_version="7.69.1"
 libarchive_version="3.3.2"
 libffi_version="3.2.1"
 libgcrypt_version="1.8.5"
@@ -14,7 +14,7 @@ libssh2_version="1.8.0"
 libxml2_version="2.9.7"
 libxslt_version="1.1.32"
 libyaml_version="0.1.7"
-openssl_version="1.1.1f"
+openssl_version="1.1.1g"
 readline_version="7.0"
 ruby_version="2.6.6"
 xz_version="5.2.4"
