@@ -44,7 +44,7 @@ function Create-Process {
     return $process
 }
 
-$CurlVersion = "7.61.0"
+$CurlVersion = "7.69.1"
 $Libssh2Version = "1.8.0"
 $ZlibVersion = "1.2.11"
 
