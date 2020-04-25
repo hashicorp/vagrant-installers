@@ -185,6 +185,7 @@ pushd "${cache_dir}"
 
 echo_stderr " -> Building substrate requirements..."
 
+export PKG_CONFIG_PATH="${embed_dir}/lib/pkgconfig"
 export CFLAGS="-I${embed_dir}/include"
 export CPPFLAGS="-I${embed_dir}/include"
 export LDFLAGS="-L${embed_dir}/lib"
