@@ -9,6 +9,8 @@ chown root:wheel gon
 chmod 755 gon
 mv gon /System/Volumes/Data/usr/local/bin/gon
 
+su vagrant -l -c 'brew install bash'
+
 chmod 755 /vagrant/package/package.sh
 
 set -e
