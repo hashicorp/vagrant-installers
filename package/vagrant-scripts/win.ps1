@@ -24,11 +24,10 @@ $SubstratePath = "C:\vagrant\substrate-assets\substrate_windows_x86_64.zip"
 $SubstrateExists = Test-Path -LiteralPath $SubstratePath
 
 if(!$SubstrateExists) {
-    Write-Host "Error: No substrate found @ ${SubstratePath}!"
-    exit 1
+    Write-Error "Error: No substrate found @ ${SubstratePath}!"
 }
 
-Write-Host "Starting package build"
+Write-Output "Starting package build"
 Set-Location -Path "C:\vagrant\${pkg_dir}"
 
 if(!$env:SignKeyPath) {
@@ -39,12 +38,11 @@ if(!$env:SignKeyPath) {
 $SignKeyExists = Test-Path -LiteralPath $SignKeyPath
 $PackageScript = "C:\vagrant\package\package.ps1"
 
-Write-Host "Starting 64-bit package process"
+Write-Output "Starting 64-bit package process"
 
 if($SignKeyExists) {
     if(!$env:SignKeyPassword) {
-        Write-Host "Error: No password provided for code signing key!"
-        exit 1
+        Write-Error "Error: No password provided for code signing key!"
     }
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
@@ -63,17 +61,15 @@ if($SignKeyExists) {
 
 & $PackageScript @PackageArgs
 if(!$?){
-    Write-Host "Error: Packaging failed!"
-    exit 1
+    Write-Error "Error: Packaging failed!"
 }
 
-Write-Host "Starting 32-bit package process..."
+Write-Output "Starting 32-bit package process..."
 $SubstratePath = "C:\vagrant\substrate-assets\substrate_windows_i686.zip"
 
 if($SignKeyExists) {
     if(!$env:SignKeyPassword) {
-        Write-Host "Error: No password provided for code signing key!"
-        exit 1
+        Write-Error "Error: No password provided for code signing key!"
     }
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
@@ -92,6 +88,5 @@ if($SignKeyExists) {
 
 & $PackageScript @PackageArgs
 if(!$?){
-    Write-Host "Error: Packaging failed!"
-    exit 1
+    Write-Error "Error: Packaging failed!"
 }
