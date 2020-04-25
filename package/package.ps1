@@ -1,22 +1,22 @@
 <#
 .SYNOPSIS
-    Packages a Vagrant installer from a substrate package.
+Packages a Vagrant installer from a substrate package.
 
 .DESCRIPTION
-    Packages a Vagrant installer from a substrate package.
+Packages a Vagrant installer from a substrate package.
 
-    This script requires administrative privileges.
+This script requires administrative privileges.
 
-    You can run this script from an old-style cmd.exe prompt using the
-    following:
+You can run this script from an old-style cmd.exe prompt using the
+following:
 
-      powershell.exe -ExecutionPolicy Unrestricted -NoLogo -NoProfile -Command "& '.\package.ps1'"
+powershell.exe -ExecutionPolicy Unrestricted -NoLogo -NoProfile -Command "& '.\package.ps1'"
 
 .PARAMETER SubstratePath
-    Path to the substrate zip file.
+Path to the substrate zip file.
 
 .PARAMETER VagrantRevision
-    The commit revision of Vagrant to install.
+The commit revision of Vagrant to install.
 #>
 param(
     [Parameter(Mandatory=$true)]
@@ -54,8 +54,8 @@ $WixCandle = Get-Command candle | Select-Object -ExpandProperty Definition
 $WixLight  = Get-Command light | Select-Object -ExpandProperty Definition
 
 If ($BuildStyle -ne "ephemeral" -And $BuildStyle -ne "cached") {
-  Write-Host "Error: BuildStyle must be either 'ephemeral' or 'cached'"
-  exit 1
+    Write-Output "Error: BuildStyle must be either 'ephemeral' or 'cached'"
+    exit 1
 }
 
 $UseCache = $false
@@ -80,32 +80,32 @@ $SubstratePath = Resolve-Path $SubstratePath
 # We need to create a temporary configuration directory
 $SubstrateTmpDir = [System.IO.Path]::GetTempPath()
 If ($BuildStyle -eq "ephemeral") {
-  $SubstrateTmpDir = [System.IO.Path]::Combine(
-      $SubstrateTmpDir, [System.IO.Path]::GetRandomFileName())
-  [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
+    $SubstrateTmpDir = [System.IO.Path]::Combine(
+        $SubstrateTmpDir, [System.IO.Path]::GetRandomFileName())
+    [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
 } Else {
-  $SubstrateTmpDir = [System.IO.Path]::Combine(
-      $SubstrateTmpDir, "vagrant-substrate-builder")
-  If ($ScrubCache -eq "no") {
-    [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
-    $SubstrateDirectory = Get-ChildItem $SubstrateTmpDir
-    If ($SubstrateDirectory.count -ne 0) {
-      $UseCache = $true
+    $SubstrateTmpDir = [System.IO.Path]::Combine(
+        $SubstrateTmpDir, "vagrant-substrate-builder")
+    If ($ScrubCache -eq "no") {
+        [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
+        $SubstrateDirectory = Get-ChildItem $SubstrateTmpDir
+        If ($SubstrateDirectory.count -ne 0) {
+            $UseCache = $true
+        }
+    } Else {
+        [System.IO.Directory]::Delete($SubstrateTmpDir, $true)
+        [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
     }
-  } Else {
-    [System.IO.Directory]::Delete($SubstrateTmpDir, $true)
-    [System.IO.Directory]::CreateDirectory($SubstrateTmpDir) | Out-Null
-  }
 }
 
-Write-Host "Substrate temp dir: $($SubstrateTmpDir)"
+Write-Output "Substrate temp dir: $($SubstrateTmpDir)"
 
 # Unzip
 If ($UseCache -eq $false) {
-  Write-Host "Expanding substrate..."
-  Start-Process "C:\Program Files\7-Zip\7z.exe" "x -o${SubstrateTmpDir} ${SubstratePath}" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\unpack.log
+    Write-Output "Expanding substrate..."
+    Start-Process "C:\Program Files\7-Zip\7z.exe" "x -o${SubstrateTmpDir} ${SubstratePath}" -NoNewWindow -Wait -RedirectStandardOutput C:\Windows\Temp\unpack.log
 } Else {
-  Write-Host "Using cached substrate"
+    Write-Output "Using cached substrate"
 }
 
 # Set the full path to the substrate
@@ -113,8 +113,8 @@ $SubstrateDir = "$($SubstrateTmpDir)"
 
 $Path32Bit = [System.IO.Path]::Combine($SubstrateDir, "embedded", "mingw32")
 if (Test-Path -Path $Path32Bit) {
-  Write-Host "Detected 32bit substrate. Building 32bit package."
-  $PackageArch = "32"
+    Write-Output "Detected 32bit substrate. Building 32bit package."
+    $PackageArch = "32"
 }
 
 #--------------------------------------------------------------------
@@ -122,61 +122,67 @@ if (Test-Path -Path $Path32Bit) {
 #--------------------------------------------------------------------
 $VagrantTmpDir = [System.IO.Path]::GetTempPath()
 if ($BuildStyle -eq "ephemeral" ) {
-  $VagrantTmpDir = [System.IO.Path]::Combine(
-    $VagrantTmpDir, [System.IO.Path]::GetRandomFileName())
-  [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
+    $VagrantTmpDir = [System.IO.Path]::Combine(
+        $VagrantTmpDir, [System.IO.Path]::GetRandomFileName())
+    [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
 } Else {
-  $VagrantTmpDir = [System.IO.Path]::Combine(
-    $VagrantTmpDir, "vagrant-$($VagrantRevision)")
-  If ($ScrubCache -eq "no") {
-    [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
-    $VagrantDirectory = Get-ChildItem $VagrantTmpDir
-    If ($VagrantDirectory.count -ne 0) {
-      $UseCache = $true
+    $VagrantTmpDir = [System.IO.Path]::Combine(
+        $VagrantTmpDir, "vagrant-$($VagrantRevision)")
+    If ($ScrubCache -eq "no") {
+        [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
+        $VagrantDirectory = Get-ChildItem $VagrantTmpDir
+        If ($VagrantDirectory.count -ne 0) {
+            $UseCache = $true
+        }
+    } Else {
+        [System.IO.Directory]::Delete($VagrantTmpDir, $true)
+        [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
     }
-  } Else {
-    [System.IO.Directory]::Delete($VagrantTmpDir, $true)
-    [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
-  }
 }
 
-Write-Host "Vagrant temp dir: $($VagrantTmpDir)"
+Write-Output "Vagrant temp dir: $($VagrantTmpDir)"
 
 $VagrantSourceURL = "$($VagrantSourceBaseURL)/$($VagrantRevision).zip"
 $VagrantDest      = "$($VagrantTmpDir)\vagrant.zip"
 $VagrantSourceDir = $VagrantTmpDir
 
 if (-Not (Test-Path -Path "$($Dir)\vagrant.gem")) {
-  # Download
-  If ($UseCache -eq $false) {
-    Write-Host "Downloading Vagrant: $($VagrantRevision)"
-    $client = New-Object System.Net.WebClient
-    $client.DownloadFile($VagrantSourceURL, $VagrantDest)
+    # Download
+    If ($UseCache -eq $false) {
+        Write-Output "Downloading Vagrant: $($VagrantRevision)"
+        $client = New-Object System.Net.WebClient
+        $client.DownloadFile($VagrantSourceURL, $VagrantDest)
 
-    # Unzip
-    Write-Host "Unzipping Vagrant"
-    Expand-ZipFile -file $VagrantDest -destination $VagrantTmpDir
-  } Else {
-    Write-Host "Using cached Vagrant download: $($VagrantRevision)"
-  }
+        # Unzip
+        Write-Output "Unzipping Vagrant"
+        Expand-ZipFile -file $VagrantDest -destination $VagrantTmpDir
+    } Else {
+        Write-Output "Using cached Vagrant download: $($VagrantRevision)"
+    }
 
-  # Set the full path to where Vagrant is
-  $VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
+    # Set the full path to where Vagrant is
+    $VagrantSourceDir = "$($VagrantTmpDir)\vagrant-$($VagrantRevision)"
 
-  # Build gem
-  If ($UseCache -eq $false) {
-    Write-Host "Building Vagrant Gem"
-    Push-Location $VagrantSourceDir
-      &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
-    Copy-Item vagrant-*.gem -Destination vagrant.gem
-    Pop-Location
-  } Else {
-    Write-Host "Using cached build of Vagrant Gem"
-  }
+    # Build gem
+    If ($UseCache -eq $false) {
+        Write-Output "Building Vagrant Gem"
+        Push-Location $VagrantSourceDir
+        & "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" build vagrant.gemspec
+        if(!$?) {
+            Write-Error "Failed to build Vagrant RubyGem"
+        }
+        Copy-Item vagrant-*.gem -Destination vagrant.gem
+        Pop-Location
+    } Else {
+        Write-Output "Using cached build of Vagrant Gem"
+    }
 } else {
     Copy-Item "$($Dir)\vagrant.gem" -Destination "$($VagrantSourceDir)\vagrant.gem"
     Push-Location $VagrantSourceDir
-    &"$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" unpack vagrant.gem
+    & "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\ruby.exe" "$($SubstrateDir)\embedded\mingw$($PackageArch)\bin\gem" unpack vagrant.gem
+    if(!$?) {
+        Write-Error "Failed to unpack Vagrant RubyGem"
+    }
     Copy-Item ".\vagrant\version.txt" -Destination ".\version.txt"
     Remove-Item -Recurse -Force ".\vagrant"
     Pop-Location
@@ -188,47 +194,52 @@ if (-Not (Test-Path $VagrantVersionFile)) {
     "0.1.0" | Out-File -FilePath $VagrantVersionFile
 }
 $VagrantVersion=$((Get-Content $VagrantVersionFile) -creplace '\.[^0-9]+(\.[0-9]+)?$', '$1')
-Write-Host "Vagrant version: $VagrantVersion"
+Write-Output "Vagrant version: $VagrantVersion"
 
 if ($PackageArch -eq "64") {
-  $MingArchDir = "x86_64-w64-mingw32"
+    $MingArchDir = "x86_64-w64-mingw32"
 } else {
-  $MingArchDir = "i686-w64-mingw32"
+    $MingArchDir = "i686-w64-mingw32"
 }
 
 if ($UseCache -eq $false) {
-  # Install gem. We do this in a sub-shell so we don't have to worry
-  # about restoring environmental variables.
-  $env:PackageArch      = $PackageArch
-  $env:MingArchDir      = $MingArchDir
-  $env:SubstrateDir     = $SubstrateDir
-  $env:VagrantSourceDir = $VagrantSourceDir
-  $env:VagrantVersion   = $VagrantVersion
-  powershell {
-      $ErrorActionPreference = "Stop"
+    # Install gem. We do this in a sub-shell so we don't have to worry
+    # about restoring environmental variables.
+    $env:PackageArch      = $PackageArch
+    $env:MingArchDir      = $MingArchDir
+    $env:SubstrateDir     = $SubstrateDir
+    $env:VagrantSourceDir = $VagrantSourceDir
+    $env:VagrantVersion   = $VagrantVersion
+    powershell {
+        Set-Location $env:VagrantSourceDir
+        $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
+        $PackageArch  = $env:PackageArch
+        $MingArchDir  = $env:MingArchDir
+        $env:GEM_PATH = "$($EmbeddedDir)\gems\$($env:VagrantVersion)"
+        $env:GEM_HOME = $env:GEM_PATH
+        $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
+        $env:CPPFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
+        $env:CFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
+        $env:LDFLAGS  = "-L/mingw$($PackageArch)/lib -L/mingw$($PackageArch)/$($MingArchDir)/lib -L/usr/lib"
+        $env:PKG_CONFIG_PATH = "/mingw$($PackageArch)/lib/pkgconfig:/usr/lib/pkgconfig"
+        $env:Path     ="$($EmbeddedDir)\mingw$($PackageArch)\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
+        $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
+        & "$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-document
 
-      Set-Location $env:VagrantSourceDir
-      $EmbeddedDir  = "$($env:SubstrateDir)\embedded"
-      $PackageArch  = $env:PackageArch
-      $MingArchDir  = $env:MingArchDir
-      $env:GEM_PATH = "$($EmbeddedDir)\gems\$($env:VagrantVersion)"
-      $env:GEM_HOME = $env:GEM_PATH
-      $env:GEMRC    = "$($EmbeddedDir)\etc\gemrc"
-      $env:CPPFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
-      $env:CFLAGS = "-I/mingw$($PackageArch)/$($MingArchDir)/include -I/mingw$($PackageArch)/include -I/usr/include"
-      $env:LDFLAGS  = "-L/mingw$($PackageArch)/lib -L/mingw$($PackageArch)/$($MingArchDir)/lib -L/usr/lib"
-      $env:PKG_CONFIG_PATH = "/mingw$($PackageArch)/lib/pkgconfig:/usr/lib/pkgconfig"
-      $env:Path     ="$($EmbeddedDir)\mingw$($PackageArch)\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
-      $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
-      &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-document
+        if(!$?) {
+            Write-Error "Failed to install Vagrant RubyGem into packaging substrate"
+        }
 
-      # Extensions
-      # &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
-  }
-  Remove-Item Env:SubstrateDir
-  Remove-Item Env:VagrantSourceDir
+        # Extensions
+        # &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+    }
+    if(!$?) {
+        Write-Error "Vagrant packaging into substrate failed"
+    }
+    Remove-Item Env:SubstrateDir
+    Remove-Item Env:VagrantSourceDir
 } Else {
-  Write-Host "Using cached installation of Vagrant Gem"
+    Write-Output "Using cached installation of Vagrant Gem"
 }
 
 #--------------------------------------------------------------------
@@ -242,8 +253,8 @@ $contents = @"
 }
 "@
 $contents | Out-File `
-    -Encoding ASCII `
-    -FilePath "$($SubstrateDir)\embedded\plugins.json"
+  -Encoding ASCII `
+  -FilePath "$($SubstrateDir)\embedded\plugins.json"
 
 #--------------------------------------------------------------------
 # Manifest File
@@ -254,17 +265,17 @@ $contents = @"
 }
 "@
 $contents | Out-File `
-    -Encoding ASCII `
-    -FilePath "$($SubstrateDir)\embedded\manifest.json"
+  -Encoding ASCII `
+  -FilePath "$($SubstrateDir)\embedded\manifest.json"
 
 #--------------------------------------------------------------------
 # MSI
 #--------------------------------------------------------------------
 # Final path to output
 if ( $PackageArch -eq "64") {
-  $OutputPath = "vagrant_$($VagrantVersion)_x86_64.msi"
+    $OutputPath = "vagrant_$($VagrantVersion)_x86_64.msi"
 } else {
-  $OutputPath = "vagrant_$($VagrantVersion)_i686.msi"
+    $OutputPath = "vagrant_$($VagrantVersion)_i686.msi"
 }
 
 $InstallerTmpDir = [System.IO.Path]::GetTempPath()
@@ -272,165 +283,167 @@ $InstallerTmpDir = [System.IO.Path]::Combine(
     $InstallerTmpDir, [System.IO.Path]::GetRandomFileName())
 [System.IO.Directory]::CreateDirectory($InstallerTmpDir) | Out-Null
 [System.IO.Directory]::CreateDirectory("$($InstallerTmpDir)\assets") | Out-Null
-Write-Host "Installer temp dir: $($InstallerTmpDir)"
+Write-Output "Installer temp dir: $($InstallerTmpDir)"
 
 Copy-Item "$($Dir)\support\windows\bg_banner.bmp" `
-    -Destination "$($InstallerTmpDir)\assets\bg_banner.bmp"
+  -Destination "$($InstallerTmpDir)\assets\bg_banner.bmp"
 Copy-Item "$($Dir)\support\windows\bg_dialog.bmp" `
-    -Destination "$($InstallerTmpDir)\assets\bg_dialog.bmp"
+  -Destination "$($InstallerTmpDir)\assets\bg_dialog.bmp"
 Copy-Item "$($Dir)\support\windows\license.rtf" `
-    -Destination "$($InstallerTmpDir)\assets\license.rtf"
+  -Destination "$($InstallerTmpDir)\assets\license.rtf"
 Copy-Item "$($Dir)\support\windows\burn_logo.bmp" `
-    -Destination "$($InstallerTmpDir)\assets\burn_logo.bmp"
+  -Destination "$($InstallerTmpDir)\assets\burn_logo.bmp"
 Copy-Item "$($Dir)\support\windows\vagrant.ico" `
-    -Destination "$($InstallerTmpDir)\assets\vagrant.ico"
+  -Destination "$($InstallerTmpDir)\assets\vagrant.ico"
 Copy-Item "$($Dir)\support\windows\vagrant-en-us.wxl" `
-    -Destination "$($InstallerTmpDir)\vagrant-en-us.wxl"
+  -Destination "$($InstallerTmpDir)\vagrant-en-us.wxl"
 
 $contents = @"
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
-  <?define VersionNumber="$($VagrantVersion)" ?>
-  <?define DisplayVersionNumber="$($VagrantVersion)" ?>
+<?define VersionNumber="$($VagrantVersion)" ?>
+<?define DisplayVersionNumber="$($VagrantVersion)" ?>
 
-  <!--
-    Upgrade code must be unique per version installer.
-    This is used to determine uninstall/reinstall cases.
-  -->
-  <?define UpgradeCode="$($UpgradeCode)" ?>
+<!--
+Upgrade code must be unique per version installer.
+This is used to determine uninstall/reinstall cases.
+-->
+<?define UpgradeCode="$($UpgradeCode)" ?>
 </Include>
 "@
+
 $contents | Out-File `
-    -Encoding ASCII `
-    -FilePath "$($InstallerTmpDir)\vagrant-config.wxi"
+  -Encoding ASCII `
+  -FilePath "$($InstallerTmpDir)\vagrant-config.wxi"
 
 $contents = @"
 <?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <!-- Include our wxi -->
-  <?include "$($InstallerTmpDir)\vagrant-config.wxi" ?>
+<!-- Include our wxi -->
+<?include "$($InstallerTmpDir)\vagrant-config.wxi" ?>
 
-  <!-- The main product -->
-  <Product Id="*"
-           Language="!(loc.LANG)"
-           Name="!(loc.ProductName)"
-           Version="`$(var.VersionNumber)"
-           Manufacturer="!(loc.ManufacturerName)"
-           UpgradeCode="`$(var.UpgradeCode)">
+<!-- The main product -->
+<Product Id="*"
+Language="!(loc.LANG)"
+Name="!(loc.ProductName)"
+Version="`$(var.VersionNumber)"
+Manufacturer="!(loc.ManufacturerName)"
+UpgradeCode="`$(var.UpgradeCode)">
 
-    <!-- Define the package information -->
-    <Package Compressed="yes"
-             InstallerVersion="200"
-             InstallPrivileges="elevated"
-             InstallScope="perMachine"
-             Manufacturer="!(loc.ManufacturerName)" />
+<!-- Define the package information -->
+<Package Compressed="yes"
+InstallerVersion="200"
+InstallPrivileges="elevated"
+InstallScope="perMachine"
+Manufacturer="!(loc.ManufacturerName)" />
 
-    <!-- Disallow installing older versions until the new version is removed -->
-    <!-- Note that this creates the RemoveExistingProducts action -->
-    <MajorUpgrade DowngradeErrorMessage="A later version of Vagrant is installed. Please remove this version first. Setup will now exit."
-                  Schedule="afterInstallInitialize" />
+<!-- Disallow installing older versions until the new version is removed -->
+<!-- Note that this creates the RemoveExistingProducts action -->
+<MajorUpgrade DowngradeErrorMessage="A later version of Vagrant is installed. Please remove this version first. Setup will now exit."
+Schedule="afterInstallInitialize" />
 
-    <!-- The source media for the installer -->
-    <Media Id="1"
-           Cabinet="Vagrant.cab"
-           CompressionLevel="high"
-           EmbedCab="yes" />
+<!-- The source media for the installer -->
+<Media Id="1"
+Cabinet="Vagrant.cab"
+CompressionLevel="high"
+EmbedCab="yes" />
 
-     <!-- Require Windows NT Kernel -->
-     <Condition Message="This application is only supported on Windows 2000 or higher.">
-       <![CDATA[Installed or (VersionNT >= 500)]]>
-     </Condition>
+<!-- Require Windows NT Kernel -->
+<Condition Message="This application is only supported on Windows 2000 or higher.">
+<![CDATA[Installed or (VersionNT >= 500)]]>
+</Condition>
 
-     <!-- Some steps for our installation -->
-     <InstallExecuteSequence>
-       <ScheduleReboot After="InstallFinalize"/>
-     </InstallExecuteSequence>
+<!-- Some steps for our installation -->
+<InstallExecuteSequence>
+<ScheduleReboot After="InstallFinalize"/>
+</InstallExecuteSequence>
 
-     <!-- Include application icon for add/remove programs -->
-     <Icon Id="icon.ico" SourceFile="$($InstallerTmpDir)\assets\vagrant.ico" />
-     <Property Id="ARPPRODUCTICON" Value="icon.ico" />
-     <Property Id="ARPHELPLINK" Value="https://www.vagrantup.com" />
+<!-- Include application icon for add/remove programs -->
+<Icon Id="icon.ico" SourceFile="$($InstallerTmpDir)\assets\vagrant.ico" />
+<Property Id="ARPPRODUCTICON" Value="icon.ico" />
+<Property Id="ARPHELPLINK" Value="https://www.vagrantup.com" />
 
-     <!-- Get the proper system directory -->
-     <SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
+<!-- Get the proper system directory -->
+<SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
 
-     <PropertyRef Id="WIX_ACCOUNT_USERS" />
-     <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
+<PropertyRef Id="WIX_ACCOUNT_USERS" />
+<PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
 
-     <!-- The directory where we'll install Vagrant -->
-     <Directory Id="TARGETDIR" Name="SourceDir">
-       <Directory Id="WINDOWSVOLUME">
-         <Directory Id="MANUFACTURERDIR" Name="HashiCorp">
-           <Directory Id="INSTALLDIR" Name="Vagrant">
-             <Component Id="VagrantBin"
-               Guid="{12a01bfc-ae9e-4543-8a32-47865cc03071}">
-               <!--
-                 Add our bin dir to the PATH so people can use
-                 vagrant right away in the shell.
-               -->
-               <Environment Id="Environment"
-                 Name="PATH"
-                 Action="set"
-                 Part="last"
-                 System="yes"
-                 Value="[INSTALLDIR]bin" />
+<!-- The directory where we'll install Vagrant -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+    <Directory Id="WINDOWSVOLUME">
+    <Directory Id="MANUFACTURERDIR" Name="HashiCorp">
+    <Directory Id="INSTALLDIR" Name="Vagrant">
+    <Component Id="VagrantBin"
+    Guid="{12a01bfc-ae9e-4543-8a32-47865cc03071}">
+    <!--
+    Add our bin dir to the PATH so people can use
+    vagrant right away in the shell.
+    -->
+    <Environment Id="Environment"
+    Name="PATH"
+    Action="set"
+    Part="last"
+    System="yes"
+    Value="[INSTALLDIR]bin" />
 
-               <!-- Because we are not in "Program Files" we inherit
-                    permissions that are not desirable. Force new permissions -->
-               <CreateFolder>
-                 <Permission GenericAll="yes" User="[WIX_ACCOUNT_ADMINISTRATORS]" />
-                 <Permission GenericRead="yes" GenericExecute="yes" User="[WIX_ACCOUNT_USERS]" />
-               </CreateFolder>
-             </Component>
-           </Directory>
-         </Directory>
-       </Directory>
-     </Directory>
+    <!-- Because we are not in "Program Files" we inherit
+    permissions that are not desirable. Force new permissions -->
+    <CreateFolder>
+    <Permission GenericAll="yes" User="[WIX_ACCOUNT_ADMINISTRATORS]" />
+    <Permission GenericRead="yes" GenericExecute="yes" User="[WIX_ACCOUNT_USERS]" />
+    </CreateFolder>
+    </Component>
+    </Directory>
+    </Directory>
+    </Directory>
+    </Directory>
 
-     <!-- Define the features of our install -->
-     <Feature Id="VagrantFeature"
-              Title="!(loc.ProductName)"
-              Level="1">
-       <ComponentGroupRef Id="VagrantDir" />
-       <ComponentRef Id="VagrantBin" />
-     </Feature>
+    <!-- Define the features of our install -->
+    <Feature Id="VagrantFeature"
+    Title="!(loc.ProductName)"
+    Level="1">
+    <ComponentGroupRef Id="VagrantDir" />
+    <ComponentRef Id="VagrantBin" />
+    </Feature>
 
-     <!-- WixUI configuration so we can have a UI -->
-     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <!-- WixUI configuration so we can have a UI -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
 
-     <UIRef Id="VagrantUI_InstallDir" />
-     <UI Id="VagrantUI_InstallDir">
-       <UIRef Id="WixUI_InstallDir" />
-     </UI>
+    <UIRef Id="VagrantUI_InstallDir" />
+    <UI Id="VagrantUI_InstallDir">
+    <UIRef Id="WixUI_InstallDir" />
+    </UI>
 
-     <WixVariable Id="WixUILicenseRtf" Value="$($InstallerTmpDir)\assets\license.rtf" />
-     <WixVariable Id="WixUIDialogBmp" Value="$($InstallerTmpDir)\assets\bg_dialog.bmp" />
-     <WixVariable Id="WixUIBannerBmp" Value="$($InstallerTmpDir)\assets\bg_banner.bmp" />
-  </Product>
-</Wix>
+    <WixVariable Id="WixUILicenseRtf" Value="$($InstallerTmpDir)\assets\license.rtf" />
+    <WixVariable Id="WixUIDialogBmp" Value="$($InstallerTmpDir)\assets\bg_dialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="$($InstallerTmpDir)\assets\bg_banner.bmp" />
+    </Product>
+    </Wix>
 "@
-$contents | Out-File `
-    -Encoding ASCII `
-    -FilePath "$($InstallerTmpDir)\vagrant-main.wxs"
 
-Write-Host "Running heat.exe"
+$contents | Out-File `
+  -Encoding ASCII `
+  -FilePath "$($InstallerTmpDir)\vagrant-main.wxs"
+
+Write-Output "Running heat.exe"
 &$WixHeat dir $SubstrateDir `
-    -nologo `
-    -ke `
-    -sreg `
-    -srd `
-    -gg `
-    -cg VagrantDir `
-    -dr INSTALLDIR `
-    -var 'var.VagrantSourceDir' `
-    -out "$($InstallerTmpDir)\vagrant-files.wxs"
+  -nologo `
+  -ke `
+  -sreg `
+  -srd `
+  -gg `
+  -cg VagrantDir `
+  -dr INSTALLDIR `
+  -var 'var.VagrantSourceDir' `
+  -out "$($InstallerTmpDir)\vagrant-files.wxs"
 
 if(!$?) {
-    Write-Host "Error: Failed running heat.exe"
+    Write-Output "Error: Failed running heat.exe"
     exit 1
 }
 
-Write-Host "Running candle.exe"
+Write-Output "Running candle.exe"
 $CandleArgs = @(
     "-nologo",
     "-I$($InstallerTmpDir)",
@@ -440,28 +453,28 @@ $CandleArgs = @(
     "$($InstallerTmpDir)\vagrant-main.wxs"
 )
 Start-Process -NoNewWindow -Wait `
-    -ArgumentList $CandleArgs -FilePath $WixCandle
+  -ArgumentList $CandleArgs -FilePath $WixCandle
 
 if(!$?) {
-    Write-Host "Error: Failed running candle.exe"
+    Write-Output "Error: Failed running candle.exe"
     exit 1
 }
 
-Write-Host "Running light.exe"
+Write-Output "Running light.exe"
 &$WixLight `
-    -nologo `
-    -ext WixUIExtension `
-    -ext WixUtilExtension `
-    -spdb `
-    -v `
-    -cultures:en-us `
-    -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
-    -out $OutputPath `
-    "$($InstallerTmpDir)\vagrant-files.wixobj" `
-    "$($InstallerTmpDir)\vagrant-main.wixobj"
+  -nologo `
+  -ext WixUIExtension `
+  -ext WixUtilExtension `
+  -spdb `
+  -v `
+  -cultures:en-us `
+  -loc "$($InstallerTmpDir)\vagrant-en-us.wxl" `
+  -out $OutputPath `
+  "$($InstallerTmpDir)\vagrant-files.wixobj" `
+  "$($InstallerTmpDir)\vagrant-main.wixobj"
 
 if(!$?) {
-    Write-Host "Error: Failed running light.exe"
+    Write-Output "Error: Failed running light.exe"
     exit 1
 }
 
@@ -475,24 +488,24 @@ if ($SignKey) {
     }
 
     & $SignTool sign `
-        /t http://timestamp.digicert.com `
-        /f $SignKey `
-        /p $SignKeyPassword `
-        $OutputPath
+      /t http://timestamp.digicert.com `
+      /f $SignKey `
+      /p $SignKeyPassword `
+      $OutputPath
 
     if(!$?) {
-        Write-Host "Error: Failed to sign package"
+        Write-Output "Error: Failed to sign package"
         exit 1
     }
 } else {
     if ($SignRequired -eq "1") {
-        Write-Host "Error: Package signing is required but package is not signed"
+        Write-Output "Error: Package signing is required but package is not signed"
         exit 1
     }
-    Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    Write-Host "!      This package is unsigned        !"
-    Write-Host "! Rebuild with signing key for release !"
-    Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    Write-Output "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    Write-Output "!      This package is unsigned        !"
+    Write-Output "! Rebuild with signing key for release !"
+    Write-Output "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 }
 
 Copy-Item $OutputPath -Destination "$($InstallerTmpDir)\vagrant.msi"
@@ -500,8 +513,8 @@ Copy-Item $OutputPath -Destination "$($InstallerTmpDir)\vagrant.msi"
 Remove-Item -Recurse -Force $InstallerTmpDir
 
 If ($BuildStyle -eq "ephemeral") {
-  Remove-Item -Recurse -Force $SubstrateTmpDir
-  Remove-Item -Recurse -Force $VagrantTmpDir
+    Remove-Item -Recurse -Force $SubstrateTmpDir
+    Remove-Item -Recurse -Force $VagrantTmpDir
 }
 
-Write-Host "Installer MSI at: $($OutputPath)"
+Write-Output "Installer MSI at: $($OutputPath)"
