@@ -46,6 +46,19 @@ rm -rf _scripts substrate-asset.zip
 # windows paths using the `/cygdrive` mount instead of the msys2
 # style mounts of `/DRIVE`
 find ./mingw64/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' {} \;
+
+# For some reason libffi is being linked to from ruby with a
+# an api version of 6, but the file written for the dll is
+# using 7. This results in libraries linked against ffi to
+# fail loading due to the expected libffi path being missing.
+# We'll check for the 7 file and make a copy for the 6 file
+# which will let things work properly. The result of this
+# fiasco can be seen from within a Ruby application when
+# attempting to load fiddle, which relies on ffi, and fails.
+if [ -f ./mingw64/bin/libffi-7.dll ];
+   cp ./mingw64/bin/libffi-7.dll ./mingw64/bin/libffi-6.dll
+fi
+
 # Copy CA certs into expected location
 cp /usr/ssl/cert.pem cacert.pem
 
@@ -67,6 +80,19 @@ rm -rf _scripts substrate-asset.zip
 # windows paths using the `/cygdrive` mount instead of the msys2
 # style mounts of `/DRIVE`
 find ./mingw32/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"build_os"] = "cygwin"/' {} \;
+
+# For some reason libffi is being linked to from ruby with a
+# an api version of 6, but the file written for the dll is
+# using 7. This results in libraries linked against ffi to
+# fail loading due to the expected libffi path being missing.
+# We'll check for the 7 file and make a copy for the 6 file
+# which will let things work properly. The result of this
+# fiasco can be seen from within a Ruby application when
+# attempting to load fiddle, which relies on ffi, and fails.
+if [ -f ./mingw32/bin/libffi-7.dll ];
+   cp ./mingw32/bin/libffi-7.dll ./mingw64/bin/libffi-6.dll
+fi
+
 # Copy CA certs into expected location
 cp /usr/ssl/cert.pem cacert.pem
 
