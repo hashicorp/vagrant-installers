@@ -55,7 +55,7 @@ find ./mingw64/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"bui
 # which will let things work properly. The result of this
 # fiasco can be seen from within a Ruby application when
 # attempting to load fiddle, which relies on ffi, and fails.
-if [ -f ./mingw64/bin/libffi-7.dll ];
+if [ -f ./mingw64/bin/libffi-7.dll ]; then
    cp ./mingw64/bin/libffi-7.dll ./mingw64/bin/libffi-6.dll
 fi
 
@@ -89,7 +89,7 @@ find ./mingw32/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"bui
 # which will let things work properly. The result of this
 # fiasco can be seen from within a Ruby application when
 # attempting to load fiddle, which relies on ffi, and fails.
-if [ -f ./mingw32/bin/libffi-7.dll ];
+if [ -f ./mingw32/bin/libffi-7.dll ]; then
    cp ./mingw32/bin/libffi-7.dll ./mingw64/bin/libffi-6.dll
 fi
 
