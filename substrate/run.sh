@@ -200,11 +200,11 @@ if [[ "${host_os}" = "darwin" ]]; then
     export CPPFLAGS="${CFLAGS}"
     export LDFLAGS="${LD_FLAGS} -mmacosx-version-min=10.9 ${ISYSROOT}" # ${SYSLIBROOT}"
 
-    export LD_RPATH="XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+    export LD_RPATH="/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
     ORIGINAL_LD_RPATH="${LD_RPATH}"
     libtool="glibtool"
 else
-    export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=XORIGIN/../lib:XORIGIN/../lib64:/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+    export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
     libtool="libtool"
 fi
 
