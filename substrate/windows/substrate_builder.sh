@@ -90,7 +90,7 @@ find ./mingw32/lib/ruby/ -name "*rbconfig.rb" -exec sed -i 's/"build_os".*$/"bui
 # fiasco can be seen from within a Ruby application when
 # attempting to load fiddle, which relies on ffi, and fails.
 if [ -f ./mingw32/bin/libffi-7.dll ]; then
-   cp ./mingw32/bin/libffi-7.dll ./mingw64/bin/libffi-6.dll
+   cp ./mingw32/bin/libffi-7.dll ./mingw32/bin/libffi-6.dll
 fi
 
 # Copy CA certs into expected location
