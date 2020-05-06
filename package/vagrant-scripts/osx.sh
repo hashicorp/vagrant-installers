@@ -11,6 +11,12 @@ mv gon /System/Volumes/Data/usr/local/bin/gon
 
 su vagrant -l -c 'brew install bash'
 
+# Move the SDK into the developer section
+sdk="/Users/vagrant/SDKs/MacOSX10.9.sdk"
+if [ -d "${sdk}" ]; then
+    mv "${sdk}" /Library/Developer/CommandLineTools/SDKs/
+fi
+
 chmod 755 /vagrant/package/package.sh
 
 set -e

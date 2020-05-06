@@ -20,6 +20,8 @@ ruby_version="2.6.6"
 xz_version="5.2.4"
 zlib_version="1.2.11"
 
+macos_deployment_target="10.9"
+
 function echo_stderr {
     (>&2 echo "$@")
 }
@@ -191,18 +193,28 @@ export CPPFLAGS="-I${embed_dir}/include"
 export LDFLAGS="-L${embed_dir}/lib"
 ORIGINAL_LDFLAGS="${LDFLAGS}"
 if [[ "${host_os}" = "darwin" ]]; then
-    export MACOSX_DEPLOYMENT_TARGET="10.9"
-    export SDKROOT="/Users/vagrant/SDKs/MacOSX10.9.sdk" #"$(xcrun --sdk macosx --show-sdk-path)"
+    sdk_root="/Library/Developer/CommandLineTools/SDKs"
+    sdk_path="${sdk_root}/MacOSX.sdk"
+    versioned_sdk_path="${sdk_root}/MacOSX${macos_deployment_target}.sdk"
+    # Check that deployment target sdk exists
+    if [ ! -d "${versioned_sdk_path}" ]; then
+        echo_stderr " !! Requested macOS SDK version is not available: ${macos_deployment_target}"
+        exit 1
+    else
+        rm -f "${sdk_path}"
+        ln -s "${versioned_sdk_path}" "${sdk_path}"
+    fi
+    export MACOSX_DEPLOYMENT_TARGET="${macos_deployment_target}"
+    export SDKROOT="${sdk_path}" #"$(xcrun --sdk macosx --show-sdk-path)"
     export ISYSROOT="-isysroot ${SDKROOT}"
     export SYSLIBROOT="-syslibroot ${SDKROOT}"
     export SYS_ROOT="${SDKROOT}"
-    export CFLAGS="${CFLAGS} -mmacosx-version-min=10.9 ${ISYSROOT}"
+    export CFLAGS="${CFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT}"
     export CXXFLAGS="${CFLAGS}"
     export CPPFLAGS="${CFLAGS}"
-    export LDFLAGS="${LD_FLAGS} -mmacosx-version-min=10.9 ${ISYSROOT}" # ${SYSLIBROOT}"
+    export LDFLAGS="${LD_FLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT}" # ${SYSLIBROOT}"
 
     export LD_RPATH="/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
-    ORIGINAL_LD_RPATH="${LD_RPATH}"
     libtool="glibtool"
 else
     export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
@@ -368,18 +380,14 @@ if [ $? -ne 0 ]; then
 fi
 tar -xzf openssl.tar.gz
 pushd openssl-*
-if [ "${LD_RPATH}" != "" ]; then
-    export LD_RPATH="/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
-else
+if [ -z "${LD_RPATH}" ]; then
     CURRENT_LDFLAGS="${LDFLAGS}"
     export LDFLAGS="${ORIGINAL_LDFLAGS} -Wl,-rpath=/opt/vagrant/embedded/lib"
 fi
 ./config --prefix="${embed_dir}" --openssldir="${embed_dir}" shared
 make
 make install_sw
-if [ "${LD_RPATH}" != "" ]; then
-    export LD_RPATH="${ORIGINAL_LD_RPATH}"
-else
+if [ -z "${LD_RPATH}" ]; then
     export LDFLAGS="${CURRENT_LDFLAGS}"
 fi
 popd
