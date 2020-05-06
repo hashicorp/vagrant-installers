@@ -7,14 +7,27 @@ if [ "$#" -ne "2" ]; then
   exit 1
 fi
 
-export MACOSX_DEPLOYMENT_TARGET="10.9"
-export SDKROOT="/Users/vagrant/SDKs/MacOSX10.9.sdk" #"$(xcrun --sdk macosx --show-sdk-path)"
+macos_deployment_target="10.9"
+
+sdk_root="/Library/Developer/CommandLineTools/SDKs"
+sdk_path="${sdk_root}/MacOSX.sdk"
+versioned_sdk_path="${sdk_root}/MacOSX${macos_deployment_target}.sdk"
+# Check that deployment target sdk exists
+if [ ! -d "${versioned_sdk_path}" ]; then
+    echo_stderr " !! Requested macOS SDK version is not available: ${macos_deployment_target}"
+    exit 1
+else
+    rm -f "${sdk_path}"
+    ln -s "${versioned_sdk_path}" "${sdk_path}"
+fi
+export MACOSX_DEPLOYMENT_TARGET="${macos_deployment_target}"
+export SDKROOT="${sdk_path}" #"$(xcrun --sdk macosx --show-sdk-path)"
 export ISYSROOT="-isysroot ${SDKROOT}"
 export SYSLIBROOT="-syslibroot ${SDKROOT}"
 export SYS_ROOT="${SDKROOT}"
-export CFLAGS="-mmacosx-version-min=10.9 ${ISYSROOT}"
+export CFLAGS="-mmacosx-version-min=${macos_deployment_target} ${ISYSROOT}"
 export CXXFLAGS="${CFLAGS}"
-export LDFLAGS="-mmacosx-version-min=10.9 ${SYSLIBROOT}"
+export LDFLAGS="-mmacosx-version-min=${macos_deployment_target} ${SYSLIBROOT}"
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"

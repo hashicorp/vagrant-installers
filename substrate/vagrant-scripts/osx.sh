@@ -18,6 +18,12 @@ mv cacert.pem /usr/local/etc/openssl/cacert.pem
 export SSL_CERT_FILE=/usr/local/etc/openssl/cacert.pem
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
+# Move the SDK into the developer section
+sdk="/Users/vagrant/SDKs/MacOSX10.9.sdk"
+if [ -d "${sdk}" ]; then
+    mv "${sdk}" /Library/Developer/CommandLineTools/SDKs/
+fi
+
 set -e
 
 if [ "${VAGRANT_BUILD_DEBUG}" = "1" ]; then
