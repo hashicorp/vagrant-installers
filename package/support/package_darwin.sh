@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-set -e
+
+function fail() {
+    echo "ERROR: ${1}"
+    exit 1
+}
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
@@ -34,9 +38,14 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+VINCE="${DIR}/vince"
 SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
 OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_x86_64.dmg"
+
+function vince() {
+    "${VINCE}" -u "${NOTARIZE_USERNAME}" -p "${NOTARIZE_PASSWORD}" "${@}"
+}
 
 EMBEDDED_DIR="$1/embedded"
 GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
@@ -51,12 +60,13 @@ export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
 
 echo "Rebuild rb-fsevent bin executable..."
-"${GEM_COMMAND}" install --no-document rake
-pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*
-pushd ext
-sed -ibak "s|.*SDK_INFO =.*\$|\$SDK_INFO = \{'Path' => '${SDKROOT}', 'ProductBuildVersion' => '${MACOSX_DEPLOYMENT_TARGET}'\}; next|" rakefile.rb
+pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/ext ||
+    fail "Failed to locate rb-fsevent directory"
+sed -ibak "s|.*SDK_INFO =.*\$|\$SDK_INFO = \{'Path' => '${SDKROOT}', 'ProductBuildVersion' => '${MACOSX_DEPLOYMENT_TARGET}'\}; next|" rakefile.rb ||
+    fail "Failed to update build settings for rb-fsevent rebuild"
 popd
-rake -f ext/rakefile.rb replace_exe
+rake -f ext/rakefile.rb replace_exe ||
+    fail "Failed to rebuild rb-fsevent"
 popd
 
 # Work in a temporary directory
@@ -125,29 +135,38 @@ EOF
 chmod 0755 ${STAGING_DIR}/scripts/postinstall
 
 # Install and enable package signing if available
-if [[ -f "${PKG_SIGN_CERT_PATH}" && -f "${PKG_SIGN_KEY_PATH}" ]]
-then
-    set +e
+if [ -f "${PKG_SIGN_CERT_PATH}" ] && [ -f "${PKG_SIGN_KEY_PATH}" ]; then
     security find-identity | grep "Installer.*${PKG_SIGN_IDENTITY}"
     if [ $? -ne 0 ]; then
-        security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
-        security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild
+        security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
+            fail "Failed to import signing certificate"
+        security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
+            fail "Failed to import signing key"
     fi
     SIGN_PKG="1"
-    set -e
 fi
 
 # Install and enable code signing if available
-if [[ -f "${CODE_SIGN_CERT_PATH}" && "${CODE_SIGN_PASS}" != "" ]]
-then
-    set +e
+if [ -f "${CODE_SIGN_CERT_PATH}" ] && [ ! -z "${CODE_SIGN_PASS}" ]; then
     security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}"
     if [ $? -ne 0 ]; then
         echo "==> Installing code signing key..."
-        security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign
+        security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign ||
+            fail "Failed to import code signing key"
     fi
-    set -e
     SIGN_CODE="1"
+fi
+
+if [ "${SIGN_REQUIRED}" -eq "1" ]; then
+    if [ "${SIGN_CODE}" -ne "1" ]; then
+        fail "Signing is required but code signing is not enabled"
+    fi
+    if [ "${SIGN_PKG}" -ne "1" ]; then
+        fail "Signing is required but code signing is not enabled"
+    fi
+    if [ -z "${NOTARIZE_USERNAME}" ] || [ -z "${NOTARIZE_PASSWORD}" ]; then
+        fail "Signing is required but notarization credentials are not valid"
+    fi
 fi
 
 # Perform library scrubbing to remove files which will fail notarization
@@ -158,8 +177,7 @@ rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rubyzip-"*/test/
 # Code sign
 #-------------------------------------------------------------------------
 # Sign all executables within package
-if [[ "${SIGN_CODE}" -eq "1" ]]
-then
+if [ "${SIGN_CODE}" -eq "1" ]; then
     cat <<EOF >entitlements.plist
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -171,13 +189,17 @@ then
 </plist>
 EOF
     echo "Validating plist format..."
-    plutil -lint entitlements.plist
+    plutil -lint entitlements.plist ||
+        fail "Entitlements plist file format is invalid"
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --timestamp --options=runtime --entitlements entitlements.plist -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --timestamp --options=runtime --entitlements entitlements.plist -s "${CODE_SIGN_IDENTITY}" {} \; ||
+        fail "Failure while signing executables"
     echo "Finding all substate bundles..."
-    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \; ||
+        fail "Failure while signing bundles"
     echo "Finding all substrate shared library objects..."
-    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \;
+    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \; ||
+        fail "Failure while signing share library objects"
     rm entitlements.plist
 fi
 
@@ -186,8 +208,7 @@ fi
 #-------------------------------------------------------------------------
 # Create the component package using pkgbuild. The component package
 # contains the raw file structure that is installed via the installer package.
-if [[ "${SIGN_PKG}" -eq "1" ]]
-then
+if [ "${SIGN_PKG}" -eq "1" ]; then
     echo "Building core.pkg..."
     pkgbuild \
         --root ${SUBSTRATE_DIR} \
@@ -197,7 +218,8 @@ then
         --scripts ${STAGING_DIR}/scripts \
         --timestamp=none \
         --sign "${PKG_SIGN_IDENTITY}" \
-        ${STAGING_DIR}/core.pkg
+        ${STAGING_DIR}/core.pkg ||
+        fail "Failed to build core package"
 else
     echo "Building core.pkg..."
     pkgbuild \
@@ -207,7 +229,8 @@ else
         --install-location "/opt/vagrant" \
         --scripts ${STAGING_DIR}/scripts \
         --timestamp=none \
-        ${STAGING_DIR}/core.pkg
+        ${STAGING_DIR}/core.pkg ||
+        fail "Failed to build core package"
 fi
 
 # Create the distribution definition, an XML file that describes what
@@ -250,22 +273,23 @@ echo "Building Vagrant.pkg..."
 
 # Check is signing certificate is available. Install
 # and sign if found.
-if [[ "${SIGN_PKG}" -eq "1" ]]
-then
+if [ "${SIGN_PKG}" -eq "1" ]; then
     productbuild \
         --distribution ${STAGING_DIR}/vagrant.dist \
         --resources ${STAGING_DIR}/resources \
         --package-path ${STAGING_DIR} \
         --timestamp=none \
         --sign "${PKG_SIGN_IDENTITY}" \
-        ${STAGING_DIR}/Vagrant.pkg
+        ${STAGING_DIR}/Vagrant.pkg ||
+        fail "Failed to build Vagrant package"
 else
     productbuild \
         --distribution ${STAGING_DIR}/vagrant.dist \
         --resources ${STAGING_DIR}/resources \
         --package-path ${STAGING_DIR} \
         --timestamp=none \
-        ${STAGING_DIR}/Vagrant.pkg
+        ${STAGING_DIR}/Vagrant.pkg ||
+        fail "Failed to build Vagrant package"
 fi
 #-------------------------------------------------------------------------
 # DMG
@@ -277,16 +301,10 @@ cp "${DIR}/darwin/uninstall.tool" ${STAGING_DIR}/dmg/uninstall.tool
 chmod +x ${STAGING_DIR}/dmg/uninstall.tool
 
 echo "Creating DMG"
-dmgbuild -s "${DIR}/darwin/dmgbuild.py" -D srcfolder="${STAGING_DIR}/dmg" -D backgroundimg="${DIR}/darwin/background_installer.png" Vagrant "${OUTPUT_PATH}"
+dmgbuild -s "${DIR}/darwin/dmgbuild.py" -D srcfolder="${STAGING_DIR}/dmg" -D backgroundimg="${DIR}/darwin/background_installer.png" Vagrant "${OUTPUT_PATH}" ||
+    fail "Failed to create Vagrant DMG"
 
-if [[ "${SIGN_PKG}" -ne "1" ]]
-then
-    if [[ "${SIGN_REQUIRED}" -eq "1" ]]
-    then
-        echo "Error: Package signing is required but package is not signed"
-        exit 1
-    fi
-    set +x
+if [ "${SIGN_PKG}" -ne "1" ]; then
     echo
     echo "!!!!!!!!!!!! WARNING !!!!!!!!!!!!"
     echo "! Vagrant installer package is  !"
@@ -294,25 +312,46 @@ then
     echo "! signing key for release build !"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo
-    set -x
 else
     echo "==> Signing DMG..."
-    codesign -s "${PKG_SIGN_IDENTITY}" --timestamp "${OUTPUT_PATH}"
+    codesign -s "${PKG_SIGN_IDENTITY}" --timestamp "${OUTPUT_PATH}" ||
+        fail "Failed to sign the Vagrant DMG"
 fi
 
 if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME}" != "" ]; then
-    echo "==> Notarizing DMG..."
-    export AC_USERNAME="${NOTARIZE_USERNAME}"
-    export AC_PASSWORD="${NOTARIZE_PASSWORD}"
-    cat <<EOF > config.hcl
-notarize {
-  path = "${OUTPUT_PATH}"
-  bundle_id = "com.hashicorp.vagrant"
-  staple = true
-}
-EOF
     if [ -z "${DISABLE_NOTARIZATION}" ]; then
-        gon ./config.hcl
+        echo "==> Submitting DMG for notarization..."
+        uuid="$(vince notarize com.hashicorp.vagrant "${OUTPUT_PATH}")"
+        if [ $? -ne 0 ]; then
+            echo "!!!! Failed to submit notarization. Waiting and trying again..."
+            sleep 30
+            uuid="$(vince notarize com.hashicorp.vagrant "${OUTPUT_PATH}")" ||
+                fail "Failed to submit Vagrant package for notarization"
+        fi
+
+        wait_result=1
+        retries=5
+        while [ "${retries}" -gt 0 ]; do
+            vince wait "${uuid}"
+            wait_result=$?
+            if [ $wait_result -ne 0 ]; then
+                retries=((retries-1))
+            fi
+            if [ $retries -gt 0 ]; then
+                echo ".... Pausing and retrying notarization wait..."
+                sleep 30
+            fi
+        done
+
+        vince validate "${uuid}"
+
+        if [ $? -ne 0 ]; then
+            vince logs "${uuid}"
+            fail "Vagrant package notarization failed"
+        fi
+
+        vince staple "${OUTPUT_PATH}" ||
+            fail "Vagrant package notarization stapling failed"
     else
         echo
         echo "!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!"
