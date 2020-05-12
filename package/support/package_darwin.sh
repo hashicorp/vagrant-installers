@@ -59,6 +59,8 @@ export LDFLAGS="${LDFLAGS} -L${EMBEDDED_DIR}/lib -L${EMBEDDED_DIR}/lib64"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
 
+"${GEM_COMMAND}" install --no-document rake
+
 echo "Rebuild rb-fsevent bin executable..."
 pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/ext ||
     fail "Failed to locate rb-fsevent directory"
