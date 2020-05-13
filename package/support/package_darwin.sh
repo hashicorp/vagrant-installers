@@ -66,7 +66,7 @@ pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/ext 
     fail "Failed to locate rb-fsevent directory"
 sed -ibak "s|.*SDK_INFO =.*\$|\$SDK_INFO = \{'Path' => '${SDKROOT}', 'ProductBuildVersion' => '${MACOSX_DEPLOYMENT_TARGET}'\}; next|" rakefile.rb ||
     fail "Failed to update build settings for rb-fsevent rebuild"
-popd
+cd ..
 rake -f ext/rakefile.rb replace_exe ||
     fail "Failed to rebuild rb-fsevent"
 popd
