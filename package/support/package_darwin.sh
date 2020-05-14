@@ -38,7 +38,7 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-VINCE="${DIR}/vince"
+VINCE="${DIR}/../vince"
 SUBSTRATE_DIR=$1
 VAGRANT_VERSION=$2
 OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_x86_64.dmg"
