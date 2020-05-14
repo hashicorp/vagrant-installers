@@ -159,11 +159,11 @@ if [ -f "${CODE_SIGN_CERT_PATH}" ] && [ ! -z "${CODE_SIGN_PASS}" ]; then
     SIGN_CODE="1"
 fi
 
-if [ "${SIGN_REQUIRED}" -eq "1" ]; then
-    if [ "${SIGN_CODE}" -ne "1" ]; then
+if [ "${SIGN_REQUIRED}" = "1" ]; then
+    if [ "${SIGN_CODE}" != "1" ]; then
         fail "Signing is required but code signing is not enabled"
     fi
-    if [ "${SIGN_PKG}" -ne "1" ]; then
+    if [ "${SIGN_PKG}" != "1" ]; then
         fail "Signing is required but code signing is not enabled"
     fi
     if [ -z "${NOTARIZE_USERNAME}" ] || [ -z "${NOTARIZE_PASSWORD}" ]; then
@@ -179,7 +179,7 @@ rm -rf "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rubyzip-"*/test/
 # Code sign
 #-------------------------------------------------------------------------
 # Sign all executables within package
-if [ "${SIGN_CODE}" -eq "1" ]; then
+if [ "${SIGN_CODE}" = "1" ]; then
     cat <<EOF >entitlements.plist
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -210,7 +210,7 @@ fi
 #-------------------------------------------------------------------------
 # Create the component package using pkgbuild. The component package
 # contains the raw file structure that is installed via the installer package.
-if [ "${SIGN_PKG}" -eq "1" ]; then
+if [ "${SIGN_PKG}" = "1" ]; then
     echo "Building core.pkg..."
     pkgbuild \
         --root ${SUBSTRATE_DIR} \
@@ -275,7 +275,7 @@ echo "Building Vagrant.pkg..."
 
 # Check is signing certificate is available. Install
 # and sign if found.
-if [ "${SIGN_PKG}" -eq "1" ]; then
+if [ "${SIGN_PKG}" = "1" ]; then
     productbuild \
         --distribution ${STAGING_DIR}/vagrant.dist \
         --resources ${STAGING_DIR}/resources \
@@ -306,7 +306,7 @@ echo "Creating DMG"
 dmgbuild -s "${DIR}/darwin/dmgbuild.py" -D srcfolder="${STAGING_DIR}/dmg" -D backgroundimg="${DIR}/darwin/background_installer.png" Vagrant "${OUTPUT_PATH}" ||
     fail "Failed to create Vagrant DMG"
 
-if [ "${SIGN_PKG}" -ne "1" ]; then
+if [ "${SIGN_PKG}" != "1" ]; then
     echo
     echo "!!!!!!!!!!!! WARNING !!!!!!!!!!!!"
     echo "! Vagrant installer package is  !"
@@ -337,7 +337,7 @@ if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME
             vince wait "${uuid}"
             wait_result=$?
             if [ $wait_result -ne 0 ]; then
-                retries=((retries-1))
+                retries=$((retries-1))
             fi
             if [ $retries -gt 0 ]; then
                 echo ".... Pausing and retrying notarization wait..."
