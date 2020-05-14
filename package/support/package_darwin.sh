@@ -338,6 +338,8 @@ if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME
             wait_result=$?
             if [ $wait_result -ne 0 ]; then
                 retries=$((retries-1))
+            else
+                retries=0
             fi
             if [ $retries -gt 0 ]; then
                 echo ".... Pausing and retrying notarization wait..."
