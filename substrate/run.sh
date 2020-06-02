@@ -115,7 +115,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
         echo_stderr "   -> Installing custom m4..."
-        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
+        curl -L -s -o m4.tar.gz https://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
         tar xzf m4.tar.gz
         pushd m4*
         ./configure --prefix "/usr/local"
@@ -127,7 +127,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # autoconf
     if [[ ! -f "/usr/local/bin/autoconf" ]]; then
         echo_stderr "   -> Installing custom autoconf..."
-        curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+        curl -L -s -o autoconf.tar.gz https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
         tar xzf autoconf.tar.gz
         pushd autoconf*
         ./configure --prefix "/usr/local"
@@ -139,7 +139,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
+        curl -L -s -o automake.tar.gz https://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
@@ -151,7 +151,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # libtool
     if [[ ! -f "/usr/local/bin/libtool" ]]; then
         echo_stderr "   -> Installing custom libtool..."
-        curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
+        curl -L -s -o libtool.tar.gz https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
         tar xzf libtool.tar.gz
         pushd libtool*
         ./configure --prefix "/usr/local"
@@ -251,7 +251,7 @@ popd
 
 # libiconv
 echo_stderr "   -> Building libiconv..."
-libiconv_url="http://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz"
+libiconv_url="https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz"
 curl -L -s -o libiconv.tar.gz "${libiconv_url}"
 tar -xzf libiconv.tar.gz
 pushd libiconv-*
@@ -339,7 +339,7 @@ popd
 
 # libyaml
 echo_stderr "   -> Building libyaml..."
-libyaml_url="http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz"
+libyaml_url="https://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz"
 curl -L -s -o libyaml.tar.gz "${libyaml_url}"
 tar -xzf libyaml.tar.gz
 pushd yaml-*
@@ -350,7 +350,7 @@ popd
 
 # zlib
 echo_stderr "   -> Building zlib..."
-zlib_url="http://zlib.net/zlib-${zlib_version}.tar.gz"
+zlib_url="https://zlib.net/zlib-${zlib_version}.tar.gz"
 curl -L -s -o zlib.tar.gz "${zlib_url}"
 tar -xzf zlib.tar.gz
 pushd zlib-*
@@ -361,7 +361,7 @@ popd
 
 # readline
 echo_stderr "   -> Building readline..."
-readline_url="http://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz"
+readline_url="https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz"
 curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
@@ -372,10 +372,10 @@ popd
 
 # openssl
 echo_stderr "   -> Building openssl..."
-openssl_url="http://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
+openssl_url="https://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
 curl -L -f -s -o openssl.tar.gz "${openssl_url}"
 if [ $? -ne 0 ]; then
-    openssl_url="http://www.openssl.org/source/old/${openssl_version::-1}/openssl-${openssl_version}.tar.gz"
+    openssl_url="https://www.openssl.org/source/old/${openssl_version::-1}/openssl-${openssl_version}.tar.gz"
     curl -L -s -o openssl.tar.gz "${openssl_url}"
 fi
 tar -xzf openssl.tar.gz
@@ -394,7 +394,7 @@ popd
 
 # libssh2
 echo_stderr "   -> Building libssh2..."
-libssh2_url="http://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz"
+libssh2_url="https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz"
 curl -L -s -o libssh2.tar.gz "${libssh2_url}"
 tar -xzf libssh2.tar.gz
 pushd libssh2-*
