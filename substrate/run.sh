@@ -253,7 +253,7 @@ popd
 echo_stderr "   -> Building libiconv..."
 # Kernel Cert Expired?
 libiconv_url="http://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz"
-curl -L -o libiconv.tar.gz "${libiconv_url}"
+curl -L -s -o libiconv.tar.gz "${libiconv_url}"
 tar -xzf libiconv.tar.gz
 pushd libiconv-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking
