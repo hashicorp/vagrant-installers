@@ -26,6 +26,11 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 pushd "${root}" > "${output}"
 
+function cleanup() {
+    unset PACKET_EXEC_PERSIST
+    packet-exec run -- /bin/true
+}
+
 export PKT_PACKER_BUILDS="${PKT_PACKER_BUILDS:-centos-6,centos-6-i386,ubuntu-14.04,ubuntu-14.04-i386,win-8}"
 export PACKET_EXEC_REMOTE_DIRECTORY="${job_id}"
 
@@ -39,6 +44,18 @@ if [ $? -ne 0 ]; then
                 "Failed to create packet device"
 fi
 
-# Starting box build job on packet-exec device
-wrap_stream packet-exec run -upload -- ./.ci/boxes.sh \
-            "Failed to setup project on remote packet instance"
+# Move into the packer template folder
+pushd packer/vagrant > "${output}"
+
+# Force our directory to be uploaded and persisted
+export PACKET_EXEC_PERSIST=1
+packet-exec run -upload -- /bin/true
+
+IFS=',' read -r -a builds <<< "${PKT_PACKER_BUILDS}"
+for build in "${builds[@]}"; do
+    echo "Building box for ${build}..."
+    export PKT_PACKER_BOX="${build}"
+    pkt_wrap_stream packer build "template_${build}.json" \
+                    "Failed to build box '${build}'"
+    slack -m "New Vagrant installers build box available for: ${build}"
+done
