@@ -87,7 +87,7 @@
     "iso_checksum": "7c7d99546077c805faae40a8864882c46f0ca141",
     "guest_additions_url": "",
     "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
-    "headless": "false",
+    "headless": "true",
     "update": "true",
     "version": "0.1",
     "build_timestamp":  "{{isotime \"20060102150405\"}}"
