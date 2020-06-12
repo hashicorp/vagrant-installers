@@ -1,10 +1,11 @@
 {
   "builders": [
     {
-      "type": "vmware-iso",
-      "iso_url": "{{ user `iso_url` }}",
-      "iso_checksum": "{{ user `iso_checksum` }}",
-      "iso_checksum_type": "sha1",
+      "communicator": "winrm",
+      "cores": 1,
+      "cpus": "{{ user `cpus` }}",
+      "disk_adapter_type": "lsisas1068",
+      "disk_size": "{{user `disk_size`}}",
       "floppy_files": [
         "{{template_dir}}/floppy/win-8/Autounattend.xml",
         "{{template_dir}}/floppy/buildtools-adminfile.xml",
@@ -21,21 +22,19 @@
         "{{template_dir}}/floppy/win-8/update.bat",
         "{{template_dir}}/floppy/win-8/zz-start-transports.cmd"
       ],
-      "shutdown_command": "{{ user `shutdown_command`}}",
-      "communicator": "winrm",
       "guest_os_type": "windows8-64",
       "headless": "{{ user `headless` }}",
-      "tools_upload_flavor": "windows",
-      "version": "{{ user `hw_version` }}",
-      "cpus": "{{ user `cpus` }}",
-      "cores": 1,
+      "iso_checksum": "sha1:{{ user `iso_checksum` }}",
+      "iso_url": "{{ user `iso_url` }}",
       "memory": "{{ user `memory` }}",
-      "disk_size": "{{user `disk_size`}}",
-      "disk_adapter_type": "lsisas1068",
+      "shutdown_command": "{{ user `shutdown_command`}}",
+      "tools_upload_flavor": "windows",
+      "type": "vmware-iso",
+      "version": "{{ user `hw_version` }}",
       "vm_name": "{{user `vm_name`}}",
-      "winrm_username": "vagrant",
       "winrm_password": "vagrant",
-      "winrm_timeout": "1h"
+      "winrm_timeout": "1h",
+      "winrm_username": "vagrant"
     }
   ],
   "post-processors": [
@@ -47,8 +46,8 @@
       "vagrantfile_template": "vagrantfile-windows_8.template"
     },
     {
-      "type": "vagrant-cloud",
       "box_tag": "hashicorp-vagrant/win-8",
+      "type": "vagrant-cloud",
       "version": "{{user `version`}}.{{user `build_timestamp`}}"
     }
   ],
@@ -77,19 +76,20 @@
     }
   ],
   "variables": {
-    "vm_name": "eval-win81x64-enterprise",
-    "vm_suffix": "",
+    "build_timestamp": "{{isotime \"20060102150405\"}}",
     "cpus": "2",
-    "memory": "2048",
     "disk_size": "40960",
-    "hw_version": "7",
-    "iso_url": "http://care.dlservice.microsoft.com/dl/download/B/9/9/B999286E-0A47-406D-8B3D-5B5AD7373A4A/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
-    "iso_checksum": "7c7d99546077c805faae40a8864882c46f0ca141",
     "guest_additions_url": "",
-    "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
     "headless": "true",
+    "hw_version": "7",
+    "iso_checksum": "7c7d99546077c805faae40a8864882c46f0ca141",
+    "iso_url": "http://care.dlservice.microsoft.com/dl/download/B/9/9/B999286E-0A47-406D-8B3D-5B5AD7373A4A/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
+    "memory": "2048",
+    "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
     "update": "true",
     "version": "0.1",
-    "build_timestamp":  "{{isotime \"20060102150405\"}}"
+    "vm_name": "eval-win81x64-enterprise",
+    "vm_suffix": ""
   }
 }
+
