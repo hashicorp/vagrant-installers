@@ -33,7 +33,7 @@
       "version": "{{ user `hw_version` }}",
       "vm_name": "{{user `vm_name`}}",
       "winrm_password": "vagrant",
-      "winrm_timeout": "1h",
+      "winrm_timeout": "4h",
       "winrm_username": "vagrant"
     }
   ],
@@ -92,4 +92,3 @@
     "vm_suffix": ""
   }
 }
-
