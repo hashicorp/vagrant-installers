@@ -8,6 +8,7 @@ export PACKET_EXEC_DEVICE_SIZE="${PACKET_EXEC_DEVICE_SIZE:-baremetal_0,baremetal
 export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-iad1,iad2,ewr1,dfw1,dfw2,sea1,sjc1,lax1}"
 export PACKET_EXEC_OPERATING_SYSTEM="${PACKET_EXEC_OPERATING_SYSTEM:-ubuntu_18_04}"
 export PACKET_EXEC_PRE_BUILTINS="${PACKET_EXEC_PRE_BUILTINS:-InstallVmware,InstallVagrant,InstallVagrantVmware,InstallHashiCorpTool}"
+export PACKET_EXEC_ATTACH_VOLUME="1"
 export PACKET_EXEC_QUIET="1"
 export PKT_VAGRANT_HOME="/mnt/data"
 export PKT_VAGRANT_CLOUD_TOKEN="${VAGRANT_CLOUD_TOKEN}"
@@ -16,6 +17,7 @@ export PKT_SLACK_TOKEN="${SLACK_TOKEN}"
 export PKT_SLACK_USERNAME="${SLACK_USERNAME}"
 export PKT_SLACK_ICON="${SLACK_ICON}"
 export PKT_SLACK_TITLE="${SLACK_TITLE}"
+export PKT_PACKER_CACHE_DIR="/mnt/data/packer-cache-dir"
 
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
