@@ -1,11 +1,17 @@
-# last-modified: Thu Feb 20 04:00:25 UTC 2020
+# last-modified: Mon Jun 15 19:58:02 UTC 2020
 #!/usr/bin/env bash
 
 # Path to file used for output redirect
 # and extracting messages for warning and
 # failure information sent to slack
 function output_file() {
-    printf "/tmp/.ci-output"
+    if [ "${1}" = "clean" ] && [ -f "${ci_output_file_path}" ]; then
+        rm -f "${ci_output_file_path}"
+    fi
+    if [ -z "${ci_output_file_path}" ] || [ ! -f "${ci_output_file_path}" ]; then
+        ci_output_file_path="$(mktemp)"
+    fi
+    printf "${ci_output_file_path}"
 }
 
 # Write failure message, send error to configured
@@ -57,7 +63,7 @@ function wrap() {
 # Execute command while redirecting all output to
 # a file. Exit status is returned.
 function wrap_raw() {
-    rm -f "$(output_file)"
+    output_file "clean"
     "${@}" > "$(output_file)" 2>&1
     return $?
 }
@@ -83,7 +89,7 @@ function wrap_stream() {
 # to a file. Command output will be streamed
 # during execution. Exit status is returned
 function wrap_stream_raw() {
-    rm -f "$(output_file)"
+    output_file "clean"
     "${@}" > "$(output_file)" 2>&1 &
     pid=$!
     until [ -f "$(output_file)" ]; do
@@ -254,10 +260,15 @@ function release_validate() {
 # $2: Asset file or directory of assets
 function release() {
     release_validate "${@}"
-    wrap_raw ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${1}" -delete
+    tag_name="${1}"
+    assets="${2}"
+    body="$(release_details)"
+    body="${body:-New ${repo_name} release - ${tag_name}}"
+    wrap_raw ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${tag_name}" \
+             -b "${body}" -delete "${assets}"
     if [ $? -ne 0 ]; then
-        wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${1}" \
-             "${1}" "${2}" "Failed to create release for version ${1}"
+        wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${tag_name}" \
+             -b "${body}" "${tag_name}" "${assets}" "Failed to create release for version ${tag_name}"
     fi
 }
 
@@ -272,15 +283,32 @@ function prerelease() {
     else
         ptag="${1}"
     fi
+    assets="${2}"
 
     wrap_raw ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${ptag}" \
-             -delete -prerelease "${ptag}" "${2}"
+             -delete -prerelease "${ptag}" "${assets}"
     if [ $? -ne 0 ]; then
         wrap ghr -u "${repo_owner}" -r "${repo_name}" -c "${full_sha}" -n "${ptag}" \
-             -prerelease "${ptag}" "${2}" \
+             -prerelease "${ptag}" "${assets}" \
              "Failed to create prerelease for version ${1}"
     fi
     echo -n "${ptag}"
+}
+
+# Generate details of the release. This will consist
+# of a link to the changelog if we can properly detect
+# it based on current location.
+#
+# $1: Tag name
+#
+# Returns: details content
+function release_details() {
+    tag_name="${1}"
+    proj_root="$(git rev-parse --show-toplevel)"
+    if [ $? -ne 0 ] || [ -z "$(git tag -l "${tag_name}")"] || [ ! -f "${proj_root}/CHANGELOG.md" ]; then
+        return
+    fi
+    echo -en "CHANGELOG:\n\nhttps://github.com/${repository}/blob/${tag_name}/CHANGELOG.md"
 }
 
 # Check if version string is valid for release
@@ -363,6 +391,89 @@ function hashicorp_release() {
 
     export AWS_ACCESS_KEY_ID="${oid}"
     export AWS_SECRET_ACCESS_KEY="${okey}"
+}
+
+# Build and release project gem to RubyGems
+function publish_to_rubygems() {
+    if [ -z "${RUBYGEMS_API_KEY}" ]; then
+        fail "RUBYGEMS_API_KEY is currently unset"
+    fi
+
+    gem_config="$(mktemp -p ./)" || fail "Failed to create temporary credential file"
+    wrap gem build *.gemspec \
+         "Failed to build RubyGem"
+    printf -- "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}\n" > "${gem_config}"
+    wrap_raw gem push --config-file "${gem_config}" *.gem
+    result=$?
+    rm -f "${gem_config}"
+
+    if [ $result -ne 0 ]; then
+        fail "Failed to publish RubyGem"
+    fi
+}
+
+# Publish gem to the hashigems repository
+#
+# $1: Path to gem file to publish
+function publish_to_hashigems() {
+    path="${1}"
+    if [ -z "${path}" ]; then
+        fail "Path to built gem required for publishing to hashigems"
+    fi
+
+    wrap_stream gem install --user-install --no-document reaper-man \
+                "Failed to install dependency for hashigem generation"
+    user_bin="$(ruby -e 'puts Gem.user_dir')/bin"
+    reaper="${user_bin}/reaper-man"
+
+    # Create a temporary directory to work from
+    tmpdir="$(mktemp -d -p ./)" ||
+        fail "Failed to create working directory for hashigems publish"
+    mkdir -p "${tmpdir}/hashigems/gems"
+    wrap cp "${path}" "${tmpdir}/hashigems/gems" \
+         "Failed to copy gem to working directory"
+    wrap_raw pushd "${tmpdir}"
+
+    # Run quick test to ensure bucket is accessible
+    wrap aws s3 ls "${HASHIGEMS_METADATA_BUCKET}" \
+         "Failed to access hashigems asset bucket"
+
+    # Grab our remote metadata. If the file doesn't exist, that is always an error.
+    wrap aws s3 cp "${HASHIGEMS_METADATA_BUCKET}/vagrant-rubygems.list" ./ \
+         "Failed to retrieve hashigems metadata list"
+
+    # Add the new gem to the metadata file
+    wrap_stream "${reaper}" package add -S rubygems -p vagrant-rubygems.list ./hashigems/gems/*.gem \
+                "Failed to add new gem to hashigems metadata list"
+    # Generate the repository
+    wrap_stream "${reaper}" repo generate -p vagrant-rubygems.list -o hashigems -S rubygems \
+                "Failed to generate the hashigems repository"
+    # Upload the updated repository
+    wrap_raw pushd ./hashigems
+    wrap_stream aws s3 sync . "${HASHIGEMS_PUBLIC_BUCKET}" \
+                "Failed to upload the hashigems repository"
+    # Store the updated metadata
+    wrap_raw popd
+    wrap_stream aws s3 cp vagrant-rubygems.list "${HASHIGEMS_METADATA_BUCKET}/vagrant-rubygems.list" \
+                "Failed to upload the updated hashigems metadata file"
+
+    # Invalidate cloudfront so the new content is available
+    invalid="$(aws cloudfront create-invalidation --distribution-id "${HASHIGEMS_CLOUDFRONT_ID}" --paths "/*")"
+    if [ $? -ne 0 ]; then
+        fail "Invalidation of hashigems CDN distribution failed"
+    fi
+    invalid_id="$(printf '%s' "${invalid}" | jq -r ".Invalidation.Id")"
+    if [ -z "${invalid_id}" ]; then
+        fail "Failed to determine the ID of the hashigems CDN invalidation request"
+    fi
+
+    # Wait for the invalidation process to complete
+    wrap aws cloudfront wait invalidation-completed --distribution-id "${HASHIGEMS_CLOUDFRONT_ID}" --id "${invalid_id}" \
+         "Failure encountered while waiting for hashigems CDN invalidation request to complete (ID: ${invalid_id})"
+
+    # Clean up and we are done
+    wrap_raw popd
+    rm -rf "${tmpdir}"
 }
 
 # Configures git for hashibot usage
