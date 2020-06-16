@@ -128,12 +128,12 @@
                     <Order>6</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\update.bat</CommandLine>
-                    <Description>Apply updates</Description>
-                    <Order>7</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
+                <!-- <SynchronousCommand wcm:action="add"> -->
+                <!--     <CommandLine>cmd.exe /c a:\update.bat</CommandLine> -->
+                <!--     <Description>Apply updates</Description> -->
+                <!--     <Order>7</Order> -->
+                <!--     <RequiresUserInput>true</RequiresUserInput> -->
+                <!-- </SynchronousCommand> -->
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\disablewinupdate.bat</CommandLine>
                     <Description>Disable updates</Description>
