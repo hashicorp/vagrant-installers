@@ -56,7 +56,7 @@ IFS=',' read -r -a builds <<< "${PKT_PACKER_BUILDS}"
 for build in "${builds[@]}"; do
     echo "Building box for ${build}..."
     export PKT_PACKER_BOX="${build}"
-    pkt_wrap_stream packer build "template_${build}.json" \
+    pkt_wrap_stream packer build -force "template_${build}.json" \
                     "Failed to build box '${build}'"
     slack -m "New Vagrant installers build box available for: ${build}"
 done
