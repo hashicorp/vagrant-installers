@@ -28,7 +28,7 @@ prepare() {
 build() {
 
   CPPFLAGS+=" -DFD_SETSIZE=2048"
-  CFLAGS="-O3 -fno-fast-math -fstack-protector-strong"
+  CFLAGS="-O3 -fno-fast-math -fstack-protector-strong -fcommon"
   LDFLAGS="-pipe -s -fstack-protector-strong"
 
   [[ -d "${srcdir}/build-${MINGW_CHOST}" ]] && rm -rf "${srcdir}/build-${MINGW_CHOST}"
