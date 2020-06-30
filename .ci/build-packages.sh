@@ -17,6 +17,9 @@ csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
+# TODO: Remove
+DEBUG=1
+
 . "${root}/.ci/common.sh"
 
 pushd "${root}" > "${output}"
@@ -187,17 +190,22 @@ else
     pkt_wrap_stream_raw vagrant destroy -f
 fi
 
-# Validate all substrates are available
+# Validate all expected substrates were built
 for p in "${!substrate_list[@]}"; do
     path=(substrate-assets/${p})
     if [ ! -f "${path}" ]; then
-        if [ -n "#{release}" ]; then
-            fail "Missing expected substrate at '${path}'"
-        else
-            warn "Missing expected substrate at '${path}'"
-        fi
+        substrates_missing="${substrates_missing},${p}"
     fi
 done
+substrates_missing="${substrates_missing#,}"
+
+if [ "${substrates_missing}" != "" ]; then
+    if [ -n "#{release}" ]; then
+        fail "Missing Vagrant substrate assets matching patterns: ${substrate_missing}"
+    else
+        warn "Missing Vagrant substrate assets matching patterns: ${substrate_missing}"
+    fi
+fi
 
 
 for p in "${!package_list[@]}"; do
