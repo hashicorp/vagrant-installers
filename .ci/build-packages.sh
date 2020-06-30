@@ -191,7 +191,11 @@ fi
 for p in "${!substrate_list[@]}"; do
     path=(substrate-assets/${p})
     if [ ! -f "${path}" ]; then
-        fail "Missing expected substrate at '${path}'"
+        if [ -n "#{release}" ]; then
+            fail "Missing expected substrate at '${path}'"
+        else
+            warn "Missing expected substrate at '${path}'"
+        fi
     fi
 done
 
@@ -271,7 +275,11 @@ done
 packages_missing="${packages_missing#,}"
 
 if [ "${packages_missing}" != "" ]; then
-    fail "Missing Vagrant package assets matching patterns: ${packages_missing}"
+    if [ -n "#{release}" ]; then
+        fail "Missing Vagrant package assets matching patterns: ${packages_missing}"
+    else
+        warn "Missing Vagrant package assets matching patterns: ${packages_missing}"
+    fi
 fi
 
 # If this is a release build sign our package assets and then upload
