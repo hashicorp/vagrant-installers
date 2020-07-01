@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 #### Software versions
-
 #### Update these as required
 
 curl_version="7.69.1"
