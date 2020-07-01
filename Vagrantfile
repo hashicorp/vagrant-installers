@@ -68,6 +68,7 @@ Vagrant.configure("2") do |config|
 
       if script_name.start_with?('win')
         box_config.vm.communicator = 'winrm'
+        box_config.vm.guest = :windows
         if File.exist?("Win_CodeSigning.p12")
           box_config.vm.provision "file", source: "Win_CodeSigning.p12", destination: "C:/Users/vagrant/Win_CodeSigning.p12"
         end
@@ -77,7 +78,6 @@ Vagrant.configure("2") do |config|
                               privileged: !unprivileged_provision.include?(box_basename)
 
       config.vm.provider :vmware_desktop do |v|
-        v.ssh_info_public = true
         v.vmx["memsize"] = ENV.fetch("VAGRANT_GUEST_MEMORY_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_MEMORY", "4096"))
         v.vmx["numvcpus"] = ENV.fetch("VAGRANT_GUEST_CPUS_#{script_name.upcase}", ENV.fetch("VAGRANT_GUEST_CPUS", "1"))
         v.vmx["tools.upgrade.policy"] = "manual"
