@@ -47,6 +47,7 @@ script_env_vars = Hash[
 ]
 
 Vagrant.configure("2") do |config|
+  config.vm.base_mac = nil
   build_boxes.each do |box_basename|
     config.vm.define(box_basename) do |box_config|
       script_name = box_basename.split('-').first
