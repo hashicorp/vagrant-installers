@@ -201,7 +201,7 @@ done
 substrates_missing="${substrates_missing#,}"
 
 if [ "${substrates_missing}" != "" ]; then
-    if [ -n "#{release}" ]; then
+    if [ -n "${release}" ]; then
         fail "Missing Vagrant substrate assets matching patterns: ${substrate_missing}"
     else
         warn "Missing Vagrant substrate assets matching patterns: ${substrate_missing}"
@@ -284,7 +284,7 @@ done
 packages_missing="${packages_missing#,}"
 
 if [ "${packages_missing}" != "" ]; then
-    if [ -n "#{release}" ]; then
+    if [ -n "${release}" ]; then
         fail "Missing Vagrant package assets matching patterns: ${packages_missing}"
     else
         warn "Missing Vagrant package assets matching patterns: ${packages_missing}"
