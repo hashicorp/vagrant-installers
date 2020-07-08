@@ -230,7 +230,7 @@ else
     fi
 
     echo "Starting Vagrant package guests... "
-    pkt_wrap_stream vagrant up --no-provision \
+    pkt_wrap_stream vagrant up --no-provision --debug \
                     "Failed to start builder guests on packet device for packaging"
     echo "Start Vagrant package builds..."
 
