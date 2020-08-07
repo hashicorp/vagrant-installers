@@ -30,6 +30,7 @@ jobs:
           PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: releases@hashicorp.com
           PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ secrets.MACOS_NOTARIZE_PASSWORD }}
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ${{ secrets.DISABLE_NOTARIZATION }}
+          FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
         working-directory: ${{github.workspace}}
       - name: Clean Workspace
         if: always()
