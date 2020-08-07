@@ -142,7 +142,7 @@ else
     export PKT_VAGRANT_BUILD_TYPE="substrate"
 
     echo "Starting Vagrant substrate guests..."
-    pkt_wrap_stream vagrant up --no-provision --debug \
+    pkt_wrap_stream vagrant up --no-provision \
                     "Failed to start builder guests on packet device for substrates"
     echo "Start Vagrant substrate builds..."
 
@@ -227,7 +227,7 @@ else
     fi
 
     echo "Starting Vagrant package guests... "
-    pkt_wrap_stream vagrant up --no-provision --debug \
+    pkt_wrap_stream vagrant up --no-provision \
                     "Failed to start builder guests on packet device for packaging"
     echo "Start Vagrant package builds..."
 
