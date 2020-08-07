@@ -18,9 +18,6 @@ csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
-# TODO: Remove
-DEBUG=1
-
 . "${root}/.ci/common.sh"
 
 pushd "${root}" > "${output}"
