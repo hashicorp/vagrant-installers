@@ -14,8 +14,8 @@ if not exist "C:\Windows\Temp\windows.iso" (
     rd /S /Q "C:\Program Files (x86)\VMWare"
 )
 
-powershell -Command "Start-Process 'C:\Program Files\7-Zip\7z.exe' -ArgumentList @('x', 'C:\Windows\Temp\windows.iso', '-oC:\Windows\Temp\VMware') -Wait"
-powershell -Command "Start-Process 'C:\Windows\Temp\VMware\setup64.exe' -ArgumentList @('/s', '/v/qn REBOOT=R') -Wait"
+cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\windows.iso -oC:\Windows\Temp\VMware"
+msiexec /qb /i C:\Windows\Temp\VMware\setup64.exe /norestart
 
 rd /Q "C:\Windows\Temp\vmware-tools.tar"
 rd /Q "C:\Windows\Temp\windows.iso"
