@@ -47,7 +47,7 @@ Version: ${VAGRANT_VERSION}-1
 Section:
 Priority: optional
 Architecture: amd64
-Depends: ruby2.6, ruby2.6-dev, libssl1.0.0, libssl-dev, libgnutls28, libgnutls-dev, curl, libcurl4-gnutls-dev, bsdtar, libxml2, libxml2-dev, libxslt1-dev, libffi6, libffi-dev, libkeyutils1, openssh-client, libp11-kit-dev, zlib1g
+Depends: ruby2.6, ruby2.6-dev
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
@@ -64,7 +64,6 @@ apt-get update
 # Install required packages
 apt-get remove --purge -yq ruby2.4 ruby2.4-dev
 apt-get install -y build-essential ca-certificates ruby2.6 ruby2.6-dev
-update-ca-certificates
 
 export WORK_DIR
 export DEB_FILE
