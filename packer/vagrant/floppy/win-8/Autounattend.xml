@@ -93,21 +93,15 @@
             </AutoLogon>
             <FirstLogonCommands>
                 <SynchronousCommand wcm:action="add">
-                    <CommandLine>powershell.exe -file a:\01-set-dns.ps1</CommandLine>
+                    <CommandLine>powershell.exe -file a:\set-dns.ps1</CommandLine>
                     <Description>Update DNS server</Description>
                     <Order>1</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\01-enable-tls.bat</CommandLine>
+                    <CommandLine>cmd.exe /c a:\enable-tls.bat</CommandLine>
                     <Description>Apply SSL/TLS fix</Description>
                     <Order>2</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\02-install-wget.cmd</CommandLine>
-                    <Description>Install wget</Description>
-                    <Order>3</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
@@ -129,12 +123,6 @@
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\update.bat</CommandLine>
-                    <Description>Apply updates</Description>
-                    <Order>7</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
-                <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\disablewinupdate.bat</CommandLine>
                     <Description>Disable updates</Description>
                     <Order>8</Order>
@@ -147,8 +135,8 @@
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\zz-start-transports.cmd</CommandLine>
-                    <Description>Disable updates</Description>
+                    <CommandLine>cmd.exe /c a:\start-winrm.cmd</CommandLine>
+                    <Description>Start WinRM service updates</Description>
                     <Order>10</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
