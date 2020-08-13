@@ -15,7 +15,7 @@ if not exist "C:\Windows\Temp\windows.iso" (
 )
 
 cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\windows.iso -oC:\Windows\Temp\VMware"
-msiexec /qb /i C:\Windows\Temp\VMware\setup64.exe /norestart
+start /wait C:\Windows\Temp\VMware\setup64.exe /norestart
 
 rd /Q "C:\Windows\Temp\vmware-tools.tar"
 rd /Q "C:\Windows\Temp\windows.iso"
