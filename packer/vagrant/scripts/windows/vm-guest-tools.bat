@@ -17,6 +17,4 @@ if not exist "C:\Windows\Temp\windows.iso" (
 cmd /c ""C:\Program Files\7-Zip\7z.exe" x C:\Windows\Temp\windows.iso -oC:\Windows\Temp\VMware"
 start /wait C:\Windows\Temp\VMware\setup64.exe /norestart
 
-rd /Q "C:\Windows\Temp\vmware-tools.tar"
-rd /Q "C:\Windows\Temp\windows.iso"
-rd /S /Q "C:\Windows\Temp\VMware"
+::rd /S /Q "C:\Windows\Temp\VMware"

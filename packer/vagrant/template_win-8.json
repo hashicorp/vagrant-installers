@@ -69,7 +69,7 @@
         "{{template_dir}}/scripts/windows/ruby.bat",
         "{{template_dir}}/scripts/windows/go.bat",
         "{{template_dir}}/scripts/windows/git.bat",
-        "{{template_dir}}/scripts/windows/msys2.bat",
+        "{{template_dir}}/scripts/windows/msys2-install.bat",
         "{{template_dir}}/scripts/windows/msys2-upgrade.bat",
         "{{template_dir}}/scripts/windows/msys2-setup.bat",
         "{{template_dir}}/scripts/windows/styrene.bat",
