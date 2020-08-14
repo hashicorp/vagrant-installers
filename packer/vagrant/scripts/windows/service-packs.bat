@@ -11,19 +11,19 @@ powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.Security
 start /wait C:\Windows\Temp\clearcompressionflag.exe
 
 start /wait wusa C:\Windows\Temp\sp1.msu "/extract:C:\Windows\Temp"
-start /wait dism /online /add-package "/packagepath:C:\windows\Temp\windows8.1-kb2919355-x64.cab"
+start /wait dism /online /add-package /norestart "/packagepath:C:\windows\Temp\windows8.1-kb2919355-x64.cab"
 
 start /wait wusa C:\Windows\Temp\sp2.msu "/extract:C:\Windows\Temp"
-start /wait dism /online /add-package "/packagepath:C:\windows\Temp\windows8.1-kb2932046-x64.cab"
+start /wait dism /online /add-package /norestart "/packagepath:C:\windows\Temp\windows8.1-kb2932046-x64.cab"
 
 start /wait wusa C:\Windows\Temp\sp3.msu "/extract:C:\Windows\Temp"
-start /wait dism /online /add-package "/packagepath:C:\windows\Temp\windows8.1-kb2959977-x64.cab"
+start /wait dism /online /add-package /norestart "/packagepath:C:\windows\Temp\windows8.1-kb2959977-x64.cab"
 
 start /wait wusa C:\Windows\Temp\sp4.msu "/extract:C:\Windows\Temp"
-start /wait dism /online /add-package "/packagepath:C:\windows\Temp\windows8.1-kb2937592-x64.cab"
+start /wait dism /online /add-package /norestart "/packagepath:C:\windows\Temp\windows8.1-kb2937592-x64.cab"
 
 start /wait wusa C:\Windows\Temp\sp5.msu "/extract:C:\Windows\Temp"
-start /wait dism /online /add-package "/packagepath:C:\windows\Temp\windows8.1-kb2938439-x64.cab"
+start /wait dism /online /add-package /norestart "/packagepath:C:\windows\Temp\windows8.1-kb2938439-x64.cab"
 
 start /wait wusa C:\Windows\Temp\sp6.msu "/extract:C:\Windows\Temp"
-start /wait dism /online /add-package "/packagepath:C:\windows\Temp\windows8.1-kb2934018-x64.cab"
+start /wait dism /online /add-package /norestart "/packagepath:C:\windows\Temp\windows8.1-kb2934018-x64.cab"
