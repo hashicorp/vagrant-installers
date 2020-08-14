@@ -12,7 +12,6 @@
         "{{template_dir}}/floppy/win-8/msys2-install.qs",
         "{{template_dir}}/floppy/win-8/set-dns.ps1",
         "{{template_dir}}/floppy/win-8/enable-tls.bat",
-        "{{template_dir}}/floppy/win-8/disablewinupdate.bat",
         "{{template_dir}}/floppy/win-8/fixnetwork.ps1",
         "{{template_dir}}/floppy/win-8/install-winrm.cmd",
         "{{template_dir}}/floppy/win-8/passwordchange.bat",
@@ -61,6 +60,7 @@
     },
     {
       "scripts": [
+        "{{template_dir}}/scripts/windows/disablewinupdate.bat",
         "{{template_dir}}/scripts/windows/vagrant.bat",
         "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/enable-rdp.bat",
