@@ -5,6 +5,9 @@ on:
     paths:
       - 'packer/vagrant/template_win-8.json'
       - 'packer/vagrant/scripts/windows/**'
+  workflow_dispatch:
+    branches:
+          - 'master'
 
 jobs:
   build:

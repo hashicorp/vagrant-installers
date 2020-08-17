@@ -5,6 +5,9 @@ on:
     paths:
       - 'packer/vagrant/template_centos-6.json'
       - 'packer/vagrant/scripts/centos/**'
+  workflow_dispatch:
+    branches:
+          - 'master'
 
 jobs:
   build:
