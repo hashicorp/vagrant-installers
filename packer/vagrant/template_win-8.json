@@ -9,6 +9,7 @@
       "floppy_files": [
         "{{template_dir}}/floppy/win-8/Autounattend.xml",
         "{{template_dir}}/floppy/win-8/buildtools-adminfile.xml",
+        "{{template_dir}}/floppy/win-8/disablewinupdate.bat",
         "{{template_dir}}/floppy/win-8/msys2-install.qs",
         "{{template_dir}}/floppy/win-8/set-dns.ps1",
         "{{template_dir}}/floppy/win-8/enable-tls.bat",
@@ -25,7 +26,6 @@
       "iso_url": "{{ user `iso_url` }}",
       "memory": "{{ user `memory` }}",
       "shutdown_command": "{{ user `shutdown_command`}}",
-      "tools_upload_flavor": "windows",
       "type": "vmware-iso",
       "version": "{{ user `hw_version` }}",
       "vm_name": "{{user `vm_name`}}",
@@ -51,18 +51,18 @@
   "provisioners": [
     {
       "scripts": [
-        "{{template_dir}}/scripts/windows/disablewinupdate.bat",
+        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/service-packs.bat"
       ],
       "type": "windows-shell"
     },
     {
-      "type": "windows-restart"
+      "type": "windows-restart",
+      "restart_timeout": "30m"
     },
     {
       "scripts": [
         "{{template_dir}}/scripts/windows/vagrant.bat",
-        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/enable-rdp.bat",
         "{{template_dir}}/scripts/windows/build-tools.bat",
         "{{template_dir}}/scripts/windows/wix.bat",

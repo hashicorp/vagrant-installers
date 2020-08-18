@@ -1,6 +1,6 @@
 // Pulled from: https://raw.githubusercontent.com/msys2/msys2-installer/master/auto-install.js
 
-var install_dir = installer.value("InstallPrefix")
+var install_dir = "c:\\msys64"
 
 function Controller()
 {
