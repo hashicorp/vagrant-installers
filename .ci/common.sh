@@ -1,4 +1,4 @@
-# last-modified: Mon Jun 15 19:58:02 UTC 2020
+# last-modified: Thu Aug  6 16:45:05 UTC 2020
 #!/usr/bin/env bash
 
 # Path to file used for output redirect
@@ -373,8 +373,14 @@ function hashicorp_release_verify() {
 # Generate a HashiCorp release
 #
 # $1: Asset directory
+# $2: Product name (e.g. "vagrant") defaults to $repo_name
 function hashicorp_release() {
     directory="${1}"
+    product="${2}"
+
+    if [ -z "${product}" ]; then
+        product="${repo_name}"
+    fi
 
     hashicorp_release_validate "${directory}"
     hashicorp_release_verify "${directory}"
@@ -386,7 +392,7 @@ function hashicorp_release() {
 
     wrap_stream hc-releases upload "${directory}" \
                 "Failed to upload HashiCorp release assets"
-    wrap_stream hc-releases publish \
+    wrap_stream hc-releases publish -product="${product}" \
                 "Failed to publish HashiCorp release"
 
     export AWS_ACCESS_KEY_ID="${oid}"
