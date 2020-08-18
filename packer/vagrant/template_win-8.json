@@ -7,6 +7,7 @@
       "disk_adapter_type": "lsisas1068",
       "disk_size": "{{user `disk_size`}}",
       "floppy_files": [
+        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/floppy/win-8/Autounattend.xml",
         "{{template_dir}}/floppy/win-8/buildtools-adminfile.xml",
         "{{template_dir}}/floppy/win-8/disablewinupdate.bat",
@@ -73,7 +74,6 @@
         "{{template_dir}}/scripts/windows/msys2-setup.bat",
         "{{template_dir}}/scripts/windows/styrene.bat",
         "{{template_dir}}/scripts/windows/disable-firewall.bat",
-        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/clean.bat",
         "{{template_dir}}/scripts/windows/ultradefrag.bat",
         "{{template_dir}}/scripts/windows/sdelete.bat"
