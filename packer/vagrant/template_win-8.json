@@ -61,7 +61,6 @@
     },
     {
       "scripts": [
-        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/vagrant.bat",
         "{{template_dir}}/scripts/windows/enable-rdp.bat",
         "{{template_dir}}/scripts/windows/build-tools.bat",
@@ -74,6 +73,7 @@
         "{{template_dir}}/scripts/windows/msys2-setup.bat",
         "{{template_dir}}/scripts/windows/styrene.bat",
         "{{template_dir}}/scripts/windows/disable-firewall.bat",
+        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/clean.bat",
         "{{template_dir}}/scripts/windows/ultradefrag.bat",
         "{{template_dir}}/scripts/windows/sdelete.bat"
