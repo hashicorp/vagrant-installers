@@ -7,20 +7,19 @@
       "disk_adapter_type": "lsisas1068",
       "disk_size": "{{user `disk_size`}}",
       "floppy_files": [
+        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/floppy/win-8/Autounattend.xml",
-        "{{template_dir}}/floppy/buildtools-adminfile.xml",
-        "{{template_dir}}/floppy/msys2-install.qs",
-        "{{template_dir}}/floppy/win-8/01-enable-tls.bat",
-        "{{template_dir}}/floppy/win-8/02-install-wget.cmd",
-        "{{template_dir}}/floppy/win-8/_download.cmd",
-        "{{template_dir}}/floppy/win-8/_packer_config*.cmd",
+        "{{template_dir}}/floppy/win-8/buildtools-adminfile.xml",
         "{{template_dir}}/floppy/win-8/disablewinupdate.bat",
+        "{{template_dir}}/floppy/win-8/msys2-install.qs",
+        "{{template_dir}}/floppy/win-8/set-dns.ps1",
+        "{{template_dir}}/floppy/win-8/enable-tls.bat",
         "{{template_dir}}/floppy/win-8/fixnetwork.ps1",
         "{{template_dir}}/floppy/win-8/install-winrm.cmd",
         "{{template_dir}}/floppy/win-8/passwordchange.bat",
         "{{template_dir}}/floppy/win-8/powerconfig.bat",
-        "{{template_dir}}/floppy/win-8/update.bat",
-        "{{template_dir}}/floppy/win-8/zz-start-transports.cmd"
+        "{{template_dir}}/floppy/win-8/start-winrm.cmd",
+        "{{template_dir}}/floppy/vagrant.pub"
       ],
       "guest_os_type": "windows8-64",
       "headless": "{{ user `headless` }}",
@@ -28,7 +27,6 @@
       "iso_url": "{{ user `iso_url` }}",
       "memory": "{{ user `memory` }}",
       "shutdown_command": "{{ user `shutdown_command`}}",
-      "tools_upload_flavor": "windows",
       "type": "vmware-iso",
       "version": "{{ user `hw_version` }}",
       "vm_name": "{{user `vm_name`}}",
@@ -53,24 +51,32 @@
   ],
   "provisioners": [
     {
-      "environment_vars": [
-        "UPDATE={{user `update`}}"
-      ],
       "scripts": [
-        "{{template_dir}}/scripts/windows/win-8/vagrant.bat",
-        "{{template_dir}}/scripts/windows/win-8/vmtool.bat",
+        "{{template_dir}}/scripts/windows/service-packs.bat"
+      ],
+      "type": "windows-shell"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "30m"
+    },
+    {
+      "scripts": [
+        "{{template_dir}}/scripts/windows/vagrant.bat",
         "{{template_dir}}/scripts/windows/enable-rdp.bat",
         "{{template_dir}}/scripts/windows/build-tools.bat",
         "{{template_dir}}/scripts/windows/wix.bat",
         "{{template_dir}}/scripts/windows/ruby.bat",
         "{{template_dir}}/scripts/windows/go.bat",
         "{{template_dir}}/scripts/windows/git.bat",
-        "{{template_dir}}/scripts/windows/msys2.bat",
+        "{{template_dir}}/scripts/windows/msys2-install.bat",
+        "{{template_dir}}/scripts/windows/msys2-upgrade.bat",
+        "{{template_dir}}/scripts/windows/msys2-setup.bat",
         "{{template_dir}}/scripts/windows/styrene.bat",
         "{{template_dir}}/scripts/windows/disable-firewall.bat",
-        "{{template_dir}}/scripts/windows/win-8/clean.bat",
-        "{{template_dir}}/scripts/windows/win-8/ultradefrag.bat",
-        "{{template_dir}}/scripts/windows/win-8/sdelete.bat"
+        "{{template_dir}}/scripts/windows/clean.bat",
+        "{{template_dir}}/scripts/windows/ultradefrag.bat",
+        "{{template_dir}}/scripts/windows/sdelete.bat"
       ],
       "type": "windows-shell"
     }
@@ -86,7 +92,6 @@
     "iso_url": "http://care.dlservice.microsoft.com/dl/download/B/9/9/B999286E-0A47-406D-8B3D-5B5AD7373A4A/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_ENTERPRISE_EVAL_EN-US-IR3_CENA_X64FREE_EN-US_DV9.ISO",
     "memory": "2048",
     "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
-    "update": "true",
     "version": "0.1",
     "vm_name": "eval-win81x64-enterprise",
     "vm_suffix": ""
