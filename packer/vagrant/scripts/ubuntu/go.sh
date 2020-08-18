@@ -15,7 +15,7 @@ else
 fi
 set -e
 
-wget -qO go.tar.gz https://storage.googleapis.com/golang/go1.10.1.linux-${ARCH}.tar.gz
+wget -qO go.tar.gz https://dl.google.com/go/go1.14.6.linux-${ARCH}.tar.gz
 tar -C /usr/local -xzf go.tar.gz
 
 echo "export PATH=$PATH:/usr/local/go/bin" > /etc/profile.d/go-path.sh
