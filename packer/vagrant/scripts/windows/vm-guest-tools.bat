@@ -10,8 +10,6 @@ rd /S /Q "C:\Program Files (x86)\VMWare"
 
 powershell -Command "Mount-DiskImage -ImagePath C:\Windows\Temp\windows.iso"
 
-start /wait E:\setup64.exe /s /v"/qb REBOOT=R"
+start /wait E:\setup64.exe /s /v"/qb REBOOT=R\"
 
 powershell -Command "Dismount-DiskImage -ImagePath C:\Windows\Temp\windows.iso"
-
-rd /S /Q "C:\Windows\Temp\VMware"

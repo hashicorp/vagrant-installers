@@ -51,7 +51,6 @@
   "provisioners": [
     {
       "scripts": [
-        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/service-packs.bat"
       ],
       "type": "windows-shell"
@@ -62,6 +61,7 @@
     },
     {
       "scripts": [
+        "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/scripts/windows/vagrant.bat",
         "{{template_dir}}/scripts/windows/enable-rdp.bat",
         "{{template_dir}}/scripts/windows/build-tools.bat",
