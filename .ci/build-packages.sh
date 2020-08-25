@@ -3,10 +3,9 @@
 export SLACK_USERNAME="Vagrant"
 export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png"
 export SLACK_TITLE="Vagrant Packaging"
-export SLACK_CHANNEL="#team-vagrant-spam-channel"
 export PACKET_EXEC_DEVICE_NAME="${PACKET_EXEC_DEVICE_NAME:-ci-installers}"
 export PACKET_EXEC_DEVICE_SIZE="${PACKET_EXEC_DEVICE_SIZE:-baremetal_0,baremetal_1,baremetal_1e}"
-export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-iad1,iad2,ewr1,dfw1,dfw2,sea1,sjc1,lax1}"
+export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-ewr1,iad1,iad2,dfw1,dfw2,sea1,sjc1,lax1}"
 export PACKET_EXEC_OPERATING_SYSTEM="${PACKET_EXEC_OPERATING_SYSTEM:-ubuntu_18_04}"
 export PACKET_EXEC_PRE_BUILTINS="${PACKET_EXEC_PRE_BUILTINS:-InstallVmware,InstallVagrant,InstallVagrantVmware}"
 export PACKET_EXEC_ATTACH_VOLUME="1"
@@ -21,6 +20,13 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/.ci/common.sh"
 
 pushd "${root}" > "${output}"
+
+if [ ! -z "${release}" ]; then
+    export SLACK_CHANNEL="#team-vagrant"
+    slack -m "Starting Vagrant release build for: ${tag}"
+else
+    export SLACK_CHANNEL="#team-vagrant-spam-channel"
+fi
 
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
@@ -310,10 +316,6 @@ if [ ! -z "${release}" ]; then
 
     echo "Storing release packages into asset store..."
     upload_assets pkg/
-
-    # TODO: Remove after first successful run
-    slack -m  "New Vagrant release is ready for upload! - v${vagrant_version}\n\nAssets: $(asset_location)"
-    exit
 
     echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
     hashicorp_release pkg/
