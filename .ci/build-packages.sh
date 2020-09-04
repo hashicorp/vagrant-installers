@@ -336,4 +336,10 @@ else
     prerelease "${prerelease_version}" pkg/
 
     slack -m "New Vagrant development installers available:\n> https://github.com/${repository}/releases/${prerelease_version}"
+    
+    echo "Dispatching blackbox"
+    curl -X POST "https://api.github.com/repos/hashicorp/vagrant-blackbox/dispatches" \
+    -H 'Accept: application/vnd.github.everest-v3+json' \
+    -u $HASHIBOT_USERNAME:$HASHIBOT_TOKEN \
+    --data '{"event_type": "prerelease", "client_payload": { "prerelease_version": "${prerelease_version}"}}'
 fi
