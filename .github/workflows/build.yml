@@ -11,6 +11,8 @@ on:
       - '.github/workflows/build.yml'
   schedule:
     - cron: '15 1 * * *'
+  repository_dispatch:
+    types: [build]
 
 jobs:
   build:
