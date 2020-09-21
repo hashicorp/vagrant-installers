@@ -1,7 +1,7 @@
 _realname=ruby
 pkgbase="${MINGW_PACKAGE_PREFIX}-ruby26"
 pkgname="${MINGW_PACKAGE_PREFIX}-ruby26"
-pkgver=2.6.6
+pkgver=2.7.1
 pkgrel=1
 pkgdesc="An object-oriented language for quick and easy programming (mingw-w64)"
 arch=('any')
@@ -16,9 +16,9 @@ depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
          "${MINGW_PACKAGE_PREFIX}-openssl>=1.1.1"
          "${MINGW_PACKAGE_PREFIX}-zlib")
 options=('staticlibs' 'strip')
-source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver}.tar.bz2")
+source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver}.tar.xz")
 
-sha256sums=('f08b779079ecd1498e6a2548c39a86144c6c784dcec6f7e8a93208682eb8306e')
+sha256sums=('b224f9844646cc92765df8288a46838511c1cec5b550d8874bd4686a904fcee7')
 
 prepare() {
   cd ${srcdir}/${_realname}-${pkgver}
