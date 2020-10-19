@@ -10,11 +10,11 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-# Specify a certain commit if you do not want to use master
+# Specify a certain commit if you do not want to use main
 # by using:
 # export PKG2AICOMMIT=<git sha>
 if [ -z "$PKG2AICOMMIT" ] ; then
-    PKG2AICOMMIT=master
+    PKG2AICOMMIT=main
 fi
 
 

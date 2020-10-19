@@ -6,11 +6,11 @@
 
 # RECIPE=$(realpath "$0")
 
-# Specify a certain commit if you do not want to use master
+# Specify a certain commit if you do not want to use main
 # by using:
 # export PKG2AICOMMIT=<git sha>
 if [ -z "$PKG2AICOMMIT" ] ; then
-    PKG2AICOMMIT=master
+    PKG2AICOMMIT=main
 fi
 
 # Options for apt-get to use local files rather than the system ones

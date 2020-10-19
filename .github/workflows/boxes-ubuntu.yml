@@ -1,13 +1,13 @@
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
     paths:
       - 'packer/vagrant/template_ubuntu-14.04.json'
       - 'packer/vagrant/scripts/ubuntu/**'
   workflow_dispatch:
     branches:
-          - 'master'
+          - 'main'
 
 jobs:
   build:

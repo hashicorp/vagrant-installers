@@ -21,7 +21,7 @@ chmod 755 /vagrant/package/package.sh
 
 set -e
 
-/vagrant/package/package.sh /vagrant/substrate-assets/substrate_darwin_x86_64.zip master
+/vagrant/package/package.sh /vagrant/substrate-assets/substrate_darwin_x86_64.zip main
 
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 mkdir -p /vagrant/${pkg_dir}

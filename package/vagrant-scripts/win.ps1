@@ -46,7 +46,7 @@ if($SignKeyExists) {
     }
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
-        "VagrantRevision"="master";
+        "VagrantRevision"="main";
         "SignKey"="${SignKeyPath}";
         "SignKeyPassword"="${env:SignKeyPassword}";
         "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
@@ -54,7 +54,7 @@ if($SignKeyExists) {
 } else {
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
-        "VagrantRevision"="master";
+        "VagrantRevision"="main";
         "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
     }
 }
@@ -73,7 +73,7 @@ if($SignKeyExists) {
     }
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
-        "VagrantRevision"="master";
+        "VagrantRevision"="main";
         "SignKey"="${SignKeyPath}";
         "SignKeyPassword"="${env:SignKeyPassword}";
         "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
@@ -81,7 +81,7 @@ if($SignKeyExists) {
 } else {
     $PackageArgs = @{
         "SubstratePath"="${SubstratePath}";
-        "VagrantRevision"="master";
+        "VagrantRevision"="main";
         "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
     }
 }

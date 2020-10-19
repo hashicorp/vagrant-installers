@@ -1,12 +1,12 @@
 pkgname=hashicorp-vagrant
-pkgver="${CLEAN_VAGRANT_VERSION:-master}"
+pkgver="${CLEAN_VAGRANT_VERSION:-main}"
 pkgrel=1
 pkgdesc="Build and distribute virtualized development environments"
 arch=('x86_64')
 url="https://www.vagrantup.com"
 license=('MIT')
-_pkg_ver="${VAGRANT_VERSION:-master}"
-_installer_ver="${VAGRANT_INSTALLERS_VERSION:-master}"
+_pkg_ver="${VAGRANT_VERSION:-main}"
+_installer_ver="${VAGRANT_INSTALLERS_VERSION:-main}"
 source=("vagrant.tar.gz::https://github.com/hashicorp/vagrant/archive/${_pkg_ver}.tar.gz"
         "installer.tar.gz::https://github.com/hashicorp/vagrant-installers/archive/${_installer_ver}.tar.gz")
 conflicts=('vagrant' 'vagrant-substrate')

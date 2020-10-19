@@ -12,7 +12,7 @@ set -e
 
 # Call the support script directly for building since
 # there is no substrate to configure
-/vagrant/package/support/package_archlinux.sh ${GIT_BUILD_BRANCH:-master}
+/vagrant/package/support/package_archlinux.sh ${GIT_BUILD_BRANCH:-main}
 
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 # And store our new package
