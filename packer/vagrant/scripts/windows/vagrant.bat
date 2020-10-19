@@ -2,7 +2,7 @@
 @for %%i in (a:\_packer_config*.cmd) do @call "%%~i"
 @if defined PACKER_DEBUG (@echo on) else (@echo off)
 
-if not defined VAGRANT_PUB_URL set VAGRANT_PUB_URL=https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub
+if not defined VAGRANT_PUB_URL set VAGRANT_PUB_URL=https://raw.githubusercontent.com/hashicorp/vagrant/main/keys/vagrant.pub
 
 for %%i in ("%VAGRANT_PUB_URL%") do set VAGRANT_PUB=%%~nxi
 set VAGRANT_DIR=%TEMP%\vagrant

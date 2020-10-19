@@ -64,7 +64,7 @@ declare -A package_list=(
 echo "Fetching Vagrant RubyGem for installer build..."
 
 if [ "${tag}" = "" ]; then
-    wrap aws s3 cp ${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-master.gem vagrant-master.gem \
+    wrap aws s3 cp ${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-main.gem vagrant-main.gem \
          "Failed to download Vagrant RubyGem"
 else
     url=$(curl -SsL -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${repository}/releases/tags/${tag}" | jq -r '.assets[] | select(.name | contains(".gem")) | .url')
