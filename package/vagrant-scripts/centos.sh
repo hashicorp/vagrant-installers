@@ -17,7 +17,7 @@ fi
 
 set -e
 
-/vagrant/package/package.sh /vagrant/substrate-assets/substrate_centos_$(uname -m).zip master
+/vagrant/package/package.sh /vagrant/substrate-assets/substrate_centos_$(uname -m).zip main
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 mkdir -p /vagrant/${pkg_dir}
 cp *.rpm /vagrant/${pkg_dir}/

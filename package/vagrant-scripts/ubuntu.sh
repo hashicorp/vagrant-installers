@@ -18,7 +18,7 @@ export PATH=$PATH:/var/lib/gems/1.8/bin
 
 set -e
 
-/vagrant/package/package.sh /vagrant/substrate-assets/substrate_ubuntu_$(uname -m).zip master
+/vagrant/package/package.sh /vagrant/substrate-assets/substrate_ubuntu_$(uname -m).zip main
 
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 mkdir -p /vagrant/${pkg_dir}
