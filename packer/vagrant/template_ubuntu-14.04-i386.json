@@ -1,8 +1,22 @@
 {
+  "box_basename": "ubuntu-14.04-i386",
+  "builders": null,
   "iso_checksum": "976044842804eafc18390505508958b559c131211160ecae5e60694bdf171f78",
   "iso_name": "ubuntu-14.04.1-server-i386.iso",
   "mirror_directory": "14.04.1",
   "name": "ubuntu1404-i386",
-  "box_basename": "ubuntu-14.04-i386",
   "vm_name": "ubuntu-14.04-i386"
 }
+
+Error! Fixed template fails to parse: 6 errors occurred:
+	* Unknown root level key in template: 'box_basename'
+	* Unknown root level key in template: 'iso_checksum'
+	* Unknown root level key in template: 'iso_name'
+	* Unknown root level key in template: 'mirror_directory'
+	* Unknown root level key in template: 'name'
+	* Unknown root level key in template: 'vm_name'
+
+
+
+This is usually caused by an error in the input template.
+Please fix the error and try again.

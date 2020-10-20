@@ -1,7 +1,20 @@
 {
   "box_basename": "centos-6-i386",
+  "builders": null,
   "iso_checksum": "25d95b3f178e59bd672fa97e043a9191cbf73bb6cd12f5df9b540fa88076cae8",
   "iso_name": "CentOS-6.10-i386-bin-DVD1.iso",
   "mirror_directory": "6/isos/i386",
   "name": "centos-6-i386"
 }
+
+Error! Fixed template fails to parse: 5 errors occurred:
+	* Unknown root level key in template: 'box_basename'
+	* Unknown root level key in template: 'iso_checksum'
+	* Unknown root level key in template: 'iso_name'
+	* Unknown root level key in template: 'mirror_directory'
+	* Unknown root level key in template: 'name'
+
+
+
+This is usually caused by an error in the input template.
+Please fix the error and try again.

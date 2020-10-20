@@ -1,55 +1,61 @@
 {
-  "builders": [{
-    "type": "vmware-iso",
-    "guest_os_type": "other3xlinux-64",
-    "headless": true,
-    "iso_url": "{{user `mirror`}}/iso/{{user `iso_date`}}/archlinux-{{user `iso_date`}}-x86_64.iso",
-    "iso_checksum": "{{user `iso_checksum`}}",
-    "iso_checksum_type": "{{user `iso_checksum_type`}}",
-    "output_directory": "output-archlinux-x86_64-{{build_type}}",
-    "vm_name": "packer-archlinux-x86_64",
-    "disk_size": "{{user `disk_size`}}",
-    "http_directory": "http",
-    "boot_wait": "5s",
-    "boot_command": [
-      "<enter><wait10><wait10><wait10><wait10><wait10>",
-      "curl -O 'http://{{.HTTPIP}}:{{.HTTPPort}}/archlinux/install{,-chroot}.sh'<enter><wait>",
-      "bash install.sh < install-chroot.sh && systemctl reboot<enter>"
-    ],
-    "ssh_timeout": "{{user `ssh_timeout`}}",
-    "ssh_username": "vagrant",
-    "ssh_password": "vagrant",
-    "shutdown_command": "sudo systemctl poweroff",
-    "vmx_data": {
-      "memsize": "{{user `memory`}}",
-      "numvcpus": "{{user `cpus`}}"
+  "builders": [
+    {
+      "boot_command": [
+        "<enter><wait10><wait10><wait10><wait10><wait10>",
+        "curl -O 'http://{{.HTTPIP}}:{{.HTTPPort}}/archlinux/install{,-chroot}.sh'<enter><wait>",
+        "bash install.sh < install-chroot.sh \u0026\u0026 systemctl reboot<enter>"
+      ],
+      "boot_wait": "5s",
+      "disk_size": "{{user `disk_size`}}",
+      "guest_os_type": "other3xlinux-64",
+      "headless": true,
+      "http_directory": "http",
+      "iso_checksum": "{{user `iso_checksum_type`}}:{{user `iso_checksum`}}",
+      "iso_url": "{{user `mirror`}}/iso/{{user `iso_date`}}/archlinux-{{user `iso_date`}}-x86_64.iso",
+      "output_directory": "output-archlinux-x86_64-{{build_type}}",
+      "shutdown_command": "sudo systemctl poweroff",
+      "ssh_password": "vagrant",
+      "ssh_timeout": "{{user `ssh_timeout`}}",
+      "ssh_username": "vagrant",
+      "type": "vmware-iso",
+      "vm_name": "packer-archlinux-x86_64",
+      "vmx_data": {
+        "memsize": "{{user `memory`}}",
+        "numvcpus": "{{user `cpus`}}"
+      }
     }
-  }],
-  "provisioners": [{
-    "type": "shell",
-    "scripts": [
-      "scripts/arch/vmware.sh",
-      "scripts/arch/vagrant.sh",
-      "scripts/arch/sshd.sh",
-      "scripts/arch/go.sh",
-      "scripts/arch/cleanup.sh",
-      "scripts/arch/minimize.sh"
+  ],
+  "post-processors": [
+    [
+      {
+        "compression_level": "{{user `compression_level`}}",
+        "output": "archlinux-{{user `version`}}.{{user `build_timestamp`}}.box",
+        "type": "vagrant",
+        "vagrantfile_template": "vagrantfile-linux.template"
+      },
+      {
+        "box_tag": "hashicorp-vagrant/archlinux",
+        "type": "vagrant-cloud",
+        "version": "{{user `version`}}.{{user `build_timestamp`}}"
+      }
     ]
-  }],
-  "post-processors": [[
+  ],
+  "provisioners": [
     {
-      "type": "vagrant",
-      "compression_level": "{{user `compression_level`}}",
-      "output": "archlinux-{{user `version`}}.{{user `build_timestamp`}}.box",
-      "vagrantfile_template": "vagrantfile-linux.template"
-    },
-    {
-      "type": "vagrant-cloud",
-      "box_tag": "hashicorp-vagrant/archlinux",
-      "version": "{{user `version`}}.{{user `build_timestamp`}}"
+      "scripts": [
+        "scripts/arch/vmware.sh",
+        "scripts/arch/vagrant.sh",
+        "scripts/arch/sshd.sh",
+        "scripts/arch/go.sh",
+        "scripts/arch/cleanup.sh",
+        "scripts/arch/minimize.sh"
+      ],
+      "type": "shell"
     }
-  ]],
+  ],
   "variables": {
+    "build_timestamp": "{{isotime \"20060102150405\"}}",
     "compression_level": "6",
     "cpus": "1",
     "disk_size": "40000",
@@ -59,7 +65,6 @@
     "memory": "512",
     "mirror": "http://mirrors.kernel.org/archlinux",
     "ssh_timeout": "60m",
-    "version": "1.0",
-    "build_timestamp": "{{isotime \"20060102150405\"}}"
+    "version": "1.0"
   }
 }
