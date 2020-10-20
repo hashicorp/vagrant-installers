@@ -30,15 +30,14 @@
       "guest_os_type": "ubuntu",
       "headless": true,
       "http_directory": "http",
-      "iso_checksum": "{{user `iso_checksum`}}",
-      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum_type`}}:{{user `iso_checksum`}}",
       "iso_url": "{{user `mirror`}}/{{user `mirror_directory`}}/{{user `iso_name`}}",
       "output_directory": "output-{{ user `name` }}-vmware-iso",
       "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now",
       "ssh_password": "vagrant",
       "ssh_port": 22,
+      "ssh_timeout": "10000s",
       "ssh_username": "vagrant",
-      "ssh_wait_timeout": "10000s",
       "tools_upload_flavor": "linux",
       "type": "vmware-iso",
       "vm_name": "{{ user `name` }}",
@@ -51,19 +50,21 @@
       "vmx_remove_ethernet_interfaces": true
     }
   ],
-  "post-processors": [[
-    {
-      "keep_input_artifact": false,
-      "output": "{{user `box_basename`}}-{{user `version`}}.{{user `build_timestamp`}}.box",
-      "type": "vagrant",
-      "vagrantfile_template": "vagrantfile-linux.template"
-    },
-    {
-      "type": "vagrant-cloud",
-      "box_tag": "hashicorp-vagrant/{{user `box_basename`}}",
-      "version": "{{user `version`}}.{{user `build_timestamp`}}"
-    }
-  ]],
+  "post-processors": [
+    [
+      {
+        "keep_input_artifact": false,
+        "output": "{{user `box_basename`}}-{{user `version`}}.{{user `build_timestamp`}}.box",
+        "type": "vagrant",
+        "vagrantfile_template": "vagrantfile-linux.template"
+      },
+      {
+        "box_tag": "hashicorp-vagrant/{{user `box_basename`}}",
+        "type": "vagrant-cloud",
+        "version": "{{user `version`}}.{{user `build_timestamp`}}"
+      }
+    ]
+  ],
   "provisioners": [
     {
       "environment_vars": [
@@ -90,6 +91,8 @@
     }
   ],
   "variables": {
+    "box_basename": "ubuntu-14.04",
+    "build_timestamp": "{{isotime \"20060102150405\"}}",
     "cpus": "1",
     "disk_size": "65536",
     "http_proxy": "{{env `http_proxy`}}",
@@ -101,10 +104,9 @@
     "mirror": "http://old-releases.ubuntu.com/releases",
     "mirror_directory": "14.04.1",
     "name": "ubuntu1404",
-    "box_basename": "ubuntu-14.04",
     "no_proxy": "{{env `no_proxy`}}",
     "preseed_path": "preseed.cfg",
-    "version": "1.0",
-    "build_timestamp":  "{{isotime \"20060102150405\"}}"
+    "version": "1.0"
   }
 }
+

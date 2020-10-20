@@ -5,7 +5,6 @@
       "disk_size": "{{ user `disk_size` }}",
       "guest_os_type": "{{ user `vmware_guest_os_type` }}",
       "headless": true,
-      "iso_checksum_type": "none",
       "iso_url": "{{ user `iso_url` }}",
       "output_directory": "output-{{ user `vm_name` }}-vmware-iso",
       "shutdown_command": "echo '{{ user `ssh_username` }}'|sudo -S shutdown -h now",
@@ -14,7 +13,6 @@
       "ssh_port": 22,
       "ssh_timeout": "10000s",
       "ssh_username": "{{ user `ssh_username` }}",
-      "ssh_wait_timeout": "10000s",
       "tools_upload_flavor": "darwin",
       "type": "vmware-iso",
       "vm_name": "{{ user `vm_name` }}",
@@ -32,19 +30,21 @@
       }
     }
   ],
-  "post-processors": [[
-    {
-      "keep_input_artifact": false,
-      "output": "{{user `vm_name`}}-{{user `version`}}.{{user `build_timestamp}}.box",
-      "type": "vagrant",
-      "vagrantfile_template": "vagrantfile-osx109.template"
-    },
-    {
-      "type": "vagrant-cloud",
-      "box_tag": "hashicorp-vagrant/osx-10.9",
-      "version": "{{user `version`}.{{user `build_timestamp`}}"
-    }
-  ]],
+  "post-processors": [
+    [
+      {
+        "keep_input_artifact": false,
+        "output": "{{user `vm_name`}}-{{user `version`}}.{{user `build_timestamp}}.box",
+        "type": "vagrant",
+        "vagrantfile_template": "vagrantfile-osx109.template"
+      },
+      {
+        "box_tag": "hashicorp-vagrant/osx-10.9",
+        "type": "vagrant-cloud",
+        "version": "{{user `version`}.{{user `build_timestamp`}}"
+      }
+    ]
+  ],
   "provisioners": [
     {
       "destination": "/private/tmp/darwin.iso",
@@ -108,6 +108,7 @@
   ],
   "variables": {
     "autologin": "true",
+    "build_timestamp": "{{isotime \"20060102150405\"}}",
     "cpus": "1",
     "disk_size": "65536",
     "install_vagrant_keys": "true",
@@ -117,9 +118,8 @@
     "ssh_password": "vagrant",
     "ssh_username": "vagrant",
     "update": "true",
-    "vm_name": "osx109",
-    "vmware_guest_os_type": "darwin13-64",
     "version": "1.0",
-    "build_timestamp":  "{{isotime \"20060102150405\"}}"
+    "vm_name": "osx109",
+    "vmware_guest_os_type": "darwin13-64"
   }
 }
