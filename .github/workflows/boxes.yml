@@ -16,6 +16,8 @@ jobs:
       - name: Build Boxes
         run: ./.ci/build-boxes.sh
         working-directory: ${{github.workspace}}
+        env:
+          VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}

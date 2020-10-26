@@ -22,6 +22,7 @@ jobs:
         working-directory: ${{github.workspace}}
         env:
           PKT_PACKER_BUILDS: "ubuntu-14.04"
+          VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}
