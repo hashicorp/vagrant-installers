@@ -15,9 +15,9 @@ dictionaries-common
 dpkg
 fontconfig
 fontconfig-config
-# gconf2 # elementary OS 0.4 Loki does NOT have libgconf-2-4
-# gconf2-common # elementary OS 0.4 Loki does NOT have libgconf-2-4
-# gconf-service # elementary OS 0.4 Loki does NOT have libgconf-2-4
+gconf2 # elementary OS 0.4 Loki does NOT have libgconf-2-4
+gconf2-common # elementary OS 0.4 Loki does NOT have libgconf-2-4
+gconf-service # elementary OS 0.4 Loki does NOT have libgconf-2-4
 gvfs-backends # e.g., for Bluefish
 gksu
 glib-networking
@@ -33,27 +33,27 @@ libc6
 libc6-dev
 libcairo2
 libcups2
-# libcurl3 # Does draw in a lot of libs including security relevant ones; e.g., in supertux2; but otherwise get ../lib/x86_64-linux-gnu/libssl.so.1.0.0: version `OPENSSL_1.0.2' not found (required by /usr/lib/x86_64-linux-gnu/libcurl.so.4)
-# libcurl3-gnutls # https://github.com/AppImage/AppImages/issues/120#issuecomment-261749714
-# libdbm2 # seems not to exist
+libcurl3 # Does draw in a lot of libs including security relevant ones; e.g., in supertux2; but otherwise get ../lib/x86_64-linux-gnu/libssl.so.1.0.0: version `OPENSSL_1.0.2' not found (required by /usr/lib/x86_64-linux-gnu/libcurl.so.4)
+libcurl3-gnutls # https://github.com/AppImage/AppImages/issues/120#issuecomment-261749714
+libdbm2 # seems not to exist
 libdbus-1-3
 libdrm2
 libegl1-mesa
 libfontconfig1
 libgbm1
 libgcc1
-# libgconf-2-4 # elementary OS 0.4 Loki does NOT have it
+libgconf-2-4 # elementary OS 0.4 Loki does NOT have it
 libgdk-pixbuf2.0-0
 libgl1
 libgl1-mesa
 libgl1-mesa-dri
 libgl1-mesa-glx
-# libglib2.0-0 # https://github.com/LibreCAD/LibreCAD/issues/858#issuecomment-345449318
+libglib2.0-0 # https://github.com/LibreCAD/LibreCAD/issues/858#issuecomment-345449318
 libglu1-mesa
-# libgnutls26 cannot be expected to be eveywhere, e.g., KDE neon
-# libgpg-error0 gives non-fatal errors on many systems and is low-level, can it be expected to be everywhere?
-# libgpg-error0
-# libgstreamer1.0-0
+libgnutls26 cannot be expected to be eveywhere, e.g., KDE neon
+libgpg-error0 gives non-fatal errors on many systems and is low-level, can it be expected to be everywhere?
+libgpg-error0
+libgstreamer1.0-0
 libgtk2.0-0
 libgtk-3-0
 libnss3
@@ -62,7 +62,7 @@ libpango-1.0-0
 libpangocairo-1.0-0 # Workaround for: openSUSE: undefined symbol: hb_buffer_set_cluster_level?; commenting this out leads to square boxes instead of fonts
 libpangoft2-1.0-0 # Workaround for: openSUSE: undefined symbol: hb_buffer_set_cluster_level?; commenting this out leads to square boxes instead of fonts
 libstdc++6
-#libtasn1-6
+libtasn1-6
 libwayland-egl1-mesa # e.g., OpenRA
 lsb-base
 libxcb1 # Workaround for: Fedora 25: undefined symbol: xcb_send_request_with_fds, https://github.com/AppImage/AppImages/issues/128
