@@ -33,6 +33,16 @@ if [ -z "${default_ssl_cert_file}" ]; then
         default_ssl_cert_file="/etc/ssl/ca-certificates.crt"
     elif [ -f "/etc/ca-certificates.crt" ]; then
         default_ssl_cert_file="/etc/ca-certificates.crt"
+    elif [ -f "/etc/pki/tls/certs/ca-bundle.crt" ]; then
+        default_ssl_cert_file="/etc/pki/tls/certs/ca-bundle.crt"
+    elif [ -f "/etc/ssl/ca-bundle.pem" ]; then
+        default_ssl_cert_file="/etc/ssl/ca-bundle.pem"
+    elif [ -f "/etc/pki/tls/cacert.pem" ]; then
+        default_ssl_cert_file="/etc/pki/tls/cacert.pem"
+    elif [ -f "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem" ]; then
+        default_ssl_cert_file="/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+    elif [ -f "/etc/ssl/cert.pem" ]; then
+        default_ssl_cert_file="/etc/ssl/cert.pem"
     else
         echo "WARNING: Failed to locate ca-certificates.crt file!"
         echo
