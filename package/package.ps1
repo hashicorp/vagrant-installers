@@ -224,7 +224,7 @@ if ($UseCache -eq $false) {
         $env:PKG_CONFIG_PATH = "/mingw$($PackageArch)/lib/pkgconfig:/usr/lib/pkgconfig"
         $env:Path     ="$($EmbeddedDir)\mingw$($PackageArch)\bin;$($EmbeddedDir)\bin;$($EmbeddedDir)\usr\bin;$($env:Path)"
         $env:SSL_CERT_FILE = "$($EmbeddedDir)\cacert.pem"
-        & "$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-document
+        & "$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant.gem --no-document --prerelease
 
         if(!$?) {
             Write-Error "Failed to install Vagrant RubyGem into packaging substrate"
