@@ -10,6 +10,9 @@ export PATH="${PATH}:${root}/.ci"
 
 pushd "${root}" > "${output}"
 
+# Configure for hashibot
+hashibot_git
+
 if [ "${repo_name}" = "vagrant-installers" ]; then
     remote_repository="hashicorp/vagrant-builders"
 else

@@ -318,7 +318,7 @@ if [ ! -z "${release}" ]; then
     upload_assets pkg/
 
     echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
-    hashicorp_release pkg/
+    hashicorp_release pkg/ vagrant
 
     slack -m "New Vagrant release has been published! - *${vagrant_version}*\n\nAssets: https://releases.hashicorp.com/vagrant/${vagrant_version}\nStore: $(asset_location)"
 else
