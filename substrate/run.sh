@@ -4,21 +4,22 @@
 
 #### Update these as required
 
-curl_version="7.69.1"
-libarchive_version="3.3.2"
-libffi_version="3.2.1"
-libgcrypt_version="1.8.5"
+curl_version="7.72.0"
+libarchive_version="3.4.3"
+libffi_version="3.3"
+libgcrypt_version="1.8.7"
 libgmp_version="6.1.2"
-libgpg_error_version="1.27"
-libiconv_version="1.15"
+libgpg_error_version="1.39"
+libiconv_version="1.16"
+# Need up update gcc version to use libssh2 1.9.0+
 libssh2_version="1.8.0"
 libxml2_version="2.9.7"
 libxslt_version="1.1.32"
-libyaml_version="0.1.7"
-openssl_version="1.1.1g"
-readline_version="7.0"
+libyaml_version="0.2.5"
+openssl_version="1.1.1h"
+readline_version="8.0"
 ruby_version="2.6.6"
-xz_version="5.2.4"
+xz_version="5.2.5"
 zlib_version="1.2.11"
 
 macos_deployment_target="10.9"
