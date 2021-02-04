@@ -17,7 +17,7 @@ on:
 jobs:
   build:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Build Vagrant Installers
+    name: Build Vagrant Installers space
     runs-on: self-hosted
     steps:
       - name: Code Checkout
