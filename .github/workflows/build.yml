@@ -35,7 +35,6 @@ jobs:
           FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
           PACKET_EXEC_PREFER_FACILITIES: ewr1,iad1,iad2,dfw1,dfw2,sea1,sjc1,lax1
           VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
-          AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
         working-directory: ${{github.workspace}}
       - name: Clean Workspace
         if: always()
