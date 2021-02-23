@@ -18,7 +18,6 @@ jobs:
         working-directory: ${{github.workspace}}
         env:
           VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
-          AWS_ASSUME_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}
