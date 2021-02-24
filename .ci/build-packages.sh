@@ -113,6 +113,8 @@ mkdir -p substrate-assets pkg
 
 echo "Fetching any prebuilt substrates and/or packages... "
 
+# force renewal of the aws session
+AWS_SESSION_EXPIRATION=$(date)
 # If there are existing substrates or packages already built, download them
 aws s3 sync --no-progress "${s3_substrate_dst}/" ./substrate-assets/
 aws s3 sync --no-progress "${s3_package_dst}/" ./pkg/
@@ -186,6 +188,8 @@ else
     wrap_stream_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- /bin/true
 
     echo "Storing any built substrates... "
+    # force renewal of the aws session
+    AWS_SESSION_EXPIRATION=$(date)
     # Store all built substrates
     wrap_stream_raw aws s3 sync --no-progress ./substrate-assets/ "${s3_substrate_dst}"
 
@@ -269,6 +273,8 @@ else
     # Fetch any built packages
     wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
 
+    # force renewal of the aws session
+    AWS_SESSION_EXPIRATION=$(date)
     # Store all built packages
     echo "Storing any built packages... "
     wrap_stream_raw aws s3 sync --no-progress ./pkg/ "${s3_package_dst}"
