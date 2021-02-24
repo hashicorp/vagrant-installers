@@ -66,7 +66,7 @@ echo "Fetching Vagrant RubyGem for installer build..."
 
 if [ "${tag}" = "" ]; then
     # Unset the session token to ensure no timeout is reached
-    unset AWS_SESSION_TOKEN
+    # unset AWS_SESSION_TOKEN
     wrap aws s3 cp ${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-main.gem vagrant-main.gem \
          "Failed to download Vagrant RubyGem"
 else
