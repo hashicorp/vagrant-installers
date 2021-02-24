@@ -65,6 +65,8 @@ declare -A package_list=(
 echo "Fetching Vagrant RubyGem for installer build..."
 
 if [ "${tag}" = "" ]; then
+    # Unset the session token to ensure no timeout is reached
+    unset AWS_SESSION_TOKEN
     wrap aws s3 cp ${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-main.gem vagrant-main.gem \
          "Failed to download Vagrant RubyGem"
 else
@@ -113,6 +115,8 @@ mkdir -p substrate-assets pkg
 
 echo "Fetching any prebuilt substrates and/or packages... "
 
+# Unset the session token to ensure no timeout is reached
+unset AWS_SESSION_TOKEN
 # If there are existing substrates or packages already built, download them
 aws s3 sync --no-progress "${s3_substrate_dst}/" ./substrate-assets/
 aws s3 sync --no-progress "${s3_package_dst}/" ./pkg/
@@ -186,6 +190,8 @@ else
     wrap_stream_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- /bin/true
 
     echo "Storing any built substrates... "
+    # Unset the session token to ensure no timeout is reached
+    unset AWS_SESSION_TOKEN
     # Store all built substrates
     wrap_stream_raw aws s3 sync --no-progress ./substrate-assets/ "${s3_substrate_dst}"
 
@@ -269,6 +275,8 @@ else
     # Fetch any built packages
     wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
 
+    # Unset the session token to ensure no timeout is reached
+    unset AWS_SESSION_TOKEN
     # Store all built packages
     echo "Storing any built packages... "
     wrap_stream_raw aws s3 sync --no-progress ./pkg/ "${s3_package_dst}"
