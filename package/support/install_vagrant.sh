@@ -88,6 +88,7 @@ export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
 export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
 
+mkdir -p "${EMBEDDED_DIR}/certs"
 # Install the pkg-config gem to ensure system can read the bundled *.pc files
 ${GEM_COMMAND} install pkg-config --no-document -v "~> 1.1.7"
 
