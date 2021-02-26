@@ -481,7 +481,7 @@ cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
 
 # cacert
 echo_stderr " -> Writing cacert.pem..."
-curl -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.haxx.se/ca/cacert.pem
+curl -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.se/ca/cacert.pem
 cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
 
 # rubyencoder
