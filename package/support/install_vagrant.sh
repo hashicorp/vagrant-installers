@@ -86,6 +86,7 @@ export CFLAGS="${CPPFLAGS}"
 export LDFLAGS="-L${EMBEDDED_DIR}/lib -L${EMBEDDED_DIR}/lib64"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
+export CURL_CA_BUNDLE="${EMBEDDED_DIR}/cacert.pem"
 export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
 
 mkdir -p "${EMBEDDED_DIR}/certs"
