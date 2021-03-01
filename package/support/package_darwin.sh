@@ -58,6 +58,7 @@ export CFLAGS="${CPPFLAGS}"
 export LDFLAGS="${LDFLAGS} -L${EMBEDDED_DIR}/lib -L${EMBEDDED_DIR}/lib64"
 export PATH="${EMBEDDED_DIR}/bin:${PATH}"
 export PKG_CONFIG_PATH="${EMBEDDED_DIR}/lib/pkgconfig"
+export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
 
 "${GEM_COMMAND}" install --no-document rake
 
