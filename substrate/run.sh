@@ -4,19 +4,19 @@
 
 #### Update these as required
 
-curl_version="7.72.0"
-libarchive_version="3.4.3"
+curl_version="7.75.0"
+libarchive_version="3.5.1"
 libffi_version="3.3"
-libgcrypt_version="1.8.7"
-libgmp_version="6.1.2"
-libgpg_error_version="1.39"
+libgcrypt_version="1.9.2"
+libgmp_version="6.2.1"
+libgpg_error_version="1.41"
 libiconv_version="1.16"
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_version="1.8.0"
-libxml2_version="2.9.7"
-libxslt_version="1.1.32"
+libxml2_version="2.9.10"
+libxslt_version="1.1.34"
 libyaml_version="0.2.5"
-openssl_version="1.1.1h"
+openssl_version="1.1.1j"
 readline_version="8.0"
 ruby_version="2.6.6"
 xz_version="5.2.5"
