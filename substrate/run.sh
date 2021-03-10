@@ -52,10 +52,10 @@ fi
 
 if [[ "${uname}" = *"Linux"* ]]; then
     host_os="linux"
-    if [[ -f /etc/os-release ]]; then
-        linux_os="ubuntu"
-    else
+    if [[ -f /etc/centos-release ]]; then
         linux_os="centos"
+    else
+        linux_os="ubuntu"
     fi
     host_ident="${linux_os}_${host_arch}"
     install_prefix=""
