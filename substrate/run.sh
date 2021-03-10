@@ -100,7 +100,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # need newer gcc to build libxcrypt-compat package
     echo_stderr "      -> Installing custom gcc..."
     sudo yum install -y centos-release-scl
-    sudo yum install -y devtoolset-8-toolchain unzip git zip
+    sudo yum install -y devtoolset-8-toolchain unzip git zip autoconf
     source /opt/rh/devtoolset-8/enable
 
     yum -d 0 -e 0 -y install chrpath gcc make perl
@@ -109,15 +109,16 @@ if [[ "${linux_os}" = "centos" ]]; then
     yum -d 0 -e 0 -y remove openssl-devel
     set -e
 
-    if [[ ! -f "/usr/local/go/bin/go" ]]; then
-        curl -L -s -o go.tar.gz https://dl.google.com/go/go1.13.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go.tar.gz
-    fi
-
     echo_stderr "  -> Build and install custom host tools..."
 
     PATH=/usr/local/bin:/usr/local/go/bin:$PATH
     export PATH=/usr/local/bin:$PATH
+
+     # go
+    if [[ ! -f "/usr/local/go/bin/go" ]]; then
+        curl -L -s -o go.tar.gz https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go.tar.gz
+    fi
 
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
@@ -131,22 +132,10 @@ if [[ "${linux_os}" = "centos" ]]; then
         popd
     fi
 
-    # autoconf
-    if [[ ! -f "/usr/local/bin/autoconf" ]]; then
-        echo_stderr "   -> Installing custom autoconf..."
-        curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
-        tar xzf autoconf.tar.gz
-        pushd autoconf*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.3.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
