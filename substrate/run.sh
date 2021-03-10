@@ -228,11 +228,11 @@ fi
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
         echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.6.tar.gz
+        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
         tar xzf libxcrypt.tar.gz
         pushd libxcrypt*
 
-        ./bootstrap
+        ./autogen.sh
         ./configure --prefix="${embed_dir}" --libdir="${embed_dir}/lib"
         make
         make install
