@@ -100,10 +100,10 @@ if [[ "${linux_os}" = "centos" ]]; then
     # need newer gcc to build libxcrypt-compat package
     echo_stderr "      -> Installing custom gcc..."
     sudo yum install -y centos-release-scl
-    sudo yum install -y devtoolset-8-toolchain unzip git zip
+    sudo yum install -y devtoolset-8-toolchain unzip git zip autoconf
     source /opt/rh/devtoolset-8/enable
 
-    yum -d 0 -e 0 -y install chrpath gcc make perl
+    yum -d 0 -e 0 -y install chrpath gcc make perl perl-Thread-Queue 
     yum -d 0 -e 0 -y install perl-Data-Dumper
     # Remove openssl dev files to prevent any conflicts when building
     yum -d 0 -e 0 -y remove openssl-devel
@@ -125,18 +125,6 @@ if [[ "${linux_os}" = "centos" ]]; then
         curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
         tar xzf m4.tar.gz
         pushd m4*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
-    # autoconf
-    if [[ ! -f "/usr/local/bin/autoconf" ]]; then
-        echo_stderr "   -> Installing custom autoconf..."
-        curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
-        tar xzf autoconf.tar.gz
-        pushd autoconf*
         ./configure --prefix "/usr/local"
         make
         make install
