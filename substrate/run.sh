@@ -103,7 +103,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     sudo yum install -y devtoolset-8-toolchain
     source /opt/rh/devtoolset-8/enable
 
-    yum -d 0 -e 0 -y install chrpath gcc make perl
+    yum -d 0 -e 0 -y install chrpath gcc make perl #perl-Thread-Queue.noarch
     yum -d 0 -e 0 -y install perl-Data-Dumper
     # Remove openssl dev files to prevent any conflicts when building
     yum -d 0 -e 0 -y remove openssl-devel
@@ -141,7 +141,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.3.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
