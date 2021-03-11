@@ -109,15 +109,16 @@ if [[ "${linux_os}" = "centos" ]]; then
     yum -d 0 -e 0 -y remove openssl-devel
     set -e
 
-    if [[ ! -f "/usr/local/go/bin/go" ]]; then
-        curl -L -s -o go.tar.gz https://dl.google.com/go/go1.13.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go.tar.gz
-    fi
-
     echo_stderr "  -> Build and install custom host tools..."
 
     PATH=/usr/local/bin:/usr/local/go/bin:$PATH
     export PATH=/usr/local/bin:$PATH
+
+     # go
+    if [[ ! -f "/usr/local/go/bin/go" ]]; then
+        curl -L -s -o go.tar.gz https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go.tar.gz
+    fi
 
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
@@ -134,7 +135,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.3.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
