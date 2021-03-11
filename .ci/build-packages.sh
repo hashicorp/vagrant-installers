@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export DEBUG="1"
 export SLACK_USERNAME="Vagrant"
 export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png"
 export SLACK_TITLE="Vagrant Packaging"
