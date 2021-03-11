@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export DEBUG="1"
 export SLACK_USERNAME="Vagrant"
 export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png"
 export SLACK_TITLE="Vagrant Packaging"
@@ -40,7 +41,7 @@ trap cleanup EXIT
 
 # Set variables we'll need later
 declare -A substrate_list=(
-    [*centos_x86_64.zip]="centos-6"
+    [*centos_x86_64.zip]="centos-7.4"
     [*centos_i686.zip]="centos-6-i386"
     [*darwin_x86_64.zip]="osx-10.15"
     [*ubuntu_x86_64.zip]="ubuntu-14.04"
@@ -52,7 +53,7 @@ declare -A substrate_list=(
 declare -A package_list=(
     [*amd64.zip]="appimage"
 #    [*x86_64.tar.xz]="archlinux"
-    [*x86_64.rpm]="centos-6"
+    [*x86_64.rpm]="centos-7"
     [*i686.rpm]="centos-6-i386"
     [*x86_64.dmg]="osx-10.15"
     [*x86_64.deb]="ubuntu-14.04"
