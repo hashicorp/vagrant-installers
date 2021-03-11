@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export DEBUG="1"
 export SLACK_USERNAME="Vagrant"
 export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png"
 export SLACK_TITLE="Vagrant Packaging"
@@ -29,14 +30,14 @@ else
     export SLACK_CHANNEL="#team-vagrant-spam-channel"
 fi
 
-# Define a custom cleanup function to destroy any orphan guests
-# on the packet instance
-function cleanup() {
-    unset PACKET_EXEC_PERSIST
-    packet-exec run -- pkill -f vmware-vmx
-}
+# # Define a custom cleanup function to destroy any orphan guests
+# # on the packet instance
+# function cleanup() {
+#     unset PACKET_EXEC_PERSIST
+#     packet-exec run -- pkill -f vmware-vmx
+# }
 
-trap cleanup EXIT
+# trap cleanup EXIT
 
 # Set variables we'll need later
 declare -A substrate_list=(
