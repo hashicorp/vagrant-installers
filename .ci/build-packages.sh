@@ -30,14 +30,14 @@ else
     export SLACK_CHANNEL="#team-vagrant-spam-channel"
 fi
 
-# Define a custom cleanup function to destroy any orphan guests
-# on the packet instance
-function cleanup() {
-    unset PACKET_EXEC_PERSIST
-    packet-exec run -- pkill -f vmware-vmx
-}
+# # Define a custom cleanup function to destroy any orphan guests
+# # on the packet instance
+# function cleanup() {
+#     unset PACKET_EXEC_PERSIST
+#     packet-exec run -- pkill -f vmware-vmx
+# }
 
-trap cleanup EXIT
+# trap cleanup EXIT
 
 # Set variables we'll need later
 declare -A substrate_list=(
