@@ -3,7 +3,7 @@ on:
     branches:
       - 'main'
     paths:
-      - 'packer/vagrant/template_centos-6-i386.json'
+      - 'packer/vagrant/template_centos-7-i386.json'
       - 'packer/vagrant/scripts/centos/**'
   workflow_dispatch:
     branches:
@@ -21,7 +21,7 @@ jobs:
         run: ./.ci/build-boxes.sh
         working-directory: ${{github.workspace}}
         env:
-          PKT_PACKER_BUILDS: "centos-6-i386"
+          PKT_PACKER_BUILDS: "centos-7-i386"
           VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
       - name: Clean Workspace
         if: always()
