@@ -114,6 +114,7 @@ if [[ "${linux_os}" = "centos" ]]; then
         sudo tar -C /usr/local -xzf go.tar.gz
     fi
 
+
     echo_stderr "  -> Build and install custom host tools..."
 
     PATH=/usr/local/bin:/usr/local/go/bin:$PATH
