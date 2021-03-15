@@ -5,7 +5,7 @@ build_boxes = [
   'appimage',
 #  'archlinux',
   'centos-7',
-  'centos-6-i386',
+  'centos-7-i386',
   'osx-10.15',
   'ubuntu-14.04',
   'ubuntu-14.04-i386',
