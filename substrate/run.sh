@@ -52,10 +52,10 @@ fi
 
 if [[ "${uname}" = *"Linux"* ]]; then
     host_os="linux"
-    if [[ -f /etc/os-release ]]; then
-        linux_os="ubuntu"
-    else
+    if [[ -f /etc/centos-release ]]; then
         linux_os="centos"
+    else
+        linux_os="ubuntu"
     fi
     host_ident="${linux_os}_${host_arch}"
     install_prefix=""
@@ -100,10 +100,10 @@ if [[ "${linux_os}" = "centos" ]]; then
     # need newer gcc to build libxcrypt-compat package
     echo_stderr "      -> Installing custom gcc..."
     sudo yum install -y centos-release-scl
-    sudo yum install -y devtoolset-8-toolchain
+    sudo yum install -y devtoolset-8-toolchain unzip git zip autoconf
     source /opt/rh/devtoolset-8/enable
 
-    yum -d 0 -e 0 -y install chrpath gcc make perl
+    yum -d 0 -e 0 -y install chrpath gcc make perl perl-Thread-Queue 
     yum -d 0 -e 0 -y install perl-Data-Dumper
     # Remove openssl dev files to prevent any conflicts when building
     yum -d 0 -e 0 -y remove openssl-devel
@@ -126,22 +126,10 @@ if [[ "${linux_os}" = "centos" ]]; then
         popd
     fi
 
-    # autoconf
-    if [[ ! -f "/usr/local/bin/autoconf" ]]; then
-        echo_stderr "   -> Installing custom autoconf..."
-        curl -L -s -o autoconf.tar.gz http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
-        tar xzf autoconf.tar.gz
-        pushd autoconf*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.1.tar.gz
+        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.3.tar.gz
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
@@ -228,11 +216,11 @@ fi
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
         echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.6.tar.gz
+        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
         tar xzf libxcrypt.tar.gz
         pushd libxcrypt*
 
-        ./bootstrap
+        ./autogen.sh
         ./configure --prefix="${embed_dir}" --libdir="${embed_dir}/lib"
         make
         make install
