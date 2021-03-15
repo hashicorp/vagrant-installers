@@ -17,7 +17,7 @@ if exist "%SystemRoot%\_download.cmd" (
   call "%SystemRoot%\_download.cmd" "%VAGRANT_PUB_URL%" "%VAGRANT_PATH%"
 ) else (
   echo ==^> Downloading "%VAGRANT_PUB_URL%" to "%VAGRANT_PATH%"
-  powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%VAGRANT_PUB_URL%', '%VAGRANT_PATH%')" <NUL
+  powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('%VAGRANT_PUB_URL%', '%VAGRANT_PATH%')" <NUL
 )
 if not exist "%VAGRANT_PATH%" goto exit1
 
@@ -48,5 +48,3 @@ wmic USERACCOUNT WHERE "Name='%USERNAME%'" set PasswordExpires=FALSE
 
 @echo ==^> Script exiting with errorlevel %ERRORLEVEL%
 @exit /b %ERRORLEVEL%
-
-
