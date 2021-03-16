@@ -37,6 +37,9 @@ Controller.prototype.IntroductionPageCallback = function()
 
 Controller.prototype.TargetDirectoryPageCallback = function()
 {
+    if (!install_dir) {
+        install_dir = "C:/MSYS64"
+    }
     gui.currentPageWidget().TargetDirectoryLineEdit.setText(install_dir);
     gui.clickButton(buttons.NextButton);
 }
@@ -67,9 +70,6 @@ Controller.prototype.InstallationFinishedPageCallback = function()
 Controller.prototype.FinishedPageCallback = function()
 {
     console.log("(console.log) FinishedPageCallback ");
-//    var checkBox = gui.pageWidgetByObjectName("RunItCheckBox");
-//    console.log("typeof checkBox is " + typeof checkBox);
-//    assert(typeof checkBox === 'object');
 
     var page = gui.pageWidgetByObjectName("FinishedPage");
     page.RunItCheckBox.checked = false;
