@@ -4,5 +4,5 @@ if not exist "C:\Windows\Temp\msys2.exe" (
 
 cmd /c "C:\Windows\Temp\msys2.exe -v --platform minimal --script A:\msys2-install.qs"
 
-taskkill /IM "gpg-agent.exe" /F
-taskkill /IM "dirmngr.exe" /F
+rem taskkill /IM "gpg-agent.exe" /F
+rem taskkill /IM "dirmngr.exe" /F
