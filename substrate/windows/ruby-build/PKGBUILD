@@ -22,7 +22,7 @@ sha256sums=('f08b779079ecd1498e6a2548c39a86144c6c784dcec6f7e8a93208682eb8306e')
 
 prepare() {
   cd ${srcdir}/${_realname}-${pkgver}
-  autoreconf -fi
+  autoreconf-2.13 -f -i
 }
 
 build() {
