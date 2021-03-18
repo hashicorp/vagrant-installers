@@ -46,10 +46,10 @@ if($SignKeyExists -and $SignKeyPassword) {
 try {
     & C:\vagrant\substrate\run.ps1 @SubstrateArgs
     if(!$?) {
-        Write-Error "Substrate build failed"
+        Write-Output "ERROR: Substrate build failed"
         exit 1
     }
 } catch {
-    Write-Error "Unexpected substrate build error!"
+    Write-Output "ERROR: ${PSItem}"
     exit 1
 }
