@@ -2,14 +2,14 @@
 # vi: set ft=ruby :
 
 build_boxes = [
-  'appimage',
+  # 'appimage',
 #  'archlinux',
-  'centos-7',
-  'centos-7-i386',
-  'osx-10.15',
+  # 'centos-7',
+  # 'centos-7-i386',
+  # 'osx-10.15',
   'ubuntu-14.04',
-  'ubuntu-14.04-i386',
-  'win-8',
+  # 'ubuntu-14.04-i386',
+  # 'win-8',
 ]
 
 box_mappings = {
