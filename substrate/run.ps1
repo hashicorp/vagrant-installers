@@ -154,7 +154,7 @@ Pop-Location
 Write-Output "Building vagrant launcher..."
 
 $env:GOPATH = "C:\Windows\Temp"
-$env:PATH = "C:\Go\bin;C:\Program Files\Git\bin;$($OriginalPath)"
+$env:PATH = "C:\Program Files\Go\bin;C:\Program Files\Git\bin;$($OriginalPath)"
 
 $LauncherDepProc = Create-Process go.exe "get github.com/mitchellh/osext"
 $LauncherDepProc.WaitForExit()
