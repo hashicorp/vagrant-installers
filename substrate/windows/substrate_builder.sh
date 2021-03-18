@@ -3,9 +3,6 @@
 echo "Running host updates before build"
 pacman -Syu --noconfirm
 
-echo "Cleaning cache"
-rm -rf /var/cache/pacman/pkg/*
-
 # Create directories for new assets
 rm -rf output/vagrant-w64/
 rm -rf output/vagrant-w32/
@@ -27,17 +24,16 @@ find $RUBYPKGDIR -name "*.xz" -exec cp {} pkgs/ \;
 if [ $? -ne 0 ];
 then
     echo "Attempting to package again..."
-    set -e
-    ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg
+    ./styrene.sh --pkg-dir=pkgs --output-dir=output --no-exe --color=no vagrant.cfg || exit 1
 fi
 
-set -ex
+set -x
 
 # Start with the 64 bit build
 mkdir -p substrate
-find output/ -name "*w64*.zip" -exec cp {} substrate/substrate-asset.zip \;
-pushd substrate
-unzip -q substrate-asset.zip
+find output/ -name "*w64*.zip" -exec cp {} substrate/substrate-asset.zip \; || exit 1
+pushd substrate || exit 1
+unzip -q substrate-asset.zip || exit 1
 rm -rf _scripts substrate-asset.zip
 
 # The built ruby will have a minimal installation of msys2 and
@@ -60,7 +56,7 @@ if [ -f ./mingw64/bin/libffi-7.dll ]; then
 fi
 
 # Copy CA certs into expected location
-cp /usr/ssl/cert.pem cacert.pem
+cp /usr/ssl/cert.pem cacert.pem || exit 1
 
 find ./ -maxdepth 1 -name "*" -exec rm -rf $STAGE64/embedded/{} \;
 find ./ -maxdepth 1 -name "*" -exec mv -f {} $STAGE64/embedded/ \;
@@ -69,9 +65,9 @@ rm -rf substrate
 
 # Finish with the 32 bit build
 mkdir -p substrate
-find output/ -name "*w32*.zip" -exec cp {} substrate/substrate-asset.zip \;
-pushd substrate
-unzip -q substrate-asset.zip
+find output/ -name "*w32*.zip" -exec cp {} substrate/substrate-asset.zip \; || exit 1
+pushd substrate || exit 1
+unzip -q substrate-asset.zip || exit 1
 rm -rf _scripts substrate-asset.zip
 
 # The built ruby will have a minimal installation of msys2 and
@@ -94,9 +90,11 @@ if [ -f ./mingw32/bin/libffi-7.dll ]; then
 fi
 
 # Copy CA certs into expected location
-cp /usr/ssl/cert.pem cacert.pem
+cp /usr/ssl/cert.pem cacert.pem || exit 1
 
 find ./ -maxdepth 1 -name "*" -exec rm -rf $STAGE32/embedded/{} \;
 find ./ -maxdepth 1 -name "*" -exec mv -f {} $STAGE32/embedded/ \;
 popd
 rm -rf substrate
+
+exit 0
