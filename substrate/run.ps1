@@ -44,8 +44,8 @@ function Create-Process {
     return $process
 }
 
-$CurlVersion = "7.69.1"
-$Libssh2Version = "1.8.0"
+$CurlVersion = "7.75.0"
+$Libssh2Version = "1.9.0"
 $ZlibVersion = "1.2.11"
 
 $CurlVersionUnderscore = ($CurlVersion -Replace "\.", "_")
@@ -383,9 +383,9 @@ Push-Location "${CurlBuildDir32}\winbuild"
 Pop-Location
 
 Push-Location "${CurlBuildDir32}"
-Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\bin\*" "${Embed32Dir}\bin\"
-Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\lib\*" "${Embed32Dir}\lib\"
-Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\include\curl\*" "${Embed32Dir}\include\curl\"
+Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-schannel\bin\*" "${Embed32Dir}\bin\"
+Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-schannel\lib\*" "${Embed32Dir}\lib\"
+Copy-Item ".\builds\libcurl-vc-x86-release-static-zlib-static-ssh2-static-ipv6-sspi-schannel\include\curl\*" "${Embed32Dir}\include\curl\"
 Copy-Item "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\vcruntime140.dll" "${Embed32Dir}\bin\"
 Pop-Location
 
@@ -394,9 +394,9 @@ Pop-Location
 [System.IO.Directory]::CreateDirectory("${Embed64Dir}\include\curl")
 
 Push-Location "${CurlBuildDir64}"
-Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\bin\*" "${Embed64Dir}\bin\"
-Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\lib\*" "${Embed64Dir}\lib\"
-Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-winssl\include\curl\*" "${Embed64Dir}\include\curl\"
+Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-schannel\bin\*" "${Embed64Dir}\bin\"
+Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-schannel\lib\*" "${Embed64Dir}\lib\"
+Copy-Item ".\builds\libcurl-vc-x64-release-static-zlib-static-ssh2-static-ipv6-sspi-schannel\include\curl\*" "${Embed64Dir}\include\curl\"
 Copy-Item "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\vcruntime140.dll" "${Embed64Dir}\bin\"
 Pop-Location
 
