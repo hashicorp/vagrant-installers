@@ -16,7 +16,7 @@ libssh2_version="1.8.0"
 libxml2_version="2.9.10"
 libxslt_version="1.1.34"
 libyaml_version="0.2.5"
-openssl_version="1.1.1j"
+openssl_version="1.1.1k"
 readline_version="8.0"
 ruby_version="2.6.6"
 xz_version="5.2.5"
@@ -103,7 +103,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     sudo yum install -y devtoolset-8-toolchain unzip git zip autoconf
     source /opt/rh/devtoolset-8/enable
 
-    yum -d 0 -e 0 -y install chrpath gcc make perl perl-Thread-Queue 
+    yum -d 0 -e 0 -y install chrpath gcc make perl perl-Thread-Queue
     yum -d 0 -e 0 -y install perl-Data-Dumper
     # Remove openssl dev files to prevent any conflicts when building
     yum -d 0 -e 0 -y remove openssl-devel
