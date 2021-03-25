@@ -2,12 +2,12 @@ app: vagrant
 union: true
 
 ingredients:
-  dist: trusty
+  dist: bionic
   sources:
-    - deb http://us.archive.ubuntu.com/ubuntu/ trusty main universe
-    - deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main universe
-    - deb http://us.archive.ubuntu.com/ubuntu/ trusty-backports main universe
-    - deb http://us.archive.ubuntu.com/ubuntu/ trusty-security main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic-updates main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic-backports main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic-security main universe
   ppas:
     - brightbox/ruby-ng
   debs:
@@ -33,6 +33,5 @@ script:
   - chmod a+x usr/bin/vagrant
   - rm -rf usr/share/man
   - rm -rf usr/share/info
-  - rm -rf usr/share/doc
   - rm -rf usr/gembundle/cache
   - mv usr/lib/x86_64-linux-gnu/pkgconfig usr/lib/x86_64-linux-gnu/pkgconfig-int

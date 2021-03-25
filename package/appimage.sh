@@ -44,8 +44,9 @@ mkdir -p "vagrant/DEBIAN/"
 cat <<EOF > vagrant/DEBIAN/control
 Package: vagrant
 Version: ${VAGRANT_VERSION}-1
-Section:
-Priority: optional
+Section: utils
+Priority: important
+Essential: yes
 Architecture: amd64
 Depends: ruby2.6, ruby2.6-dev
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
@@ -63,6 +64,7 @@ apt-get update
 
 # Install required packages
 apt-get remove --purge -yq ruby2.4 ruby2.4-dev
+apt-get autoremove -y
 apt-get install -y build-essential ca-certificates ruby2.6 ruby2.6-dev
 
 export WORK_DIR
