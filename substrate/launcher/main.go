@@ -336,22 +336,43 @@ func main() {
 			if debug {
 				log.Printf("launcher: path modification will prefer system bins.")
 			}
-			path = fmt.Sprintf(
-				"%s;%s;%s;%s",
-				filepath.Join(embeddedDir, mingwDir, "bin"),
-				path,
-				filepath.Join(embeddedDir, "bin"),
-				filepath.Join(embeddedDir, "usr", "bin"))
+			if os.Getenv("VAGRANT_DISABLE_WINCURL") != "" {
+				path = fmt.Sprintf(
+					"%s;%s;%s;%s",
+					path,
+					filepath.Join(embeddedDir, mingwDir, "bin"),
+					filepath.Join(embeddedDir, "usr", "bin"),
+					filepath.Join(embeddedDir, "bin"))
+			} else {
+				path = fmt.Sprintf(
+					"%s;%s;%s;%s",
+					path,
+					filepath.Join(embeddedDir, "bin"),
+					filepath.Join(embeddedDir, mingwDir, "bin"),
+					filepath.Join(embeddedDir, "usr", "bin"))
+			}
 		} else {
-			path = fmt.Sprintf(
-				"%s;%s;%s;%s",
-				filepath.Join(embeddedDir, mingwDir, "bin"),
-				filepath.Join(embeddedDir, "bin"),
-				filepath.Join(embeddedDir, "usr", "bin"),
-				path)
+			if os.Getenv("VAGRANT_DISABLE_WINCURL") != "" {
+				path = fmt.Sprintf(
+					"%s;%s;%s;%s",
+					filepath.Join(embeddedDir, mingwDir, "bin"),
+					filepath.Join(embeddedDir, "usr", "bin"),
+					filepath.Join(embeddedDir, "bin"),
+					path)
+			} else {
+				path = fmt.Sprintf(
+					"%s;%s;%s;%s",
+					filepath.Join(embeddedDir, "bin"),
+					filepath.Join(embeddedDir, mingwDir, "bin"),
+					filepath.Join(embeddedDir, "usr", "bin"),
+					path)
+			}
 		}
 	} else {
 		if preferSystem {
+			if debug {
+				log.Printf("launcher: path modification will prefer system bins.")
+			}
 			path = fmt.Sprintf("%s:%s",
 				path, filepath.Join(embeddedDir, "bin"))
 		} else {
