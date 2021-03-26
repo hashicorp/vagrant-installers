@@ -38,7 +38,7 @@ if [ "${CLEAN_VAGRANT_VERSION}" != "" ]; then
     VAGRANT_VERSION=$CLEAN_VAGRANT_VERSION
 fi
 
-mv *.xz "${ORIGIN}/vagrant_${VAGRANT_VERSION}_x86_64.tar.xz"
+mv *.zst "${ORIGIN}/vagrant_${VAGRANT_VERSION}_x86_64.tar.zst"
 
 popd
 rm -rf "${TMP_DIR}"

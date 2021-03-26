@@ -3,7 +3,7 @@
 
 build_boxes = [
   'appimage',
-#  'archlinux',
+  'archlinux',
   'centos-7',
   'centos-7-i386',
   'osx-10.15',
@@ -54,7 +54,9 @@ Vagrant.configure("2") do |config|
       script_ext = script_name.start_with?('win') ? 'ps1' : 'sh'
       provision_script = File.join(script_base, "#{script_name}.#{script_ext}")
 
-      box_config.vm.box = "#{box_prefix}/#{box_mappings.fetch(box_basename, box_basename)}"
+      box_name = box_mappings.fetch(box_basename, box_basename)
+      box_name = "#{box_prefix}/#{box_name}" if !box_name.include?("/")
+      box_config.vm.box = box_name
 
       if box_basename.include?('osx')
         box_config.vm.provision 'shell', inline: "sysctl -w net.inet.tcp.win_scale_factor=8\nsysctl " \
