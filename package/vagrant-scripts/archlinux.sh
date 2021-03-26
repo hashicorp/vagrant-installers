@@ -25,4 +25,4 @@ set -e
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 # And store our new package
 mkdir -p /vagrant/${pkg_dir}
-cp *.xz /vagrant/${pkg_dir}/
+cp *.zst /vagrant/${pkg_dir}/
