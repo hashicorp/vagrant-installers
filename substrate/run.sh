@@ -1,26 +1,36 @@
 #!/usr/bin/env bash
 
-#### Software versions
+#### Software dependencies
+
+dep_cache="https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
 #### Update these as required
 
-curl_version="7.75.0"
-libarchive_version="3.5.1"
-libffi_version="3.3"
-libgcrypt_version="1.9.2"
-libgmp_version="6.2.1"
-libgpg_error_version="1.41"
-libiconv_version="1.16"
+curl_file="curl-7.75.0.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
+libarchive_file="libarchive-v3.5.1.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
+libffi_file="libffi-3.3.tar.gz"               # ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
+libgcrypt_file="libgcrypt-1.9.2.tar.bz2"      # https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2
+libgmp_file="gmp-6.2.1.tar.bz2"               # https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2
+libgpg_error_file="libgpg-error-1.41.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
+libiconv_file="libiconv-1.16.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
 # Need up update gcc version to use libssh2 1.9.0+
-libssh2_version="1.8.0"
-libxml2_version="2.9.10"
-libxslt_version="1.1.34"
-libyaml_version="0.2.5"
-openssl_version="1.1.1k"
-readline_version="8.0"
-ruby_version="2.6.6"
-xz_version="5.2.5"
-zlib_version="1.2.11"
+libssh2_file="libssh2-1.8.0.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
+libxml2_file="libxml2-2.9.10.tar.gz"          # ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
+libxslt_file="libxslt-1.1.34.tar.gz"          # ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
+libyaml_file="yaml-0.2.5.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
+openssl_file="openssl-1.1.1k.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
+readline_file="readline-8.0.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
+ruby_file="ruby-2.6.6.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
+xz_file="xz-5.2.5.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
+zlib_file="zlib-1.2.11.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
+
+# Used for centos builds
+m4_file="m4-1.4.18.tar.gz"                # https://ftp.gnu.org/gnu/m4/m4-${VERSION}.tar.gz
+automake_file="automake-1.16.3.tar.gz"    # https://ftp.gnu.org/gnu/automake/automake-${VERSION}.tar.gz
+libtool_file="libtool-2.4.6.tar.gz"       # https://ftp.gnu.org/gnu/libtool/libtool-${VERSION}.tar.gz
+patchelf_file="patchelf-0.9.tar.gz"       # https://nixos.org/releases/patchelf/patchelf-${VERSION}/patchelf-${VERSION}.tar.gz
+libxcrypt_file="libxcrypt-v4.4.18.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
+
 
 macos_deployment_target="10.9"
 
@@ -117,7 +127,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
         echo_stderr "   -> Installing custom m4..."
-        curl -L -s -o m4.tar.gz http://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz
+        curl -L -s -o m4.tar.gz "${dep_cache}/${m4_file}"
         tar xzf m4.tar.gz
         pushd m4*
         ./configure --prefix "/usr/local"
@@ -129,7 +139,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz http://ftp.gnu.org/gnu/automake/automake-1.16.3.tar.gz
+        curl -L -s -o automake.tar.gz "${dep_cache}/${automake_file}"
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
@@ -141,7 +151,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # libtool
     if [[ ! -f "/usr/local/bin/libtool" ]]; then
         echo_stderr "   -> Installing custom libtool..."
-        curl -L -s -o libtool.tar.gz http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.gz
+        curl -L -s -o libtool.tar.gz "${dep_cache}/${libtool_file}"
         tar xzf libtool.tar.gz
         pushd libtool*
         ./configure --prefix "/usr/local"
@@ -153,7 +163,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # patchelf
     if [[ ! -f "/usr/local/bin/patchelf" ]]; then
         echo_stderr "   -> Installing custom patchelf..."
-        curl -L -s -o patchelf.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
+        curl -L -s -o patchelf.tar.gz "${dep_cache}/${patchelf_file}"
         tar xzf patchelf.tar.gz
         pushd patchelf*
         ./configure --prefix "/usr/local"
@@ -216,7 +226,7 @@ fi
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
         echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -L -s -o libxcrypt.tar.gz https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
+        curl -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
         tar xzf libxcrypt.tar.gz
         pushd libxcrypt*
 
@@ -230,7 +240,7 @@ fi
 
 # libffi
 echo_stderr "   -> Building libffi..."
-libffi_url="ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz"
+libffi_url="${dep_cache}/${libffi_file}"
 curl -L -s -o libffi.tar.gz "${libffi_url}"
 tar -xzf libffi.tar.gz
 pushd libffi-*
@@ -241,7 +251,7 @@ popd
 
 # libiconv
 echo_stderr "   -> Building libiconv..."
-libiconv_url="http://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz"
+libiconv_url="${dep_cache}/${libiconv_file}"
 curl -L -s -o libiconv.tar.gz "${libiconv_url}"
 tar -xzf libiconv.tar.gz
 pushd libiconv-*
@@ -256,7 +266,7 @@ $libtool --finish "${embed_dir}/lib"
 if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
     echo_stderr "   -> Building libgmp..."
-    libgmp_url="https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2"
+    libgmp_url="${dep_cache}/${libgmp_file}"
     curl -L -s -o libgmp.tar.bz2 "${libgmp_url}"
     tar -xjf libgmp.tar.bz2
     pushd gmp-*
@@ -272,7 +282,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
 
     # libgpg_error
     echo_stderr "   -> Building libgpg_error..."
-    libgpg_error_url="https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2"
+    libgpg_error_url="${dep_cache}/${libgpg_error_file}"
     curl -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
     tar -xjf libgpg-error.tar.bz2
     pushd libgpg-error-*
@@ -283,7 +293,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
 
     # libgcrypt
     echo_stderr "   -> Building libgcrypt..."
-    libgcrypt_url="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2"
+    libgcrypt_url="${dep_cache}/${libgcrypt_file}"
     curl -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
     tar -xjf libgcrypt.tar.bz2
     pushd libgcrypt-*
@@ -296,7 +306,7 @@ fi
 
 # xz
 echo_stderr "   -> Building xz..."
-xz_url="https://tukaani.org/xz/xz-${xz_version}.tar.gz"
+xz_url="${dep_cache}/${xz_file}"
 curl -L -s -o xz.tar.gz "${xz_url}"
 tar -xzf xz.tar.gz
 pushd xz-*
@@ -307,7 +317,7 @@ popd
 
 # libxml2
 echo_stderr "   -> Building libxml2..."
-libxml2_url="ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz"
+libxml2_url="${dep_cache}/${libxml2_file}"
 curl -L -s -o libxml2.tar.gz "${libxml2_url}"
 tar -xzf libxml2.tar.gz
 pushd libxml2-*
@@ -318,7 +328,7 @@ popd
 
 # libxslt
 echo_stderr "   -> Building libxslt..."
-libxslt_url="ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz"
+libxslt_url="${dep_cache}/${libxslt_file}"
 curl -L -s -o libxslt.tar.gz "${libxslt_url}"
 tar -xzf libxslt.tar.gz
 pushd libxslt-*
@@ -329,7 +339,7 @@ popd
 
 # libyaml
 echo_stderr "   -> Building libyaml..."
-libyaml_url="http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz"
+libyaml_url="${dep_cache}/${libyaml_file}"
 curl -L -s -o libyaml.tar.gz "${libyaml_url}"
 tar -xzf libyaml.tar.gz
 pushd yaml-*
@@ -340,7 +350,7 @@ popd
 
 # zlib
 echo_stderr "   -> Building zlib..."
-zlib_url="http://zlib.net/zlib-${zlib_version}.tar.gz"
+zlib_url="${dep_cache}/${zlib_file}"
 curl -L -s -o zlib.tar.gz "${zlib_url}"
 tar -xzf zlib.tar.gz
 pushd zlib-*
@@ -351,7 +361,7 @@ popd
 
 # readline
 echo_stderr "   -> Building readline..."
-readline_url="http://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz"
+readline_url="${dep_cache}/${readline_file}"
 curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
@@ -362,12 +372,8 @@ popd
 
 # openssl
 echo_stderr "   -> Building openssl..."
-openssl_url="http://www.openssl.org/source/openssl-${openssl_version}.tar.gz"
+openssl_url="${dep_cache}/${openssl_file}"
 curl -L -f -s -o openssl.tar.gz "${openssl_url}"
-if [ $? -ne 0 ]; then
-    openssl_url="http://www.openssl.org/source/old/${openssl_version::-1}/openssl-${openssl_version}.tar.gz"
-    curl -L -s -o openssl.tar.gz "${openssl_url}"
-fi
 tar -xzf openssl.tar.gz
 pushd openssl-*
 if [ -z "${LD_RPATH}" ]; then
@@ -384,7 +390,7 @@ popd
 
 # libssh2
 echo_stderr "   -> Building libssh2..."
-libssh2_url="http://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz"
+libssh2_url="${dep_cache}/${libssh2_file}"
 curl -L -s -o libssh2.tar.gz "${libssh2_url}"
 tar -xzf libssh2.tar.gz
 pushd libssh2-*
@@ -395,7 +401,7 @@ popd
 
 # bsdtar / libarchive
 echo_stderr "   -> Building bsdtar / libarchive..."
-libarchive_url="https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz"
+libarchive_url="${dep_cache}/${libarchive_file}"
 curl -L -s -o libarchive.tar.gz "${libarchive_url}"
 tar -xzf libarchive.tar.gz
 pushd libarchive-*
@@ -429,7 +435,7 @@ popd
 
 # curl
 echo_stderr "   -> Building curl..."
-curl_url="https://curl.haxx.se/download/curl-${curl_version}.tar.gz"
+curl_url="${dep_cache}/${curl_file}"
 curl -L -s -o curl.tar.gz "${curl_url}"
 tar -xzf curl.tar.gz
 pushd curl-*
@@ -440,8 +446,7 @@ popd
 
 # ruby
 echo_stderr "   -> Building ruby..."
-ruby_short_version=$(echo $ruby_version | awk -F. '{print $1"."$2}')
-ruby_url="https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip"
+ruby_url="${dep_cache}/${ruby_file}"
 curl -L -s -o ruby.zip "${ruby_url}"
 unzip -q ruby.zip
 pushd ruby-*
