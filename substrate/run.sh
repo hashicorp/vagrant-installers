@@ -406,6 +406,13 @@ curl -L -s -o libarchive.tar.gz "${libarchive_url}"
 tar -xzf libarchive.tar.gz
 pushd libarchive-*
 
+if [ "${host_os}" = "darwin" ]; then
+    conf_file=$(<configure.ac)
+    if [[ "${conf_file}" != *"AC_PROG_CPP"* ]]; then
+        sed -i.old 's/^AM_PROG_CC_C_O/AM_PROG_CC_C_O\'$'\nAC_PROG_CPP/' configure.ac
+    fi
+fi
+
 if [[ "${host_os}" = "linux" ]]; then
     export PATH=/usr/local/bin:$PATH
     PATH=/usr/local/bin:$PATH
