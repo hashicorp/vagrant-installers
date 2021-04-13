@@ -18,7 +18,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
 options=('staticlibs' 'strip')
 source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver}.tar.bz2")
 
-sha256sums=('e4227e8b7f65485ecb73397a83e0d09dcd39f25efd411c782b69424e55c7a99e')
+sha256sums=('775a5d47b73ce3ee5d600f993badd7b640a2caca138573326db6632858517710')
 
 prepare() {
   cd ${srcdir}/${_realname}-${pkgver}
