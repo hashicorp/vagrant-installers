@@ -459,7 +459,7 @@ unzip -q ruby.zip
 pushd ruby-*
 ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
             --enable-shared --with-opt-dir="${embed_dir}" --enable-load-relative
-CFLAGS="-I./include -O3" make && make install
+CFLAGS="-I./include -O3 -std=gnu99" make && make install
 popd
 
 # go launcher
