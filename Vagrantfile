@@ -3,7 +3,7 @@
 
 build_boxes = [
   'appimage',
-  'archlinux',
+#  'archlinux',
   'centos-7',
   'centos-7-i386',
   'osx-10.15',
