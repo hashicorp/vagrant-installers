@@ -9,7 +9,7 @@ sudo pacman -Syy --noconfirm archlinux-keyring || exit 1
 sudo pacman -Syyu --noconfirm || exit 1
 
 # Ensure keys are up-to-date
-sudo pacman-key --refresh-keys
+# sudo pacman-key --refresh-keys
 # Ensure the dev tools are installed
 sudo pacman --noconfirm -Suy base-devel ruby  || exit 1
 
