@@ -55,6 +55,10 @@ if [ -f "/etc/redhat-release" ]; then
     ${DIR}/support/package_centos.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
 fi
 
+if [ -f "/etc/arch-release" ]; then
+    ${DIR}/support/package_archlinux.sh ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
+fi
+
 # Darwin
 if [[ "$OSTYPE" == "darwin"* ]]; then
     "${DIR}/support/package_darwin.sh" ${SUBSTRATE_DIR} ${VAGRANT_VERSION}
