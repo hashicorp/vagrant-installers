@@ -3,7 +3,7 @@
 
 build_boxes = [
   'appimage',
-#  'archlinux',
+  'archlinux',
   'centos-7',
   'centos-7-i386',
   'osx-10.15',
@@ -32,11 +32,13 @@ box_prefix = ENV.fetch('VAGRANT_BUILD_BOX_PREFIX', 'hashicorp-vagrant')
 script_base = File.join(build_type, "vagrant-scripts")
 
 if build_type == 'substrate'
-  build_boxes.delete("archlinux")
   build_boxes.delete("appimage")
 end
 
-unprivileged_provision = ["archlinux"]
+unprivileged_provision = []
+if build_type != 'substrate'
+  #unprivileged_provision << "archlinux"
+end
 
 script_env_vars = Hash[
   ENV.map do |key, value|
