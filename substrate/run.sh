@@ -64,8 +64,12 @@ if [[ "${uname}" = *"Linux"* ]]; then
     host_os="linux"
     if [[ -f /etc/centos-release ]]; then
         linux_os="centos"
-    else
+    elif [[ -f /etc/ubuntu-release ]]; then
         linux_os="ubuntu"
+    elif [[ -f /etc/arch-release ]]; then
+        linux_os="archlinux"
+    else
+        linux_os="linux"
     fi
     host_ident="${linux_os}_${host_arch}"
     install_prefix=""
@@ -103,6 +107,10 @@ pushd "${setupdir}"
 echo_stderr "  -> Installing any required packages..."
 if [[ "${linux_os}" = "ubuntu" ]]; then
     apt-get install -qy build-essential autoconf automake chrpath libtool
+fi
+
+if [[ "${linux_os}" = "archlinux" ]]; then
+    pacman --noconfirm -Suy unzip
 fi
 
 if [[ "${linux_os}" = "centos" ]]; then
@@ -365,9 +373,12 @@ readline_url="${dep_cache}/${readline_file}"
 curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
+CURRENT_LDFLAGS="${LDFLAGS}"
+export LDFLAGS="${LDFLAGS} -lncurses"
 ./configure --prefix="${embed_dir}"
 make
 make install
+export LDFLAGS="${CURRENT_LDFLAGS}"
 popd
 
 # openssl
@@ -406,7 +417,7 @@ curl -L -s -o libarchive.tar.gz "${libarchive_url}"
 tar -xzf libarchive.tar.gz
 pushd libarchive-*
 
-if [ "${host_os}" = "darwin" ]; then
+if [ "${host_os}" = "darwin" ] || [ "${linux_os}" = "archlinux" ]; then
     conf_file=$(<configure.ac)
     if [[ "${conf_file}" != *"AC_PROG_CPP"* ]]; then
         sed -i.old 's/^AM_PROG_CC_C_O/AM_PROG_CC_C_O\'$'\nAC_PROG_CPP/' configure.ac
@@ -471,7 +482,7 @@ export GOPATH="$(mktemp -d)"
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 mkdir launcher
-cp /vagrant/substrate/launcher/main.go launcher/
+cp /vagrant/substrate/launcher/* launcher/
 pushd launcher
 go get github.com/mitchellh/osext
 go build -o "${build_dir}/bin/vagrant" main.go
