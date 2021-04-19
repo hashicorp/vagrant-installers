@@ -374,12 +374,16 @@ readline_url="${dep_cache}/${readline_file}"
 curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
-CURRENT_LDFLAGS="${LDFLAGS}"
-export LDFLAGS="${LDFLAGS} -lncurses"
+if [[ "${linux_os}" = "archlinux" ]]; then
+    CURRENT_LDFLAGS="${LDFLAGS}"
+    export LDFLAGS="${LDFLAGS} -lncurses"
+fi
 ./configure --prefix="${embed_dir}"
 make
 make install
-export LDFLAGS="${CURRENT_LDFLAGS}"
+if [[ "${linux_os}" = "archlinux" ]]; then
+    export LDFLAGS="${CURRENT_LDFLAGS}"
+fi
 popd
 
 # openssl
