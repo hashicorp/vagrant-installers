@@ -64,7 +64,8 @@ if [[ "${uname}" = *"Linux"* ]]; then
     host_os="linux"
     if [[ -f /etc/centos-release ]]; then
         linux_os="centos"
-    elif [[ -f /etc/ubuntu-release ]]; then
+    elif [[ "$(</etc/lsb-release)" = *"Ubuntu"* ]]; then
+        export DEBIAN_FRONTEND=noninteractive
         linux_os="ubuntu"
     elif [[ -f /etc/arch-release ]]; then
         linux_os="archlinux"
