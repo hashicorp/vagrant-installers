@@ -11,7 +11,7 @@ sudo pacman -Syyu --noconfirm || exit 1
 # Ensure keys are up-to-date
 # sudo pacman-key --refresh-keys
 # Ensure the dev tools are installed
-sudo pacman --noconfirm -Suy base-devel ruby  || exit 1
+sudo pacman --noconfirm -Suy base-devel ruby unzip || exit 1
 
 # Expected file mode
 chmod 755 /vagrant/package/support/package_archlinux.sh
