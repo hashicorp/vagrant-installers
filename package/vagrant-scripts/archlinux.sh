@@ -11,16 +11,14 @@ sudo pacman -Syyu --noconfirm || exit 1
 # Ensure keys are up-to-date
 # sudo pacman-key --refresh-keys
 # Ensure the dev tools are installed
-sudo pacman --noconfirm -Suy base-devel ruby  || exit 1
+sudo pacman --noconfirm -Suy base-devel ruby unzip || exit 1
 
 # Expected file mode
 chmod 755 /vagrant/package/support/package_archlinux.sh
 
 set -e
 
-# Call the support script directly for building since
-# there is no substrate to configure
-/vagrant/package/support/package_archlinux.sh ${GIT_BUILD_BRANCH:-main}
+/vagrant/package/package.sh /vagrant/substrate-assets/substrate_archlinux_x86_64.zip main
 
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
 # And store our new package

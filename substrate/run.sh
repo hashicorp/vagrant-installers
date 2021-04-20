@@ -20,7 +20,7 @@ libxslt_file="libxslt-1.1.34.tar.gz"          # ftp://xmlsoft.org/libxml2/libxsl
 libyaml_file="yaml-0.2.5.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
 openssl_file="openssl-1.1.1k.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
 readline_file="readline-8.0.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
-ruby_file="ruby-2.6.6.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
+ruby_file="ruby-2.6.7.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
 xz_file="xz-5.2.5.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
 zlib_file="zlib-1.2.11.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
@@ -64,8 +64,13 @@ if [[ "${uname}" = *"Linux"* ]]; then
     host_os="linux"
     if [[ -f /etc/centos-release ]]; then
         linux_os="centos"
-    else
+    elif [[ "$(</etc/lsb-release)" = *"Ubuntu"* ]]; then
+        export DEBIAN_FRONTEND=noninteractive
         linux_os="ubuntu"
+    elif [[ -f /etc/arch-release ]]; then
+        linux_os="archlinux"
+    else
+        linux_os="linux"
     fi
     host_ident="${linux_os}_${host_arch}"
     install_prefix=""
@@ -103,6 +108,10 @@ pushd "${setupdir}"
 echo_stderr "  -> Installing any required packages..."
 if [[ "${linux_os}" = "ubuntu" ]]; then
     apt-get install -qy build-essential autoconf automake chrpath libtool
+fi
+
+if [[ "${linux_os}" = "archlinux" ]]; then
+    pacman --noconfirm -Suy unzip
 fi
 
 if [[ "${linux_os}" = "centos" ]]; then
@@ -365,9 +374,16 @@ readline_url="${dep_cache}/${readline_file}"
 curl -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
+if [[ "${linux_os}" = "archlinux" ]]; then
+    CURRENT_LDFLAGS="${LDFLAGS}"
+    export LDFLAGS="${LDFLAGS} -lncurses"
+fi
 ./configure --prefix="${embed_dir}"
 make
 make install
+if [[ "${linux_os}" = "archlinux" ]]; then
+    export LDFLAGS="${CURRENT_LDFLAGS}"
+fi
 popd
 
 # openssl
@@ -406,7 +422,7 @@ curl -L -s -o libarchive.tar.gz "${libarchive_url}"
 tar -xzf libarchive.tar.gz
 pushd libarchive-*
 
-if [ "${host_os}" = "darwin" ]; then
+if [ "${host_os}" = "darwin" ] || [ "${linux_os}" = "archlinux" ]; then
     conf_file=$(<configure.ac)
     if [[ "${conf_file}" != *"AC_PROG_CPP"* ]]; then
         sed -i.old 's/^AM_PROG_CC_C_O/AM_PROG_CC_C_O\'$'\nAC_PROG_CPP/' configure.ac
@@ -457,9 +473,12 @@ ruby_url="${dep_cache}/${ruby_file}"
 curl -L -s -o ruby.zip "${ruby_url}"
 unzip -q ruby.zip
 pushd ruby-*
+o_cflags="${CFLAGS}"
+export CFLAGS="${CFLAGS} -I./include -O3 -std=c99"
 ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
             --enable-shared --with-opt-dir="${embed_dir}" --enable-load-relative
-CFLAGS="-I./include -O3" make && make install
+make && make install
+export CFLAGS="${o_cflags}"
 popd
 
 # go launcher
@@ -468,7 +487,7 @@ export GOPATH="$(mktemp -d)"
 export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 mkdir launcher
-cp /vagrant/substrate/launcher/main.go launcher/
+cp /vagrant/substrate/launcher/* launcher/
 pushd launcher
 go get github.com/mitchellh/osext
 go build -o "${build_dir}/bin/vagrant" main.go

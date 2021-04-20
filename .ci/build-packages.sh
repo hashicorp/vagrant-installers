@@ -40,6 +40,7 @@ trap cleanup EXIT
 
 # Set variables we'll need later
 declare -A substrate_list=(
+    [*archlinux_x86_64.zip]="archlinux"
     [*centos_x86_64.zip]="centos-7"
     [*centos_i686.zip]="centos-7-i386"
     [*darwin_x86_64.zip]="osx-10.15"
@@ -210,9 +211,9 @@ substrates_missing="${substrates_missing#,}"
 
 if [ "${substrates_missing}" != "" ]; then
     if [ -n "${release}" ]; then
-        fail "Missing Vagrant substrate assets matching patterns: ${substrate_missing}"
+        fail "Missing Vagrant substrate assets matching patterns: ${substrates_missing}"
     else
-        warn "Missing Vagrant substrate assets matching patterns: ${substrate_missing}"
+        warn "Missing Vagrant substrate assets matching patterns: ${substrates_missing}"
     fi
 fi
 

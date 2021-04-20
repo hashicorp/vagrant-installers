@@ -5,6 +5,7 @@ OUTPUT_DIR="${VAGRANT_SUBSTRATE_OUTPUT_DIR:-substrate-assets}"
 mkdir -p /vagrant/${OUTPUT_DIR}
 chmod 755 /vagrant/substrate/run.sh
 
+su vagrant -l -c 'git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow'
 su vagrant -l -c 'brew update'
 su vagrant -l -c 'brew install wget'
 

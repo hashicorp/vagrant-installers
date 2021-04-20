@@ -3,12 +3,8 @@
 export PATH="/usr/local/bin:$PATH"
 
 sudo pip3 install dmgbuild
-curl -Lo gon.zip https://github.com/mitchellh/gon/releases/download/v0.2.2/gon_0.2.2_macos.zip
-unzip gon.zip
-chown root:wheel gon
-chmod 755 gon
-mv gon /System/Volumes/Data/usr/local/bin/gon
 
+git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
 su vagrant -l -c 'brew install bash'
 
 # Move the SDK into the developer section
