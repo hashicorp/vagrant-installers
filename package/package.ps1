@@ -488,6 +488,7 @@ if ($SignKey) {
     }
 
     & $SignTool sign `
+      /d Vagrant `
       /t http://timestamp.digicert.com `
       /f $SignKey `
       /p $SignKeyPassword `
