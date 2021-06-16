@@ -22,7 +22,6 @@ makedepends=('ruby' 'go')
 
 prepare() {
   mkdir -p "${srcdir}/opt/vagrant/embedded/etc"
-  mkdir -p "${srcdir}/opt/vagrant/embedded/rgloader"
   mkdir -p "${srcdir}/opt/vagrant/bin"
 }
 
@@ -40,8 +39,6 @@ build() {
 
   # Install the required substrate items
   cp "${INSTALLERS_DIR}/substrate/common/gemrc" "${EMBEDDED_DIR}/etc/gemrc"
-  cp "${INSTALLERS_DIR}/substrate/common/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
-  cp "${INSTALLERS_DIR}/substrate/linux/rgloader/"* "${EMBEDDED_DIR}/rgloader/"
 
   # Install vagrant launcher
   pushd "${INSTALLERS_DIR}/substrate/launcher"
