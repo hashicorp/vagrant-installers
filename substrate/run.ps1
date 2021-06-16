@@ -192,18 +192,6 @@ Write-Output "Installing gemrc file..."
 Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "$($Stage32Dir)\embedded\etc\gemrc"
 Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "$($Stage64Dir)\embedded\etc\gemrc"
 
-Write-Output "Install rgloader files..."
-$Rgloader32Dir = [System.IO.Path]::Combine($Embed32Dir, "rgloader")
-$Rgloader64Dir = [System.IO.Path]::Combine($Embed64Dir, "rgloader")
-
-[System.IO.Directory]::CreateDirectory($Rgloader32Dir) | Out-Null
-[System.IO.Directory]::CreateDirectory($Rgloader64Dir) | Out-Null
-
-Copy-Item "C:\vagrant\substrate\common\rgloader\*" -Destination "$($Rgloader32Dir)"
-Copy-Item "C:\vagrant\substrate\common\rgloader\*" -Destination "$($Rgloader64Dir)"
-Copy-Item "C:\vagrant\substrate\windows\rgloader\*" -Destination "$($Rgloader32Dir)"
-Copy-Item "C:\vagrant\substrate\windows\rgloader\*" -Destination "$($Rgloader64Dir)"
-
 Write-Output "Preparing native curl build..."
 
 $CurlBuildDir32 = [System.IO.Path]::Combine($CacheDir, "curl32")

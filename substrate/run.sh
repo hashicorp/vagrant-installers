@@ -503,12 +503,6 @@ echo_stderr " -> Writing cacert.pem..."
 curl -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.se/ca/cacert.pem
 cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
 
-# rubyencoder
-echo_stderr " -> Installing rubyencoder loader..."
-mkdir -p "${embed_dir}/rgloader"
-cp /vagrant/substrate/common/rgloader/* "${embed_dir}/rgloader"/
-cp /vagrant/substrate/${host_os}/rgloader/* "${embed_dir}/rgloader"/
-
 echo_stderr " -> Cleaning cruft..."
 rm -rf "${embed_dir}"/{certs,misc,private,openssl.cnf,openssl.cnf.dist}
 rm -rf "${embed_dir}/share"/{info,man,doc,gtk-doc}
