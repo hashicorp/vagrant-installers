@@ -150,6 +150,7 @@ if (-Not (Test-Path -Path "$($Dir)\vagrant.gem")) {
     # Download
     If ($UseCache -eq $false) {
         Write-Output "Downloading Vagrant: $($VagrantRevision)"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $client = New-Object System.Net.WebClient
         $client.DownloadFile($VagrantSourceURL, $VagrantDest)
 
