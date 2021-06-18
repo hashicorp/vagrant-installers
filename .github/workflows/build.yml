@@ -9,6 +9,7 @@ on:
       - 'package/**'
       - '.ci/build-packages.sh'
       - '.github/workflows/build.yml'
+      - 'Vagrantfile'
   schedule:
     - cron: '15 1 * * *'
   repository_dispatch:
