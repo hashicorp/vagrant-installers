@@ -48,7 +48,7 @@ Section: utils
 Priority: important
 Essential: yes
 Architecture: amd64
-Depends: ruby2.6, ruby2.6-dev
+Depends: ruby3.0, ruby3.0-dev
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
@@ -65,7 +65,7 @@ apt-get update
 # Install required packages
 apt-get remove --purge -yq ruby2.4 ruby2.4-dev
 apt-get autoremove -y
-apt-get install -y build-essential ca-certificates ruby2.6 ruby2.6-dev
+apt-get install -y build-essential ca-certificates ruby3.0 ruby3.0-dev
 
 export WORK_DIR
 export DEB_FILE

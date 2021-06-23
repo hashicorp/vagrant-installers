@@ -1,6 +1,6 @@
 _realname=ruby
-pkgbase="${MINGW_PACKAGE_PREFIX}-ruby26"
-pkgname="${MINGW_PACKAGE_PREFIX}-ruby26"
+pkgbase="${MINGW_PACKAGE_PREFIX}-ruby30"
+pkgname="${MINGW_PACKAGE_PREFIX}-ruby30"
 pkgver=2.6.7
 pkgrel=1
 pkgdesc="An object-oriented language for quick and easy programming (mingw-w64)"
