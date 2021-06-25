@@ -14,7 +14,7 @@ options=('!emptydirs')
 md5sums=('SKIP' 'SKIP')
 depends=('libffi>=3.2.1' 'libxml2>=2.9.4' 'libxslt>=1.1.29'
          'libyaml' 'zlib>=1.2.11' 'xz>=5.2.3' 'readline>=6.3'
-         'openssl>=1.0.2l' 'libssh2>=1.8.0' 'libarchive' 'curl>=7.54.0' 'ruby>=3.0.0'
+         'openssl>=1.0.2l' 'libssh2>=1.8.0' 'libarchive' 'curl>=7.54.0' 'ruby>=2.3.4'
          'rsync' 'autoconf' 'automake' 'binutils' 'bison' 'flex' 'gawk' 'gcc' 'gettext'
          'grep' 'groff' 'gzip' 'libtool' 'm4' 'make' 'patch' 'pkg-config' 'sed' 'util-linux'
          'which')
