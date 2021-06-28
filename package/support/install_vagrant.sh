@@ -92,7 +92,7 @@ mkdir -p "${EMBEDDED_DIR}/certs"
 # Install the pkg-config gem to ensure system can read the bundled *.pc files
 ${GEM_COMMAND} install pkg-config --no-document -v "~> 1.1.7"
 
-${GEM_COMMAND} install vagrant.gem --no-document --prerelease
+${GEM_COMMAND} install vagrant.gem --no-document
 
 # Install extensions
 # ${GEM_COMMAND} install vagrant-share --force --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
