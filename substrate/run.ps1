@@ -81,8 +81,6 @@ $PackageDir = [System.IO.Path]::Combine($CacheDir, "packages")
 
 # Define the important paths
 
-$RubyDepsPath           = [System.IO.Path]::Combine($CacheDir, "ruby_dependencies.sh")
-$RubyBuilderPath        = [System.IO.Path]::Combine($CacheDir, "ruby_builder.sh")
 $SubstrateDepsPath      = [System.IO.Path]::Combine($CacheDir, "substrate_dependencies.sh")
 $SubstrateBuilderPath   = [System.IO.Path]::Combine($CacheDir, "substrate_builder.sh")
 $SubstrateBuilderDir    = "C:\msys64\home\vagrant\styrene"
@@ -96,8 +94,6 @@ Copy-Item "C:\vagrant\substrate\windows\*" -Destination "$($CacheDir)" -Recurse
 [System.IO.Directory]::CreateDirectory($LauncherDir) | Out-Null
 Copy-Item "C:\vagrant\substrate\launcher\*" -Destination $LauncherDir -Recurse
 
-# Start the Ruby build
-Write-Output "Starting Ruby build..."
 
 Push-Location "$($CacheDir)"
 
@@ -105,28 +101,6 @@ $OriginalPath = $env:PATH
 
 $env:PATH = "$($PATH);C:\msys64\usr\bin"
 $env:MSYSTEM = "MINGW64"
-
-$DepProc = Create-Process bash.exe "--login -f '$($RubyDepsPath)'" "$($CacheDir)"
-$DepProc.WaitForExit()
-
-if($DepProc.ExitCode -ne 0) {
-    Write-Error "Failed to install ruby build dependencies! - $($DepProc.ExitCode)"
-}
-
-$RubyProc32 = Create-Process bash.exe "--login -f '$($RubyBuilderPath)' mingw32" "$($CacheDir)"
-$RubyProc64 = Create-Process bash.exe "--login -f '$($RubyBuilderPath)' mingw64" "$($CacheDir)"
-$RubyProc32.WaitForExit()
-$RubyProc64.WaitForExit()
-
-if($RubyProc32.ExitCode -ne 0) {
-    Write-Error "Ruby 32 bit build has failed!"
-}
-if($RubyProc64.ExitCode -ne 0) {
-    Write-Error "Ruby 64 bit build has failed!"
-}
-
-# Relocate packages
-Copy-Item .\ruby-build-*\*.xz -Destination "$($PackageDir)\"
 
 Pop-Location
 
