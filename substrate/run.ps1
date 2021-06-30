@@ -94,8 +94,6 @@ Copy-Item "C:\vagrant\substrate\windows\*" -Destination "$($CacheDir)" -Recurse
 [System.IO.Directory]::CreateDirectory($LauncherDir) | Out-Null
 Copy-Item "C:\vagrant\substrate\launcher\*" -Destination $LauncherDir -Recurse
 
-# Start the Ruby build
-Write-Output "Starting Ruby build..."
 
 Push-Location "$($CacheDir)"
 
@@ -103,9 +101,6 @@ $OriginalPath = $env:PATH
 
 $env:PATH = "$($PATH);C:\msys64\usr\bin"
 $env:MSYSTEM = "MINGW64"
-
-# Relocate packages
-Copy-Item .\ruby-build-*\*.xz -Destination "$($PackageDir)\"
 
 Pop-Location
 
