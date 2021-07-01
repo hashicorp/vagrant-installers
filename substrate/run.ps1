@@ -81,8 +81,6 @@ $PackageDir = [System.IO.Path]::Combine($CacheDir, "packages")
 
 # Define the important paths
 
-$RubyDepsPath           = [System.IO.Path]::Combine($CacheDir, "ruby_dependencies.sh")
-$RubyBuilderPath        = [System.IO.Path]::Combine($CacheDir, "ruby_builder.sh")
 $SubstrateDepsPath      = [System.IO.Path]::Combine($CacheDir, "substrate_dependencies.sh")
 $SubstrateBuilderPath   = [System.IO.Path]::Combine($CacheDir, "substrate_builder.sh")
 $SubstrateBuilderDir    = "C:\msys64\home\vagrant\styrene"
@@ -96,8 +94,6 @@ Copy-Item "C:\vagrant\substrate\windows\*" -Destination "$($CacheDir)" -Recurse
 [System.IO.Directory]::CreateDirectory($LauncherDir) | Out-Null
 Copy-Item "C:\vagrant\substrate\launcher\*" -Destination $LauncherDir -Recurse
 
-# Start the Ruby build
-Write-Output "Starting Ruby build..."
 
 Push-Location "$($CacheDir)"
 
@@ -105,28 +101,6 @@ $OriginalPath = $env:PATH
 
 $env:PATH = "$($PATH);C:\msys64\usr\bin"
 $env:MSYSTEM = "MINGW64"
-
-$DepProc = Create-Process bash.exe "--login -f '$($RubyDepsPath)'" "$($CacheDir)"
-$DepProc.WaitForExit()
-
-if($DepProc.ExitCode -ne 0) {
-    Write-Error "Failed to install ruby build dependencies! - $($DepProc.ExitCode)"
-}
-
-$RubyProc32 = Create-Process bash.exe "--login -f '$($RubyBuilderPath)' mingw32" "$($CacheDir)"
-$RubyProc64 = Create-Process bash.exe "--login -f '$($RubyBuilderPath)' mingw64" "$($CacheDir)"
-$RubyProc32.WaitForExit()
-$RubyProc64.WaitForExit()
-
-if($RubyProc32.ExitCode -ne 0) {
-    Write-Error "Ruby 32 bit build has failed!"
-}
-if($RubyProc64.ExitCode -ne 0) {
-    Write-Error "Ruby 64 bit build has failed!"
-}
-
-# Relocate packages
-Copy-Item .\ruby-build-*\*.xz -Destination "$($PackageDir)\"
 
 Pop-Location
 
@@ -191,18 +165,6 @@ Pop-Location
 Write-Output "Installing gemrc file..."
 Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "$($Stage32Dir)\embedded\etc\gemrc"
 Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "$($Stage64Dir)\embedded\etc\gemrc"
-
-Write-Output "Install rgloader files..."
-$Rgloader32Dir = [System.IO.Path]::Combine($Embed32Dir, "rgloader")
-$Rgloader64Dir = [System.IO.Path]::Combine($Embed64Dir, "rgloader")
-
-[System.IO.Directory]::CreateDirectory($Rgloader32Dir) | Out-Null
-[System.IO.Directory]::CreateDirectory($Rgloader64Dir) | Out-Null
-
-Copy-Item "C:\vagrant\substrate\common\rgloader\*" -Destination "$($Rgloader32Dir)"
-Copy-Item "C:\vagrant\substrate\common\rgloader\*" -Destination "$($Rgloader64Dir)"
-Copy-Item "C:\vagrant\substrate\windows\rgloader\*" -Destination "$($Rgloader32Dir)"
-Copy-Item "C:\vagrant\substrate\windows\rgloader\*" -Destination "$($Rgloader64Dir)"
 
 Write-Output "Preparing native curl build..."
 

@@ -20,7 +20,7 @@ libxslt_file="libxslt-1.1.34.tar.gz"          # ftp://xmlsoft.org/libxml2/libxsl
 libyaml_file="yaml-0.2.5.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
 openssl_file="openssl-1.1.1k.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
 readline_file="readline-8.0.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
-ruby_file="ruby-2.6.7.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
+ruby_file="ruby-3.0.1.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
 xz_file="xz-5.2.5.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
 zlib_file="zlib-1.2.11.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
@@ -502,12 +502,6 @@ cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
 echo_stderr " -> Writing cacert.pem..."
 curl -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.se/ca/cacert.pem
 cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
-
-# rubyencoder
-echo_stderr " -> Installing rubyencoder loader..."
-mkdir -p "${embed_dir}/rgloader"
-cp /vagrant/substrate/common/rgloader/* "${embed_dir}/rgloader"/
-cp /vagrant/substrate/${host_os}/rgloader/* "${embed_dir}/rgloader"/
 
 echo_stderr " -> Cleaning cruft..."
 rm -rf "${embed_dir}"/{certs,misc,private,openssl.cnf,openssl.cnf.dist}
