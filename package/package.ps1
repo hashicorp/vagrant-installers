@@ -231,8 +231,18 @@ if ($UseCache -eq $false) {
             Write-Error "Failed to install Vagrant RubyGem into packaging substrate"
         }
 
-        # Extensions
-        # &"$($EmbeddedDir)\mingw$($PackageArch)\bin\ruby.exe" "$($EmbeddedDir)\mingw$($PackageArch)\bin\gem" install vagrant-share --force --no-ri --no-rdoc --source "http://gems.hashicorp.com"
+        $BundleDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+        [System.IO.Directory]::CreateDirectory($BundleDir) | Out-Null
+
+        Push-Location "${env:GEM_PATH}\gems\bcrypt_pbkdf-*"
+        Remove-Item "bcrypt_pbkdf.gemspec"
+        Move-Item "..\..\specifications\bcrypt_pbkdf*.gemspec" ".\bcrypt_pbkdf.gemspec"
+        &"${EmbeddedDir}\mingw${PackageArch}\bin\bundle.cmd" config set --local path "${BundleDir}"
+        &"${EmbeddedDir}\mingw${PackageArch}\bin\bundle.cmd" install
+        &"${EmbeddedDir}\mingw${PackageArch}\bin\bundle.cmd" exec rake compile
+
+        Remove-Item "${BundleDir}" -Force -Recurse
+        Pop-Location
     }
     if(!$?) {
         Write-Error "Vagrant packaging into substrate failed"
