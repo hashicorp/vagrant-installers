@@ -236,7 +236,7 @@ if ($UseCache -eq $false) {
 
         Push-Location "${env:GEM_PATH}\gems\bcrypt_pbkdf-*"
         Remove-Item "bcrypt_pbkdf.gemspec"
-        Move-Item "..\..\specifications\bcrypt_pbkdf*.gemspec" ".\bcrypt_pbkdf.gemspec"
+        Copy-Item "..\..\specifications\bcrypt_pbkdf*.gemspec" ".\bcrypt_pbkdf.gemspec"
         &"${EmbeddedDir}\mingw${PackageArch}\bin\bundle.cmd" config set --local path "${BundleDir}"
         &"${EmbeddedDir}\mingw${PackageArch}\bin\bundle.cmd" install
         &"${EmbeddedDir}\mingw${PackageArch}\bin\bundle.cmd" exec rake compile
