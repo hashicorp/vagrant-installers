@@ -161,6 +161,10 @@ else
     packet-exec run -quiet -- sleep 500 &
     unset PACKET_EXEC_PRE_BUILTINS
 
+    echo "Pausing to allow secrets to become available"
+    sleep 10
+    echo "Resuming after secrets pause"
+
     for p in "${!substrate_list[@]}"; do
         path=(substrate-assets/${p})
         guest="${substrate_list[${p}]}"
@@ -247,6 +251,10 @@ else
     export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
     packet-exec run -quiet -- sleep 500 &
     unset PACKET_EXEC_PRE_BUILTINS
+
+    echo "Pausing to allow secrets to become available"
+    sleep 10
+    echo "Resuming after secrets pause"
 
     for p in "${!package_list[@]}"; do
         path=(pkg/${p})
