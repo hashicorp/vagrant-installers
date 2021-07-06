@@ -45,7 +45,7 @@ Section: utils
 Priority: important
 Essential: yes
 Architecture: amd64
-Depends: ruby2.6, ruby2.6-dev
+Depends: ruby2.7, ruby2.7-dev
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
