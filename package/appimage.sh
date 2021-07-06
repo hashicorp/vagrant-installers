@@ -62,7 +62,7 @@ apt-get update
 # Install required packages
 apt-get remove --purge -yq ruby2.4 ruby2.4-dev
 apt-get autoremove -y
-apt-get install -y build-essential ca-certificates ruby2.6 ruby2.6-dev
+apt-get install -y build-essential ca-certificates ruby2.7 ruby2.7-dev
 
 export WORK_DIR
 export DEB_FILE
