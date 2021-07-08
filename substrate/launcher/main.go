@@ -159,6 +159,14 @@ func main() {
 			filepath.Join(embeddedDir, "lib64")
 		cflags = "-I" + filepath.Join(embeddedDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "include", "libxml2")
+		// If the Ruby 3 include directory exists within our installation, add
+		// the ruby subdirectory to the configured include paths.
+		// NOTE: This is a workaround for the ruby-libvirt library which relies
+		// on the old path to st.h (see: https://gitlab.com/libvirt/libvirt-ruby/-/issues/4)
+		ruby3inc := filepath.Join(embeddedDir, "include", "ruby-3.0.0", "ruby")
+		if _, err := os.Stat(ruby3inc); err == nil {
+			cflags = cflags + " -I" + ruby3inc
+		}
 	}
 
 	// Include any original flags
