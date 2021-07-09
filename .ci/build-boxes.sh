@@ -5,7 +5,7 @@ export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98
 export SLACK_TITLE="Vagrant Builder Boxes"
 export PACKET_EXEC_DEVICE_NAME="${PACKET_EXEC_DEVICE_NAME:-ci-installer-boxes}"
 export PACKET_EXEC_DEVICE_SIZE="${PACKET_EXEC_DEVICE_SIZE:-baremetal_0,baremetal_1,baremetal_1e}"
-export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-iad1,iad2,ewr1,dfw1,dfw2,sea1,sjc1,lax1}"
+export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-iad2,dfw2,dfw1,ny5,ny7,ewr1,la4,lax1,lax2,tr2,ch3,ord1,ord4}"
 export PACKET_EXEC_OPERATING_SYSTEM="${PACKET_EXEC_OPERATING_SYSTEM:-ubuntu_18_04}"
 # set workstation url to point to v15. ref: https://github.com/hashicorp/packer/issues/10009
 export PKT_WORKSTATION_DOWNLOAD_URL="https://download3.vmware.com/software/wkst/file/VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle"
