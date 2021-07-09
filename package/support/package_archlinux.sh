@@ -22,7 +22,7 @@ TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
 pushd $TMP_DIR
 TMP_DIR="$(pwd)"
 
-cp "${DIR}/archlinux/PKGBUILD" ./PKGBUILD
+cp "${DIR}/archlinux/PKGBUILD.local" ./PKGBUILD
 
 tar -f substrate.tar.gz --directory="${SUBSTRATE_DIR}" -cz ./
 
