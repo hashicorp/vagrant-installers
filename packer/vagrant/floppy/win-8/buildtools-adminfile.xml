@@ -2,12 +2,10 @@
 <AdminDeploymentCustomizations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/wix/2011/AdminDeployment">
   <BundleCustomizations TargetDir="default" NoCacheOnlyMode="default" NoWeb="default" NoRefresh="default" SuppressRefreshPrompt="default" Feed="default" />
   <SelectableItemCustomizations>
-    <SelectableItemCustomization Id="GitForWindowsx64V7" Hidden="no" Selected="yes" FriendlyName="Git for Windows" />
-    <SelectableItemCustomization Id="GitForWindowsx86V7" Hidden="no" Selected="yes" FriendlyName="Git for Windows" />
+    <SelectableItemCustomization Id="Win81SDK_CppBuildSKUV1" Hidden="no" Selected="yes" FriendlyName="Windows 8.1 SDK" />
     <SelectableItemCustomization Id="VSUV1PreReqV1" Selected="no" FriendlyName="Visual Studio 2015 Update 1 Prerequisite" />
     <SelectableItemCustomization Id="VSUV3RTMV1" Selected="no" FriendlyName="Visual Studio 2015 Update 3" />
     <SelectableItemCustomization Id="MicroUpdateV3.5" Selected="no" FriendlyName="Update for Microsoft Visual Studio 2015 (KB3165756)" />
-    <SelectableItemCustomization Id="Win81SDK_CppBuildSKUV1" Hidden="no" Selected="yes" FriendlyName="Windows 8.1 SDK" />
     <SelectableItemCustomization Id="PythonToolsForVisualStudioV8" Hidden="no" Selected="no" FriendlyName="Python Tools for Visual Studio (January 2017)" />
     <SelectableItemCustomization Id="ClickOnceV1" Hidden="no" Selected="no" FriendlyName="ClickOnce Publishing Tools" />
     <SelectableItemCustomization Id="PowerShellToolsV1" Hidden="no" Selected="no" FriendlyName="PowerShell Tools for Visual Studio" />
@@ -37,6 +35,8 @@
     <SelectableItemCustomization Id="Node.jsV1" Hidden="no" Selected="no" FriendlyName="Joyent Node.js" />
     <SelectableItemCustomization Id="VSEmu_AndroidV1.1.622.2" Hidden="no" Selected="no" FriendlyName="Microsoft Visual Studio Emulator for Android (July 2016)" />
     <SelectableItemCustomization Id="WebSocket4NetV1" Hidden="no" Selected="no" FriendlyName="WebSocket4Net" />
+    <SelectableItemCustomization Id="GitForWindowsx64V9" Hidden="no" Selected="no" FriendlyName="Git for Windows" />
+    <SelectableItemCustomization Id="GitForWindowsx86V9" Hidden="no" Selected="no" FriendlyName="Git for Windows" />
     <SelectableItemCustomization Id="GitHubVSV1" Hidden="no" Selected="no" FriendlyName="GitHub Extension for Visual Studio" />
     <SelectableItemCustomization Id="VS_SDK_GroupV5" Hidden="no" Selected="no" FriendlyName="Visual Studio Extensibility Tools Update 3" />
     <SelectableItemCustomization Id="VS_SDK_Breadcrumb_GroupV5" Selected="no" FriendlyName="Visual Studio Extensibility Tools Update 3" />

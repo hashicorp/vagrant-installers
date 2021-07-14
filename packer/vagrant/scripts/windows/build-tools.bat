@@ -1,7 +1,8 @@
-if not exist "C:\Windows\Temp\build-tools.exe" (
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe', 'C:\Windows\Temp\build-tools.exe')" <NUL
-)
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('https://vagrant-public-cache.s3.amazonaws.com/buildtools-sdk.zip', 'C:\Windows\Temp\build-tools.zip')" <NUL
 
-start /wait C:\Windows\Temp\build-tools.exe /Passive /AdminFile A:\buildtools-adminfile.xml
+mkdir C:\Windows\Temp\build-tools-installer
+"C:\Program Files\7-Zip\7z.exe" x -y -o"C:\Windows\Temp\build-tools-installer" C:\Windows\Temp\build-tools.zip
+
+start /wait c:\Windows\Temp\build-tools-installer\visualcppbuildtools_full.exe /adminfile a:\buildtools-adminfile.xml /passive /norestart /norefresh
 
 setx PATH "%PATH%;C:\Program Files (x86)\Windows Kits\8.1\bin\x86" /m

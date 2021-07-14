@@ -1,4 +1,4 @@
-if not defined SDELETE_URL set SDELETE_URL=http://web.archive.org/web/20160404120859if_/http://live.sysinternals.com/sdelete.exe
+set SDELETE_URL=https://vagrant-public-cache.s3.amazonaws.com/sdelete.exe
 
 for %%i in ("%SDELETE_URL%") do set SDELETE_EXE=%%~nxi
 set SDELETE_DIR=%TEMP%\sdelete
@@ -12,7 +12,7 @@ if exist "%SystemRoot%\_download.cmd" (
   call "%SystemRoot%\_download.cmd" "%SDELETE_URL%" "%SDELETE_PATH%"
 ) else (
   echo ==^> Downloading "%SDELETE_URL%" to "%SDELETE_PATH%"
-  powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%SDELETE_URL%', '%SDELETE_PATH%')" <NUL
+  powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('%SDELETE_URL%', '%SDELETE_PATH%')" <NUL
 )
 if not exist "%SDELETE_PATH%" goto exit1
 

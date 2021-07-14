@@ -1,20 +1,9 @@
-if not defined ULTRADEFRAG_32_URL set ULTRADEFRAG_32_URL=https://downloads.sourceforge.net/ultradefrag/ultradefrag-portable-7.0.2.bin.i386.zip
-if not defined ULTRADEFRAG_64_URL set ULTRADEFRAG_64_URL=https://downloads.sourceforge.net/ultradefrag/ultradefrag-portable-7.0.2.bin.amd64.zip
-
 ::::::::::::
 :main
 ::::::::::::
 
-if not exist "C:\Windows\Temp\7z920-x64.msi" (
-    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; (New-Object System.Net.WebClient).DownloadFile('http://www.7-zip.org/a/7z920-x64.msi', 'C:\Windows\Temp\7z920-x64.msi')" <NUL
-    msiexec /qb /i C:\Windows\Temp\7z920-x64.msi
-)
-
-if defined ProgramFiles(x86) (
-  set ULTRADEFRAG_URL=%ULTRADEFRAG_64_URL%
-) else (
-  set ULTRADEFRAG_URL=%ULTRADEFRAG_32_URL%
-)
+:: download source https://downloads.sourceforge.net/ultradefrag/ultradefrag-portable-7.0.2.bin.amd64.zip
+set ULTRADEFRAG_URL=https://vagrant-public-cache.s3.amazonaws.com/ultradefrag-portable-7.0.2.bin.amd64.zip
 
 for %%i in ("%ULTRADEFRAG_URL%") do set ULTRADEFRAG_ZIP=%%~nxi
 set ULTRADEFRAG_DIR=%TEMP%\ultradefrag

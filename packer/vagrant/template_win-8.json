@@ -7,6 +7,7 @@
       "disk_adapter_type": "lsisas1068",
       "disk_size": "{{user `disk_size`}}",
       "floppy_files": [
+        "{{template_dir}}/scripts/windows/install-zip.bat",
         "{{template_dir}}/scripts/windows/vm-guest-tools.bat",
         "{{template_dir}}/floppy/win-8/Autounattend.xml",
         "{{template_dir}}/floppy/win-8/buildtools-adminfile.xml",
@@ -32,7 +33,13 @@
       "vm_name": "{{user `vm_name`}}",
       "winrm_password": "vagrant",
       "winrm_timeout": "4h",
-      "winrm_username": "vagrant"
+      "winrm_username": "vagrant",
+      "vmx_data": {
+        "tools.upgrade.policy": "manual"
+      },
+      "vmx_data_post": {
+        "tools.upgrade.policy": "manual"
+      }
     }
   ],
   "post-processors": [

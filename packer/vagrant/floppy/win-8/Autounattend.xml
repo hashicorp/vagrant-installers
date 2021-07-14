@@ -95,55 +95,61 @@
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\disablewindupdate.bat</CommandLine>
                     <Description>Disable Windows Updates</Description>
-                    <Order>1</Order>
+                    <Order>10</Order>
                     <RequiresUserInput>true</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                  <CommandLine>cmd.exe /c a:\enable-tls.bat</CommandLine>
+                  <Description>Apply SSL/TLS fix</Description>
+                  <Order>11</Order>
+                  <RequiresUserInput>true</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                  <CommandLine>cmd.exe /c a:\install-zip.bat</CommandLine>
+                  <Description>Install 7z</Description>
+                  <Order>20</Order>
+                  <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\vm-guest-tools.bat</CommandLine>
                     <Description>Install guest tools</Description>
-                    <Order>2</Order>
-                    <RequiresUserInput>true</RequiresUserInput>
-                </SynchronousCommand>
-                <SynchronousCommand wcm:action="add">
-                    <CommandLine>cmd.exe /c a:\enable-tls.bat</CommandLine>
-                    <Description>Apply SSL/TLS fix</Description>
-                    <Order>3</Order>
+                    <Order>30</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>powershell.exe -file a:\fixnetwork.ps1</CommandLine>
                     <Description>Fix network classifications</Description>
-                    <Order>4</Order>
+                    <Order>40</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\passwordchange.bat</CommandLine>
                     <Description>Disable password change</Description>
-                    <Order>5</Order>
+                    <Order>50</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\powerconfig.bat</CommandLine>
                     <Description>Disable power configurations</Description>
-                    <Order>6</Order>
+                    <Order>60</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\disablewinupdate.bat</CommandLine>
                     <Description>Disable updates</Description>
-                    <Order>8</Order>
+                    <Order>80</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\install-winrm.cmd</CommandLine>
                     <Description>Install WinRM</Description>
-                    <Order>9</Order>
+                    <Order>90</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
                 <SynchronousCommand wcm:action="add">
                     <CommandLine>cmd.exe /c a:\start-winrm.cmd</CommandLine>
                     <Description>Start WinRM service updates</Description>
-                    <Order>10</Order>
+                    <Order>100</Order>
                     <RequiresUserInput>true</RequiresUserInput>
                 </SynchronousCommand>
             </FirstLogonCommands>
