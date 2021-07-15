@@ -98,7 +98,7 @@ If ($BuildStyle -eq "ephemeral") {
     }
 }
 
-Write-Output "Substrate temp dir: $($SubstrateTmpDir)"
+Write-Output "Substrate temp dir: ${SubstrateTmpDir}"
 
 # Unzip
 If ($UseCache -eq $false) {
@@ -109,7 +109,7 @@ If ($UseCache -eq $false) {
 }
 
 # Set the full path to the substrate
-$SubstrateDir = "$($SubstrateTmpDir)"
+$SubstrateDir = "${SubstrateTmpDir}"
 
 $Path32Bit = [System.IO.Path]::Combine($SubstrateDir, "embedded", "mingw32")
 if (Test-Path -Path $Path32Bit) {
@@ -127,7 +127,7 @@ if ($BuildStyle -eq "ephemeral" ) {
     [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
 } Else {
     $VagrantTmpDir = [System.IO.Path]::Combine(
-        $VagrantTmpDir, "vagrant-$($VagrantRevision)")
+        $VagrantTmpDir, "vagrant-${VagrantRevision}")
     If ($ScrubCache -eq "no") {
         [System.IO.Directory]::CreateDirectory($VagrantTmpDir) | Out-Null
         $VagrantDirectory = Get-ChildItem $VagrantTmpDir
@@ -140,16 +140,16 @@ if ($BuildStyle -eq "ephemeral" ) {
     }
 }
 
-Write-Output "Vagrant temp dir: $($VagrantTmpDir)"
+Write-Output "Vagrant temp dir: ${VagrantTmpDir}"
 
-$VagrantSourceURL = "$($VagrantSourceBaseURL)/$($VagrantRevision).zip"
-$VagrantDest      = "$($VagrantTmpDir)\vagrant.zip"
+$VagrantSourceURL = "${VagrantSourceBaseURL)/$($VagrantRevision}.zip"
+$VagrantDest      = "${VagrantTmpDir}\vagrant.zip"
 $VagrantSourceDir = $VagrantTmpDir
 
-if (-Not (Test-Path -Path "$($Dir)\vagrant.gem")) {
+if (-Not (Test-Path -Path "${Dir}\vagrant.gem")) {
     # Download
     If ($UseCache -eq $false) {
-        Write-Output "Downloading Vagrant: $($VagrantRevision)"
+        Write-Output "Downloading Vagrant: ${VagrantRevision}"
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $client = New-Object System.Net.WebClient
         $client.DownloadFile($VagrantSourceURL, $VagrantDest)
