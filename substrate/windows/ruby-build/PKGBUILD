@@ -1,0 +1,60 @@
+_realname=ruby
+pkgbase="${MINGW_PACKAGE_PREFIX}-ruby27"
+pkgname="${MINGW_PACKAGE_PREFIX}-ruby27"
+pkgver=2.7.4
+pkgrel=1
+pkgdesc="An object-oriented language for quick and easy programming (mingw-w64)"
+arch=('any')
+url="https://www.ruby-lang.org/en"
+license=("BSD, custom")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-pkg-config")
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-gdbm>=1.17"
+         "${MINGW_PACKAGE_PREFIX}-gmp"
+         "${MINGW_PACKAGE_PREFIX}-libffi"
+         "${MINGW_PACKAGE_PREFIX}-libyaml"
+         "${MINGW_PACKAGE_PREFIX}-openssl>=1.1.1"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+options=('staticlibs' 'strip')
+source=("https://cache.ruby-lang.org/pub/ruby/${pkgver%.*}/${_realname}-${pkgver}.tar.gz")
+
+sha256sums=('3043099089608859fc8cce7f9fdccaa1f53a462457e3838ec3b25a7d609fbc5b')
+
+prepare() {
+  cd ${srcdir}/${_realname}-${pkgver}
+  autoreconf-2.13 -f -i
+}
+
+build() {
+
+  CPPFLAGS+=" -DFD_SETSIZE=2048"
+  CFLAGS="-O3 -fno-fast-math -fstack-protector-strong -fcommon"
+  LDFLAGS="-pipe -s -fstack-protector-strong"
+
+  [[ -d "${srcdir}/build-${MINGW_CHOST}" ]] && rm -rf "${srcdir}/build-${MINGW_CHOST}"
+  mkdir -p "${srcdir}/build-${MINGW_CHOST}" && cd "${srcdir}/build-${MINGW_CHOST}"
+
+  ../${_realname}-${pkgver}/configure \
+    --prefix=${MINGW_PREFIX} \
+    --build=${MINGW_CHOST} \
+    --host=${MINGW_CHOST} \
+    --target=${MINGW_CHOST} \
+    --with-out-ext=readline,pty,syslog
+
+  make showflags main
+}
+
+#check() {
+#  cd "${srcdir}/build-${MINGW_CHOST}"
+#  echo $PATH
+#  make -l "TESTOPTS=-q" btest test-basic
+#}
+
+package() {
+  cd "${srcdir}/build-${MINGW_CHOST}"
+  make -f GNUMakefile DESTDIR="${pkgdir}" install-nodoc
+  for script in {erb,gem,irb,rdoc,ri}; do
+    install ${srcdir}/ruby-${pkgver}/bin/${script} \
+      ${pkgdir}${MINGW_PREFIX}/bin/
+  done
+}

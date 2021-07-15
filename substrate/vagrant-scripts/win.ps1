@@ -50,6 +50,6 @@ try {
         exit 1
     }
 } catch {
-    Write-Output "ERROR: ${PSItem}"
+    Write-Output "ERROR: Substrate build encountered an unexpected error" # ${PSItem}"
     exit 1
 }
