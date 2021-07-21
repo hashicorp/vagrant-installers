@@ -33,12 +33,16 @@ function Create-Process {
         [string] $Cwd,
         [parameter(Mandatory=$false, Position=3)]
         [AllowNull()]
-        [hashtable] $Env
+        [hashtable] $Env,
+        [parameter(Mandatory=$false)]
+        [switch] $QuietOut,
+        [parameter(Mandatory=$false)]
+        [switch] $QuietErr
     )
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $ExePath
-    $info.RedirectStandardError = $false
-    $info.RedirectStandardOutput = $false
+    $info.RedirectStandardError = $true
+    $info.RedirectStandardOutput = $true
     $info.UseShellExecute = $false
     if($Cwd) {
         $info.WorkingDirectory = $Cwd
@@ -53,7 +57,26 @@ function Create-Process {
 
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $info
+
+    if(!$QuietOut) {
+        $evO = Register-ObjectEvent -InputObject $process -Action {
+            if(-not [String]::IsNullOrEmpty($Event.SourceEventArgs.Data)) {
+                [Console]::WriteLine($Event.SourceEventArgs.Data)
+            }
+        } -EventName OutputDataReceived
+    }
+    if(!$QuietErr) {
+        $evE = Register-ObjectEvent -InputObject $process -Action {
+            if(-not [String]::IsNullOrEmpty($Event.SourceEventArgs.Data) -and !$QuietErr) {
+                [Console]::Error.WriteLine($Event.SourceEventArgs.Data)
+            }
+        } -EventName ErrorDataReceived
+    }
+
     $process.Start() | Out-Null
+    $process.BeginErrorReadLine();
+    $process.BeginOutputReadLine();
+
     return $process
 }
 
@@ -129,29 +152,32 @@ $env:PATH = "${PATH};C:\msys64\usr\bin"
 $env:MSYSTEM = "MINGW64"
 
 $DepProc = Create-Process bash.exe "--login -f '${RubyDepsPath}'" "${CacheDir}"
-$DepProc.WaitForExit()
+do { Start-Sleep -Seconds 1} while(!$DepProc.HasExited)
 
 if($DepProc.ExitCode -ne 0) {
     Write-Error "Failed to install ruby build dependencies! - ${DepProc.ExitCode}"
 }
+$DepProc.Dispose()
 
 if($Build32) {
-    $RubyProc32 = Create-Process bash.exe "--login -f '${RubyBuilderPath}' mingw32" "${CacheDir}"
+    $RubyProc32 = Create-Process bash.exe "--login -f '${RubyBuilderPath}' mingw32" "${CacheDir}" -QuietOut
 }
 if($Build64) {
-    $RubyProc64 = Create-Process bash.exe "--login -f '${RubyBuilderPath}' mingw64" "${CacheDir}"
+    $RubyProc64 = Create-Process bash.exe "--login -f '${RubyBuilderPath}' mingw64" "${CacheDir}" -QuietOut
 }
 if($Build32) {
-    $RubyProc32.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$RubyProc32.HasExited)
     if($RubyProc32.ExitCode -ne 0) {
         Write-Error "Ruby 32 bit build has failed!"
     }
+    $RubyProc32.Dispose()
 }
 if($Build64) {
-    $RubyProc64.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$RubyProc64.HasExited)
     if($RubyProc64.ExitCode -ne 0) {
         Write-Error "Ruby 64 bit build has failed!"
     }
+    $RubyProc64.Dispose()
 }
 
 # Relocate packages
@@ -166,16 +192,22 @@ Push-Location "${CacheDir}"
 
 $env:MSYSTEM = "MSYS"
 $SubstrateDepProc = Create-Process bash.exe "--login -f '${SubstrateDepsPath}'" -Cwd "${CacheDir}"
-$SubstrateDepProc.WaitForExit()
+do { Start-Sleep -Seconds 1} while(!$SubstrateDepProc.HasExited)
+
+if($SubstrateDepProc.ExitCode -ne 0) {
+    Write-Error "Substrate dependency script has failed!"
+}
+$SubstrateDepProc.Dispose()
 
 Copy-Item "$($CacheDir)\vagrant.cfg" -Destination "${SubstrateBuilderDir}\vagrant.cfg"
 
-$SubstrateProc = Create-Process bash.exe "--login -f '${SubstrateBuilderPath}' '${PackageDir}' '${Stage32Dir}' '${Stage64Dir}'" "${SubstrateBuilderDir}"
-$SubstrateProc.WaitForExit()
+$SubstrateProc = Create-Process bash.exe "--login -f '${SubstrateBuilderPath}' '${PackageDir}' '${Stage32Dir}' '${Stage64Dir}'" "${SubstrateBuilderDir}" -QuietOut
+do { Start-Sleep -Seconds 1} while(!$SubstrateProc.HasExited)
 
 if($SubstrateProc.ExitCode -ne 0) {
     Write-Error "Substrate build has failed!"
 }
+$SubstrateProc.Dispose()
 
 Pop-Location
 
@@ -186,11 +218,12 @@ $env:GOPATH = "C:\Windows\Temp"
 $env:PATH = "C:\Program Files\Go\bin;C:\Program Files\Git\bin;${OriginalPath}"
 
 $LauncherDepProc = Create-Process go.exe "get github.com/mitchellh/osext"
-$LauncherDepProc.WaitForExit()
+do { Start-Sleep -Seconds 1} while(!$LauncherDepProc.HasExited)
 
 if($LauncherDepProc.ExitCode -ne 0) {
     Write-Error "Failed to install launcher dependency: osext"
 }
+$LauncherDepProc.Dispose()
 
 Push-Location "${LauncherDir}"
 
@@ -213,17 +246,19 @@ if($Build32) {
 }
 
 if($Build64) {
-    $LauncherProc64.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$LauncherProc64.HasExited)
     if($LauncherProc64.ExitCode -ne 0) {
         Write-Error "Failed to build vagrant 64-bit launcher!"
     }
+    $LauncherProc64.Dispose()
 }
 
 if($Build32) {
-    $LauncherProc32.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$LauncherProc32.HasExited)
     if($LauncherProc32.ExitCode -ne 0) {
         Write-Error "Failed to build vagrant 32-bit launcher!"
     }
+    $LauncherProc32.Dispose()
 }
 
 Pop-Location
@@ -247,26 +282,28 @@ Write-Output "Unpacking curl..."
 if($Build32) {
     $CurlBuildDir32 = [System.IO.Path]::Combine($CacheDir, "curl32")
     [System.IO.Directory]::CreateDirectory($CurlBuildDir32) | Out-Null
-    $CurlUnpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${CurlAsset} -y" "${CurlBuildDir32}"
+    $CurlUnpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${CurlAsset} -y" "${CurlBuildDir32}" -QuietOut
 }
 if($Build64) {
-    $CurlUnpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${CurlAsset} -y" "${CurlBuildDir64}"
     $CurlBuildDir64 = [System.IO.Path]::Combine($CacheDir, "curl64")
     [System.IO.Directory]::CreateDirectory($CurlBuildDir64) | Out-Null
+    $CurlUnpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${CurlAsset} -y" "${CurlBuildDir64}" -QuietOut
 }
 
 if($Build32) {
-    $CurlUnpack32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$CurlUnpack32Proc.HasExited)
     if($CurlUnpack32Proc.ExitCode -ne 0) {
         Write-Error "Failed to unpack cURL for 32-bit build"
     }
+    $CurlUnpack32Proc.Dispose()
     $CurlBuildDir32 = Resolve-Path -Path "${CurlBuildDir32}\curl-*"
 }
 if($Build64) {
-    $CurlUnpack64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$CurlUnpack64Proc.HasExited)
     if($CurlUnpack64Proc.ExitCode -ne 0) {
         Write-Error "Failed to unpack cURL for 64-bit build"
     }
+    $CurlUnpack64Proc.Dispose()
     $CurlBuildDir64 = Resolve-Path -Path "${CurlBuildDir64}\curl-*"
 }
 
@@ -303,25 +340,27 @@ $ZlibAsset = [System.IO.Path]::Combine($CacheDir, "zlib.zip")
 
 Write-Output "Unpacking zlib..."
 if($Build32) {
-    $ZlibUnpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${ZlibAsset} -y" "${ZlibDir32}"
+    $ZlibUnpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${ZlibAsset} -y" "${ZlibDir32}" -QuietOut
 }
 if($Build64) {
-    $ZlibUnpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${ZlibAsset} -y" "${ZlibDir64}"
+    $ZlibUnpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${ZlibAsset} -y" "${ZlibDir64}" -QuietOut
 }
 
 if($Build32) {
-    $ZlibUnpack32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$ZlibUnpack32Proc.HasExited)
     if($ZlibUnpack32Proc.ExitCode -ne 0) {
         Write-Error "Failed to unpack zlib for 32-bit build"
     }
+    $ZlibUnpack32Proc.Dispose()
     Move-Item "${ZlibDir32}\zlib-*\*" "${ZlibDir32}\"
 }
 
 if($Build64) {
-    $ZlibUnpack64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$ZlibUnpack64Proc.HasExited)
     if($ZlibUnpack64Proc.ExitCode -ne 0) {
         Write-Error "Failed to unpack zlib for 64-bit build"
     }
+    $ZlibUnpack64Proc.Dispose()
     Move-Item "${ZlibDir64}\zlib-*\*" "${ZlibDir64}\"
 }
 
@@ -330,21 +369,22 @@ if($Build32) {
 
     $ZlibBuilderScript = [System.IO.Path]::Combine($ZlibDir32, "zlib-builder.bat")
     Copy-Item "$($CacheDir)\zlib-builder.bat" -Destination "${ZlibBuilderScript}"
-    $ZlibBuild32Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir32}" @{ZlibArch = "x86"}
+    $ZlibBuild32Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir32}" @{ZlibArch = "x86"} -QuietOut
 }
 
 if($Build64) {
     Write-Output "Building 64bit zlib..."
     $ZlibBuilderScript = [System.IO.Path]::Combine($ZlibDir64, "zlib-builder.bat")
     Copy-Item "$($CacheDir)\zlib-builder.bat" -Destination "${ZlibBuilderScript}"
-    $ZlibBuild64Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir64}" @{ZlibArch = "x64"}
+    $ZlibBuild64Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir64}" @{ZlibArch = "x64"} -QuietOut
 }
 
 if($Build32) {
-    $ZlibBuild32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$ZlibBuild32Proc.HasExited)
     if($ZlibBuild32Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 32-bit zlib for curl!"
     }
+    $ZlibBuilder32Proc.Dispose()
     Push-Location "${ZlibDir32}"
     Copy-Item ".\*.h" "${ZlibDepsIncDir32}\"
     Copy-Item ".\zlib.lib" "${ZlibDepsLibDir32}\zlib.lib"
@@ -353,10 +393,11 @@ if($Build32) {
 }
 
 if($Build64) {
-    $ZlibBuild64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$ZlibBuild64Proc.HasExited)
     if($ZlibBuild64Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 64-bit zlib for curl!"
     }
+    $ZlibBuilder64Proc.Dispose()
     Push-Location "${ZlibDir64}"
     Copy-Item ".\*.h" "${ZlibDepsIncDir64}\"
     Copy-Item ".\zlib.lib" "${ZlibDepsLibDir64}\zlib.lib"
@@ -396,25 +437,27 @@ $Libssh2Asset = [System.IO.Path]::Combine($CacheDir, "libssh2.zip")
 
 Write-Output "Unpacking libssh2..."
 if($Build32) {
-    $Libssh2Unpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${Libssh2Asset} -y" "${Libssh2Dir32}"
+    $Libssh2Unpack32Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${Libssh2Asset} -y" "${Libssh2Dir32}" -QuietOut
 }
 if($Build64) {
-    $Libssh2Unpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${Libssh2Asset} -y" "${Libssh2Dir64}"
+    $Libssh2Unpack64Proc = Create-Process "C:\Program Files\7-Zip\7z.exe" "x ${Libssh2Asset} -y" "${Libssh2Dir64}" -QuietOut
 }
 
 if($Build32) {
-    $Libssh2Unpack32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$Libssh2Unpack32Proc.HasExited)
     if($Libssh2Unpack32Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 32-bit libssh2"
     }
+    $Libssh2Unpack32Proc.Dispose()
     Move-Item "${Libssh2Dir32}\libssh2-*\*" "${Libssh2Dir32}\"
 }
 
 if($Build64) {
-    $Libssh2Unpack64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$Libssh2Unpack64Proc.HasExited)
     if($Libssh2Unpack64Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 64-bit libssh2"
     }
+    $Libssh2Unpack64Proc.Dispose()
     Move-Item "${Libssh2Dir64}\libssh2-*\*" "${Libssh2Dir64}\"
 }
 
@@ -422,21 +465,22 @@ if($Build32) {
     Write-Output "Building 32-bit libssh2..."
     $Libssh2Builder32Script = [System.IO.Path]::Combine($Libssh2Dir32, "libssh2-builder.bat")
     Copy-Item "$($CacheDir)\libssh2-builder.bat" -Destination "${Libssh2Builder32Script}"
-    $Libssh2Build32Proc = Create-Process "${Libssh2Builder32Script}" -Cwd "${Libssh2Dir32}" @{Libssh2Arch = "x86"}
+    $Libssh2Build32Proc = Create-Process "${Libssh2Builder32Script}" -Cwd "${Libssh2Dir32}" @{Libssh2Arch = "x86"} -QuietOut
 }
 
 if($Build64) {
     Write-Output "Building 64-bit libssh2..."
     $Libssh2Builder64Script = [System.IO.Path]::Combine($Libssh2Dir64, "libssh2-builder.bat")
     Copy-Item "$($CacheDir)\libssh2-builder.bat" -Destination "${Libssh2Builder64Script}"
-    $Libssh2Build64Proc = Create-Process "${Libssh2Builder64Script}" -Cwd "${Libssh2Dir64}" @{Libssh2Arch = "x64"}
+    $Libssh2Build64Proc = Create-Process "${Libssh2Builder64Script}" -Cwd "${Libssh2Dir64}" @{Libssh2Arch = "x64"} -QuietOut
 }
 
 if($Build32) {
-    $Libssh2Build32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$Libssh2Build32Proc.HasExited)
     if($Libssh2Build32Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 32-bit libssh2 for curl!"
     }
+    $Libssh2Build32Proc.Dispose()
     Push-Location "${Libssh2Dir32}"
     Copy-Item ".\include\*" "${Libssh2DepsIncDir32}\"
     Copy-Item ".\Release\src\libssh2.lib" "${Libssh2DepsLibDir32}\libssh2.lib"
@@ -445,10 +489,11 @@ if($Build32) {
 }
 
 if($Build64) {
-    $Libssh2Build64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$Libssh2Build64Proc.HasExited)
     if($Libssh2Build64Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 64-bit libssh2 for curl!"
     }
+    $Libssh2Build64Proc.Dispose()
     Push-Location "${Libssh2Dir64}"
     Copy-Item ".\include\*" "${Libssh2DepsIncDir64}\"
     Copy-Item ".\Release\src\libssh2.lib" "${Libssh2DepsLibDir64}\libssh2.lib"
@@ -469,10 +514,11 @@ if($Build64) {
 }
 
 if($Build32) {
-    $CurlBuild32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$CurlBuild32Proc.HasExited)
     if($CurlBuild32Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 32-bit curl!"
     }
+    $CurlBuild32Proc.Dispose()
     Push-Location "${CurlBuildDir32}\winbuild"
     [System.IO.Directory]::CreateDirectory("${Embed32Dir}\bin")
     [System.IO.Directory]::CreateDirectory("${Embed32Dir}\lib")
@@ -488,10 +534,11 @@ if($Build32) {
 }
 
 if($Build64) {
-    $CurlBuild64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$CurlBuild64Proc.HasExited)
     if($CurlBuild64Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 64-bit curl!"
     }
+    $CurlBuild64Proc.Dispose()
     [System.IO.Directory]::CreateDirectory("${Embed64Dir}\bin")
     [System.IO.Directory]::CreateDirectory("${Embed64Dir}\lib")
     [System.IO.Directory]::CreateDirectory("${Embed64Dir}\include\curl")
@@ -515,10 +562,11 @@ if($SignKeyFile -and !$SignKeyPassword) {
     $binaries = Get-ChildItem "${StageDir}" -Filter *.exe -Recurse
     foreach($binary in $binaries) {
         $SignProc = Create-Process signtool.exe "sign /t http://timestamp.digicert.com /f ${SignKeyFile} /p ${SignKeyPassword} ${binary.FullName}"
-        $SignProc.WaitForExit()
+        do { Start-Sleep -Seconds 1} while(!$SignProc.HasExited)
         if($SignProc.ExitCode -ne 0) {
             Write-Error "Failed to sign embedded binary -> ${binary.FullName}"
         }
+        $SignProc.Dispose()
     }
 }
 
@@ -535,17 +583,19 @@ if($Build64) {
 }
 
 if($Build32) {
-    $Asset32Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$Asset32Proc.HasExited)
     if($Asset32Proc.ExitCode -ne 0) {
         Write-Error "Failed to compress 32-bit substrate asset!"
     }
+    $Asset32Proc.Dispose()
 }
 
 if($Build64) {
-    $Asset64Proc.WaitForExit()
+    do { Start-Sleep -Seconds 1} while(!$Asset64Proc.HasExited)
     if($Asset64Proc.ExitCode -ne 0) {
         Write-Error "Failed to compress 64-bit substrate asset!"
     }
+    $Asset64Proc.Dispose()
 }
 
 Write-Output "Cleaning up build files..."
