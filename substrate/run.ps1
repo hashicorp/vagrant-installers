@@ -563,10 +563,10 @@ if($SignKeyFile -and !$SignKeyPassword) {
     Write-Output "Signing embedded binaries..."
     $binaries = Get-ChildItem "${StageDir}" -Filter *.exe -Recurse
     foreach($binary in $binaries) {
-        $SignProc = Create-Process signtool.exe "sign /t http://timestamp.digicert.com /f ${SignKeyFile} /p ${SignKeyPassword} ${binary.FullName}"
+        $SignProc = Create-Process signtool.exe "sign /t http://timestamp.digicert.com /f ${SignKeyFile} /p ${SignKeyPassword} $($binary.FullName)"
         do { Start-Sleep -Seconds 1} while(!$SignProc.HasExited)
         if($SignProc.ExitCode -ne 0) {
-            Write-Error "Failed to sign embedded binary -> ${binary.FullName}"
+            Write-Error "Failed to sign embedded binary -> $($binary.FullName)"
         }
         $SignProc.Dispose()
     }
