@@ -1,1 +1,1 @@
-gem: --no-ri --no-rdoc --no-user-install
+gem: --no-document --no-user-install
