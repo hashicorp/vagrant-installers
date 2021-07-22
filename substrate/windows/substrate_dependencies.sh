@@ -18,5 +18,4 @@ pacman-key --init --keyserver https://keyserver.ubuntu.com/
 echo "keyserver hkp://keyserver.ubuntu.com" >> /etc/pacman.d/gnupg/gpg.conf
 pacman-key --populate msys2
 pacman-key --refresh-keys
-pacman -S --noconfirm msys2-keyring
 pacman -Syu --noconfirm
