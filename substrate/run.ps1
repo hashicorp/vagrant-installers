@@ -32,31 +32,27 @@ function Create-Process {
         [parameter(Mandatory=$false, Position=2)]
         [string] $Cwd,
         [parameter(Mandatory=$false, Position=3)]
-        [AllowNull()]
         [hashtable] $Env,
         [parameter(Mandatory=$false)]
         [switch] $QuietOut,
         [parameter(Mandatory=$false)]
         [switch] $QuietErr
     )
-    $info = New-Object System.Diagnostics.ProcessStartInfo
-    $info.FileName = $ExePath
-    $info.RedirectStandardError = $true
-    $info.RedirectStandardOutput = $true
-    $info.UseShellExecute = $false
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo.FileName = $ExePath
+    $process.StartInfo.RedirectStandardError = $true
+    $process.StartInfo.RedirectStandardOutput = $true
+    $process.StartInfo.UseShellExecute = $false
     if($Cwd) {
-        $info.WorkingDirectory = $Cwd
+        $process.StartInfo.WorkingDirectory = $Cwd
     }
-    $info.Arguments = $Arguments
+    $process.StartInfo.Arguments = $Arguments
     if($Env -ne $null) {
-        foreach($k in $Env) {
-            $v = $Env.$k
-            $info.Enviroment.Add($k, $v)
+        foreach($entry in $Env.GetEnumerator()) {
+            $process.StartInfo.EnvironmentVariables.Add($entry.Name, $entry.Value)
         }
     }
 
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $info
 
     if(!$QuietOut) {
         $evO = Register-ObjectEvent -InputObject $process -Action {
@@ -242,7 +238,7 @@ if($Build64) {
 }
 
 if($Build32) {
-    $LauncherProc32 = Create-Process go.exe "build -o ${Stage32Bin}\vagrant.exe main.go" "${LauncherDir}" @{GOARCH = "386"}
+    $LauncherProc32 = Create-Process go.exe "build -o ${Stage32Bin}\vagrant.exe main.go" "${LauncherDir}" -Env @{GOARCH = "386"}
 }
 
 if($Build64) {
@@ -265,9 +261,13 @@ Pop-Location
 
 Write-Output "Installing gemrc file..."
 if($Build32) {
+    $Gemrc32Dir = [System.IO.Path]::Combine($Stage32Dir, "embedded\etc")
+    [System.IO.Directory]::CreateDirectory($Gemrc32Dir) | Out-Null
     Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "${Stage32Dir}\embedded\etc\gemrc"
 }
 if($Build64) {
+    $Gemrc64Dir = [System.IO.Path]::Combine($Stage64Dir, "embedded\etc")
+    [System.IO.Directory]::CreateDirectory($Gemrc64Dir) | Out-Null
     Copy-Item "C:\vagrant\substrate\common\gemrc" -Destination "${Stage64Dir}\embedded\etc\gemrc"
 }
 
@@ -369,14 +369,14 @@ if($Build32) {
 
     $ZlibBuilderScript = [System.IO.Path]::Combine($ZlibDir32, "zlib-builder.bat")
     Copy-Item "$($CacheDir)\zlib-builder.bat" -Destination "${ZlibBuilderScript}"
-    $ZlibBuild32Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir32}" @{ZlibArch = "x86"} -QuietOut
+    $ZlibBuild32Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir32}" -Env @{ZlibArch = "x86"} -QuietOut
 }
 
 if($Build64) {
     Write-Output "Building 64bit zlib..."
     $ZlibBuilderScript = [System.IO.Path]::Combine($ZlibDir64, "zlib-builder.bat")
     Copy-Item "$($CacheDir)\zlib-builder.bat" -Destination "${ZlibBuilderScript}"
-    $ZlibBuild64Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir64}" @{ZlibArch = "x64"} -QuietOut
+    $ZlibBuild64Proc = Create-Process "${ZlibBuilderScript}" -Cwd "${ZlibDir64}" -Env @{ZlibArch = "x64"} -QuietOut
 }
 
 if($Build32) {
@@ -384,7 +384,7 @@ if($Build32) {
     if($ZlibBuild32Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 32-bit zlib for curl!"
     }
-    $ZlibBuilder32Proc.Dispose()
+    $ZlibBuild32Proc.Dispose()
     Push-Location "${ZlibDir32}"
     Copy-Item ".\*.h" "${ZlibDepsIncDir32}\"
     Copy-Item ".\zlib.lib" "${ZlibDepsLibDir32}\zlib.lib"
@@ -397,7 +397,7 @@ if($Build64) {
     if($ZlibBuild64Proc.ExitCode -ne 0) {
         Write-Error "Failed to build 64-bit zlib for curl!"
     }
-    $ZlibBuilder64Proc.Dispose()
+    $ZlibBuild64Proc.Dispose()
     Push-Location "${ZlibDir64}"
     Copy-Item ".\*.h" "${ZlibDepsIncDir64}\"
     Copy-Item ".\zlib.lib" "${ZlibDepsLibDir64}\zlib.lib"
@@ -464,15 +464,15 @@ if($Build64) {
 if($Build32) {
     Write-Output "Building 32-bit libssh2..."
     $Libssh2Builder32Script = [System.IO.Path]::Combine($Libssh2Dir32, "libssh2-builder.bat")
-    Copy-Item "$($CacheDir)\libssh2-builder.bat" -Destination "${Libssh2Builder32Script}"
-    $Libssh2Build32Proc = Create-Process "${Libssh2Builder32Script}" -Cwd "${Libssh2Dir32}" @{Libssh2Arch = "x86"} -QuietOut
+    Copy-Item "${CacheDir}\libssh2-builder.bat" -Destination "${Libssh2Builder32Script}"
+    $Libssh2Build32Proc = Create-Process "${Libssh2Builder32Script}" -Cwd "${Libssh2Dir32}" -Env @{Libssh2Arch = "x86"} -QuietOut
 }
 
 if($Build64) {
     Write-Output "Building 64-bit libssh2..."
     $Libssh2Builder64Script = [System.IO.Path]::Combine($Libssh2Dir64, "libssh2-builder.bat")
-    Copy-Item "$($CacheDir)\libssh2-builder.bat" -Destination "${Libssh2Builder64Script}"
-    $Libssh2Build64Proc = Create-Process "${Libssh2Builder64Script}" -Cwd "${Libssh2Dir64}" @{Libssh2Arch = "x64"} -QuietOut
+    Copy-Item "${CacheDir}\libssh2-builder.bat" -Destination "${Libssh2Builder64Script}"
+    $Libssh2Build64Proc = Create-Process "${Libssh2Builder64Script}" -Cwd "${Libssh2Dir64}" -Env @{Libssh2Arch = "x64"} -QuietOut
 }
 
 if($Build32) {
@@ -503,14 +503,16 @@ if($Build64) {
 
 if($Build32) {
     Write-Output "Building native 32-bit cURL..."
+    Copy-Item "${CacheDir}\curl-builder.bat" "${CurlBuildDir32}\winbuild\builder.bat"
     $CurlBuilder32 = [System.IO.Path]::Combine($CurlBuildDir32, "winbuild\builder.bat")
-    $CurlBuild32Proc = Create-Process "${CurlBuilder32}" -Cwd "${CurlBuildDir32}\winbuild" @{CurlArch = "x86"}
+    $CurlBuild32Proc = Create-Process "${CurlBuilder32}" -Cwd "${CurlBuildDir32}\winbuild" -Env @{CurlArch = "x86"} -QuietOut
 }
 
 if($Build64) {
     Write-Output "Building native 64-bit cURL..."
+    Copy-Item "${CacheDir}\curl-builder.bat" "${CurlBuildDir64}\winbuild\builder.bat"
     $CurlBuilder64 = [System.IO.Path]::Combine($CurlBuildDir64, "winbuild\builder.bat")
-    $CurlBuild64Proc = Create-Process "${CurlBuilder64}" -Cwd "${CurlBuildDir64}\winbuild" @{CurlArch = "x64"}
+    $CurlBuild64Proc = Create-Process "${CurlBuilder64}" -Cwd "${CurlBuildDir64}\winbuild" -Env @{CurlArch = "x64"} -QuietOut
 }
 
 if($Build32) {
