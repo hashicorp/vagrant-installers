@@ -14,6 +14,8 @@ export PACKET_EXEC_QUIET="1"
 export PKT_VAGRANT_HOME="/mnt/data"
 export PKT_VAGRANT_CLOUD_TOKEN="${VAGRANT_CLOUD_TOKEN}"
 
+export PKT_VAGRANT_ONLY_BOXES="win-8"
+
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
