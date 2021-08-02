@@ -45,6 +45,7 @@ $ErrorActionPreference = "Stop"
 # Put this in a variable to make things easy later
 $UpgradeCode = "1a672674-6722-4e3a-9061-8f539a8b0ed6"
 
+
 # Get the directory to this script
 $Dir = Split-Path $script:MyInvocation.MyCommand.Path
 
@@ -330,92 +331,108 @@ $contents | Out-File `
 $contents = @"
 <?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-<!-- Include our wxi -->
-<?include "${InstallerTmpDir}\vagrant-config.wxi" ?>
+  <!-- Include our wxi -->
+  <?include "${InstallerTmpDir}\vagrant-config.wxi" ?>
 
-<!-- The main product -->
-<Product Id="*"
-Language="!(loc.LANG)"
-Name="!(loc.ProductName)"
-Version="`$(var.VersionNumber)"
-Manufacturer="!(loc.ManufacturerName)"
-UpgradeCode="`$(var.UpgradeCode)">
+  <!-- The main product -->
+  <Product Id="*"
+           Language="!(loc.LANG)"
+           Name="!(loc.ProductName)"
+           Version="`$(var.VersionNumber)"
+           Manufacturer="!(loc.ManufacturerName)"
+           UpgradeCode="`$(var.UpgradeCode)">
 
-<!-- Define the package information -->
-<Package Compressed="yes"
-InstallerVersion="200"
-InstallPrivileges="elevated"
-InstallScope="perMachine"
-Manufacturer="!(loc.ManufacturerName)" />
+    <!-- Define the package information -->
+    <Package Compressed="yes"
+             InstallerVersion="200"
+             InstallPrivileges="elevated"
+             InstallScope="perMachine"
+             Manufacturer="!(loc.ManufacturerName)" />
 
-<!-- Disallow installing older versions until the new version is removed -->
-<!-- Note that this creates the RemoveExistingProducts action -->
-<MajorUpgrade DowngradeErrorMessage="A later version of Vagrant is installed. Please remove this version first. Setup will now exit."
-Schedule="afterInstallInitialize" />
+    <!-- Disallow installing older versions until the new version is removed -->
+    <!-- Note that this creates the RemoveExistingProducts action -->
+    <MajorUpgrade DowngradeErrorMessage="A later version of Vagrant is installed. Please remove this version first. Setup will now exit."
+                  Schedule="afterInstallInitialize"
+                  AllowDowngrades="no"
+                  AllowSameVersionUpgrades="no"
+                  IgnoreRemoveFailure="no" />
 
-<!-- The source media for the installer -->
-<Media Id="1"
-Cabinet="Vagrant.cab"
-CompressionLevel="high"
-EmbedCab="yes" />
+    <!-- The source media for the installer -->
+    <Media Id="1"
+           Cabinet="Vagrant.cab"
+           CompressionLevel="high"
+           EmbedCab="yes" />
 
-<!-- Require Windows NT Kernel -->
-<Condition Message="This application is only supported on Windows 2000 or higher.">
-<![CDATA[Installed or (VersionNT >= 500)]]>
-</Condition>
+    <!-- Require Windows NT Kernel -->
+    <Condition Message="This application is only supported on Windows 2000 or higher.">
+      <![CDATA[Installed or (VersionNT >= 500)]]>
+    </Condition>
 
-<!-- Some steps for our installation -->
-<InstallExecuteSequence>
-<ScheduleReboot After="InstallFinalize"/>
-</InstallExecuteSequence>
+    <!-- Some steps for our installation -->
+    <InstallExecuteSequence>
+      <ScheduleReboot After="InstallFinalize"/>
+    </InstallExecuteSequence>
 
-<!-- Include application icon for add/remove programs -->
-<Icon Id="icon.ico" SourceFile="${InstallerTmpDir}\assets\vagrant.ico" />
-<Property Id="ARPPRODUCTICON" Value="icon.ico" />
-<Property Id="ARPHELPLINK" Value="https://www.vagrantup.com" />
+    <!-- Include application icon for add/remove programs -->
+    <Icon Id="icon.ico" SourceFile="${InstallerTmpDir}\assets\vagrant.ico" />
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    <Property Id="ARPHELPLINK" Value="https://www.vagrantup.com" />
 
-<!-- Get the proper system directory -->
-<SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
-
-<PropertyRef Id="WIX_ACCOUNT_USERS" />
-<PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
-
-<!-- The directory where we'll install Vagrant -->
-    <Directory Id="TARGETDIR" Name="SourceDir">
-    <Directory Id="WINDOWSVOLUME">
-    <Directory Id="MANUFACTURERDIR" Name="HashiCorp">
-    <Directory Id="INSTALLDIR" Name="Vagrant">
-    <Component Id="VagrantBin"
-    Guid="{12a01bfc-ae9e-4543-8a32-47865cc03071}">
     <!--
-    Add our bin dir to the PATH so people can use
-    vagrant right away in the shell.
+      This will force all files to replaced regardless of file version status.
+      In general using this mode is discouraged as it can cause issues with
+      shared components (see: DLL hell) and increases the time for upgrades
+      due to all files having to be copied. However, since our product is
+      isolated and does not share components, we avoid the biggest concern.
+      Increased upgrade time introduces a negative impact, but is acceptable
+      to ensure a proper installation after upgrade (where substrate files
+      may be downgraded from one version to the next).
     -->
-    <Environment Id="Environment"
-    Name="PATH"
-    Action="set"
-    Part="last"
-    System="yes"
-    Value="[INSTALLDIR]bin" />
+    <Property Id="REINSTALLMODE" Value="amus" />
 
-    <!-- Because we are not in "Program Files" we inherit
-    permissions that are not desirable. Force new permissions -->
-    <CreateFolder>
-    <Permission GenericAll="yes" User="[WIX_ACCOUNT_ADMINISTRATORS]" />
-    <Permission GenericRead="yes" GenericExecute="yes" User="[WIX_ACCOUNT_USERS]" />
-    </CreateFolder>
-    </Component>
-    </Directory>
-    </Directory>
-    </Directory>
+
+    <!-- Get the proper system directory -->
+    <SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
+
+    <PropertyRef Id="WIX_ACCOUNT_USERS" />
+    <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
+
+    <!-- The directory where we'll install Vagrant -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="WINDOWSVOLUME">
+        <Directory Id="MANUFACTURERDIR" Name="HashiCorp">
+          <Directory Id="INSTALLDIR" Name="Vagrant">
+            <Component Id="VagrantBin"
+                       Guid="12a01bfc-ae9e-4543-8a32-47865cc03071">
+              <!--
+                   Add our bin dir to the PATH so people can use
+                   vagrant right away in the shell.
+              -->
+              <Environment Id="Environment"
+                           Name="PATH"
+                           Action="set"
+                           Part="last"
+                           System="yes"
+                           Value="[INSTALLDIR]bin" />
+
+              <!-- Because we are not in "Program Files" we inherit
+                   permissions that are not desirable. Force new permissions -->
+              <CreateFolder>
+                <Permission GenericAll="yes" User="[WIX_ACCOUNT_ADMINISTRATORS]" />
+                <Permission GenericRead="yes" GenericExecute="yes" User="[WIX_ACCOUNT_USERS]" />
+              </CreateFolder>
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
     </Directory>
 
     <!-- Define the features of our install -->
     <Feature Id="VagrantFeature"
-    Title="!(loc.ProductName)"
-    Level="1">
-    <ComponentGroupRef Id="VagrantDir" />
-    <ComponentRef Id="VagrantBin" />
+             Title="!(loc.ProductName)"
+             Level="1">
+      <ComponentGroupRef Id="VagrantDir" />
+      <ComponentRef Id="VagrantBin" />
     </Feature>
 
     <!-- WixUI configuration so we can have a UI -->
@@ -423,14 +440,14 @@ EmbedCab="yes" />
 
     <UIRef Id="VagrantUI_InstallDir" />
     <UI Id="VagrantUI_InstallDir">
-    <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_InstallDir" />
     </UI>
 
     <WixVariable Id="WixUILicenseRtf" Value="${InstallerTmpDir}\assets\license.rtf" />
     <WixVariable Id="WixUIDialogBmp" Value="${InstallerTmpDir}\assets\bg_dialog.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="${InstallerTmpDir}\assets\bg_banner.bmp" />
-    </Product>
-    </Wix>
+  </Product>
+</Wix>
 "@
 
 $contents | Out-File `
@@ -440,10 +457,11 @@ $contents | Out-File `
 Write-Output "Running heat.exe"
 &$WixHeat dir $SubstrateDir `
   -nologo `
-  -ke `
   -sreg `
   -srd `
   -gg `
+  -g1 `
+  -sfrag `
   -cg VagrantDir `
   -dr INSTALLDIR `
   -var 'var.VagrantSourceDir' `
