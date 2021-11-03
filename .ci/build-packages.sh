@@ -29,6 +29,9 @@ else
     export SLACK_CHANNEL="#team-vagrant-spam-channel"
 fi
 
+# Grab a recent cacert bundle
+curl -O https://curl.se/ca/cacert.pem
+
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
 function cleanup() {

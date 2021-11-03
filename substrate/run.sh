@@ -38,6 +38,10 @@ function echo_stderr {
     (>&2 echo "$@")
 }
 
+# Set curl to use updated cert bundle
+echo "cacert = /vagrant/cacert.pem" > ~/.curlrc
+echo "capath = /usr" >> ~/.curlrc
+
 set -e
 
 # Verify arguments
