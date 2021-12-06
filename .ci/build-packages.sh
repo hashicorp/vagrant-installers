@@ -99,7 +99,7 @@ vagrant_version="$(gem specification vagrant-*.gem version)"
 vagrant_version="${vagrant_version##*version: }"
 
 # Place gem into package directory for packaging
-wrap mv vagrant-*.gem package/vagrant.gem \
+wrap cp vagrant-*.gem package/vagrant.gem \
      "Failed to move vagrant RubyGem for packaging"
 
 # Ensure we have a packet device to connect
@@ -313,34 +313,8 @@ if [ "${packages_missing}" != "" ]; then
     fi
 fi
 
-# If this is a release build sign our package assets and then upload
-# via the hc-releases binary
-if [ ! -z "${release}" ]; then
-    echo -n "Cloning Vagrant repository for signing process... "
-    wrap git clone git://github.com/hashicorp/vagrant vagrant \
-         "Failed to clone Vagrant repository"
-
-    mkdir -p vagrant/pkg/dist
-    mv pkg/* vagrant/pkg/dist/
-    pushd vagrant > "${output}"
-
-    echo "Generating checksums and signing result for Vagrant version ${vagrant_version}..."
-    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
-    wrap_stream packet-exec run -upload -download "./pkg/dist/*SHA256SUMS*:./pkg/dist" -- ./scripts/sign.sh "${vagrant_version}" \
-                "Checksum generation and signing failed for release"
-    unset PACKET_EXEC_PRE_BUILTINS
-    popd > "${output}"
-
-    mv vagrant/pkg/dist/* pkg/
-
-    echo "Storing release packages into asset store..."
-    upload_assets pkg/
-
-    echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
-    hashicorp_release pkg/ vagrant
-
-    slack -m "New Vagrant release has been published! - *${vagrant_version}*\n\nAssets: https://releases.hashicorp.com/vagrant/${vagrant_version}\nStore: $(asset_location)"
-else
+# If this is not a release build, push the prerelease to GitHub
+if [ -z "${release}" ]; then
     if [ "${tag}" != "" ]; then
         prerelease_version="${tag}"
     else
@@ -358,7 +332,110 @@ else
 
     echo "Dispatching vagrant-acceptance"
     curl -X POST "https://api.github.com/repos/hashicorp/vagrant-acceptance/dispatches" \
-    -H 'Accept: application/vnd.github.everest-v3+json' \
-    -u $HASHIBOT_USERNAME:$HASHIBOT_TOKEN \
-    --data '{"event_type": "prerelease", "client_payload": { "prerelease_version": "'"${prerelease_version}"'"}}'
+         -H 'Accept: application/vnd.github.everest-v3+json' \
+         -u $HASHIBOT_USERNAME:$HASHIBOT_TOKEN \
+         --data '{"event_type": "prerelease", "client_payload": { "prerelease_version": "'"${prerelease_version}"'"}}'
+
+    # As this is not an actual release, we are done now
+    exit
 fi
+
+# If we are still here, then this is a release build. Sign the
+# assets and publish the release.
+echo -n "Cloning Vagrant repository for signing process... "
+wrap git clone https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/hashicorp/vagrant vagrant \
+     "Failed to clone Vagrant repository"
+
+mkdir -p vagrant/pkg/dist
+mv pkg/* vagrant/pkg/dist/
+pushd vagrant > "${output}"
+
+echo "Generating checksums and signing result for Vagrant version ${vagrant_version}..."
+export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+wrap_stream packet-exec run -upload -download "./pkg/dist/*SHA256SUMS*:./pkg/dist" -- ./scripts/sign.sh "${vagrant_version}" \
+            "Checksum generation and signing failed for release"
+unset PACKET_EXEC_PRE_BUILTINS
+popd > "${output}"
+
+mv vagrant/pkg/dist/* pkg/
+
+echo "Storing release packages into asset store..."
+upload_assets pkg/
+
+echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
+hashicorp_release pkg/ vagrant
+
+slack -m "New Vagrant release has been published! - *${vagrant_version}*\n\nAssets: https://releases.hashicorp.com/vagrant/${vagrant_version}\nStore: $(asset_location)"
+
+# Now that we have published the new version we need to create
+# a new branch for the versioned docs and push the gem as a release
+# into the vagrant repository.
+tags=($(git tag -l --sort=v:refname)) # this provides tag list in ascending order
+tag_len="${#tags[@]}"
+for ((i=0; i < "${tag_len}"; i++))
+do
+    val=$(semver "${vagrant_version}" "${tag}")
+    if [[ "${val}" == "0" ]]; then
+        idx=$((i+1))
+        break
+    fi
+done
+if [ -z "${idx}" ]; then
+    fail "Failed to determine previous version from current release - ${vagrant_version}"
+fi
+previous_version="${tags[$idx]}"
+if [ -z "${previous_version}" ]; then
+    fail "Previous version detection did not provide valid result. (Current release: ${vagrant_version})"
+fi
+previous_version="${previous_version:1:${#previous_version}}" # remove 'v' prefix
+
+# Now that we have the previous version, checkout the stable-website
+# branch and create a new release branch.
+release_branch="release/${previous_version}"
+release_minor_branch="release/${previous_version%.*}.x"
+echo "Creating a new release-${previous_version} branch..."
+
+wrap git checkout stable-website \
+     "Failed to checkout stable-website branch"
+wrap git checkout -b "${release_branch}" \
+     "Failed to create new branch: ${release_branch}"
+wrap git push origin "${release_branch}" \
+     "Failed to push new branch: ${release_branch}"
+
+echo "Creating a new ${release_minor_branch} branch..."
+wrap git checkout stable-website \
+     "Failed to checkout stable-website branch"
+git branch -d "${release_minor_branch}" > "${output}"
+
+wrap git checkout -b "${release_minor_branch}" \
+     "Failed to create new branch: ${release_minor_branch}"
+wrap git push -f origin "${release_minor_branch}" \
+     "Failed to push new branch: ${release_minor_branch}"
+
+slack -m "New branches created for previous release: ${release_branch} and ${release_minor_branch}"
+
+# Now update the stable-website branch with new version content
+echo "Updating stable-website with latest..."
+wrap git checkout "v${vagrant_version}" \
+     "Failed to checkout vagrant release v${vagrant_version}"
+wrap git branch -d stable-website \
+     "Failed to delete stable-website branch"
+wrap git checkout -b stable-website \
+     "Failed to create new stable-website branch from release v${vagrant_version}"
+wrap git push -f origin stable-website \
+     "Failed to push updated stable-website branch"
+
+slack -m "Vagrant website changes have been pushed for release ${vagrant_version}"
+
+# Finally, we need to create a release on the vagrant repository
+wrap mv ../"vagrant-${vagrant_version}.gem" ./
+
+# Override local variables to create release on vagrant repository
+repo_owner="hashicorp"
+repo_name="vagrant"
+full_sha="v${vagrant_version}"
+export GITHUB_TOKEN="${HASHIBOT_TOKEN}"
+
+release "v${vagrant_version}" ./"vagrant-${vagrant_version}.gem"
+
+slack -m "New Vagrant GitHub release created for v${vagrant_release} - release process complete."
