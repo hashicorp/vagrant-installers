@@ -23,3 +23,5 @@ umount /tmp/vmware;
 rm -rf  /tmp/vmware;
 rm -rf  /tmp/vmware-archive;
 rm -f $HOME_DIR/*.iso;
+
+ln -s /etc/vmware-tools/services.sh /etc/rc.d/rc3.d/S99VMwareTools
