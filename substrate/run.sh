@@ -5,24 +5,24 @@
 dep_cache="https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
 #### Update these as required
-
-curl_file="curl-7.75.0.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
-libarchive_file="libarchive-v3.5.1.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
-libffi_file="libffi-3.3.tar.gz"               # ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
-libgcrypt_file="libgcrypt-1.9.2.tar.bz2"      # https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2
+autoconf_file="autoconf-2.71.tar.gz"
+curl_file="curl-7.84.0.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
+libarchive_file="libarchive-3.6.1.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
+libffi_file="libffi-3.4.2.tar.gz"               # https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
+libgcrypt_file="libgcrypt-1.10.1.tar.bz2"      # https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2
 libgmp_file="gmp-6.2.1.tar.bz2"               # https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2
-libgpg_error_file="libgpg-error-1.41.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
-libiconv_file="libiconv-1.16.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
+libgpg_error_file="libgpg-error-1.45.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
+libiconv_file="libiconv-1.17.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_file="libssh2-1.8.0.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
-libxml2_file="libxml2-2.9.10.tar.gz"          # ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
-libxslt_file="libxslt-1.1.34.tar.gz"          # ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
+libxml2_file="libxml2-2.9.14.tar.xz"          # https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.14/libxml2-v2.9.14.tar.gz ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
+libxslt_file="libxslt-1.1.35.tar.xz"          # https://gitlab.gnome.org/GNOME/libxslt/-/archive/v1.1.35/libxslt-v1.1.35.tar.gz ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
 libyaml_file="yaml-0.2.5.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
-openssl_file="openssl-1.1.1k.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
-readline_file="readline-8.0.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
-ruby_file="ruby-2.7.4.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
+openssl_file="openssl-1.1.1q.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
+readline_file="readline-8.1.2.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
+ruby_file="ruby-2.7.6.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
 xz_file="xz-5.2.5.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
-zlib_file="zlib-1.2.11.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
+zlib_file="zlib-1.2.12.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
 # Used for centos builds
 m4_file="m4-1.4.18.tar.gz"                # https://ftp.gnu.org/gnu/m4/m4-${VERSION}.tar.gz
@@ -42,7 +42,7 @@ function echo_stderr {
 echo "cacert = /vagrant/cacert.pem" > ~/.curlrc
 echo "capath = /usr" >> ~/.curlrc
 
-set -e
+set -ex
 
 # Verify arguments
 if [ "$#" -ne "1" ]; then
@@ -122,14 +122,16 @@ if [[ "${linux_os}" = "centos" ]]; then
     set +e
     # need newer gcc to build libxcrypt-compat package
     echo_stderr "      -> Installing custom gcc..."
-    sudo yum install -y centos-release-scl
-    sudo yum install -y devtoolset-8-toolchain unzip git zip autoconf
-    source /opt/rh/devtoolset-8/enable
+    sudo yum install -y devtoolset-8-toolchain rh-perl524 rh-perl524-perl-open unzip git zip autoconf
 
-    yum -d 0 -e 0 -y install chrpath gcc make perl perl-Thread-Queue
-    yum -d 0 -e 0 -y install perl-Data-Dumper
+    yum -d 0 -e 0 -y install chrpath gcc make  rh-perl524-perl-Thread-Queue
+    yum -d 0 -e 0 -y install rh-perl524-perl-Data-Dumper python-devel
     # Remove openssl dev files to prevent any conflicts when building
     yum -d 0 -e 0 -y remove openssl-devel
+
+    source /opt/rh/devtoolset-8/enable
+    source /opt/rh/rh-perl524/enable
+
     set -e
 
     echo_stderr "  -> Build and install custom host tools..."
@@ -137,10 +139,22 @@ if [[ "${linux_os}" = "centos" ]]; then
     PATH=/usr/local/bin:$PATH
     export PATH=/usr/local/bin:$PATH
 
+    # autoconf
+    if [[ ! -f "/usr/local/bin/autoconf" ]]; then
+        echo_stderr "   -> Installing custom autoconf..."
+        curl -f -L -s -o autoconf.tar.gz "${dep_cache}/${autoconf_file}"
+        tar xf autoconf.tar.gz
+        pushd autoconf*
+        ./configure --prefix "/usr/local"
+        make
+        make install
+        popd
+    fi
+
     # m4
     if [[ ! -f "/usr/local/bin/m4" ]]; then
         echo_stderr "   -> Installing custom m4..."
-        curl -L -s -o m4.tar.gz "${dep_cache}/${m4_file}"
+        curl -f -L -s -o m4.tar.gz "${dep_cache}/${m4_file}"
         tar xzf m4.tar.gz
         pushd m4*
         ./configure --prefix "/usr/local"
@@ -152,7 +166,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # automake
     if [[ ! -f "/usr/local/bin/automake" ]]; then
         echo_stderr "   -> Installing custom automake..."
-        curl -L -s -o automake.tar.gz "${dep_cache}/${automake_file}"
+        curl -f -L -s -o automake.tar.gz "${dep_cache}/${automake_file}"
         tar xzf automake.tar.gz
         pushd automake*
         ./configure --prefix "/usr/local"
@@ -164,7 +178,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # libtool
     if [[ ! -f "/usr/local/bin/libtool" ]]; then
         echo_stderr "   -> Installing custom libtool..."
-        curl -L -s -o libtool.tar.gz "${dep_cache}/${libtool_file}"
+        curl -f -L -s -o libtool.tar.gz "${dep_cache}/${libtool_file}"
         tar xzf libtool.tar.gz
         pushd libtool*
         ./configure --prefix "/usr/local"
@@ -176,7 +190,7 @@ if [[ "${linux_os}" = "centos" ]]; then
     # patchelf
     if [[ ! -f "/usr/local/bin/patchelf" ]]; then
         echo_stderr "   -> Installing custom patchelf..."
-        curl -L -s -o patchelf.tar.gz "${dep_cache}/${patchelf_file}"
+        curl -f -L -s -o patchelf.tar.gz "${dep_cache}/${patchelf_file}"
         tar xzf patchelf.tar.gz
         pushd patchelf*
         ./configure --prefix "/usr/local"
@@ -239,7 +253,7 @@ fi
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
         echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
+        curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
         tar xzf libxcrypt.tar.gz
         pushd libxcrypt*
 
@@ -254,7 +268,7 @@ fi
 # libffi
 echo_stderr "   -> Building libffi..."
 libffi_url="${dep_cache}/${libffi_file}"
-curl -L -s -o libffi.tar.gz "${libffi_url}"
+curl -f -L -s -o libffi.tar.gz "${libffi_url}"
 tar -xzf libffi.tar.gz
 pushd libffi-*
 ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --libdir="${embed_dir}/lib"
@@ -265,7 +279,7 @@ popd
 # libiconv
 echo_stderr "   -> Building libiconv..."
 libiconv_url="${dep_cache}/${libiconv_file}"
-curl -L -s -o libiconv.tar.gz "${libiconv_url}"
+curl -f -L -s -o libiconv.tar.gz "${libiconv_url}"
 tar -xzf libiconv.tar.gz
 pushd libiconv-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking
@@ -280,7 +294,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
     echo_stderr "   -> Building libgmp..."
     libgmp_url="${dep_cache}/${libgmp_file}"
-    curl -L -s -o libgmp.tar.bz2 "${libgmp_url}"
+    curl -f -L -s -o libgmp.tar.bz2 "${libgmp_url}"
     tar -xjf libgmp.tar.bz2
     pushd gmp-*
     if [[ "${host_arch}" = "i686" ]]; then
@@ -296,7 +310,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgpg_error
     echo_stderr "   -> Building libgpg_error..."
     libgpg_error_url="${dep_cache}/${libgpg_error_file}"
-    curl -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
+    curl -f -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
     tar -xjf libgpg-error.tar.bz2
     pushd libgpg-error-*
     ./configure --prefix="${embed_dir}" --enable-static
@@ -307,7 +321,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgcrypt
     echo_stderr "   -> Building libgcrypt..."
     libgcrypt_url="${dep_cache}/${libgcrypt_file}"
-    curl -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
+    curl -f -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
     tar -xjf libgcrypt.tar.bz2
     pushd libgcrypt-*
     ./configure --prefix="${embed_dir}" --enable-static --with-libgpg-error-prefix="${embed_dir}"
@@ -320,7 +334,7 @@ fi
 # xz
 echo_stderr "   -> Building xz..."
 xz_url="${dep_cache}/${xz_file}"
-curl -L -s -o xz.tar.gz "${xz_url}"
+curl -f -L -s -o xz.tar.gz "${xz_url}"
 tar -xzf xz.tar.gz
 pushd xz-*
 ./configure --prefix="${embed_dir}" --disable-xz --disable-xzdec --disable-dependency-tracking --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts
@@ -331,8 +345,8 @@ popd
 # libxml2
 echo_stderr "   -> Building libxml2..."
 libxml2_url="${dep_cache}/${libxml2_file}"
-curl -L -s -o libxml2.tar.gz "${libxml2_url}"
-tar -xzf libxml2.tar.gz
+curl -f -L -s -o libxml2.tar.xz "${libxml2_url}"
+tar -xf libxml2.tar.xz
 pushd libxml2-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python --without-lzma --with-zlib="${embed_dir}/lib"
 make
@@ -342,8 +356,8 @@ popd
 # libxslt
 echo_stderr "   -> Building libxslt..."
 libxslt_url="${dep_cache}/${libxslt_file}"
-curl -L -s -o libxslt.tar.gz "${libxslt_url}"
-tar -xzf libxslt.tar.gz
+curl -f -L -s -o libxslt.tar.xz "${libxslt_url}"
+tar -xf libxslt.tar.xz
 pushd libxslt-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-libxml-prefix="${embed_dir}"
 make
@@ -353,7 +367,7 @@ popd
 # libyaml
 echo_stderr "   -> Building libyaml..."
 libyaml_url="${dep_cache}/${libyaml_file}"
-curl -L -s -o libyaml.tar.gz "${libyaml_url}"
+curl -f -L -s -o libyaml.tar.gz "${libyaml_url}"
 tar -xzf libyaml.tar.gz
 pushd yaml-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking
@@ -364,7 +378,7 @@ popd
 # zlib
 echo_stderr "   -> Building zlib..."
 zlib_url="${dep_cache}/${zlib_file}"
-curl -L -s -o zlib.tar.gz "${zlib_url}"
+curl -f -L -s -o zlib.tar.gz "${zlib_url}"
 tar -xzf zlib.tar.gz
 pushd zlib-*
 ./configure --prefix="${embed_dir}"
@@ -375,7 +389,7 @@ popd
 # readline
 echo_stderr "   -> Building readline..."
 readline_url="${dep_cache}/${readline_file}"
-curl -L -s -o readline.tar.gz "${readline_url}"
+curl -f -L -s -o readline.tar.gz "${readline_url}"
 tar -xzf readline.tar.gz
 pushd readline-*
 if [[ "${linux_os}" = "archlinux" ]]; then
@@ -393,7 +407,7 @@ popd
 # openssl
 echo_stderr "   -> Building openssl..."
 openssl_url="${dep_cache}/${openssl_file}"
-curl -L -f -s -o openssl.tar.gz "${openssl_url}"
+curl -f -L -f -s -o openssl.tar.gz "${openssl_url}"
 tar -xzf openssl.tar.gz
 pushd openssl-*
 if [ -z "${LD_RPATH}" ]; then
@@ -411,7 +425,7 @@ popd
 # libssh2
 echo_stderr "   -> Building libssh2..."
 libssh2_url="${dep_cache}/${libssh2_file}"
-curl -L -s -o libssh2.tar.gz "${libssh2_url}"
+curl -f -L -s -o libssh2.tar.gz "${libssh2_url}"
 tar -xzf libssh2.tar.gz
 pushd libssh2-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-libssl-prefix="${embed_dir}"
@@ -422,7 +436,7 @@ popd
 # bsdtar / libarchive
 echo_stderr "   -> Building bsdtar / libarchive..."
 libarchive_url="${dep_cache}/${libarchive_file}"
-curl -L -s -o libarchive.tar.gz "${libarchive_url}"
+curl -f -L -s -o libarchive.tar.gz "${libarchive_url}"
 tar -xzf libarchive.tar.gz
 pushd libarchive-*
 
@@ -463,7 +477,7 @@ popd
 # curl
 echo_stderr "   -> Building curl..."
 curl_url="${dep_cache}/${curl_file}"
-curl -L -s -o curl.tar.gz "${curl_url}"
+curl -f -L -s -o curl.tar.gz "${curl_url}"
 tar -xzf curl.tar.gz
 pushd curl-*
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 --disable-ldap --with-libssh2 --with-ssl
@@ -474,7 +488,7 @@ popd
 # ruby
 echo_stderr "   -> Building ruby..."
 ruby_url="${dep_cache}/${ruby_file}"
-curl -L -s -o ruby.zip "${ruby_url}"
+curl -f -L -s -o ruby.zip "${ruby_url}"
 unzip -q ruby.zip
 pushd ruby-*
 o_cflags="${CFLAGS}"
@@ -504,7 +518,7 @@ cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
 
 # cacert
 echo_stderr " -> Writing cacert.pem..."
-curl -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.se/ca/cacert.pem
+curl -f -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.se/ca/cacert.pem
 cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
 
 echo_stderr " -> Cleaning cruft..."
