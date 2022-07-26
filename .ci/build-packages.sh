@@ -65,16 +65,22 @@ declare -A package_list=(
     [*i686.msi]="win-8"
 )
 
-# Grab the vagrant gem the installer is building around
+# Grab the vagrant gem and vagrant-agogo the installer is building around
 echo "Fetching Vagrant RubyGem for installer build..."
 
 if [ "${tag}" = "" ]; then
     wrap aws s3 cp ${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-main.gem vagrant-main.gem \
          "Failed to download Vagrant RubyGem"
+    wrap aws s3 cp ${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go-main.zip vagrant-go.zip \
+        "Failed to download Vagrant go binary"
+
 else
-    url=$(curl -SsL -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${repository}/releases/tags/${tag}" | jq -r '.assets[] | select(.name | contains(".gem")) | .url')
-    wrap curl -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Accept: application/octet-stream" -SsL -o "vagrant-${tag}.gem" "${url}" \
+    url_gem=$(curl -SsL -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${repository}/releases/tags/${tag}" | jq -r '.assets[] | select(.name | contains(".gem")) | .url')
+    url_zip=$(curl -SsL -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${repository}/releases/tags/${tag}" | jq -r '.assets[] | select(.name | contains(".zip")) | .url')
+    wrap curl -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Accept: application/octet-stream" -SsL -o "vagrant-${tag}.gem" "${url_gem}" \
          "Failed to download Vagrant RubyGem"
+    wrap curl -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Accept: application/octet-stream" -SsL -o "vagrant.zip" "${url_zip}" \
+         "Failed to download Vagrant go zip"
 fi
 
 gem_short_sha=$(sha256sum vagrant-*.gem)
@@ -98,9 +104,17 @@ export PKT_VAGRANT_INSTALLERS_VAGRANT_PACKAGE_SIGNING_REQUIRED=1
 vagrant_version="$(gem specification vagrant-*.gem version)"
 vagrant_version="${vagrant_version##*version: }"
 
+# Decompress the go binary
+wrap unzip vagrant-go.zip \
+    "Failed to unzip Vagrant go asset"
+
 # Place gem into package directory for packaging
 wrap cp vagrant-*.gem package/vagrant.gem \
      "Failed to move vagrant RubyGem for packaging"
+
+# Place the go binary into the package directory for packaging
+wrap cp vagrant-go package/vagrant-go \
+     "Failed to move vagrant go binary for packaging"
 
 # Ensure we have a packet device to connect
 echo "Creating packet device if needed..."
