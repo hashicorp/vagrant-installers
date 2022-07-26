@@ -35,6 +35,7 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 VAGRANT_GEM_PATH="${DIR}/../vagrant.gem"
+VAGRANT_GO_PATH="${DIR}/../vagrant-go"
 
 # Work in a temporary directory
 TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
@@ -67,6 +68,7 @@ if [ ! -f "${VAGRANT_GEM_PATH}" ]; then
     ${GEM_COMMAND} build vagrant.gemspec
     cp vagrant-*.gem vagrant.gem
 else
+    cp "${VAGRANT_GO_PATH}" ./vagrant-go
     cp "${VAGRANT_GEM_PATH}" ./vagrant.gem
     ${GEM_COMMAND} unpack ./vagrant.gem
     VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
@@ -96,6 +98,9 @@ ${GEM_COMMAND} install vagrant.gem --no-document
 
 # Install extensions
 # ${GEM_COMMAND} install vagrant-share --force --no-document --conservative --clear-sources --source "https://gems.hashicorp.com"
+
+# Install Vagrant go binary to bin dir
+mv vagrant-go "${SUBSTRATE_DIR}"/bin/vagrant-go
 
 # Setup the system plugins
 cat <<EOF >${EMBEDDED_DIR}/plugins.json
