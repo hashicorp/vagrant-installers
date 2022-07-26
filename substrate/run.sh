@@ -102,16 +102,12 @@ if [ "${host_os}" = "darwin" ]; then
     su vagrant -l -c 'brew install automake autoconf pkg-config'
 fi
 
-if [ "${host_os}" = "darwin" ]; then
-    su vagrant -l -c 'brew install automake autoconf pkg-config'
-fi
-
 setupdir=$(mktemp -d vagrant-substrate-setup.XXXXX)
 pushd "${setupdir}"
 
 echo_stderr "  -> Installing any required packages..."
 if [[ "${linux_os}" = "ubuntu" ]]; then
-    apt-get install -qy build-essential autoconf automake chrpath libtool
+    apt-get install -qy build-essential autoconf automake chrpath libtool libpython-dev
 fi
 
 if [[ "${linux_os}" = "archlinux" ]]; then
