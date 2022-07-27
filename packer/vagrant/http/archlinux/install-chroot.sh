@@ -22,10 +22,10 @@ vagrant ALL=(ALL) NOPASSWD: ALL
 EOF
 chmod 440 /etc/sudoers.d/vagrant
 
-mkdir -p /etc/systemd/network
-ln -sf /dev/null /etc/systemd/network/99-default.link
-
 systemctl enable sshd
+systemctl start sshd
+
+ln -sf /dev/null /etc/systemd/network/99-default.link
 systemctl enable dhcpcd@eth0
 
 grub-install "$device"

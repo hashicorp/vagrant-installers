@@ -59,10 +59,10 @@
     "compression_level": "6",
     "cpus": "1",
     "disk_size": "40000",
-    "iso_checksum": "494d2ca93841870d42412ffba47dd114db034924",
+    "iso_checksum": "42138726a0c439cec40b4d52c9e03601d61b4cd3",
     "iso_checksum_type": "sha1",
-    "iso_date": "2019.01.01",
-    "memory": "512",
+    "iso_date": "2022.07.01",
+    "memory": "1024",
     "mirror": "http://mirrors.kernel.org/archlinux",
     "ssh_timeout": "60m",
     "version": "1.0"
