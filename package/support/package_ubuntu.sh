@@ -38,7 +38,7 @@ chmod +x ./usr/bin/vagrant
 cat <<EOF >./usr/bin/vagrant-go
 #!/usr/bin/env bash
 #
-# This script just forwards all arguments to the real vagrant binary.
+# This script just forwards all arguments to the real vagrant-go binary.
 
 /opt/vagrant/bin/vagrant-go "\$@"
 EOF
