@@ -48,6 +48,7 @@
         "scripts/arch/vagrant.sh",
         "scripts/arch/sshd.sh",
         "scripts/arch/go.sh",
+        "scripts/arch/tools.sh",
         "scripts/arch/cleanup.sh",
         "scripts/arch/minimize.sh"
       ],
