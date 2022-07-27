@@ -23,6 +23,7 @@ pushd $TMP_DIR
 TMP_DIR="$(pwd)"
 
 cp "${DIR}/archlinux/PKGBUILD.local" ./PKGBUILD
+sed -i "s/%VAGRANT_VERSION%/${VAGRANT_VERSION}/" ./PKGBUILD
 
 tar -f substrate.tar.gz --directory="${SUBSTRATE_DIR}" -cz ./
 

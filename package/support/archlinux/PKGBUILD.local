@@ -1,5 +1,5 @@
 pkgname=hashicorp-vagrant
-pkgver="${VAGRANT_VERSION:-unknown}"
+pkgver="%VAGRANT_VERSION%"
 pkgrel=1
 pkgdesc="Build and distribute virtualized development environments"
 arch=('x86_64')
@@ -26,4 +26,5 @@ package() {
     cp -r "${srcdir}"/* "${pkgdir}/opt/vagrant/"
     mkdir -p "${pkgdir}/usr/bin"
     ln -s /opt/vagrant/bin/vagrant "${pkgdir}/usr/bin/vagrant"
+    ln -s /opt/vagrant/bin/vagrant-go "${pkgdir}/usr/bin/vagrant-go"
 }
