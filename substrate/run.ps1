@@ -109,16 +109,24 @@ function Create-Process {
 $Build32 = !$Disable32
 $Build64 = !$Disable64
 
-$CurlVersion = "7.75.0"
-$Libssh2Version = "1.9.0"
-$ZlibVersion = "1.2.11"
+$CurlVersion = "7.84.0"
+$Libssh2Version = "1.10.0"
+$ZlibVersion = "1.2.12"
 
 $CurlVersionUnderscore = ($CurlVersion -Replace "\.", "_")
 $CurlRemoteFilename = "curl-${CurlVersion}.zip"
 
-$ZlibURL = "https://github.com/madler/zlib/archive/v${ZlibVersion}.zip"
-$CurlURL = "https://github.com/curl/curl/releases/download/curl-${CurlVersionUnderscore}/${CurlRemoteFilename}"
-$Libssh2URL = "https://github.com/libssh2/libssh2/archive/libssh2-${Libssh2Version}.zip"
+$DepCache = "https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
+
+$CurlURL = "${DepCache}/curl-${CurlVersion}.zip"
+$Libssh2URL = "${DepCache}/libssh2-${Libssh2Version}.zip"
+$ZlibURL = "${DepCache}/zlib-${ZlibVersion}.zip"
+
+# NOTE: We pull artifacts from our cache so we don't need to worry about availability. These
+#       original URL values are left as guidance on where to source the zip artifacts
+# $ZlibURL = "https://github.com/madler/zlib/archive/v${ZlibVersion}.zip"
+# $CurlURL = "https://github.com/curl/curl/releases/download/curl-${CurlVersionUnderscore}/${CurlRemoteFilename}"
+# $Libssh2URL = "https://github.com/libssh2/libssh2/archive/libssh2-${Libssh2Version}.zip"
 
 # Allow HTTPS connections to work
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12

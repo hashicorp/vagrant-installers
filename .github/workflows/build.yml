@@ -22,7 +22,14 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+      - id: setup-signore-package
+        uses: hashicorp/setup-signore-package@v1
+      - run: echo setup-signore-package installed version: ${{ steps.setup-signore-package.outputs.version }}
+      - id: setup-signore
+        uses: hashicorp/setup-signore@v1
+        with:
+          github_token: ${{ secrets.HASHIBOT_TOKEN }}
       - name: Build and Release
         run: ./.ci/build-packages.sh
         env:

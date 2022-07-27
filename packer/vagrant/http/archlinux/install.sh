@@ -24,13 +24,19 @@ mkswap "${device}1"
 mkfs.ext4 "${device}2"
 mount "${device}2" /mnt
 
-curl -fsS https://www.archlinux.org/mirrorlist/?country=all > /tmp/mirrolist
+curl -fsSL https://www.archlinux.org/mirrorlist/?country=all > /tmp/mirrolist
 grep '^#Server' /tmp/mirrolist | sort -R | head -n 50 | sed 's/^#//' > /etc/pacman.d/mirrorlist
 #rankmirrors -v /tmp/mirrolist.50 | tee /etc/pacman.d/mirrorlist
-pacstrap /mnt base grub openssh sudo
+
+systemctl disable sshd
+systemctl stop sshd
+pacman -Sy --noconfirm archlinux-keyring
+pacstrap /mnt base linux linux-firmware grub openssh sudo mkinitcpio dhcpcd
 
 swapon "${device}1"
 genfstab -p /mnt >> /mnt/etc/fstab
 swapoff "${device}1"
+
+cp /etc/mkinitcpio.d/linux.preset /mnt/etc/mkinitcpio.d/
 
 arch-chroot /mnt /bin/bash

@@ -125,6 +125,9 @@ fi
 # PATH.
 ln -Fs \$2/bin/vagrant /usr/local/bin/vagrant
 
+# And a link for the vagrant-go binary
+ln -Fs \$2/bin/vagrant-go /usr/local/bin/vagrant-go
+
 # Remove old legacy Vagrant installation
 [ -d /Applications/Vagrant ] && rm -rf /Applications/Vagrant
 

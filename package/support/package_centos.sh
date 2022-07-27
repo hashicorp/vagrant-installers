@@ -34,6 +34,16 @@ cat <<EOF >./usr/bin/vagrant
 EOF
 chmod +x ./usr/bin/vagrant
 
+# Create the Linux script proxy for vagrant-go
+cat <<EOF >./usr/bin/vagrant-go
+#!/usr/bin/env bash
+#
+# This script just forwards all arguments to the real vagrant-go binary.
+
+/opt/vagrant/bin/vagrant-go "\$@"
+EOF
+chmod +x ./usr/bin/vagrant-go
+
 # Package it up!
 fpm -p ${OUTPUT_PATH} \
   -n vagrant \
