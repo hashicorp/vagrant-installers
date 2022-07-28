@@ -3,7 +3,7 @@
 export SLACK_USERNAME="Vagrant"
 export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png"
 export SLACK_TITLE="Vagrant Builder Boxes"
-export PACKET_EXEC_DEVICE_NAME="${PACKET_EXEC_DEVICE_NAME:-ci-installer-boxes}"
+export PACKET_EXEC_DEVICE_NAME="${PACKET_EXEC_DEVICE_NAME:-ci-installer-boxes_${run_number}}"
 export PACKET_EXEC_DEVICE_SIZE="${PACKET_EXEC_DEVICE_SIZE:-c3.small.x86,c3.medium.x86}"
 export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-sv15,sv16,la4,da11,ch3,dc10,dc13,ny5,ny7}"
 export PACKET_EXEC_OPERATING_SYSTEM="${PACKET_EXEC_OPERATING_SYSTEM:-ubuntu_18_04}"
