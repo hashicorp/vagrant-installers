@@ -4,7 +4,7 @@ on:
       - 'main'
       - 'box-archlinux-*'
     paths:
-      - 'packer/vagrant/template-archlinux.json'
+      - 'packer/vagrant/template_archlinux.json'
       - 'packer/vagrant/scripts/arch/**'
   schedule:
     - cron: '30 2 7 * *'
