@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - 'main'
+      - 'box-archlinux-*'
+    paths:
+      - 'packer/vagrant/template-archlinux.json'
+      - 'packer/vagrant/scripts/arch/**'
+  schedule:
+    - cron: '30 2 7 * *'
+  workflow_dispatch:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build Vagrant Installer Boxes (archlinux)
+    runs-on: self-hosted
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v1
+      - name: Build Box
+        run: ./.ci/build-boxes.sh
+        working-directory: ${{github.workspace}}
+        env:
+          PKT_PACKER_BUILDS: "archlinux"
+          VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
+      - name: Clean Workspace
+        if: always()
+        run: rm -rf ${{ github.workspace }}
