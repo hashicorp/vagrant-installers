@@ -49,6 +49,11 @@
         "output": "win-8_{{user `version`}}.{{user `build_timestamp`}}.box",
         "type": "vagrant",
         "vagrantfile_template": "vagrantfile-windows_8.template"
+      },
+      {
+        "box_tag": "hashicorp-vagrant/{{user `box_basename`}}",
+        "type": "vagrant-cloud",
+        "version": "{{user `version`}}.{{user `build_timestamp`}}"
       }
     ]
   ],
@@ -85,6 +90,7 @@
     }
   ],
   "variables": {
+    "box_basename": "win-8",
     "build_timestamp": "{{isotime \"20060102150405\"}}",
     "cpus": "2",
     "disk_size": "40960",
