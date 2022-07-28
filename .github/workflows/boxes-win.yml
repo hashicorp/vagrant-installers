@@ -2,12 +2,15 @@ on:
   push:
     branches:
       - 'main'
+      - 'box-windows*'
     paths:
       - 'packer/vagrant/template_win-8.json'
       - 'packer/vagrant/scripts/windows/**'
+  schedule:
+    - cron: '30 2 1 * *'
   workflow_dispatch:
     branches:
-          - 'main'
+      - 'main'
 
 jobs:
   build:

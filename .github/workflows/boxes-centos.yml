@@ -2,12 +2,15 @@ on:
   push:
     branches:
       - 'main'
+      - 'box-centos-*'
     paths:
-      - 'packer/vagrant/template_centos-7.json'
+      - 'packer/vagrant/template_centos-6.json'
       - 'packer/vagrant/scripts/centos/**'
+  schedule:
+    - cron: '30 2 2 * *'
   workflow_dispatch:
     branches:
-          - 'main'
+      - 'main'
 
 jobs:
   build:
@@ -21,7 +24,7 @@ jobs:
         run: ./.ci/build-boxes.sh
         working-directory: ${{github.workspace}}
         env:
-          PKT_PACKER_BUILDS: "centos-7"
+          PKT_PACKER_BUILDS: "centos-6"
           VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
       - name: Clean Workspace
         if: always()
