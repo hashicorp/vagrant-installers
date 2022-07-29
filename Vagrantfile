@@ -6,7 +6,7 @@ build_boxes = [
   'archlinux',
   'centos-6',
   'centos-7-i386',
-  'osx-10.15',
+#  'osx-10.15',
   'ubuntu-14.04',
   'ubuntu-14.04-i386',
   'win-8',
