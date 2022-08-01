@@ -23,10 +23,6 @@ jobs:
     steps:
       - name: Code Checkout
         uses: actions/checkout@v2
-      - id: setup-signore
-        uses: hashicorp/setup-signore@v1
-        with:
-          github-token: ${{ secrets.HASHIBOT_TOKEN }}
       - name: Build and Release
         run: ./.ci/build-packages.sh
         env:
