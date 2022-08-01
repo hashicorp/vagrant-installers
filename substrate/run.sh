@@ -503,7 +503,7 @@ export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 mkdir launcher
 cp /vagrant/substrate/launcher/* launcher/
 pushd launcher
-go get github.com/mitchellh/osext
+go mod download
 go build -o "${build_dir}/bin/vagrant" main.go
 popd
 
