@@ -122,7 +122,7 @@ echo "Creating packet device if needed..."
 packet-exec info
 
 if [ $? -ne 0 ]; then
-    wrap_stream packet-exec create \
+    wrap_stream packet-exec create -debug \
                 "Failed to create packet device"
 fi
 
