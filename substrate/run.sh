@@ -465,10 +465,25 @@ fi
 ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-zlib --without-bz2lib \
             --without-iconv --without-libiconv-prefix --without-nettle --without-openssl \
             --without-xml2 --without-expat
+
+# This is a quick hack to work around glibc-2.36 updates that
+# causes problems when attempting to include linux/fs.h. It
+# should be removed once the headers have been syncrhonized
+# https://sourceware.org/glibc/wiki/Synchronizing_Headers
+# https://sourceware.org/glibc/wiki/Release/2.36#Usage_of_.3Clinux.2Fmount.h.3E_and_.3Csys.2Fmount.h.3E
+if [[ "${linux_os}" = "archlinux" ]]; then
+    sed -i.bak 's/#include <linux\/mount.h>/\/\/#include <linux\/mount.h>/' /usr/include/linux/fs.h
+fi
+
 make
 make install
 unset ACLOCAL_PATH
 popd
+
+# Restore the modified header file
+if [[ "${linux_os}" = "archlinux" ]]; then
+    mv /usr/include/linux/fs.h.bak /usr/include/linux/fs.h
+fi
 
 # curl
 echo_stderr "   -> Building curl..."
