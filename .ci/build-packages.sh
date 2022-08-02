@@ -54,7 +54,7 @@ declare -A substrate_list=(
 )
 
 declare -A package_list=(
-    [*amd64.zip]="appimage"
+#    [*amd64.zip]="appimage"
     [*x86_64.tar.zst]="archlinux"
     [*x86_64.rpm]="centos-6"
     [*i686.rpm]="centos-7-i386"

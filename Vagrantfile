@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 build_boxes = [
-  'appimage',
+#  'appimage',
   'archlinux',
   'centos-6',
   'centos-7-i386',
@@ -13,7 +13,7 @@ build_boxes = [
 ]
 
 box_mappings = {
-  'appimage' => 'ubuntu-14.04',
+  'appimage' => 'bento/ubuntu-20.04',
   'appimage-i386' => 'ubuntu-14.04-i386',
 }
 
