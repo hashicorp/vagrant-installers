@@ -64,3 +64,6 @@ for build in "${builds[@]}"; do
                     "Failed to build box '${build}'"
     slack -m "New Vagrant installers build box available for: ${build}"
 done
+
+wrap packet-exec destroy -force \
+    "Failed to destroy packet device"
