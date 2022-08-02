@@ -252,15 +252,15 @@ Write-Output "Building vagrant launcher..."
 $env:GOPATH = "C:\Windows\Temp"
 $env:PATH = "C:\Program Files\Go\bin;C:\Program Files\Git\bin;${OriginalPath}"
 
-$LauncherDepProc = Create-Process go.exe "get github.com/mitchellh/osext" -QuietOut
+Push-Location "${LauncherDir}"
+
+$LauncherDepProc = Create-Process go.exe "mod download" -QuietOut
 Wait-Process $LauncherDepProc
 
 if($LauncherDepProc.ExitCode -ne 0) {
-    Write-Error "Failed to install launcher dependency: osext"
+    Write-Error "Failed to install launcher dependencies"
 }
 Cleanup-Process $LauncherDepProc
-
-Push-Location "${LauncherDir}"
 
 if($Build32) {
     $Stage32Bin = [System.IO.Path]::Combine($Stage32Dir, "bin")
