@@ -39,4 +39,4 @@ jobs:
         working-directory: ${{github.workspace}}
       - name: Clean Workspace
         if: always()
-        run: rm -rf ${{ github.workspace }}
+        run: rm -rf ${{ github.workspace }}/*
