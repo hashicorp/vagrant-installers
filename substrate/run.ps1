@@ -254,7 +254,7 @@ $env:PATH = "C:\Program Files\Go\bin;C:\Program Files\Git\bin;${OriginalPath}"
 
 Push-Location "${LauncherDir}"
 
-$LauncherDepProc = Create-Process go.exe "mod download" -QuietOut
+$LauncherDepProc = Create-Process go.exe "mod download" "${LauncherDir}" -QuietOut
 Wait-Process $LauncherDepProc
 
 if($LauncherDepProc.ExitCode -ne 0) {
