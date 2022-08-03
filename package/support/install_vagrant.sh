@@ -78,7 +78,7 @@ if [ ! -f "${VAGRANT_GEM_PATH}" ]; then
     ${GEM_COMMAND} build vagrant.gemspec
     cp vagrant-*.gem vagrant.gem
 else
-    cp "${VAGRANT_GO_PATH}" ./vagrant-go
+    cp $VAGRANT_GO_PATH ./vagrant-go
     cp "${VAGRANT_GEM_PATH}" ./vagrant.gem
     ${GEM_COMMAND} unpack ./vagrant.gem
     VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
