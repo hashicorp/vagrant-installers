@@ -66,16 +66,16 @@ declare -A package_list=(
 )
 
 # Grab the vagrant gem and vagrant-agogo the installer is building around
-echo "Fetching Vagrant RubyGem for installer build..."
+echo "Fetching Vagrant RubyGem and binaries for installer build..."
 
 if [ "${tag}" = "" ]; then
     wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-main.gem" vagrant-main.gem \
          "Failed to download Vagrant RubyGem"
-    wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go_main_linux_amd64.zip" vagrant-go_linux_amd64.zip \
+    wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go_main_linux_amd64.zip" vagrant_linux64.zip \
         "Failed to download Vagrant go linux amd64 binary"
-    wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go_main_linux_386.zip" vagrant-go_linux_386.zip \
+    wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go_main_linux_386.zip" vagrant_linux32.zip \
         "Failed to download Vagrant go linux 386 binary"
-    wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go_main_darwin_amd64.zip" vagrant-go_darwin_amd64.zip \
+    wrap aws s3 cp "${ASSETS_PRIVATE_BUCKET}/${repo_owner}/vagrant/vagrant-go_main_darwin_amd64.zip" vagrant_darwin64.zip \
         "Failed to download Vagrant go darwin amd64 binary"
 else
     url_gem=$(curl -SsL -H "Authorization: token ${HASHIBOT_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${repository}/releases/tags/${tag}" | jq -r '.assets[] | select(.name | contains(".gem")) | .url')
