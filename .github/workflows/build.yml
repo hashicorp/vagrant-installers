@@ -7,7 +7,6 @@ on:
     paths:
       - 'substrate/**'
       - 'package/**'
-      - '.ci/build-packages.sh'
       - 'Vagrantfile'
   schedule:
     - cron: '15 1 * * *'
