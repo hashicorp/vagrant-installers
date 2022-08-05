@@ -8,7 +8,6 @@ on:
       - 'substrate/**'
       - 'package/**'
       - '.ci/build-packages.sh'
-      - '.github/workflows/build.yml'
       - 'Vagrantfile'
   schedule:
     - cron: '15 1 * * *'
@@ -34,7 +33,9 @@ jobs:
           PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ secrets.MACOS_NOTARIZE_PASSWORD }}
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ${{ secrets.DISABLE_NOTARIZATION }}
           FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
-          PACKET_EXEC_PREFER_FACILITIES: ewr1,iad1,iad2,dfw1,dfw2,sea1,sjc1,lax1
+          SIGNORE_CLIENT_ID: ${{ secrets.SIGNORE_CLIENT_ID }}
+          SIGNORE_CLIENT_SECRET: ${{ secrets.SIGNORE_CLIENT_SECRET }}
+          SIGNORE_SIGNER: ${{ secrets.SIGNORE_SIGNER }}
           VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
         working-directory: ${{github.workspace}}
       - name: Clean Workspace
