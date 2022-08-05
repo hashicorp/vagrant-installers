@@ -205,6 +205,7 @@ if [ ! -z "${_ingredients_dist}" ] ; then
         done
     fi
     scanpackages | gzip -9c > Packages.gz
+    scanpackages > Packages
     echo "deb [trusted=yes] file:$(readlink -e $PWD) ./" >> sources.list
 
     INSTALL=$LOWERAPP
@@ -248,7 +249,7 @@ else
     cat > AppRun <<\EOF
 #!/usr/bin/env bash
 HERE="$(dirname "$(readlink -f "${0}")")"
-export UNION_PRELOAD="${HERE}"
+export SNAPPY_PRELOAD="${HERE}"
 export LD_PRELOAD="${HERE}/libunionpreload.so"
 export PATH="${HERE}"/usr/bin/:"${HERE}"/usr/sbin/:"${HERE}"/usr/games/:"${HERE}"/bin/:"${HERE}"/sbin/:"${PATH}"
 export LD_LIBRARY_PATH="${HERE}"/usr/lib/:"${HERE}"/usr/lib/i386-linux-gnu/:"${HERE}"/usr/lib/x86_64-linux-gnu/:"${HERE}"/usr/lib32/:"${HERE}"/usr/lib64/:"${HERE}"/lib/:"${HERE}"/lib/i386-linux-gnu/:"${HERE}"/lib/x86_64-linux-gnu/:"${HERE}"/lib32/:"${HERE}"/lib64/:"${LD_LIBRARY_PATH}"
@@ -300,10 +301,8 @@ fi
 # Don't suffer from NIH; use LD_PRELOAD to override calls to /usr paths
 if [ ! -z "${_union}" ] ; then
     mkdir -p usr/src/
-    wget -q "https://raw.githubusercontent.com/mikix/deb2snap/master/src/preload.c" -O - | \
-        sed -e 's|SNAPPY|UNION|g' | sed -e 's|SNAPP|UNION|g' | sed  -e 's|SNAP|UNION|g' | \
-        sed -e 's|snappy|union|g' > usr/src/libunionpreload.c
-    gcc -shared -fPIC usr/src/libunionpreload.c -o libunionpreload.so -ldl -DUNION_LIBNAME=\"libunionpreload.so\"
+    cp "${DIR}/libunionpreload.c" usr/src/
+    gcc -shared -fPIC usr/src/libunionpreload.c -o libunionpreload.so -ldl -DSNAPPY_LIBNAME=\"libunionpreload.so\"
     strip libunionpreload.so
 fi
 
