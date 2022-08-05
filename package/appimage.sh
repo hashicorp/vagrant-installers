@@ -31,8 +31,13 @@ cp "${gem_path}" vagrant.gem
 cp "${appimg_dir}/vagrant.yml" vagrant.yml
 cp "${appimg_dir}/vagrant_wrapper.sh" vagrant_wrapper.sh
 
+# Add repository so we can get recent Ruby packages
+add-apt-repository -y ppa:brightbox/ruby-ng
+apt-get update
+apt-get install -y build-essential ca-certificates ruby2.7 ruby2.7-dev
+
 # Get vagrant version
-gem unpack ./vagrant.gem
+gem2.7 unpack ./vagrant.gem
 VAGRANT_VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
 rm -rf ./vagrant/
 
@@ -45,7 +50,7 @@ Section: utils
 Priority: important
 Essential: yes
 Architecture: amd64
-Depends: ruby2.6, ruby2.6-dev
+Depends: ruby2.7, ruby2.7-dev
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
@@ -54,15 +59,6 @@ dpkg-deb -b ./vagrant
 rm -rf ./vagrant/
 DEB_FILE="${WORK_DIR}/vagrant_${VAGRANT_VERSION}-1.deb"
 mv *.deb "${DEB_FILE}"
-
-# Add repository so we can get recent Ruby packages
-add-apt-repository -y ppa:brightbox/ruby-ng
-apt-get update
-
-# Install required packages
-apt-get remove --purge -yq ruby2.4 ruby2.4-dev
-apt-get autoremove -y
-apt-get install -y build-essential ca-certificates ruby2.6 ruby2.6-dev
 
 export WORK_DIR
 export DEB_FILE

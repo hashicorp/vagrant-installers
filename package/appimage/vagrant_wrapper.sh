@@ -52,15 +52,15 @@ if [ -z "${default_ssl_cert_file}" ]; then
     fi
 fi
 
-export RUBYLIB=""
-export RUBYOPT=""
+RUBY_VERSION="2.7"
 
+unset RUBYLIB
+unset RUBYOPT
 export VAGRANT_BIN_DIR="${DIR}"
 export VAGRANT_USR_DIR="$( cd -P "$( dirname "$VAGRANT_BIN_DIR" )" && pwd )"
 export VAGRANT_ROOT_DIR="$( cd -P "$( dirname "$VAGRANT_USR_DIR" )" && pwd )"
 export GEM_HOME="${VAGRANT_USR_DIR}/gembundle"
 export GEM_PATH="${VAGRANT_USR_DIR}/gembundle"
-export RUBYLIB="$( "${VAGRANT_BIN_DIR}/ruby2.6" -e "puts $:.map{|x| ENV['VAGRANT_ROOT_DIR'] + x}.join(':')" )"
 
 # Set our SSL certificate locations unless they are already set
 if [ -z "${SSL_CERT_FILE}" ]; then
@@ -135,4 +135,4 @@ if [ ! -x "$(command -v ssh)" ]; then
     echo "  prevent error when Vagrant attempts to connect to guests."
 fi
 
-"${VAGRANT_BIN_DIR}/ruby2.6" -- "${VAGRANT_USR_DIR}/gembundle/bin/vagrant" "$@"
+"${VAGRANT_BIN_DIR}/ruby${RUBY_VERSION}" -- "${VAGRANT_USR_DIR}/gembundle/bin/vagrant" "$@"
