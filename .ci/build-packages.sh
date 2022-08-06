@@ -55,13 +55,13 @@ declare -A substrate_list=(
 
 declare -A package_list=(
     [*amd64.zip]="appimage"
-    [*x86_64.tar.zst]="archlinux"
+    [*x86_64.pkg.tar.zst]="archlinux"
     [*x86_64.rpm]="centos-6"
     [*i686.rpm]="centos-7-i386"
-    [*x86_64.dmg]="osx-10.15"
-    [*x86_64.deb]="ubuntu-14.04"
+    [*amd64.dmg]="osx-10.15"
+    [*amd64.deb]="ubuntu-14.04"
     [*i686.deb]="ubuntu-14.04-i386"
-    [*x86_64.msi]="win-8"
+    [*amd64.msi]="win-8"
     [*i686.msi]="win-8"
 )
 
