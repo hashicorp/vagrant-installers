@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -e
+function fail() {
+    echo "ERROR: ${1}"
+    exit 1
+}
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
@@ -7,10 +10,12 @@ if [ "$#" -ne "2" ]; then
     exit 1
 fi
 
-SUBSTRATE_DIR=$1
-VAGRANT_VERSION=$2
-
-ORIGIN=$(pwd)
+SUBSTRATE_DIR="${1}"
+VAGRANT_VERSION="${2}"
+ORIGIN="$(pwd)"
+if [ -z "${RELEASE_NUMBER}" ]; then
+    RELEASE_NUMBER="1"
+fi
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -18,23 +23,30 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # Work in a temporary directory
-TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
-pushd $TMP_DIR
-TMP_DIR="$(pwd)"
+TMP_DIR="$(mktemp -d tmp.XXXXXXXXX)"
+pushd "${TMP_DIR}" || fail "Failed to move to temporary working directory"
 
-cp "${DIR}/archlinux/PKGBUILD.local" ./PKGBUILD
-sed -i "s/%VAGRANT_VERSION%/${VAGRANT_VERSION}/" ./PKGBUILD
+cp "${DIR}/archlinux/PKGBUILD.local" ./PKGBUILD || fail "Failed to get PKGBUILD file"
+sed -i "s/%VAGRANT_VERSION%/${VAGRANT_VERSION}/" ./PKGBUILD ||
+    fail "Failed to set Vagrant version into PKGBUILD file"
+sed -i "s/%RELEASE_NUMBER%/${RELEASE_NUMBER}/" ./PKGBUILD ||
+    fail "Failed to set release number into PKGBUILD file"
 
 tar -f substrate.tar.gz --directory="${SUBSTRATE_DIR}" -cz ./
 
-chown -R vagrant:vagrant "${TMP_DIR}"
-su vagrant -l -c "pushd ${TMP_DIR}; makepkg --syncdeps --force --noconfirm"
+chown -R vagrant:vagrant "${TMP_DIR}" ||
+    fail "Failed to change ownership of temporary working directory"
+su vagrant -l -c "pushd ${TMP_DIR}; makepkg --syncdeps --force --noconfirm" ||
+    fail "Failed to create package"
 
 if [ "${CLEAN_VAGRANT_VERSION}" != "" ]; then
-    VAGRANT_VERSION=$CLEAN_VAGRANT_VERSION
+    VAGRANT_VERSION="${CLEAN_VAGRANT_VERSION}"
 fi
 
-mv *.zst "${ORIGIN}/vagrant_${VAGRANT_VERSION}_x86_64.tar.zst"
+mv ./*.zst "${ORIGIN}/vagrant-${VAGRANT_VERSION}-${RELEASE_NUMBER}-x86_64.tar.zst"
 
+# Exit the directory and clean it
+# (we really don't care if this fails)
+# shellcheck disable=SC2164
 popd
 rm -rf "${TMP_DIR}"
