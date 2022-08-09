@@ -1,6 +1,5 @@
 app: vagrant
 union: true
-#binpatch: true
 
 ingredients:
   dist: focal
