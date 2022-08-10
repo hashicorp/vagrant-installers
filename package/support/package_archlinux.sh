@@ -43,7 +43,7 @@ if [ "${CLEAN_VAGRANT_VERSION}" != "" ]; then
     VAGRANT_VERSION="${CLEAN_VAGRANT_VERSION}"
 fi
 
-mv ./*.zst "${ORIGIN}/vagrant-${VAGRANT_VERSION}-${RELEASE_NUMBER}-x86_64.tar.zst"
+mv ./*.zst "${ORIGIN}/vagrant-${VAGRANT_VERSION}-${RELEASE_NUMBER}-x86_64.pkg.tar.zst"
 
 # Exit the directory and clean it
 # (we really don't care if this fails)
