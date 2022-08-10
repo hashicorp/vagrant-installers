@@ -24,7 +24,7 @@ if [ ! -f "${gem_path}" ]; then
     exit 1
 fi
 
-WORK_DIR="$(mktemp -d tmp.XXXXXXXXX)"
+WORK_DIR="$(mktemp -d tmp.XXXXXXXXX -p "$(pwd)")"
 pushd "${WORK_DIR}" || fail "Could not enter work directory"
 
 # Copy in required files

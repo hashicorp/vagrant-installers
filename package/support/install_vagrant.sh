@@ -42,16 +42,20 @@ VAGRANT_GEM_PATH="${DIR}/../vagrant.gem"
 if [[ "${OSTYPE}" == "darwin"* ]]; then
     VAGRANT_GO_PATH=("${DIR}/../vagrant-go_"*darwin*)
 else
-    ARCH=$(arch | perl -ne 'chomp and print')
-    if [[ "${ARCH}" == "x86_64" ]]; then
-        VAGRANT_GO_PATH=("${DIR}/../vagrant-go_"*linux_amd64)
+    if command -v arch; then
+        ARCH=$(arch | perl -ne 'chomp and print')
+        if [[ "${ARCH}" == "x86_64" ]]; then
+            VAGRANT_GO_PATH=("${DIR}/../vagrant-go_"*linux_amd64)
+        else
+            VAGRANT_GO_PATH=("${DIR}/../vagrant-go_"*linux_386)
+        fi
     else
-        VAGRANT_GO_PATH=("${DIR}/../vagrant-go_"*linux_386)
+        VAGRANT_GO_PATH=("${DIR}/../vagrant-go_"*linux_amd64)
     fi
 fi
 
 # Work in a temporary directory
-TMP_DIR=$(mktemp -d tmp.XXXXXXXXX)
+TMP_DIR="$(mktemp -d tmp.XXXXXXXXX -p "$(pwd)")"
 pushd "${TMP_DIR}" ||
     fail "Failed to move into temporary directory"
 
