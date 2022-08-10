@@ -31,7 +31,6 @@ fi
 
 # Halt on errors
 set -e
-set -x
 
 # Check dependencies
 which wget >/dev/null 2>&1 || ( echo wget missing && exit 1 )
