@@ -93,7 +93,7 @@ export VAGRANT_INSTALLER_EMBEDDED_DIR="${VAGRANT_ROOT_DIR}"
 export VAGRANT_PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
 export VAGRANT_RUBYLIB="${RUBYLIB}"
 
-if [ "${VAGRANT_PREFER_SYSTEM_BIN}" != "" -a "${VAGRANT_PREFER_SYSTEM_BIN}" != "0" ]; then
+if [[ "${VAGRANT_PREFER_SYSTEM_BIN}" != "" && "${VAGRANT_PREFER_SYSTEM_BIN}" != "0" ]]; then
     export PATH="${PATH}:${DIR}"
 else
     export PATH="${DIR}:${PATH}"
@@ -101,8 +101,7 @@ fi
 
 new_ld_library_path="${LD_LIBRARY_PATH}"
 
-command -v ldconfig > /dev/null
-if [ $? -eq 0 ]; then
+if command -v ldconfig > /dev/null; then
     extra_ld_path=$(ldconfig -N -X -v 2>&1 | grep "^/.*:$" | tr -d ":" | tr "\n" ":")
 else
     extra_ld_path="/lib:/lib64:/usr/lib:/usr/lib64"
@@ -121,17 +120,17 @@ unset PYTHONPATH
 
 # Before we get started, check that curl and SSH are available
 if [ ! -x "$(command -v curl)" ]; then
-    echo "WARNING: Failed to locate `curl` executable"
-    echo "  Vagrant relies on `curl` for handling assets. Please"
-    echo "  ensure that `curl` has been installed to prevent errors"
+    echo "WARNING: Failed to locate 'curl' executable"
+    echo "  Vagrant relies on 'curl' for handling assets. Please"
+    echo "  ensure that 'curl' has been installed to prevent errors"
     echo "  when Vagrant is uploading or downloading assets."
     echo
 fi
 
 if [ ! -x "$(command -v ssh)" ]; then
-    echo "WARNING: Failed to locate `ssh` executable"
-    echo "  Vagrant relies on the `ssh` command for connecting to"
-    echo "  guests. Please ensure that `ssh` has been installed to"
+    echo "WARNING: Failed to locate 'ssh' executable"
+    echo "  Vagrant relies on the 'ssh' command for connecting to"
+    echo "  guests. Please ensure that 'ssh' has been installed to"
     echo "  prevent error when Vagrant attempts to connect to guests."
 fi
 

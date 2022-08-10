@@ -285,9 +285,9 @@ $contents | Out-File `
 #--------------------------------------------------------------------
 # Final path to output
 if ( $PackageArch -eq "64") {
-    $OutputPath = "vagrant_${VagrantVersion}_x86_64.msi"
+    $OutputPath = "vagrant_${VagrantVersion}_windows_amd64.msi"
 } else {
-    $OutputPath = "vagrant_${VagrantVersion}_i686.msi"
+    $OutputPath = "vagrant_${VagrantVersion}_windows_i686.msi"
 }
 
 $InstallerTmpDir = [System.IO.Path]::GetTempPath()

@@ -39,15 +39,15 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 VINCE="${DIR}/../vince"
-SUBSTRATE_DIR=$1
-VAGRANT_VERSION=$2
-OUTPUT_PATH="`pwd`/vagrant_${VAGRANT_VERSION}_x86_64.dmg"
+SUBSTRATE_DIR="${1}"
+VAGRANT_VERSION="${2}"
+OUTPUT_PATH="$(pwd)/vagrant_${VAGRANT_VERSION}_darwin_amd64.dmg"
 
 function vince() {
     "${VINCE}" -u "${NOTARIZE_USERNAME}" -p "${NOTARIZE_PASSWORD}" "${@}"
 }
 
-EMBEDDED_DIR="$1/embedded"
+EMBEDDED_DIR="${1}/embedded"
 GEM_COMMAND="${EMBEDDED_DIR}/bin/gem"
 export GEM_PATH="${EMBEDDED_DIR}/gems/${VERSION}"
 export GEM_HOME="${GEM_PATH}"
@@ -62,6 +62,7 @@ export SSL_CERT_FILE="${EMBEDDED_DIR}/cacert.pem"
 
 "${GEM_COMMAND}" install --no-document rake
 
+# TODO: Check if we still need to do this rebuild anymore
 echo "Rebuild rb-fsevent bin executable..."
 pushd "${SUBSTRATE_DIR}/embedded/gems/${VAGRANT_VERSION}/gems/rb-fsevent-"*/ext ||
     fail "Failed to locate rb-fsevent directory"
@@ -70,13 +71,16 @@ sed -ibak "s|.*SDK_INFO =.*\$|\$SDK_INFO = \{'Path' => '${SDKROOT}', 'ProductBui
 cd ..
 rake -f ext/rakefile.rb replace_exe ||
     fail "Failed to rebuild rb-fsevent"
-popd
+popd ||
+    fail "Failed to pop to original directory"
 
 # Work in a temporary directory
 rm -rf package-staging
 mkdir -p package-staging
-STAGING_DIR=$(cd package-staging; pwd)
-pushd $STAGING_DIR
+pushd package-staging ||
+    fail "Failed to enter package staging directory"
+STAGING_DIR="$(pwd)"
+
 echo "Darwin staging dir: ${STAGING_DIR}"
 
 # Set information used for package and code signing
@@ -93,18 +97,18 @@ SIGN_REQUIRED="${VAGRANT_PACKAGE_SIGNING_REQUIRED}"
 # Resources
 #-------------------------------------------------------------------------
 echo "Copying installer resources..."
-mkdir -p ${STAGING_DIR}/resources
-cp "${DIR}/darwin/background.png" ${STAGING_DIR}/background.png
-cp "${DIR}/darwin/welcome.html" ${STAGING_DIR}/welcome.html
-cp "${DIR}/darwin/license.html" ${STAGING_DIR}/license.html
+mkdir -p "${STAGING_DIR}/resources"
+cp "${DIR}/darwin/background.png" "${STAGING_DIR}/background.png"
+cp "${DIR}/darwin/welcome.html" "${STAGING_DIR}/welcome.html"
+cp "${DIR}/darwin/license.html" "${STAGING_DIR}/license.html"
 
 #-------------------------------------------------------------------------
 # Scripts
 #-------------------------------------------------------------------------
 echo "Copying installer scripts.."
-mkdir -p ${STAGING_DIR}/scripts
+mkdir -p "${STAGING_DIR}/scripts"
 
-cat <<EOF >${STAGING_DIR}/scripts/preinstall
+cat <<EOF >"${STAGING_DIR}/scripts/preinstall"
 #!/usr/bin/env bash
 
 [ -d /opt/vagrant ] && rm -rf /opt/vagrant/
@@ -112,9 +116,9 @@ cat <<EOF >${STAGING_DIR}/scripts/preinstall
 exit 0
 
 EOF
-chmod 0755 ${STAGING_DIR}/scripts/preinstall
+chmod 0755 "${STAGING_DIR}/scripts/preinstall"
 
-cat <<EOF >${STAGING_DIR}/scripts/postinstall
+cat <<EOF >"${STAGING_DIR}/scripts/postinstall"
 #!/usr/bin/env bash
 
 if [ ! -d /usr/local/bin ]; then
@@ -138,7 +142,7 @@ chflags hidden /opt
 # Exit with a success code
 exit 0
 EOF
-chmod 0755 ${STAGING_DIR}/scripts/postinstall
+chmod 0755 "${STAGING_DIR}/scripts/postinstall"
 
 # Install and enable package signing if available
 if [ -f "${PKG_SIGN_CERT_PATH}" ] && [ -f "${PKG_SIGN_KEY_PATH}" ]; then
@@ -153,9 +157,8 @@ if [ -f "${PKG_SIGN_CERT_PATH}" ] && [ -f "${PKG_SIGN_KEY_PATH}" ]; then
 fi
 
 # Install and enable code signing if available
-if [ -f "${CODE_SIGN_CERT_PATH}" ] && [ ! -z "${CODE_SIGN_PASS}" ]; then
-    security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}"
-    if [ $? -ne 0 ]; then
+if [ -f "${CODE_SIGN_CERT_PATH}" ] && [ -n "${CODE_SIGN_PASS}" ]; then
+    if ! security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}"; then
         echo "==> Installing code signing key..."
         security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign ||
             fail "Failed to import code signing key"
@@ -217,31 +220,31 @@ fi
 if [ "${SIGN_PKG}" = "1" ]; then
     echo "Building core.pkg..."
     pkgbuild \
-        --root ${SUBSTRATE_DIR} \
+        --root "${SUBSTRATE_DIR}" \
         --identifier com.vagrant.vagrant \
-        --version ${VAGRANT_VERSION} \
+        --version "${VAGRANT_VERSION}" \
         --install-location "/opt/vagrant" \
-        --scripts ${STAGING_DIR}/scripts \
+        --scripts "${STAGING_DIR}/scripts" \
         --timestamp=none \
         --sign "${PKG_SIGN_IDENTITY}" \
-        ${STAGING_DIR}/core.pkg ||
+        "${STAGING_DIR}/core.pkg" ||
         fail "Failed to build core package"
 else
     echo "Building core.pkg..."
     pkgbuild \
-        --root ${SUBSTRATE_DIR} \
+        --root "${SUBSTRATE_DIR}" \
         --identifier com.vagrant.vagrant \
-        --version ${VAGRANT_VERSION} \
+        --version "${VAGRANT_VERSION}" \
         --install-location "/opt/vagrant" \
-        --scripts ${STAGING_DIR}/scripts \
+        --scripts "${STAGING_DIR}/scripts" \
         --timestamp=none \
-        ${STAGING_DIR}/core.pkg ||
+        "${STAGING_DIR}/core.pkg" ||
         fail "Failed to build core package"
 fi
 
 # Create the distribution definition, an XML file that describes what
 # the installer will look and feel like.
-cat <<EOF >${STAGING_DIR}/vagrant.dist
+cat <<EOF >"${STAGING_DIR}/vagrant.dist"
 <installer-gui-script minSpecVersion="1">
     <title>Vagrant</title>
 
@@ -281,30 +284,30 @@ echo "Building Vagrant.pkg..."
 # and sign if found.
 if [ "${SIGN_PKG}" = "1" ]; then
     productbuild \
-        --distribution ${STAGING_DIR}/vagrant.dist \
-        --resources ${STAGING_DIR}/resources \
-        --package-path ${STAGING_DIR} \
+        --distribution "${STAGING_DIR}/vagrant.dist" \
+        --resources "${STAGING_DIR}/resources" \
+        --package-path "${STAGING_DIR}" \
         --timestamp=none \
         --sign "${PKG_SIGN_IDENTITY}" \
-        ${STAGING_DIR}/Vagrant.pkg ||
+        "${STAGING_DIR}/Vagrant.pkg" ||
         fail "Failed to build Vagrant package"
 else
     productbuild \
-        --distribution ${STAGING_DIR}/vagrant.dist \
-        --resources ${STAGING_DIR}/resources \
-        --package-path ${STAGING_DIR} \
+        --distribution "${STAGING_DIR}/vagrant.dist" \
+        --resources "${STAGING_DIR}/resources" \
+        --package-path "${STAGING_DIR}" \
         --timestamp=none \
-        ${STAGING_DIR}/Vagrant.pkg ||
+        "${STAGING_DIR}/Vagrant.pkg" ||
         fail "Failed to build Vagrant package"
 fi
 #-------------------------------------------------------------------------
 # DMG
 #-------------------------------------------------------------------------
 # Stage the files
-mkdir -p ${STAGING_DIR}/dmg
-cp ${STAGING_DIR}/Vagrant.pkg ${STAGING_DIR}/dmg/vagrant.pkg
-cp "${DIR}/darwin/uninstall.tool" ${STAGING_DIR}/dmg/uninstall.tool
-chmod +x ${STAGING_DIR}/dmg/uninstall.tool
+mkdir -p "${STAGING_DIR}/dmg"
+cp "${STAGING_DIR}/Vagrant.pkg" "${STAGING_DIR}/dmg/vagrant.pkg"
+cp "${DIR}/darwin/uninstall.tool" "${STAGING_DIR}/dmg/uninstall.tool"
+chmod +x "${STAGING_DIR}/dmg/uninstall.tool"
 
 echo "Creating DMG"
 dmgbuild -s "${DIR}/darwin/dmgbuild.py" -D srcfolder="${STAGING_DIR}/dmg" -D backgroundimg="${DIR}/darwin/background_installer.png" Vagrant "${OUTPUT_PATH}" ||
@@ -327,8 +330,7 @@ fi
 if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME}" != "" ]; then
     if [ -z "${DISABLE_NOTARIZATION}" ]; then
         echo "==> Submitting DMG for notarization..."
-        uuid="$(vince notarize com.hashicorp.vagrant "${OUTPUT_PATH}")"
-        if [ $? -ne 0 ]; then
+        if ! uuid="$(vince notarize com.hashicorp.vagrant "${OUTPUT_PATH}")"; then
             echo "!!!! Failed to submit notarization. Waiting and trying again..."
             sleep 30
             uuid="$(vince notarize com.hashicorp.vagrant "${OUTPUT_PATH}")" ||
@@ -351,9 +353,7 @@ if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME
             fi
         done
 
-        vince validate "${uuid}"
-
-        if [ $? -ne 0 ]; then
+        if ! vince validate "${uuid}"; then
             vince logs "${uuid}"
             fail "Vagrant package notarization failed"
         fi

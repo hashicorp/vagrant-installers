@@ -1,6 +1,6 @@
 pkgname=hashicorp-vagrant
 pkgver="%VAGRANT_VERSION%"
-pkgrel=1
+pkgrel=%RELEASE_NUMBER%
 pkgdesc="Build and distribute virtualized development environments"
 arch=('x86_64')
 url="https://www.vagrantup.com"

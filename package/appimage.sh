@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-set -x
+function fail() {
+    echo "ERROR: ${1}"
+    exit 1
+}
 
-ORIGIN_DIR=$(pwd)
+ORIGIN_DIR="$(pwd)"
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
@@ -12,7 +15,8 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 export DEBIAN_FRONTEND=noninteractive
 
 appimg_dir="${DIR}/appimage"
-gem_path=$(ls "${DIR}"/vagrant*.gem)
+gp=("${DIR}/vagrant"*.gem)
+gem_path="${gp[0]}"
 
 # Check for gem and fail is not found
 if [ ! -f "${gem_path}" ]; then
@@ -20,25 +24,27 @@ if [ ! -f "${gem_path}" ]; then
     exit 1
 fi
 
-set -e
-
-WORK_DIR=$(mktemp -d tmp.XXXXXXXXX)
-pushd "${WORK_DIR}"
-WORK_DIR=$(pwd)
+WORK_DIR="$(mktemp -d tmp.XXXXXXXXX)"
+pushd "${WORK_DIR}" || fail "Could not enter work directory"
 
 # Copy in required files
-cp "${gem_path}" vagrant.gem
-cp "${appimg_dir}/vagrant.yml" vagrant.yml
-cp "${appimg_dir}/vagrant_wrapper.sh" vagrant_wrapper.sh
+cp "${gem_path}" vagrant.gem || fail "Failed to relocate Vagrant Gem"
+cp "${appimg_dir}/vagrant.yml" vagrant.yml ||
+    fail "Failed to relocate appimage config"
+cp "${appimg_dir}/vagrant_wrapper.sh" vagrant_wrapper.sh ||
+    fail "Failed to relocate vagrant wrapper script"
 
 # Add repository so we can get recent Ruby packages
-add-apt-repository -y ppa:brightbox/ruby-ng
-apt-get update
-apt-get install -y build-essential ca-certificates ruby2.7 ruby2.7-dev
+add-apt-repository -y ppa:brightbox/ruby-ng ||
+    fail "Failed to add brightbox repository"
+apt-get update ||
+    fail "Failed to update local repositories"
+apt-get install -y build-essential ca-certificates ruby2.7 ruby2.7-dev ||
+    fail "Failed to install required packages"
 
 # Get vagrant version
-gem2.7 unpack ./vagrant.gem
-VAGRANT_VERSION=$(cat vagrant/version.txt | sed -e 's/\.[^0-9]*$//')
+gem2.7 unpack ./vagrant.gem || fail "Failed to unpack Vagrant gem"
+VAGRANT_VERSION="$(<vagrant/version.txt)"
 rm -rf ./vagrant/
 
 # Create our custom deb package
@@ -55,25 +61,31 @@ Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
 
-dpkg-deb -b ./vagrant
+dpkg-deb -b ./vagrant || fail "Failed to create Vagrant stub package"
 rm -rf ./vagrant/
 DEB_FILE="${WORK_DIR}/vagrant_${VAGRANT_VERSION}-1.deb"
-mv *.deb "${DEB_FILE}"
+mv ./*.deb "${DEB_FILE}"
 
 export WORK_DIR
 export DEB_FILE
 
 # Build our appimage
-"${appimg_dir}/pkg2appimage" ./vagrant.yml
+"${appimg_dir}/pkg2appimage" ./vagrant.yml ||
+    fail "Failed to build Vagrant appimage"
 
 # Create the release asset
 mkdir release-asset
-mv out/* release-asset/vagrant
-zip -j "vagrant_${VAGRANT_VERSION}_linux_amd64.zip" release-asset/*
+mv out/* release-asset/vagrant ||
+    fail "Failed to relocate Vagrant appimage for compression"
+zip -j "vagrant_${VAGRANT_VERSION}_linux_amd64.zip" release-asset/* ||
+    fail "Failed to create final Vagrant appimage asset"
 
 # Place asset in original execution directory
-mv *.zip "${ORIGIN_DIR}/"
-popd
+mv ./*.zip "${ORIGIN_DIR}/" ||
+    fail "Failed to move Vagrant appimage asset to destination"
 
-# Clean up after ourself
+# Exit the directory and clean it
+# (we really don't care if this fails)
+# shellcheck disable=SC2164
+popd
 rm -rf "${WORK_DIR}"
