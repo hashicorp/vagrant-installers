@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Ignore pushd/popd complaints
+# shellcheck disable=SC2164
+
 export SLACK_USERNAME="Vagrant"
 export SLACK_ICON="https://avatars.slack-edge.com/2017-10-17/257000837696_070f98107cdacc0486f6_36.png"
 export SLACK_TITLE="Vagrant Packaging"
@@ -20,7 +23,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/load-ci.sh"
 
-pushd "${root}" > "${output}"
+pushd "${root}"
 
 if [ ! -z "${release}" ]; then
     export SLACK_CHANNEL="#team-vagrant"
@@ -92,7 +95,7 @@ else
          "Failed to download Vagrant go darwin amd64 zip"
 fi
 
-gem_short_sha=$(sha256sum vagrant-*.gem)
+gem_short_sha=$(sha256sum vagrant-*.gem | cut -d' ' -f1)
 
 s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${short_sha}"
 if [ "${tag}" != "" ]; then
@@ -132,20 +135,12 @@ wrap cp vagrant-*.gem package/vagrant.gem \
 wrap cp vagrant-go_* package/ \
      "Failed to move vagrant go binary for packaging"
 
-# Ensure we have a packet device to connect
-echo "Creating packet device if needed..."
-
-packet-exec info
-
-if [ $? -ne 0 ]; then
-    wrap_stream packet-exec create \
-                "Failed to create packet device"
-fi
-
 # Build our substrates
 mkdir -p substrate-assets pkg
 
 echo "Fetching any prebuilt substrates and/or packages... "
+echo "  - substrate source: ${s3_substrate_dst}"
+echo "  - package source:   ${s3_package_dst}"
 
 # force renewal of the aws session
 AWS_SESSION_EXPIRATION=$(date)
@@ -153,193 +148,211 @@ AWS_SESSION_EXPIRATION=$(date)
 aws s3 sync --no-progress "${s3_substrate_dst}/" ./substrate-assets/
 aws s3 sync --no-progress "${s3_package_dst}/" ./pkg/
 
-# Make signing files available before upload
-secrets=$(load-signing) || fail "Failed to load signing files"
-eval "${secrets}"
-
-echo "Setting up remote packet device for current job... "
-# NOTE: We only need to call packet-exec with the -upload option once
-#       since we are persisting the job directory. This dummy command
-#       is used simply to seed the work directory.
-wrap_stream packet-exec run -upload -- /bin/true \
-            "Failed to setup project on remote packet instance"
-
-# Always ensure boxes are up to date
-pkt_wrap_stream vagrant box update \
-                "Failed to update local build boxes"
-
+# Generate a list of substrates we already have (if any)
 for p in "${!substrate_list[@]}"; do
     path=(substrate-assets/${p})
-    if [ ! -f "${path}" ]; then
+    if [ ! -f "${path[0]}" ]; then
         substrates_needed="${substrates_needed},${substrate_list[${p}]}"
     fi
 done
 substrates_needed="${substrates_needed#,}"
 
-if [ "${substrates_needed}" = "" ]; then
-    echo "All substrates currently exist. No build required."
-else
-    declare -A substrate_builds
-
-    export PKT_VAGRANT_ONLY_BOXES="${substrates_needed}"
-    export PKT_VAGRANT_BUILD_TYPE="substrate"
-
-    echo "Starting Vagrant substrate guests..."
-    pkt_wrap_stream vagrant up --no-provision \
-                    "Failed to start builder guests on packet device for substrates"
-    echo "Start Vagrant substrate builds..."
-
-    # Load secrets and persist for use
-    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
-    packet-exec run -quiet -- sleep 500 &
-    unset PACKET_EXEC_PRE_BUILTINS
-
-    echo "Pausing to allow secrets to become available"
-    sleep 10
-    echo "Resuming after secrets pause"
-
-    for p in "${!substrate_list[@]}"; do
-        path=(substrate-assets/${p})
-        guest="${substrate_list[${p}]}"
-        if [ -f "${path}" ] || [ ! -z "${substrate_builds[${guest}]}" ]; then
-            continue
-        fi
-        echo "Running substrate build for ${guest}..."
-        export PKT_VAGRANT_ONLY_BOXES="${guest}"
-        packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
-        pid=$!
-        substrate_builds["${guest}"]="${pid}"
-        until [ -f "${guest}.log" ]; do
-            sleep 0.1
-        done
-        tail -f --quiet --pid "${pid}" "${guest}.log" &
-    done
-
-    # Wait for all the background provisions to complete
-    # NOTE: We don't check pid success since substrate file check
-    #       below will catch any errors
-    for pid in "${substrate_builds[@]}"; do
-        wait "${pid}"
-    done
-
-    # Run simple command to pull any built substrates
-    wrap_stream_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- /bin/true
-
-    echo "Storing any built substrates... "
-    # force renewal of the aws session
-    AWS_SESSION_EXPIRATION=$(date)
-    # Store all built substrates
-    wrap_stream_raw aws s3 sync --no-progress ./substrate-assets/ "${s3_substrate_dst}"
-
-    echo "Destroying existing Vagrant guests..."
-    # Clean up the substrate VMs
-    unset PKT_VAGRANT_ONLY_BOXES
-    pkt_wrap_stream_raw vagrant destroy -f
-fi
-
-# Validate all expected substrates were built
-for p in "${!substrate_list[@]}"; do
-    path=(substrate-assets/${p})
-    if [ ! -f "${path}" ]; then
-        substrates_missing="${substrates_missing},${p}"
-    fi
-done
-substrates_missing="${substrates_missing#,}"
-
-if [ "${substrates_missing}" != "" ]; then
-    if [ -n "${release}" ]; then
-        fail "Missing Vagrant substrate assets matching patterns: ${substrates_missing}"
-    else
-        warn "Missing Vagrant substrate assets matching patterns: ${substrates_missing}"
-    fi
-fi
-
-
+# Generate a list of packages we already have (if any)
 for p in "${!package_list[@]}"; do
     path=(pkg/${p})
-    if [ ! -f "${path}" ]; then
+    if [ ! -f "${path[0]}" ]; then
         packages_needed="${packages_needed},${package_list[${p}]}"
     fi
 done
 packages_needed="${packages_needed#,}"
 
-if [ "${packages_needed}" = "" ]; then
-    echo "All packages currently exist. No build required."
+# Check if we have all the packages and substrates already built. If
+# we do, then we can skip the entire build process and jump directly
+# to publishing
+if [[ "${substrates_needed}" == "" && "${packages_needed}" == "" ]]; then
+    echo "All packages and substrates are currently built!"
 else
-    declare -A package_builds
+    echo "Starting substrate and package build process"
 
-    export PKT_VAGRANT_ONLY_BOXES="${packages_needed}"
-    export PKT_VAGRANT_BUILD_TYPE="package"
+    # Ensure we have a packet device to connect
+    echo "Creating packet device if needed..."
 
-    if [ ! -z "${release}" ]; then
-        export PKT_VAGRANT_INSTALLER_VAGRANT_PACKAGE_SIGNING_REQUIRED="1"
+    if ! packet-exec info; then
+        wrap_stream packet-exec create \
+            "Failed to create packet device"
     fi
 
-    echo "Starting Vagrant package guests... "
-    pkt_wrap_stream vagrant up --no-provision \
-                    "Failed to start builder guests on packet device for packaging"
-    echo "Start Vagrant package builds..."
+    # Make signing files available before upload
+    secrets=$(load-signing) || fail "Failed to load signing files"
+    eval "${secrets}"
 
-    # Load secrets and persist for use
-    export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
-    packet-exec run -quiet -- sleep 500 &
-    unset PACKET_EXEC_PRE_BUILTINS
+    echo "Setting up remote packet device for current job... "
+    # NOTE: We only need to call packet-exec with the -upload option once
+    #       since we are persisting the job directory. This dummy command
+    #       is used simply to seed the work directory.
+    wrap_stream packet-exec run -upload -- /bin/true \
+        "Failed to setup project on remote packet instance"
 
-    echo "Pausing to allow secrets to become available"
-    sleep 10
-    echo "Resuming after secrets pause"
+    # Always ensure boxes are up to date
+    pkt_wrap_stream vagrant box update \
+        "Failed to update local build boxes"
 
+    if [ "${substrates_needed}" = "" ]; then
+        echo "All substrates currently exist. No build required."
+    else
+        declare -A substrate_builds
+
+        export PKT_VAGRANT_ONLY_BOXES="${substrates_needed}"
+        export PKT_VAGRANT_BUILD_TYPE="substrate"
+
+        echo "Starting Vagrant substrate guests..."
+        pkt_wrap_stream vagrant up --no-provision \
+            "Failed to start builder guests on packet device for substrates"
+        echo "Start Vagrant substrate builds..."
+
+        # Load secrets and persist for use
+        export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+        packet-exec run -quiet -- sleep 500 &
+        unset PACKET_EXEC_PRE_BUILTINS
+
+        echo "Pausing to allow secrets to become available"
+        sleep 10
+        echo "Resuming after secrets pause"
+
+        for p in "${!substrate_list[@]}"; do
+            path=(substrate-assets/${p})
+            guest="${substrate_list[${p}]}"
+            if [ -f "${path[0]}" ] || [ -n "${substrate_builds[${guest}]}" ]; then
+                continue
+            fi
+            echo "Running substrate build for ${guest}..."
+            export PKT_VAGRANT_ONLY_BOXES="${guest}"
+            packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
+            pid=$!
+            substrate_builds["${guest}"]="${pid}"
+            until [ -f "${guest}.log" ]; do
+                sleep 0.1
+            done
+            tail -f --quiet --pid "${pid}" "${guest}.log" &
+        done
+
+        # Wait for all the background provisions to complete
+        # NOTE: We don't check pid success since substrate file check
+        #       below will catch any errors
+        for pid in "${substrate_builds[@]}"; do
+            wait "${pid}"
+        done
+
+        # Run simple command to pull any built substrates
+        wrap_stream_raw packet-exec run -download "./substrate-assets/*:./substrate-assets" -- /bin/true
+
+        echo "Storing any built substrates... "
+        # force renewal of the aws session
+        AWS_SESSION_EXPIRATION="$(date)"
+        # Store all built substrates
+        wrap_stream_raw aws s3 sync --no-progress ./substrate-assets/ "${s3_substrate_dst}"
+
+        echo "Destroying existing Vagrant guests..."
+        # Clean up the substrate VMs
+        unset PKT_VAGRANT_ONLY_BOXES
+        pkt_wrap_stream_raw vagrant destroy -f
+    fi
+
+    # Validate all expected substrates were built
+    for p in "${!substrate_list[@]}"; do
+        path=(substrate-assets/${p})
+        if [ ! -f "${path[0]}" ]; then
+            substrates_missing="${substrates_missing},${p}"
+        fi
+    done
+    substrates_missing="${substrates_missing#,}"
+
+    if [ "${substrates_missing}" != "" ]; then
+        if [ -n "${release}" ]; then
+            fail "Missing Vagrant substrate assets matching patterns: ${substrates_missing}"
+        else
+            warn "Missing Vagrant substrate assets matching patterns: ${substrates_missing}"
+        fi
+    fi
+
+    if [ "${packages_needed}" = "" ]; then
+        echo "All packages currently exist. No build required."
+    else
+        declare -A package_builds
+
+        export PKT_VAGRANT_ONLY_BOXES="${packages_needed}"
+        export PKT_VAGRANT_BUILD_TYPE="package"
+
+        if [ ! -z "${release}" ]; then
+            export PKT_VAGRANT_INSTALLER_VAGRANT_PACKAGE_SIGNING_REQUIRED="1"
+        fi
+
+        echo "Starting Vagrant package guests... "
+        pkt_wrap_stream vagrant up --no-provision \
+            "Failed to start builder guests on packet device for packaging"
+        echo "Start Vagrant package builds..."
+
+        # Load secrets and persist for use
+        export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
+        packet-exec run -quiet -- sleep 500 &
+        unset PACKET_EXEC_PRE_BUILTINS
+
+        echo "Pausing to allow secrets to become available"
+        sleep 10
+        echo "Resuming after secrets pause"
+
+        for p in "${!package_list[@]}"; do
+            path=(pkg/${p})
+            guest="${package_list[${p}]}"
+            if [ -f "${path[0]}" ] || [ -n "${package_builds[${guest}]}" ]; then
+                continue
+            fi
+            echo "Running package build for ${guest}..."
+            export PKT_VAGRANT_ONLY_BOXES="${guest}"
+            packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
+            pid=$!
+            package_builds["${guest}"]="${pid}"
+            until [ -f "${guest}.log" ]; do
+                sleep 0.1
+            done
+            tail -f --quiet --pid "${pid}" "${guest}.log" &
+            unset PACKET_EXEC_PRE_BUILTINS
+        done
+
+        # Wait for all the background provisions to complete
+        for pid in "${package_builds[@]}"; do
+            wait "${pid}"
+        done
+
+        # Fetch any built packages
+        wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
+
+        # force renewal of the aws session
+        AWS_SESSION_EXPIRATION="$(date)"
+        # Store all built packages
+        echo "Storing any built packages... "
+        wrap_stream_raw aws s3 sync --no-progress ./pkg/ "${s3_package_dst}"
+
+        echo "Destroying existing Vagrant guests..."
+        unset PKT_VAGRANT_ONLY_BOXES
+        pkt_wrap_stream_raw vagrant destroy -f
+    fi
+
+    # Validate all expected packages were built
     for p in "${!package_list[@]}"; do
         path=(pkg/${p})
-        guest="${package_list[${p}]}"
-        if [ -f "${path}" ] || [ ! -z "${package_builds[${guest}]}" ]; then
-            continue
+        if [ ! -f "${path[0]}" ]; then
+            packages_missing="${packages_missing},${p}"
         fi
-        echo "Running package build for ${guest}..."
-        export PKT_VAGRANT_ONLY_BOXES="${guest}"
-        packet-exec run -- vagrant provision "${guest}" > "${guest}.log" 2>&1 &
-        pid=$!
-        package_builds["${guest}"]="${pid}"
-        until [ -f "${guest}.log" ]; do
-            sleep 0.1
-        done
-        tail -f --quiet --pid "${pid}" "${guest}.log" &
-        unset PACKET_EXEC_PRE_BUILTINS
     done
+    packages_missing="${packages_missing#,}"
 
-    # Wait for all the background provisions to complete
-    for pid in "${package_builds[@]}"; do
-        wait "${pid}"
-    done
-
-    # Fetch any built packages
-    wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
-
-    # force renewal of the aws session
-    AWS_SESSION_EXPIRATION=$(date)
-    # Store all built packages
-    echo "Storing any built packages... "
-    wrap_stream_raw aws s3 sync --no-progress ./pkg/ "${s3_package_dst}"
-
-    echo "Destroying existing Vagrant guests..."
-    unset PKT_VAGRANT_ONLY_BOXES
-    pkt_wrap_stream_raw vagrant destroy -f
-fi
-
-# Validate all expected packages were built
-for p in "${!package_list[@]}"; do
-    path=(pkg/${p})
-    if [ ! -f "${path}" ]; then
-        packages_missing="${packages_missing},${p}"
-    fi
-done
-packages_missing="${packages_missing#,}"
-
-if [ "${packages_missing}" != "" ]; then
-    if [ -n "${release}" ]; then
-        fail "Missing Vagrant package assets matching patterns: ${packages_missing}"
-    else
-        warn "Missing Vagrant package assets matching patterns: ${packages_missing}"
+    if [ "${packages_missing}" != "" ]; then
+        if [ -n "${release}" ]; then
+            fail "Missing Vagrant package assets matching patterns: ${packages_missing}"
+        else
+            warn "Missing Vagrant package assets matching patterns: ${packages_missing}"
+        fi
     fi
 fi
 
@@ -363,50 +376,36 @@ if [ -z "${release}" ]; then
     echo "Dispatching vagrant-acceptance"
     curl -X POST "https://api.github.com/repos/hashicorp/vagrant-acceptance/dispatches" \
          -H 'Accept: application/vnd.github.everest-v3+json' \
-         -u $HASHIBOT_USERNAME:$HASHIBOT_TOKEN \
+         -u "${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}" \
          --data '{"event_type": "prerelease", "client_payload": { "prerelease_version": "'"${prerelease_version}"'"}}'
 
     # As this is not an actual release, we are done now
     exit
 fi
 
-# If we are still here, then this is a release build. Sign the
-# assets and publish the release.
-echo -n "Cloning Vagrant repository for signing process... "
-wrap git clone https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/hashicorp/vagrant vagrant \
-     "Failed to clone Vagrant repository"
-
-mkdir -p vagrant/pkg/dist
-mv pkg/* vagrant/pkg/dist/
-pushd vagrant > "${output}"
-
-echo "Generating checksums and signing result for Vagrant version ${vagrant_version}..."
-export PACKET_EXEC_PRE_BUILTINS="LoadSecrets"
-wrap_stream packet-exec run -upload -download "./pkg/dist/*SHA256SUMS*:./pkg/dist" -- ./scripts/sign.sh "${vagrant_version}" \
-            "Checksum generation and signing failed for release"
-unset PACKET_EXEC_PRE_BUILTINS
-popd > "${output}"
-
-mv vagrant/pkg/dist/* pkg/
-
+# If we are still here, then this is a release build.
 echo "Storing release packages into asset store..."
 upload_assets pkg/
 
 echo "Releasing new version of Vagrant to HashiCorp releases - v${vagrant_version}"
-hashicorp_release pkg/ vagrant
+hashicorp_release pkg/ vagrant "${vagrant_version}"
 
 slack -m "New Vagrant release has been published! - *${vagrant_version}*\n\nAssets: https://releases.hashicorp.com/vagrant/${vagrant_version}\nStore: $(asset_location)"
+
+echo -n "Cloning Vagrant repository for signing process... "
+wrap git clone "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/hashicorp/vagrant" vagrant-source \
+     "Failed to clone Vagrant repository"
+pushd vagrant-source
 
 # Now that we have published the new version we need to create
 # a new branch for the versioned docs and push the gem as a release
 # into the vagrant repository.
-tags=($(git tag -l --sort=v:refname)) # this provides tag list in ascending order
+tags=("$(git tag -l --sort=-v:refname)") # this provides tag list in ascending order
 tag_len="${#tags[@]}"
 for ((i=0; i < "${tag_len}"; i++))
 do
-    val=$(semver "${vagrant_version}" "${tag}")
-    if [[ "${val}" == "0" ]]; then
-        idx=$((i+1))
+    if "${root}/.ci/semver" "${vagrant_version}" "${tags[i]}"; then
+        idx=$i
         break
     fi
 done
