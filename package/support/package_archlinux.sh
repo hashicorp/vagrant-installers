@@ -23,7 +23,7 @@ while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # Work in a temporary directory
-TMP_DIR="$(mktemp -d tmp.XXXXXXXXX)"
+TMP_DIR="$(mktemp -d tmp.XXXXXXXXX -p "$(pwd)")"
 pushd "${TMP_DIR}" || fail "Failed to move to temporary working directory"
 
 cp "${DIR}/archlinux/PKGBUILD.local" ./PKGBUILD || fail "Failed to get PKGBUILD file"
