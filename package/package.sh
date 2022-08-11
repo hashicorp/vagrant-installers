@@ -26,10 +26,12 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 #--------------------------------------------------------------------
 # Create a writeable temporary directory
 TMP_DIR="$(mktemp "$(pwd)/packagetmp.XXXXXX")"
+mkdir -p "${TMP_DIR}"
 export TMPDIR="${TMP_DIR}"
 
 # Copy the substrate and unzip it
 SUBSTRATE_TMP_DIR="$(mktemp "$(pwd)/package-substrate.XXXXXXXXXX")"
+mkdir -p "${SUBSTRATE_TMP_DIR}"
 cp "${SUBSTRATE_PATH}" "${SUBSTRATE_TMP_DIR}/substrate.zip"
 pushd "${SUBSTRATE_TMP_DIR}" ||
   fail "Could not enter substrate temporary directory"
