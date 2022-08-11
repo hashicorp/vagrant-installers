@@ -55,7 +55,7 @@ else
 fi
 
 # Work in a temporary directory
-TMP_DIR="$(mktemp -d tmp.XXXXXXXXX -p "$(pwd)")"
+TMP_DIR="$(mktemp "$(pwd)/tmp.XXXXXXXXX")"
 pushd "${TMP_DIR}" ||
     fail "Failed to move into temporary directory"
 
