@@ -16,7 +16,7 @@ jobs:
   build:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Boxes (centos)
-    runs-on: self-hosted
+    runs-on: [self-hosted, vagrantci]
     steps:
       - name: Code Checkout
         uses: actions/checkout@v1
