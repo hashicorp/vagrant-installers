@@ -97,7 +97,7 @@ fi
 
 gem_short_sha=$(sha256sum vagrant-*.gem | cut -d' ' -f1) ||
     fail "Failed to generate shasum for Vagrant RubyGem"
-substrate_sha="$(git log --format=%h -1 -- "${root}/substrate/deps.sh")" ||
+substrate_sha="$(git log --format=%h -1 -- "./substrate/deps.sh")" ||
     fail "Failed to get substrate sha from git history"
 
 s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${substrate_sha}"
