@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Code Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Build and Release
         run: ./.ci/build-packages.sh
         env:
