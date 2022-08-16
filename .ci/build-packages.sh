@@ -25,7 +25,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 pushd "${root}"
 
-if [ ! -z "${release}" ]; then
+if [ -n "${release}" ]; then
     export SLACK_CHANNEL="#team-vagrant"
     slack -m "Starting Vagrant release build for: ${tag}"
 else
