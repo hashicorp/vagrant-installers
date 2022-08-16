@@ -97,6 +97,8 @@ fi
 
 gem_short_sha=$(sha256sum vagrant-*.gem | cut -d' ' -f1) ||
     fail "Failed to generate shasum for Vagrant RubyGem"
+echo "Current directory path: $(pwd)"
+echo "Current directory contents: $(ls -la)"
 substrate_sha="$(git log --format=%h -1 -- "./substrate/deps.sh")" ||
     fail "Failed to get substrate sha from git history"
 

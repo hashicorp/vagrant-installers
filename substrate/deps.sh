@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 # This file contains version information for all dependencies
 # required by the Vagrant substrates. Substrates are built
 # and cached based on the git commit id. This allows substrates
