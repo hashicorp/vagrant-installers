@@ -95,9 +95,12 @@ else
          "Failed to download Vagrant go darwin amd64 zip"
 fi
 
-gem_short_sha=$(sha256sum vagrant-*.gem | cut -d' ' -f1)
+gem_short_sha=$(sha256sum vagrant-*.gem | cut -d' ' -f1) ||
+    fail "Failed to generate shasum for Vagrant RubyGem"
+substrate_sha="$(git log --format=%h -1 -- "${root}/substrate/deps.sh")" ||
+    fail "Failed to get substrate sha from git history"
 
-s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${short_sha}"
+s3_substrate_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${substrate_sha}"
 if [ "${tag}" != "" ]; then
     if [[ "${tag}" = *"+"* ]]; then
         s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${tag}"
@@ -105,7 +108,7 @@ if [ "${tag}" != "" ]; then
         s3_package_dst="${ASSETS_PRIVATE_BUCKET}/${repository}/${tag}-${gem_short_sha}"
     fi
 else
-    s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}/${short_sha}-${gem_short_sha}"
+    s3_package_dst="${ASSETS_PRIVATE_LONGTERM}/${repository}/${ident_ref}/${substrate_sha}-${gem_short_sha}"
 fi
 
 export PACKET_EXEC_REMOTE_DIRECTORY="${job_id}"
