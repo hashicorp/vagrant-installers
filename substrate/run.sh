@@ -11,7 +11,6 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 dep_cache="https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
 #### Update these as required
-autoconf_file="autoconf-${autoconf_version}.tar.gz"
 curl_file="curl-${curl_version}.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
 libarchive_file="libarchive-${libarchive_version}.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
 libffi_file="libffi-${libffi_version}.tar.gz"               # https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
@@ -31,11 +30,7 @@ xz_file="xz-${xz_version}.tar.gz"                     # https://tukaani.org/xz/x
 zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
 # Used for centos builds
-m4_file="m4-${m4_version}.tar.gz"                # https://ftp.gnu.org/gnu/m4/m4-${VERSION}.tar.gz
-automake_file="automake-${automake_version}.tar.gz"    # https://ftp.gnu.org/gnu/automake/automake-${VERSION}.tar.gz
-libtool_file="libtool-${libtool_version}.tar.gz"       # https://ftp.gnu.org/gnu/libtool/libtool-${VERSION}.tar.gz
-patchelf_file="patchelf-${patchelf_version}.tar.gz"       # https://nixos.org/releases/patchelf/patchelf-${VERSION}/patchelf-${VERSION}.tar.gz
-libxcrypt_file="libxcrypt-v${libxcrypt_version}.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
+libxcrypt_file="libxcrypt-v4.4.18.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
 
 macos_deployment_target="10.9"
 
@@ -82,7 +77,6 @@ if [[ "${uname}" = *"Linux"* ]]; then
         linux_os="linux"
     fi
     host_ident="${linux_os}_${host_arch}"
-    install_prefix=""
 else
     host_os="darwin"
     host_ident="darwin_${host_arch}"
@@ -111,97 +105,6 @@ setupdir=$(mktemp -d vagrant-substrate-setup.XXXXX)
 pushd "${setupdir}"
 
 echo_stderr "  -> Installing any required packages..."
-if [[ "${linux_os}" = "ubuntu" ]]; then
-    apt-get install -qy build-essential autoconf automake chrpath libtool libpython-dev
-fi
-
-if [[ "${linux_os}" = "archlinux" ]]; then
-    pacman --noconfirm -Suy unzip
-fi
-
-if [[ "${linux_os}" = "centos" ]]; then
-    set +e
-    # need newer gcc to build libxcrypt-compat package
-    echo_stderr "      -> Installing custom gcc..."
-    sudo yum install -y devtoolset-8-toolchain rh-perl524 rh-perl524-perl-open unzip git zip autoconf
-
-    yum -d 0 -e 0 -y install chrpath gcc make  rh-perl524-perl-Thread-Queue
-    yum -d 0 -e 0 -y install rh-perl524-perl-Data-Dumper python-devel
-    # Remove openssl dev files to prevent any conflicts when building
-    yum -d 0 -e 0 -y remove openssl-devel
-
-    source /opt/rh/devtoolset-8/enable
-    source /opt/rh/rh-perl524/enable
-
-    set -e
-
-    echo_stderr "  -> Build and install custom host tools..."
-
-    PATH=/usr/local/bin:$PATH
-    export PATH=/usr/local/bin:$PATH
-
-    # autoconf
-    if [[ ! -f "/usr/local/bin/autoconf" ]]; then
-        echo_stderr "   -> Installing custom autoconf..."
-        curl -f -L -s -o autoconf.tar.gz "${dep_cache}/${autoconf_file}"
-        tar xf autoconf.tar.gz
-        pushd autoconf*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
-    # m4
-    if [[ ! -f "/usr/local/bin/m4" ]]; then
-        echo_stderr "   -> Installing custom m4..."
-        curl -f -L -s -o m4.tar.gz "${dep_cache}/${m4_file}"
-        tar xzf m4.tar.gz
-        pushd m4*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
-    # automake
-    if [[ ! -f "/usr/local/bin/automake" ]]; then
-        echo_stderr "   -> Installing custom automake..."
-        curl -f -L -s -o automake.tar.gz "${dep_cache}/${automake_file}"
-        tar xzf automake.tar.gz
-        pushd automake*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
-    # libtool
-    if [[ ! -f "/usr/local/bin/libtool" ]]; then
-        echo_stderr "   -> Installing custom libtool..."
-        curl -f -L -s -o libtool.tar.gz "${dep_cache}/${libtool_file}"
-        tar xzf libtool.tar.gz
-        pushd libtool*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
-    # patchelf
-    if [[ ! -f "/usr/local/bin/patchelf" ]]; then
-        echo_stderr "   -> Installing custom patchelf..."
-        curl -f -L -s -o patchelf.tar.gz "${dep_cache}/${patchelf_file}"
-        tar xzf patchelf.tar.gz
-        pushd patchelf*
-        ./configure --prefix "/usr/local"
-        make
-        make install
-        popd
-    fi
-
-    export PATH="/usr/local/bin:$PATH"
-fi
 
 if [[ "${host_os}" = "darwin" ]]; then
     pushd "/tmp"
@@ -254,7 +157,7 @@ fi
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
         echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" https://github.com/besser82/libxcrypt/archive/v4.4.18.tar.gz
+        curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" "https://github.com/besser82/libxcrypt/archive/${libxcrypt_file}"
         tar xzf libxcrypt.tar.gz
         pushd libxcrypt*
 
