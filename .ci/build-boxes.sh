@@ -56,6 +56,10 @@ pushd packer/vagrant > "${output}"
 export PACKET_EXEC_PERSIST=1
 packet-exec run -upload -- /bin/true
 
+# Load environment variables that define dependency
+# version information
+. "${root}/substrate/envrc"
+
 IFS=',' read -r -a builds <<< "${PKT_PACKER_BUILDS}"
 for build in "${builds[@]}"; do
     echo "Building box for ${build}..."
