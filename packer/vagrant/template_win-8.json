@@ -69,6 +69,9 @@
       "type": "windows-restart"
     },
     {
+      "environment_vars": [
+        "GO_INSTALL_VERSION={{user `go_version`}}"
+      ],
       "scripts": [
         "{{template_dir}}/scripts/windows/vagrant.bat",
         "{{template_dir}}/scripts/windows/enable-rdp.bat",
@@ -103,6 +106,7 @@
     "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
     "version": "0.1",
     "vm_name": "eval-win81x64-enterprise",
-    "vm_suffix": ""
+    "vm_suffix": "",
+    "go_version": "{{env `GO_INSTALL_VERSION`}}"
   }
 }

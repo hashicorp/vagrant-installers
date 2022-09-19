@@ -49,7 +49,14 @@
         "HOME_DIR=/home/vagrant",
         "http_proxy={{user `http_proxy`}}",
         "https_proxy={{user `https_proxy`}}",
-        "no_proxy={{user `no_proxy`}}"
+        "no_proxy={{user `no_proxy`}}",
+        "GO_INSTALL_VERSION={{user `go_version`}}",
+        "DEP_CACHE={{user `dependency_cache`}}",
+        "AUTOCONF_VERSION={{user `autoconf_version`}}",
+        "M4_VERSION={{user `m4_version`}}",
+        "AUTOMAKE_VERSION={{user `automake_version`}}",
+        "LIBTOOL_VERSION={{user `libtool_version`}}",
+        "PATCHELF_VERSION={{user `patchelf_version`}}"
       ],
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E sh -eux '{{.Path}}'",
       "expect_disconnect": true,
@@ -58,7 +65,8 @@
         "scripts/centos/vagrant.sh",
         "scripts/centos/vault.sh",
         "scripts/centos/update.sh",
-        "scripts/centos/install-dev-tools.sh",
+        "scripts/centos/install-dev-tools-centos6.sh",
+        "scripts/centos/install-custom-dev-tools.sh",
         "scripts/centos/vmware.sh",
         "scripts/centos/ruby.sh",
         "scripts/centos/go.sh",
@@ -86,6 +94,13 @@
     "mirror_directory": "6.10/isos/x86_64",
     "name": "centos-6",
     "no_proxy": "{{env `no_proxy`}}",
+    "go_version": "{{env `GO_INSTALL_VERSION`}}",
+    "dependency_cache": "https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies",
+    "autoconf_version": "{{env `AUTOCONF_VERSION`}}",
+    "m4_version": "{{env `M4_VERSION`}}",
+    "automake_version": "{{env `AUTOMAKE_VERSION`}}",
+    "libtool_version": "{{env `LIBTOOL_VERSION`}}",
+    "patchelf_version": "{{env `PATCHELF_VERSION`}}",
     "version": "1.0"
   }
 }
