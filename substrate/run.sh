@@ -1,36 +1,41 @@
 #!/usr/bin/env bash
 
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/substrate/deps.sh"
+
 #### Software dependencies
 
 dep_cache="https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
 #### Update these as required
-autoconf_file="autoconf-2.71.tar.gz"
-curl_file="curl-7.84.0.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
-libarchive_file="libarchive-3.6.1.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
-libffi_file="libffi-3.4.2.tar.gz"               # https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
-libgcrypt_file="libgcrypt-1.10.1.tar.bz2"      # https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2
-libgmp_file="gmp-6.2.1.tar.bz2"               # https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2
-libgpg_error_file="libgpg-error-1.45.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
-libiconv_file="libiconv-1.17.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
+autoconf_file="autoconf-${autoconf_version}.tar.gz"
+curl_file="curl-${curl_version}.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
+libarchive_file="libarchive-${libarchive_version}.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
+libffi_file="libffi-${libffi_version}.tar.gz"               # https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
+libgcrypt_file="libgcrypt-${libgcrypt_version}.tar.bz2"      # https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${libgcrypt_version}.tar.bz2
+libgmp_file="gmp-${libgmp_version}.tar.bz2"               # https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2
+libgpg_error_file="libgpg-error-${libgpg_error_version}.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
+libiconv_file="libiconv-${libiconv_version}.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
 # Need up update gcc version to use libssh2 1.9.0+
-libssh2_file="libssh2-1.8.0.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
-libxml2_file="libxml2-2.9.14.tar.xz"          # https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.14/libxml2-v2.9.14.tar.gz ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
-libxslt_file="libxslt-1.1.35.tar.xz"          # https://gitlab.gnome.org/GNOME/libxslt/-/archive/v1.1.35/libxslt-v1.1.35.tar.gz ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
-libyaml_file="yaml-0.2.5.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
-openssl_file="openssl-1.1.1q.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
-readline_file="readline-8.1.2.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
-ruby_file="ruby-2.7.6.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
-xz_file="xz-5.2.5.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
-zlib_file="zlib-1.2.12.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
+libssh2_file="libssh2-${libssh2_version}.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
+libxml2_file="libxml2-${libxml2_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.14/libxml2-v2.9.14.tar.gz ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
+libxslt_file="libxslt-${libxslt_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxslt/-/archive/v1.1.35/libxslt-v1.1.35.tar.gz ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
+libyaml_file="yaml-${libyaml_version}.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
+openssl_file="openssl-${openssl_version}.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
+readline_file="readline-${readline_version}.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
+ruby_file="ruby-${ruby_version}.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
+xz_file="xz-${xz_version}.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
+zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
 # Used for centos builds
-m4_file="m4-1.4.18.tar.gz"                # https://ftp.gnu.org/gnu/m4/m4-${VERSION}.tar.gz
-automake_file="automake-1.16.3.tar.gz"    # https://ftp.gnu.org/gnu/automake/automake-${VERSION}.tar.gz
-libtool_file="libtool-2.4.6.tar.gz"       # https://ftp.gnu.org/gnu/libtool/libtool-${VERSION}.tar.gz
-patchelf_file="patchelf-0.9.tar.gz"       # https://nixos.org/releases/patchelf/patchelf-${VERSION}/patchelf-${VERSION}.tar.gz
-libxcrypt_file="libxcrypt-v4.4.18.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
-
+m4_file="m4-${m4_version}.tar.gz"                # https://ftp.gnu.org/gnu/m4/m4-${VERSION}.tar.gz
+automake_file="automake-${automake_version}.tar.gz"    # https://ftp.gnu.org/gnu/automake/automake-${VERSION}.tar.gz
+libtool_file="libtool-${libtool_version}.tar.gz"       # https://ftp.gnu.org/gnu/libtool/libtool-${VERSION}.tar.gz
+patchelf_file="patchelf-${patchelf_version}.tar.gz"       # https://nixos.org/releases/patchelf/patchelf-${VERSION}/patchelf-${VERSION}.tar.gz
+libxcrypt_file="libxcrypt-v${libxcrypt_version}.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
 
 macos_deployment_target="10.9"
 
