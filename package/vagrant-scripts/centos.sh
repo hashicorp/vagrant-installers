@@ -1,23 +1,14 @@
 #!/bin/sh
 
-yum install -y nc zip unzip chrpath
 
-# if the proxy is around, use it
-nc -z -w3 192.168.1.1 8123 && export http_proxy="http://192.168.1.1:8123"
+# Create our local destination for the assets
 mkdir -p /vagrant/substrate-assets
+# Ensure our package script is executable
 chmod 755 /vagrant/package/package.sh
-
-hostos=$(uname -a)
-
-if [[ "${hostos}" = *"x86_64"* ]]; then
-    sudo yum install -y centos-release-scl
-    sudo yum install -y devtoolset-8-toolchain
-    source /opt/rh/devtoolset-8/enable
-fi
 
 set -e
 
-/vagrant/package/package.sh /vagrant/substrate-assets/substrate_centos_$(uname -m).zip main
+/vagrant/package/package.sh "/vagrant/substrate-assets/substrate_centos_$(uname -m).zip main"
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
-mkdir -p /vagrant/${pkg_dir}
-cp *.rpm /vagrant/${pkg_dir}/
+mkdir -p "/vagrant/${pkg_dir}"
+cp ./*.rpm "/vagrant/${pkg_dir}/"

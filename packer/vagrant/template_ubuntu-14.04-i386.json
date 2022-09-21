@@ -71,7 +71,8 @@
         "HOME_DIR=/home/vagrant",
         "http_proxy={{user `http_proxy`}}",
         "https_proxy={{user `https_proxy`}}",
-        "no_proxy={{user `no_proxy`}}"
+        "no_proxy={{user `no_proxy`}}",
+        "GO_INSTALL_VERSION={{user `go_version`}}"
       ],
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E sh -eux '{{.Path}}'",
       "expect_disconnect": true,
@@ -106,6 +107,7 @@
     "name": "ubuntu1404-i38",
     "no_proxy": "{{env `no_proxy`}}",
     "preseed_path": "preseed.cfg",
+    "go_version": "{{env `GO_INSTALL_VERSION`}}",
     "version": "1.0"
   }
 }

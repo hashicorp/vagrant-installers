@@ -11,7 +11,6 @@
 #
 # FORCE REBUILD: 2022-08-11 16:52:43-07:00
 
-autoconf_version="2.71"
 curl_version="7.84.0"
 libarchive_version="3.6.1"
 libffi_version="3.4.2"
@@ -30,9 +29,5 @@ ruby_version="2.7.6"
 xz_version="5.2.5"
 zlib_version="1.2.12"
 
-# Used for centos builds
-m4_version="1.4.18"
-automake_version="1.16.3"
-libtool_version="2.4.6"
-patchelf_version="0.9"
+# Only used for centos
 libxcrypt_version="4.4.18"
