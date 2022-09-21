@@ -13,7 +13,3 @@ yum -d 0 -e 0 -y remove openssl-devel
 
 echo '. /opt/rh/devtoolset-8/enable' >> /etc/profile
 echo '. /opt/rh/rh-perl524/enable' >> /etc/profile
-
-. /opt/rh/devtoolset-8/enable
-. /opt/rh/rh-perl524/enable
-
