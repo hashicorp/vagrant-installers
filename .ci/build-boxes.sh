@@ -58,7 +58,8 @@ packet-exec run -upload -- /bin/true
 
 # Load environment variables that define dependency
 # version information
-. "${root}/substrate/envrc"
+. "${root}/packer/vagrant/envrc" ||
+    fail "Failed to source required environment variables for versions"
 
 IFS=',' read -r -a builds <<< "${PKT_PACKER_BUILDS}"
 for build in "${builds[@]}"; do
