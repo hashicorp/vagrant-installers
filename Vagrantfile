@@ -13,7 +13,7 @@ build_boxes = [
 ]
 
 box_mappings = {
-  'appimage' => 'bento/ubuntu-20.04',
+  'appimage' => 'ubuntu-14.04',
   'appimage-i386' => 'ubuntu-14.04-i386',
 }
 

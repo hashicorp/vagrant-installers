@@ -2,14 +2,9 @@
 
 set -e
 
-# NOTE: Remove this once added to packer template
-#       and new box is available
-apt-get update
-apt-get install -yq libcairo2-dev
-
-/vagrant/package/appimage.sh
+/vagrant/package/appimage.sh "/vagrant/substrate-assets/substrate_ubuntu_$(uname -m).zip"
 
 pkg_dir=${VAGRANT_PACKAGE_OUTPUT_DIR:-"pkg"}
-mkdir -p /vagrant/${pkg_dir}
-chown vagrant:vagrant *.zip
-mv *.zip /vagrant/${pkg_dir}
+mkdir -p "/vagrant/${pkg_dir}"
+chown vagrant:vagrant ./*.zip
+mv ./*.zip "/vagrant/${pkg_dir}"

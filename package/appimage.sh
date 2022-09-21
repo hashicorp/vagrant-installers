@@ -5,6 +5,13 @@ function fail() {
     exit 1
 }
 
+# Verify arguments
+if [ "$#" -ne "1" ]; then
+  echo "Usage: $0 SUBSTRATE-PATH" >&2
+  exit 1
+fi
+
+SUBSTRATE_PATH="${1}"
 ORIGIN_DIR="$(pwd)"
 
 # Get our directory
@@ -27,25 +34,58 @@ fi
 WORK_DIR="$(mktemp -d tmp.XXXXXXXXX -p "$(pwd)")"
 pushd "${WORK_DIR}" || fail "Could not enter work directory"
 
-# Copy in required files
+check_file="$(date "+/%Y-%m-%d.stamp")"
+if [ ! -f "${check_file}" ]; then
+    apt-get update ||
+        fail "Failed to update local repositories"
+    touch "${check_file}"
+fi
+apt-get install -y libcairo2-dev build-essential ca-certificates ||
+    fail "Failed to install required packages"
+
+# Get vagrant version
 cp "${gem_path}" vagrant.gem || fail "Failed to relocate Vagrant Gem"
+gem unpack ./vagrant.gem || fail "Failed to unpack Vagrant gem"
+VAGRANT_VERSION="$(<vagrant/version.txt)"
+rm -rf ./vagrant
+
+# Copy in our substrate asset
+cp "${SUBSTRATE_PATH}" ./substrate.zip ||
+    fail "Failed to copy substrate asset"
+
+unzip ./substrate.zip ||
+    fail "Failed to unpack substrate"
+mkdir ./vagrant ||
+    fail "Failed to create vagrant directory"
+mv ./embedded ./vagrant/usr ||
+    fail "Failed to rename substrate directory"
+rm -f ./substrate.zip
+
+pushd ./vagrant/usr/lib ||
+    fail "Could not enter lib directory"
+
+for f in ./*.so; do
+    echo "Found shared library: ${f}"
+    for ff in "${f}"*; do
+        if [ "${f}" = "${ff}" ]; then
+            continue
+        fi
+        echo "  ${f} -> ${ff}"
+        rm "${ff}"
+        ln -s "${f}" "${ff}"
+    done
+done
+rm -f ./*.a
+
+popd ||
+    fail "Could not return to work directory"
+
+# Copy in required files
 cp "${appimg_dir}/vagrant.yml" vagrant.yml ||
     fail "Failed to relocate appimage config"
 cp "${appimg_dir}/vagrant_wrapper.sh" vagrant_wrapper.sh ||
     fail "Failed to relocate vagrant wrapper script"
 
-# Add repository so we can get recent Ruby packages
-add-apt-repository -y ppa:brightbox/ruby-ng ||
-    fail "Failed to add brightbox repository"
-apt-get update ||
-    fail "Failed to update local repositories"
-apt-get install -y build-essential ca-certificates ruby2.7 ruby2.7-dev ||
-    fail "Failed to install required packages"
-
-# Get vagrant version
-gem2.7 unpack ./vagrant.gem || fail "Failed to unpack Vagrant gem"
-VAGRANT_VERSION="$(<vagrant/version.txt)"
-rm -rf ./vagrant/
 
 # Create our custom deb package
 mkdir -p "vagrant/DEBIAN/"
@@ -56,18 +96,19 @@ Section: utils
 Priority: important
 Essential: yes
 Architecture: amd64
-Depends: ruby2.7, ruby2.7-dev
+Depends: ca-certificates
 Maintainer: HashiCorp Vagrant Team <team-vagrant@hashicorp.com>
 Description: Vagrant is a tool for building and distributing development environments.
 EOF
 
 dpkg-deb -b ./vagrant || fail "Failed to create Vagrant stub package"
 rm -rf ./vagrant/
-DEB_FILE="${WORK_DIR}/vagrant_${VAGRANT_VERSION}-1.deb"
-mv ./*.deb "${DEB_FILE}"
+VAGRANT_DEB_FILE="${WORK_DIR}/vagrant_${VAGRANT_VERSION}-1.deb"
+mv ./*.deb "${VAGRANT_DEB_FILE}"
 
+export VAGRANT_VERSION
 export WORK_DIR
-export DEB_FILE
+export VAGRANT_DEB_FILE
 
 # Build our appimage
 "${appimg_dir}/pkg2appimage" ./vagrant.yml ||
@@ -88,4 +129,4 @@ mv ./*.zip "${ORIGIN_DIR}/" ||
 # (we really don't care if this fails)
 # shellcheck disable=SC2164
 popd
-rm -rf "${WORK_DIR}"
+# rm -rf "${WORK_DIR}"
