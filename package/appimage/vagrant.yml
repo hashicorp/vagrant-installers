@@ -2,16 +2,14 @@ app: vagrant
 union: true
 
 ingredients:
-  dist: focal
+  dist: bionic
   sources:
-    - deb http://us.archive.ubuntu.com/ubuntu/ focal main universe
-    - deb http://us.archive.ubuntu.com/ubuntu/ focal-updates main universe
-    - deb http://us.archive.ubuntu.com/ubuntu/ focal-backports main universe
-    - deb http://us.archive.ubuntu.com/ubuntu/ focal-security main universe
-  ppas:
-    - brightbox/ruby-ng
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic-updates main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic-backports main universe
+    - deb http://us.archive.ubuntu.com/ubuntu/ bionic-security main universe
   debs:
-    - "${DEB_FILE}"
+    - "${VAGRANT_DEB_FILE}"
 
 script:
   - echo "[Desktop Entry]" > vagrant.desktop
@@ -23,13 +21,18 @@ script:
   - echo "Terminal=true" >> vagrant.desktop
   - touch app.png
   - rm -f lib/x86_64-linux-gnu/libtinfo.so*
-  - mkdir -p usr/gembundle
-  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.7 install rubygems-update --no-document
-  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.7 install "${WORK_DIR}/vagrant.gem" --no-document
-  - GEM_PATH=usr/gembundle GEM_HOME=usr/gembundle usr/bin/gem2.7 install pkg-config --no-document
+  - mkdir -p gems
+  - LD_LIBRARY_PATH="usr/lib:usr/lib64" GEM_PATH="gems" GEM_HOME="gems" usr/bin/gem install "${WORK_DIR}/vagrant.gem" --no-document
+  - LD_LIBRARY_PATH="usr/lib:usr/lib64" GEM_PATH="gems" GEM_HOME="gems" usr/bin/gem install pkg-config --no-document
   - cp "${WORK_DIR}/vagrant_wrapper.sh" usr/bin/vagrant
   - chmod a+x usr/bin/vagrant
   - rm -rf usr/share/man
   - rm -rf usr/share/info
-  - rm -rf usr/gembundle/cache
-  - mv usr/lib/x86_64-linux-gnu/pkgconfig usr/lib/x86_64-linux-gnu/pkgconfig-int
+  - rm -rf gems/cache
+  - rm -rf gems/gems/grpc-*-x86_64-linux/third_party
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/2.{5,6}
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/3.*
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/grpc_c.so
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/core/ext/upb-generated
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/core/ext/upbdefs-generated
+  - rm -rf usr/lib/ruby/*/rdoc
