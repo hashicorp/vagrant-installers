@@ -3,6 +3,8 @@
 custom_dir="$(mktemp -d vagrant-substrate.XXXXX)"
 pushd "${custom_dir}" || exit 255
 
+export PATH="/usr/local/bin:${PATH}"
+
 #-----
 
 echo "   -> Installing custom autoconf..."
