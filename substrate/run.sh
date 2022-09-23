@@ -30,7 +30,7 @@ xz_file="xz-${xz_version}.tar.gz"                     # https://tukaani.org/xz/x
 zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
 # Used for centos builds
-libxcrypt_file="libxcrypt-v4.4.18.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
+libxcrypt_file="libxcrypt-v4.4.28.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
 
 macos_deployment_target="10.9"
 
@@ -157,7 +157,7 @@ fi
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
         echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" "https://github.com/besser82/libxcrypt/archive/${libxcrypt_file}"
+        curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}"
         tar xzf libxcrypt.tar.gz
         pushd libxcrypt*
 
