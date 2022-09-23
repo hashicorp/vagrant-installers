@@ -108,7 +108,7 @@ function Create-Process {
 
 # Get the path of this script and use it to determine directory
 $ScriptPath = $MyInvocation.MyCommand.Path
-$ScriptDirectory = [System.IO.Path]::DirectoryName($ScriptPath)
+$ScriptDirectory = [System.IO.Path]::GetDirectoryName($ScriptPath)
 
 $Build32 = !$Disable32
 $Build64 = !$Disable64
