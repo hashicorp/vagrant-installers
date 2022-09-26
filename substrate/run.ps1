@@ -120,26 +120,14 @@ $depContents = Get-Content "${depPath}" | Where-Object {$_ -like '*=*'}
 for($i = 0; $i -lt $depContents.count; $i++) {
     $line = $depContents[$i]
     $parts = $line.Split("=", 2)
-    Write-Host "Parts: ${parts}"
-    $
-
     $DepVersions.Add($parts[0], $parts[1].Replace('"', ""))
 }
-
-Write-Host "Version deps: ${DepVersions}"
-Write-Error "Halting"
 
 $DepCache = "https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
 $CurlURL = "${DepCache}/curl-$($DepVersions.curl_version).zip"
 $Libssh2URL = "${DepCache}/libssh2-$($DepVersions.libssh2_version).zip"
 $ZlibURL = "${DepCache}/zlib-$($DepVersions.zlib_version).zip"
-
-# NOTE: We pull artifacts from our cache so we don't need to worry about availability. These
-#       original URL values are left as guidance on where to source the zip artifacts
-# $ZlibURL = "https://github.com/madler/zlib/archive/v${ZlibVersion}.zip"
-# $CurlURL = "https://github.com/curl/curl/releases/download/curl-${CurlVersionUnderscore}/${CurlRemoteFilename}"
-# $Libssh2URL = "https://github.com/libssh2/libssh2/archive/libssh2-${Libssh2Version}.zip"
 
 # Allow HTTPS connections to work
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
