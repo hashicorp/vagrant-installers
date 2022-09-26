@@ -21,12 +21,6 @@ dpkg --list \
     | grep linux-source \
     | xargs apt-get -y purge;
 
-# Delete development packages
-dpkg --list \
-    | awk '{ print $2 }' \
-    | grep -- '-dev$' \
-    | xargs apt-get -y purge;
-
 # delete docs packages
 dpkg --list \
     | awk '{ print $2 }' \
