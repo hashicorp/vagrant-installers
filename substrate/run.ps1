@@ -118,19 +118,22 @@ $DepVersions = @{}
 $depPath = [System.IO.Path]::Combine($ScriptDirectory, "deps.sh")
 $depContents = Get-Content "${depPath}" | Where-Object {$_ -like '*=*'}
 for($i = 0; $i -lt $depContents.count; $i++) {
-    $parts = $depContents[$i].Split("=", 2)
+    $line = $depContents[$i]
+    $parts = $line.Split("=", 2)
+    Write-Host "Parts: ${parts}"
+    $
+
     $DepVersions.Add($parts[0], $parts[1].Replace('"', ""))
 }
 
-$CurlVersion = "7.84.0"
-$Libssh2Version = "1.10.0"
-$ZlibVersion = "1.2.12"
+Write-Host "Version deps: ${DepVersions}"
+Write-Error "Halting"
 
 $DepCache = "https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
-$CurlURL = "${DepCache}/curl-${DepVersions.curl_version}.zip"
-$Libssh2URL = "${DepCache}/libssh2-${DepVersions.libssh2_version}.zip"
-$ZlibURL = "${DepCache}/zlib-${DepVersions.zlib_version}.zip"
+$CurlURL = "${DepCache}/curl-$($DepVersions.curl_version).zip"
+$Libssh2URL = "${DepCache}/libssh2-$($DepVersions.libssh2_version).zip"
+$ZlibURL = "${DepCache}/zlib-$($DepVersions.zlib_version).zip"
 
 # NOTE: We pull artifacts from our cache so we don't need to worry about availability. These
 #       original URL values are left as guidance on where to source the zip artifacts
