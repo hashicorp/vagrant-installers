@@ -26,6 +26,8 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 TMP_DIR="$(mktemp -d tmp.XXXXXXXXX -p "$(pwd)")"
 pushd "${TMP_DIR}" || fail "Failed to move to temporary working directory"
 
+pacman -Sy || fail "Failed to update package databases"
+
 cp "${DIR}/archlinux/PKGBUILD.local" ./PKGBUILD || fail "Failed to get PKGBUILD file"
 sed -i "s/%VAGRANT_VERSION%/${VAGRANT_VERSION}/" ./PKGBUILD ||
     fail "Failed to set Vagrant version into PKGBUILD file"
