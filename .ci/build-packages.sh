@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[ "${BASH_VERSINFO:-0}" -ge "4" ]
+
 # Ignore pushd/popd complaints
 # shellcheck disable=SC2164
 
@@ -405,11 +407,11 @@ pushd vagrant-source
 # Now that we have published the new version we need to create
 # a new branch for the versioned docs and push the gem as a release
 # into the vagrant repository.
-tags=("$(git tag -l --sort=-v:refname)") # this provides tag list in ascending order
+mapfile -t tags < <(git tag -l --sort=-v:refname) # this provides tag list in ascending order
 tag_len="${#tags[@]}"
 for ((i=0; i < "${tag_len}"; i++))
 do
-    if "${root}/.ci/semver" "${vagrant_version}" "${tags[i]}"; then
+    if [ "$("${root}/.ci/semver" "${vagrant_version}" "${tags[i]}")" -eq "1" ]; then
         idx=$i
         break
     fi
@@ -427,7 +429,7 @@ previous_version="${previous_version:1:${#previous_version}}" # remove 'v' prefi
 # branch and create a new release branch.
 release_branch="release/${previous_version}"
 release_minor_branch="release/${previous_version%.*}.x"
-echo "Creating a new release-${previous_version} branch..."
+echo "Creating a new ${release_branch} branch..."
 
 wrap git checkout stable-website \
      "Failed to checkout stable-website branch"
@@ -439,7 +441,9 @@ wrap git push origin "${release_branch}" \
 echo "Creating a new ${release_minor_branch} branch..."
 wrap git checkout stable-website \
      "Failed to checkout stable-website branch"
-git branch -d "${release_minor_branch}" > "${output}"
+# The release minor branch will likely not exist locally but
+# just be sure it's not there
+git branch -d "${release_minor_branch}" > "${output}" 2>&1
 
 wrap git checkout -b "${release_minor_branch}" \
      "Failed to create new branch: ${release_minor_branch}"
@@ -453,7 +457,7 @@ echo "Updating stable-website with latest..."
 wrap git checkout "v${vagrant_version}" \
      "Failed to checkout vagrant release v${vagrant_version}"
 wrap git branch -d stable-website \
-     "Failed to delete stable-website branch"
+    "Failed to delete the stable-website branch"
 wrap git checkout -b stable-website \
      "Failed to create new stable-website branch from release v${vagrant_version}"
 wrap git push -f origin stable-website \
