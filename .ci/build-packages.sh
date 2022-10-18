@@ -466,7 +466,9 @@ wrap git push -f origin stable-website \
 slack -m "Vagrant website changes have been pushed for release ${vagrant_version}"
 
 # Finally, we need to create a release on the vagrant repository
-wrap mv ../"vagrant-${vagrant_version}.gem" ./
+wrap mv ../"vagrant-${vagrant_version}.gem" ./ \
+    "Failed to relocate Vagrant RubyGem for GitHub release generation"
+
 
 # Override local variables to create release on vagrant repository
 repo_owner="hashicorp"
