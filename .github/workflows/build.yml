@@ -14,7 +14,7 @@ on:
     types: [build]
 
 env:
-  runs-on: ['self-hosted', 'ondemand', 't3.nano']
+  runs-on: ['self-hosted', 'ondemand', 'type=t3.nano']
   vagrant-ref: ${{ github.event.client_payload.vagrant_reference }}
 
 jobs:

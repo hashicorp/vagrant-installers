@@ -12,11 +12,24 @@ on:
     branches:
       - 'main'
 
+env:
+  runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
+
 jobs:
+  slack-vars:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Populate vars
+    runs-on: env.runs-on
+    uses: ./.github/workflows/slack-vars.yml
+    packet-vars:
+      if: github.repository == 'hashicorp/vagrant-builders'
+    name: Populate vars
+    runs-on: env.runs-on
+    uses: ./.github/workflows/packet-vars.yml
   build:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Boxes (archlinux)
-    runs-on: [self-hosted, vagrantci]
+    runs-on: env.runs-on
     steps:
       - name: Code Checkout
         uses: actions/checkout@v1
@@ -25,7 +38,11 @@ jobs:
         working-directory: ${{github.workspace}}
         env:
           PKT_PACKER_BUILDS: "archlinux"
-          VAGRANT_CI_LOADER_BUCKET: ${{ secrets.VAGRANT_CI_LOADER_BUCKET }}
+          PACKET_EXEC_TOKEN: ${{ needs.packet-vars.outputs.PACKET_EXEC_TOKEN }}
+          PACKET_EXEC_PROJECT_ID: ${{ needs.packet-vars.outputs.PACKET_EXEC_PROJECT_ID }}
+          PACKET_SSH_KEY_CONTENT: ${{ needs.packet-vars.outputs.PACKET_SSH_KEY_CONTENT }}
+          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          VAGRANT_CLOUD_TOKEN: ${{ needs.vagrantcloud-vars.outputs.VAGRANT_CLOUD_TOKEN }}
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}
