@@ -12,6 +12,7 @@ on:
     - cron: '15 1 * * *'
   repository_dispatch:
     types: [build]
+  workflow_dispatch:
 
 env:
   runs-on: ['self-hosted', 'ondemand', 'type=t3.nano']

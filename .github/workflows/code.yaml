@@ -3,6 +3,9 @@ on:
     branches:
       - 'main'
       - 'build-*'
+  workflow_dispatch:
+    branches:
+      - 'main'
 
 env:
   runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
