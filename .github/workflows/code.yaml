@@ -7,23 +7,20 @@ on:
     branches:
       - 'main'
 
-env:
+defaults:
   runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
 
 jobs:
   slack-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
     uses: ./.github/workflows/slack-vars.yml
   hashibot-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
     uses: ./.github/workflows/hashibot-vars.yml
   sync-installers:
     if: github.repository == 'hashicorp/vagrant-builders'
-    runs-on: env.runs-on
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
