@@ -63,16 +63,16 @@ jobs:
           caCertificates: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
-            kv/data/github/${{ github.repository }} asset_password | ASSET_PASSWORD;
-            kv/data/github/${{ github.repository }} macos_notarize_username | MACOS_NOTARIZE_USERNAME;
-            kv/data/github/${{ github.repository }} macos_notarize_password | MACOS_NOTARIZE_PASSWORD;
-            kv/data/github/${{ github.repository }} macos_sign_password | MACOS_SIGN_PASSWORD;
-            kv/data/github/${{ github.repository }} windows_sign_password | WINDOWS_SIGN_PASSWORD;
-            kv/data/github/${{ github.repository }} signore_client_id | SIGNORE_CLIENT_ID;
-            kv/data/github/${{ github.repository }} signore_client_secret | SIGNORE_CLIENT_SECRET;
-            kv/data/github/${{ github.repository }} signore_signer | SIGNORE_SIGNER;
-            kv/data/github/${{ github.repository }} macos_package_cert_content | MACOS_PACKAGE_CERT_CONTENT;
-            kv/data/github/${{ github.repository }} macos_package_key_content | MACOS_PACKAGE_KEY_CONTENT;
-            kv/data/github/${{ github.repository }} macos_code_cert_content | MACOS_CODE_CERT_CONTENT;
-            kv/data/github/${{ github.repository }} win_signing_key_content | WIN_SIGNING_KEY_CONTENT;
-            kv/data/github/${{ github.repository }} package_notification_sns_topic_arn | PACKAGE_NOTIFICATION_SNS_TOPIC_ARN;
+            kv/data/teams/vagrant/packaging asset_password | ASSET_PASSWORD;
+            kv/data/teams/vagrant/packaging macos_notarize_username | MACOS_NOTARIZE_USERNAME;
+            kv/data/teams/vagrant/packaging macos_notarize_password | MACOS_NOTARIZE_PASSWORD;
+            kv/data/teams/vagrant/packaging macos_sign_password | MACOS_SIGN_PASSWORD;
+            kv/data/teams/vagrant/packaging windows_sign_password | WINDOWS_SIGN_PASSWORD;
+            kv/data/teams/vagrant/packaging signore_client_id | SIGNORE_CLIENT_ID;
+            kv/data/teams/vagrant/packaging signore_client_secret | SIGNORE_CLIENT_SECRET;
+            kv/data/teams/vagrant/packaging signore_signer | SIGNORE_SIGNER;
+            kv/data/teams/vagrant/packaging macos_package_cert_content | MACOS_PACKAGE_CERT_CONTENT;
+            kv/data/teams/vagrant/packaging macos_package_key_content | MACOS_PACKAGE_KEY_CONTENT;
+            kv/data/teams/vagrant/packaging macos_code_cert_content | MACOS_CODE_CERT_CONTENT;
+            kv/data/teams/vagrant/packaging win_signing_key_content | WIN_SIGNING_KEY_CONTENT;
+            kv/data/teams/vagrant/packaging package_notification_sns_topic_arn | PACKAGE_NOTIFICATION_SNS_TOPIC_ARN;
