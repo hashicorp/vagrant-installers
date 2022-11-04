@@ -15,39 +15,38 @@ on:
   workflow_dispatch:
 
 env:
-  runs-on: ['self-hosted', 'ondemand', 'type=t3.nano']
   vagrant-ref: ${{ github.event.client_payload.vagrant_reference }}
 
 jobs:
   slack-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/slack-vars.yml
   hashibot-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/hashibot-vars.yml
   packet-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/packet-vars.yml
   packaging-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/packaging-vars.yml
   vagrantcloud-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/vagrantcloud-vars.yml
   build-substrates:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Substrates
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
@@ -71,7 +70,7 @@ jobs:
   build-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Packages
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     needs: build-substrates
     steps:
       - name: Code Checkout
@@ -115,7 +114,7 @@ jobs:
   release-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Release Vagrant Packages
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     needs: build-packages
     steps:
       - name: Code Checkout
@@ -134,7 +133,7 @@ jobs:
   post-release-tasks:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Post Release Tasks
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     needs: release-packages
     steps:
       - name: Code Checkout

@@ -3,24 +3,21 @@ on:
     branches:
       - 'boxes-*'
 
-env:
-  runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-
 jobs:
   slack-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/slack-vars.yml
     packet-vars:
       if: github.repository == 'hashicorp/vagrant-builders'
     name: Populate vars
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/packet-vars.yml
   build:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Boxes
-    runs-on: env.runs-on
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
