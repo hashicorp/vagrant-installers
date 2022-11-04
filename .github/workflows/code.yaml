@@ -10,13 +10,9 @@ on:
 jobs:
   slack-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/slack-vars.yml
   hashibot-vars:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
     uses: ./.github/workflows/hashibot-vars.yml
   sync-installers:
     if: github.repository == 'hashicorp/vagrant-builders'
