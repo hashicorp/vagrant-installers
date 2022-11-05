@@ -26,4 +26,4 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
-            kv/data/team/vagrant/vagrantcloud token | VAGRANT_CLOUD_TOKEN;
+            kv/data/teams/vagrant/vagrantcloud token | VAGRANT_CLOUD_TOKEN;
