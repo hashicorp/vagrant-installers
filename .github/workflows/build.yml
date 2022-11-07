@@ -122,7 +122,7 @@ jobs:
         with:
           path: pkg
       - name: RubyGem cache
-        id: package-cache
+        id: rubygem-cache
         uses: actions/cache@v3
         with:
           path: ./*.gem
@@ -146,11 +146,6 @@ jobs:
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
         working-directory: ${{github.workspace}}
-      - name: Package cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: pkg
   release-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Release Vagrant Packages
@@ -217,7 +212,7 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: RubyGem cache
-        id: package-cache
+        id: rubygem-cache
         uses: actions/cache@v3
         with:
           path: ./*.gem
