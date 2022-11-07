@@ -1587,8 +1587,3 @@ if [[ "${GITHUB_REF}" == *"refs/tags/"* ]]; then
 else
     readonly release
 fi
-
-git config --global core.packedGitLimit 128m
-git config --global core.packedGitWindowSize 128m
-git config --global pack.windowMemory 128m
-git config --global pack.packSizeLimit 128m

@@ -16,7 +16,7 @@ jobs:
     uses: ./.github/workflows/hashibot-vars.yml
   sync-installers:
     if: github.repository == 'hashicorp/vagrant-builders'
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
