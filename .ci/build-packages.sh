@@ -85,6 +85,9 @@ wrap cp vagrant-*.gem package/vagrant.gem \
 wrap cp vagrant-go_* package/ \
      "Failed to move vagrant go binary for packaging"
 
+# Ensure we are ready for using packet
+packet-setup
+
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
 function cleanup() {

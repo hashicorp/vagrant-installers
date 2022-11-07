@@ -44,6 +44,9 @@ if [ -z "${substrates_needed}" ]; then
     exit
 fi
 
+# Ensure we are ready for using packet
+packet-setup
+
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
 function cleanup() {
