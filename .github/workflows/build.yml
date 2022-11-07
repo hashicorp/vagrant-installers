@@ -16,15 +16,17 @@ on:
 
 env:
   vagrant-ref: ${{ github.event.client_payload.vagrant_reference }}
-  PACKET_EXEC_DEVICE_NAME: ci-installers-${{ github.ref }}
+  PACKET_EXEC_DEVICE_NAME: ci-installers-${{ github.ref_name }}
 
-concurrency: ${{ github.ref }}
+concurrency: ${{ github.ref_name }}
 
 jobs:
   build-substrates:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Substrates
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    outputs:
+      substrate-identifier: ${{ steps.substrate-code.outputs.identifier }}
     permissions:
       id-token: write
       contents: read
@@ -54,11 +56,17 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
+      - name: Substrate code identifier
+        id: substrate-code
+        run: |
+          id="$(git log --format %h -1 -- ./substrate)" || exit 1
+          printf "identifier=substrates-%s" "${id}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
         uses: actions/cache@v3
         with:
           path: substrate-assets
+          key: ${{ steps.substrate-code.outputs.identifier }}
       - name: Build Vagrant substrates
         run: ./.ci/build-substrates.sh
         env:
@@ -79,6 +87,9 @@ jobs:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Packages
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    outputs:
+      gem-identifier: ${{ steps.required-artifacts.outputs.gem-identifier }}
+      packages-identifier: ${{ steps.required-artifacts.outputs.packages-identifier }}
     permissions:
       id-token: write
       contents: read
@@ -111,21 +122,30 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
+      - name: Fetch required package building artifacts
+        id: required-artifacts
+        run: |
+          id="$(sha256sum ./vagrant-*.gem)" || exit 1
+          printf "gem-identifier=rubygem-%s" "${id:0:7}" >> $GITHUB_OUTPUT
+          printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
         uses: actions/cache@v3
         with:
           path: substrate-assets
+          key: ${{ steps.build-substrates.outputs.substrate-identifier }}
       - name: Package cache
         id: package-cache
         uses: actions/cache@v3
         with:
           path: pkg
+          key: ${{ steps.required-artifacts.outputs.packages-identifier }}
       - name: RubyGem cache
         id: rubygem-cache
         uses: actions/cache@v3
         with:
           path: ./*.gem
+          key: ${{ steps.required-artifacts.outputs.gem-identifier }}
       - name: Build Vagrant packages
         run: ./.ci/build-packages.sh
         env:
@@ -173,6 +193,12 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
+      - name: Package cache
+        id: package-cache
+        uses: actions/cache@v3
+        with:
+          path: pkg
+          key: ${{ jobs.build-packages.outputs.packages-identifier }}
       - name: Release Vagrant packages
         run: ./.ci/release-packages.sh
         env:
@@ -216,6 +242,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./*.gem
+          key: ${{ jobs.build-packages.outputs.gem-identifier }}
       - name: Trigger acceptance tests
         run: ./.ci/post-release-acceptance-tests.sh
         env:
