@@ -59,7 +59,7 @@ jobs:
       - name: Substrate code identifier
         id: substrate-code
         run: |
-          id="$(git log --format %h -1 -- ./substrate)" || exit 1
+          id="$(git log --format=%h -1 -- ./substrate)" || exit 1
           printf "identifier=substrates-%s" "${id}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
