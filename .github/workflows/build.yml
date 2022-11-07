@@ -42,6 +42,8 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/hashibot username | hashibot_username;
             kv/data/teams/vagrant/packet token | packet_token;
             kv/data/teams/vagrant/packet project_id | packet_project_id;
             kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
@@ -70,6 +72,8 @@ jobs:
       - name: Build Vagrant substrates
         run: ./.ci/build-substrates.sh
         env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
           PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
           PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
@@ -106,6 +110,8 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/hashibot username | hashibot_username;
             kv/data/teams/vagrant/packet token | packet_token;
             kv/data/teams/vagrant/packet project_id | packet_project_id;
             kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
@@ -149,6 +155,8 @@ jobs:
       - name: Build Vagrant packages
         run: ./.ci/build-packages.sh
         env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
           PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
           PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
