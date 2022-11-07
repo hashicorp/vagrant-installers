@@ -4,10 +4,10 @@ on:
       - 'main'
       - 'build-*'
     tags: '*'
-    paths:
-      - 'substrate/**'
-      - 'package/**'
-      - 'Vagrantfile'
+    # paths:
+    #   - 'substrate/**'
+    #   - 'package/**'
+    #   - 'Vagrantfile'
   schedule:
     - cron: '15 1 * * *'
   repository_dispatch:
