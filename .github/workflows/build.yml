@@ -198,7 +198,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: pkg
-          key: ${{ jobs.build-packages.outputs.packages-identifier }}
+          key: ${{ needs.build-packages.outputs.packages-identifier }}
       - name: Release Vagrant packages
         run: ./.ci/release-packages.sh
         env:
@@ -242,7 +242,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./*.gem
-          key: ${{ jobs.build-packages.outputs.gem-identifier }}
+          key: ${{ needs.build-packages.outputs.gem-identifier }}
       - name: Trigger acceptance tests
         run: ./.ci/post-release-acceptance-tests.sh
         env:
@@ -253,18 +253,18 @@ jobs:
       - name: Update Vagrant repository branches
         run: ./.ci/post-release-repo-branches.sh
         env:
-          HASHIBOT_EMAIL: ${{ needs.hashibot-vars.outputs.HASHIBOT_EMAIL }}
-          HASHIBOT_TOKEN: ${{ needs.hashibot-vars.outputs.HASHIBOT_TOKEN }}
-          HASHIBOT_USERNAME: ${{ needs.hashibot-vars.outputs.HASHIBOT_USERNAME }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
         working-directory: ${{github.workspace}}
       - name: Create Vagrant repository release
         run: ./.ci/post-release-repo-release.sh
         env:
-          HASHIBOT_EMAIL: ${{ needs.hashibot-vars.outputs.HASHIBOT_EMAIL }}
-          HASHIBOT_TOKEN: ${{ needs.hashibot-vars.outputs.HASHIBOT_TOKEN }}
-          HASHIBOT_USERNAME: ${{ needs.hashibot-vars.outputs.HASHIBOT_USERNAME }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
         working-directory: ${{github.workspace}}
       - name: Clean Workspace
         if: always()
