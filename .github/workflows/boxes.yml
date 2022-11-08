@@ -46,6 +46,3 @@ jobs:
           PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
-      - name: Clean Workspace
-        if: always()
-        run: rm -rf ${{ github.workspace }}
