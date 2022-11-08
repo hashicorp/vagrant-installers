@@ -128,6 +128,13 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
+      - name: Download upstream artifacts
+        id: upstream-artifacts
+        run: ./.ci/build-packages-requirements.sh
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
       - name: Fetch required package building artifacts
         id: required-artifacts
         run: |
