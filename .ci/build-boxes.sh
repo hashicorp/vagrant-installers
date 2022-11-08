@@ -9,7 +9,6 @@ export PACKET_EXEC_OPERATING_SYSTEM="${PACKET_EXEC_OPERATING_SYSTEM:-ubuntu_18_0
 # set workstation url to point to v15. ref: https://github.com/hashicorp/packer/issues/10009
 export PKT_WORKSTATION_DOWNLOAD_URL="https://download3.vmware.com/software/wkst/file/VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle"
 export PACKET_EXEC_PRE_BUILTINS="${PACKET_EXEC_PRE_BUILTINS:-InstallVmware,InstallVagrant,InstallVagrantVmware,InstallHashiCorpTool}"
-export PACKET_EXEC_ATTACH_VOLUME="1"
 export PACKET_EXEC_QUIET="1"
 export PKT_VAGRANT_HOME="/mnt/data"
 export PKT_VAGRANT_CLOUD_TOKEN="${VAGRANT_CLOUD_TOKEN}"
@@ -26,9 +25,6 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/load-ci.sh"
 
-# Set our device name after CI is loaded so we have access to common variables
-export PACKET_EXEC_DEVICE_NAME="ci-installer-boxes-${run_id}"
-
 pushd "${root}" > "${output}"
 
 function cleanup() {
@@ -39,12 +35,12 @@ function cleanup() {
 export PKT_PACKER_BUILDS="${PKT_PACKER_BUILDS:-centos-6,centos-6-i386,ubuntu-14.04,ubuntu-14.04-i386,win-8}"
 export PACKET_EXEC_REMOTE_DIRECTORY="${job_id}"
 
+packet-setup
+
 # Ensure we have a packet device to connect
 echo "Creating packet device if needed..."
 
-packet-exec info
-
-if [ $? -ne 0 ]; then
+if ! packet-exec info; then
     wrap_stream packet-exec create \
                 "Failed to create packet device"
 fi
