@@ -8,16 +8,27 @@ on:
       - 'main'
 
 jobs:
-  slack-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    uses: ./.github/workflows/slack-vars.yml
-  hashibot-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    uses: ./.github/workflows/hashibot-vars.yml
   sync-installers:
     if: github.repository == 'hashicorp/vagrant-builders'
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: read
     steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/hashibot username | hashibot_username;
       - name: Code Checkout
         uses: actions/checkout@v3
         with:
@@ -27,9 +38,9 @@ jobs:
         run: ./.ci/sync.sh
         working-directory: ${{github.workspace}}
         env:
-          HASHIBOT_TOKEN: ${{ needs.hashibot-vars.outputs.HASHIBOT_TOKEN }}
-          HASHIBOT_USERNAME: ${{ needs.hashibot-vars.outputs.HASHIBOT_USERNAME }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
 
   sync-builders:
     if: github.repository == 'hashicorp/vagrant-installers'
