@@ -1267,6 +1267,9 @@ function install_hashicorp_tool() {
         '.assets[] | select(.name | contains("linux_amd64.zip")) | .url') ||
         fail "Failed to detect latest release for hashicorp/${tool_name}"
 
+    printf "Working in directory: %s\n" "${tmp}"
+    printf "Asset found: %s\n" "${asset}"
+
     wrap curl -SsL --fail -o "${tool_name}.zip" -H "Authorization: token ${HASHIBOT_TOKEN}" \
         -H "Accept: application/octet-stream" "${asset}" \
         "Failed to download latest release for hashicorp/${tool_name}"
@@ -1278,6 +1281,8 @@ function install_hashicorp_tool() {
 
     wrap chmod 0755 ./* \
         "Failed to change mode on latest release for hashicorp/${tool_name}"
+
+    printf "Moving binary into bin dir at: %s\n" "${ci_bin_dir}"
 
     wrap mv ./* "${ci_bin_dir}" \
         "Failed to install latest release for hashicorp/${tool_name}"
