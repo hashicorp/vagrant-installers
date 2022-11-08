@@ -12,34 +12,48 @@ on:
     branches:
       - 'main'
 
+concurrency: boxes-${{ github.ref_name }}
+
+env:
+  PACKET_EXEC_DEVICE_NAME: ci-boxes-${{ github.ref_name }}
+
 jobs:
-  slack-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/slack-vars.yml
-    packet-vars:
-      if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/packet-vars.yml
   build:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Boxes (ubuntu 386)
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: read
     steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/packet token | packet_token;
+            kv/data/teams/vagrant/packet project_id | packet_project_id;
+            kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
+            kv/data/teams/vagrant/vagrantcloud token | vagrant_cloud_token;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
       - name: Build Box
         run: ./.ci/build-boxes.sh
         working-directory: ${{github.workspace}}
         env:
           PKT_PACKER_BUILDS: "ubuntu-14.04-i386"
-          PACKET_EXEC_TOKEN: ${{ needs.packet-vars.outputs.PACKET_EXEC_TOKEN }}
-          PACKET_EXEC_PROJECT_ID: ${{ needs.packet-vars.outputs.PACKET_EXEC_PROJECT_ID }}
-          PACKET_SSH_KEY_CONTENT: ${{ needs.packet-vars.outputs.PACKET_SSH_KEY_CONTENT }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
-          VAGRANT_CLOUD_TOKEN: ${{ needs.vagrantcloud-vars.outputs.VAGRANT_CLOUD_TOKEN }}
+          PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
+          PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
+          PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
+          VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
       - name: Clean Workspace
         if: always()
         run: rm -rf ${{ github.workspace }}
