@@ -142,7 +142,7 @@ jobs:
           printf "gem-identifier=rubygem-%s" "${id:0:7}" >> $GITHUB_OUTPUT
           printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
         env:
-          GIT_SHA=${{ github.sha }}
+          GIT_SHA: ${{ github.sha }}
       - name: Substrate cache
         id: substrate-cache
         uses: actions/cache@v3
