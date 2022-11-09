@@ -61,7 +61,7 @@ jobs:
       - name: Substrate code identifier
         id: substrate-code
         run: |
-          id="$(git log --format=%h -1 -- ./substrate)" || exit 1
+          id="$(git log --format=%h -1 -- ./substrate/deps.sh)" || exit 1
           printf "identifier=substrates-%s" "${id}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
@@ -135,12 +135,14 @@ jobs:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
-      - name: Fetch required package building artifacts
+      - name: Generate required artifact identifiers
         id: required-artifacts
         run: |
           id="$(sha256sum ./vagrant-*.gem)" || exit 1
           printf "gem-identifier=rubygem-%s" "${id:0:7}" >> $GITHUB_OUTPUT
           printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
+        env:
+          GIT_SHA=${{ github.sha }}
       - name: Substrate cache
         id: substrate-cache
         uses: actions/cache@v3
