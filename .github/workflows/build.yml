@@ -62,6 +62,8 @@ jobs:
         id: substrate-code
         run: |
           id="$(git log --format=%h -1 -- ./substrate/deps.sh)" || exit 1
+          printf "Generated id: %s\n" "${id}"
+          git log | head -n 5
           printf "identifier=substrates-%s" "${id}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
@@ -139,6 +141,8 @@ jobs:
         id: required-artifacts
         run: |
           id="$(sha256sum ./vagrant-*.gem)" || exit 1
+          printf "gem-identifier=rubygem-%s" "${id:0:7}"
+          printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}"
           printf "gem-identifier=rubygem-%s" "${id:0:7}" >> $GITHUB_OUTPUT
           printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
         env:
