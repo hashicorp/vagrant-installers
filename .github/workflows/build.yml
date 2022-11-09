@@ -64,7 +64,7 @@ jobs:
           id="$(git log --format=%h -1 ./substrate)" || exit 1
           printf "Generated id: %s\n" "${id}"
           git log | head -n 5
-          printf "identifier=substrates-%s" "${id}" >> $GITHUB_OUTPUT
+          printf "identifier=substrates-%s\n" "${id}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
         uses: actions/cache@v3
@@ -141,10 +141,10 @@ jobs:
         id: required-artifacts
         run: |
           id="$(sha256sum ./vagrant-*.gem)" || exit 1
-          printf "gem-identifier=rubygem-%s" "${id:0:7}"
-          printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}"
-          printf "gem-identifier=rubygem-%s" "${id:0:7}" >> $GITHUB_OUTPUT
-          printf "packages-identifier=packages-%s-%s" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
+          printf "gem-identifier=rubygem-%s\n" "${id:0:7}"
+          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA}" "${id:0:7}"
+          printf "gem-identifier=rubygem-%s\n" "${id:0:7}" >> $GITHUB_OUTPUT
+          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
         env:
           GIT_SHA: ${{ github.sha }}
       - name: Substrate cache
