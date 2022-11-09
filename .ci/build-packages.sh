@@ -51,7 +51,7 @@ vagrant_version="$(gem specification vagrant-*.gem version)" ||
 vagrant_version="${vagrant_version##*version: }"
 
 # Unpack all the vagrant-go binaries
-for file in ./*; do
+for file in ./*.zip; do
     [ -f "${file}" ] || continue
     wrap unzip "${file}" \
         "Failed to unzip vagrant-go binary file (${file})"
