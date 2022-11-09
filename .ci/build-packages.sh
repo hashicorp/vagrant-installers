@@ -47,7 +47,7 @@ fi
 
 # Extract out Vagrant version information from gem
 vagrant_version="$(gem specification vagrant-*.gem version)" ||
-    fail "Failed to ready version from Vagrant RubyGem"
+    fail "Failed to read version from Vagrant RubyGem"
 vagrant_version="${vagrant_version##*version: }"
 
 # Unpack all the vagrant-go binaries

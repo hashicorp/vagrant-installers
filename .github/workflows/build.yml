@@ -61,10 +61,10 @@ jobs:
       - name: Substrate code identifier
         id: substrate-code
         run: |
-          id="$(git log --format=%h -1 ./substrate)" || exit 1
-          printf "Generated id: %s\n" "${id}"
-          git log | head -n 5
-          printf "identifier=substrates-%s\n" "${id}" >> $GITHUB_OUTPUT
+          subid="$(git log --format=%h -1 ./substrate)" || exit 1
+          printf "Generated id: %s\n" "${subid}"
+          git log ./substrate | head -n 5
+          printf "identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
       - name: Substrate cache
         id: substrate-cache
         uses: actions/cache@v3
@@ -130,6 +130,10 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
       - name: Download upstream artifacts
         id: upstream-artifacts
         run: ./.ci/build-packages-requirements.sh
