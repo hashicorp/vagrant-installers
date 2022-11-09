@@ -146,7 +146,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: substrate-assets
-          key: ${{ steps.build-substrates.outputs.substrate-identifier }}
+          key: ${{ needs.build-substrates.outputs.substrate-identifier }}
       - name: Package cache
         id: package-cache
         uses: actions/cache@v3
