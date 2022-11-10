@@ -34,6 +34,8 @@ if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
     pushd substrate-assets
     github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
     popd
+else
+    fail "No identifier defined for substrates"
 fi
 
 # Generate a list of substrates we already have (if any)

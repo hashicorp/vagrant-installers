@@ -34,12 +34,16 @@ if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
     pushd substrate-assets
     github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
     popd
+else
+    fail "No identifier defined for substrates"
 fi
 
 if [ -n "${PACKAGES_IDENTIFIER}" ]; then
     pushd pkg
     github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
     popd
+else
+    fail "No identifier defined for packages"
 fi
 
 # Generate a list of packages we already have (if any)
