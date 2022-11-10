@@ -21,12 +21,68 @@ env:
 concurrency: ${{ github.ref_name }}
 
 jobs:
+  info:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Generate information and identifiers
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    outputs:
+      substrates-identifier: ${{ steps.info.outputs.substrates-identifier }}
+      gem-identifier: ${{ steps.info.outputs.gem-identifier }}
+      packages-identifier: ${{ steps.info.outputs.packages-identifier }}
+      vagrant-version: ${{ steps.info.outputs.vagrant-version }}
+      is-release: ${{ steps.info.outputs.is-release }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+      - name: Download upstream artifacts
+        id: upstream-artifacts
+        run: ./.ci/build-packages-requirements.sh
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
+      - name: Information generator
+        id: info
+        run: |
+          subid="$(git log --format=%h -1 ./substrate)" || exit 1
+          printf "identifier=substrates-%s\n" "${subid}"
+          printf "identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
+          gemid="$(sha256sum ./vagrant-*.gem)" || exit 1
+          gemid="${gemid:0:7}"
+          printf "gem-identifier=rubygem-%s\n" "${gemid}"
+          printf "gem-identifier=rubygem-%s\n" "${gemid}" >> $GITHUB_OUTPUT
+          pkgid="$(git log --format=%h -1 ./package)" || exit 1
+          printf "packages-identifier=packages-%s-%s-%s\n" "${subid}" "${pkgid}" "${gemid}"
+          printf "packages-identifier=packages-%s-%s-%s\n" "${subid}" "${pkgid}" "${gemid}" >> $GITHUB_OUTPUT
+          vagrant_version="$(gem specification vagrant-*.gem version)" || exit 1
+          vagrant_version="${vagrant_version##*version: }"
+          printf "vagrant-version=%s\n" "${vagrant_version}"
+          printf "vagrant-version=%s\n" "${vagrant_version}" >> $GITHUB_OUTPUT
+          . .ci/.ci-utility-files/common.sh
+          printf "is-release=%s\n" "${release}"
+          printf "is-release=%s\n" "${release}" >> $GITHUB_OUTPUT
   build-substrates:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Substrates
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
-    outputs:
-      substrates-identifier: ${{ steps.substrate-code.outputs.identifier }}
     permissions:
       id-token: write
       contents: write
@@ -58,14 +114,6 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Substrate code identifier
-        id: substrate-code
-        run: |
-          subid="$(git log --format=%h -1 ./substrate)" || exit 1
-          printf "Generated id: %s\n" "${subid}"
-          printf "identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
       - name: Build Vagrant substrates
         run: ./.ci/build-substrates.sh
         env:
@@ -84,16 +132,12 @@ jobs:
           MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
           WIN_SIGNING_KEY_CONTENT: ${{ steps.secrets.outputs.win_signing_key_content }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
-          SUBSTRATES_IDENTIFIER: ${{ steps.substrate-code.outputs.identifier }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.info.outputs.substrates-identifier }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
   build-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Packages
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
-    outputs:
-      gem-identifier: ${{ steps.required-artifacts.outputs.gem-identifier }}
-      packages-identifier: ${{ steps.required-artifacts.outputs.packages-identifier }}
-      vagrant-version: ${{ steps.required-artifacts.outputs.vagrant-version }}
     permissions:
       id-token: write
       contents: write
@@ -139,27 +183,12 @@ jobs:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
-      - name: Generate required artifact identifiers
-        id: required-artifacts
-        run: |
-          id="$(sha256sum ./vagrant-*.gem)" || exit 1
-          printf "gem-identifier=rubygem-%s\n" "${id:0:7}"
-          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA:0:7}" "${id:0:7}"
-          printf "gem-identifier=rubygem-%s\n" "${id:0:7}" >> $GITHUB_OUTPUT
-          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA:0:7}" "${id:0:7}" >> $GITHUB_OUTPUT
-          # Extract out Vagrant version information from gem
-          vagrant_version="$(gem specification vagrant-*.gem version)" || exit 1
-          vagrant_version="${vagrant_version##*version: }"
-          printf "Vagrant version: %s\n" "${vagrant_version}"
-          printf "vagrant-version=%s\n" "${vagrant_version}" >> $GITHUB_OUTPUT
-        env:
-          GIT_SHA: ${{ github.sha }}
       - name: Build Vagrant packages
         run: ./.ci/build-packages.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGES_IDENTIFIER: ${{ steps.required-artifacts.outputs.packages-identifier }}
-          SUBSTRATES_IDENTIFIER: ${{ needs.build-substrates.outputs.substrates-identifier }}
+          PACKAGES_IDENTIFIER: ${{ needs.info.outputs.packages-identifier }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.info.outputs.substrates-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
@@ -210,8 +239,8 @@ jobs:
       - name: Release Vagrant packages
         run: ./.ci/release-packages.sh
         env:
-          vagrant_version: ${{ needs.build-packages.outputs.vagrant-version }}
-          PACKAGES_IDENTIFIER: ${{ needs.build-packages.outputs.packages-identifier }}
+          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
+          PACKAGES_IDENTIFIER: ${{ needs.info.outputs.packages-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HC_RELEASES_PROD_SNS_TOPIC: ${{ steps.secrets.outputs.package_notification_topic }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
@@ -248,15 +277,10 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
-      - name: RubyGem cache
-        id: rubygem-cache
-        uses: actions/cache@v3
-        with:
-          path: ./*.gem
-          key: ${{ needs.build-packages.outputs.gem-identifier }}
       - name: Trigger acceptance tests
         run: ./.ci/post-release-acceptance-tests.sh
         env:
+          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
@@ -264,6 +288,7 @@ jobs:
       - name: Update Vagrant repository branches
         run: ./.ci/post-release-repo-branches.sh
         env:
+          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
@@ -272,6 +297,7 @@ jobs:
       - name: Create Vagrant repository release
         run: ./.ci/post-release-repo-release.sh
         env:
+          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
