@@ -96,7 +96,7 @@ jobs:
       vagrant-version: ${{ steps.required-artifacts.outputs.vagrant-version }}
     permissions:
       id-token: write
-      contents: read
+      contents: write
     needs: build-substrates
     steps:
       - name: Authentication
@@ -157,6 +157,7 @@ jobs:
       - name: Build Vagrant packages
         run: ./.ci/build-packages.sh
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGES_IDENTIFIER: ${{ steps.required-artifacts.outputs.packages-identifier }}
           SUBSTRATES_IDENTIFIER: ${{ needs.build-substrates.outputs.substrates-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
