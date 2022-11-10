@@ -211,6 +211,7 @@ jobs:
         run: ./.ci/release-packages.sh
         env:
           vagrant_version: ${{ needs.build-packages.outputs.vagrant-version }}
+          PACKAGES_IDENTIFIER: ${{ needs.build-packages.outputs.packages-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HC_RELEASES_PROD_SNS_TOPIC: ${{ steps.secrets.outputs.package_notification_topic }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}

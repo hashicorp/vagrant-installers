@@ -8,6 +8,14 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 pushd "${root}"
 
+mkdir -p ./pkg
+
+if [ -n "${PACKAGES_IDENTIFIER}" ]; then
+    pushd pkg
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
+    popd
+fi
+
 # If this is not a release build, push the prerelease to GitHub
 if [ -z "${release}" ]; then
     if [ -n "${tag}" ]; then

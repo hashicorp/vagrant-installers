@@ -162,6 +162,11 @@ done
 # Fetch any built packages
 wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
 
+echo "Root contents:"
+ls -la
+echo "Package directory contents:"
+ls -la ./pkg
+
 # Stash the packages in draft for reuse
 draft_release "${PACKAGES_IDENTIFIER}" ./pkg
 
