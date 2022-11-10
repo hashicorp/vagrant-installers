@@ -1445,8 +1445,14 @@ function github_release_assets() {
 # $3: release name
 # $4: artifact pattern (optional, all artifacts downloaded if omitted)
 function github_draft_release_assets() {
-    if [ -z "${HASHIBOT_TOKEN}" ]; then
-        fail "Fetching draft release assets requires hashibot configuration"
+    local gtoken
+
+    if [ -n "${HASHIBOT_TOKEN}" ]; then
+        gtoken="${HASHIBOT_TOKEN}"
+    elif [ -n "${GITHUB_TOKEN}" ]; then
+        gtoken="${GITHUB_TOKEN}"
+    else
+        fail "Fetching draft release assets requires hashibot or github token with write permission"
     fi
 
     local release_list release_repo release_name asset_pattern release_content
@@ -1455,7 +1461,7 @@ function github_draft_release_assets() {
     asset_pattern="${4}"
 
     release_list=$(curl -SsL --fail \
-        -H "Authorization: token ${HASHIBOT_TOKEN}" \
+        -H "Authorization: token ${gtoken}" \
         -H "Content-Type: application/json" \
         "https://api.github.com/repos/${release_repo}/releases?per_page=100") ||
         fail "Failed to request releases list for ${release_repo}"
@@ -1488,7 +1494,7 @@ function github_draft_release_assets() {
         asset="${assets[$idx]}"
         artifact="${asset_names[$idx]}"
         wrap curl -SsL --fail -o "${artifact}" \
-            -H "Authorization: token ${HASHIBOT_TOKEN}" \
+            -H "Authorization: token ${gtoken}" \
             -H "Accept: application/octet-stream" "${asset}" \
             "Failed to download asset in release (${release_name}) for ${release_repo} - ${artifact}"
     done
