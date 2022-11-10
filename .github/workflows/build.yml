@@ -29,7 +29,7 @@ jobs:
       substrates-identifier: ${{ steps.substrate-code.outputs.identifier }}
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - name: Authentication
         id: vault-auth
@@ -69,6 +69,7 @@ jobs:
       - name: Build Vagrant substrates
         run: ./.ci/build-substrates.sh
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
