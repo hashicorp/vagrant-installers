@@ -66,8 +66,8 @@ jobs:
         id: info
         run: |
           subid="$(git log --format=%h -1 ./substrate)" || exit 1
-          printf "identifier=substrates-%s\n" "${subid}"
-          printf "identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
+          printf "substrates-identifier=substrates-%s\n" "${subid}"
+          printf "substrates-identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
           gemid="$(sha256sum ./vagrant-*.gem)" || exit 1
           gemid="${gemid:0:7}"
           printf "gem-identifier=rubygem-%s\n" "${gemid}"
