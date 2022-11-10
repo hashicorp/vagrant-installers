@@ -21,7 +21,7 @@ env:
 concurrency: ${{ github.ref_name }}
 
 jobs:
-  info:
+  generate-info:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Generate information and identifiers
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
@@ -29,11 +29,11 @@ jobs:
       id-token: write
       contents: read
     outputs:
-      substrates-identifier: ${{ steps.info.outputs.substrates-identifier }}
-      gem-identifier: ${{ steps.info.outputs.gem-identifier }}
-      packages-identifier: ${{ steps.info.outputs.packages-identifier }}
-      vagrant-version: ${{ steps.info.outputs.vagrant-version }}
-      is-release: ${{ steps.info.outputs.is-release }}
+      substrates-identifier: ${{ steps.gen.outputs.substrates-identifier }}
+      gem-identifier: ${{ steps.gen.outputs.gem-identifier }}
+      packages-identifier: ${{ steps.gen.outputs.packages-identifier }}
+      vagrant-version: ${{ steps.gen.outputs.vagrant-version }}
+      is-release: ${{ steps.gen.outputs.is-release }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -63,7 +63,7 @@ jobs:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
       - name: Information generator
-        id: info
+        id: gen
         run: |
           subid="$(git log --format=%h -1 ./substrate)" || exit 1
           printf "substrates-identifier=substrates-%s\n" "${subid}"
@@ -136,7 +136,7 @@ jobs:
           MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
           WIN_SIGNING_KEY_CONTENT: ${{ steps.secrets.outputs.win_signing_key_content }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
-          SUBSTRATES_IDENTIFIER: ${{ needs.info.outputs.substrates-identifier }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.generate-info.outputs.substrates-identifier }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
   build-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
@@ -191,8 +191,8 @@ jobs:
         run: ./.ci/build-packages.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PACKAGES_IDENTIFIER: ${{ needs.info.outputs.packages-identifier }}
-          SUBSTRATES_IDENTIFIER: ${{ needs.info.outputs.substrates-identifier }}
+          PACKAGES_IDENTIFIER: ${{ needs.generate-info.outputs.packages-identifier }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.generate-info.outputs.substrates-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
@@ -243,8 +243,8 @@ jobs:
       - name: Release Vagrant packages
         run: ./.ci/release-packages.sh
         env:
-          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
-          PACKAGES_IDENTIFIER: ${{ needs.info.outputs.packages-identifier }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
+          PACKAGES_IDENTIFIER: ${{ needs.generate-info.outputs.packages-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HC_RELEASES_PROD_SNS_TOPIC: ${{ steps.secrets.outputs.package_notification_topic }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
@@ -284,7 +284,7 @@ jobs:
       - name: Trigger acceptance tests
         run: ./.ci/post-release-acceptance-tests.sh
         env:
-          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
@@ -292,7 +292,7 @@ jobs:
       - name: Update Vagrant repository branches
         run: ./.ci/post-release-repo-branches.sh
         env:
-          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
@@ -301,7 +301,7 @@ jobs:
       - name: Create Vagrant repository release
         run: ./.ci/post-release-repo-release.sh
         env:
-          vagrant_version: ${{ needs.info.outputs.vagrant-version }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
