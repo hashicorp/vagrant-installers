@@ -28,7 +28,19 @@ declare -A package_list=(
 
 # Create the package assets directory if it
 # doesn't already exist
-mkdir -p pkg
+mkdir -p pkg substrate-assets
+
+if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
+    pushd substrate-assets
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
+    popd
+fi
+
+if [ -n "${PACKAGES_IDENTIFIER}" ]; then
+    pushd pkg
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
+    popd
+fi
 
 # Generate a list of packages we already have (if any)
 for p in "${!package_list[@]}"; do
@@ -44,11 +56,6 @@ if [ -z "${packages_needed}" ]; then
     echo "All packages are currently built"
     exit
 fi
-
-# Extract out Vagrant version information from gem
-vagrant_version="$(gem specification vagrant-*.gem version)" ||
-    fail "Failed to read version from Vagrant RubyGem"
-vagrant_version="${vagrant_version##*version: }"
 
 # Unpack all the vagrant-go binaries
 for file in ./*.zip; do
@@ -154,6 +161,9 @@ done
 
 # Fetch any built packages
 wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
+
+# Stash the packages in draft for reuse
+draft_release "${PACKAGES_IDENTIFIER}" ./pkg
 
 # Now that we have finished, destroy any guests we created
 echo "Destroying existing Vagrant guests..."

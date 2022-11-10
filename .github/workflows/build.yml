@@ -26,7 +26,7 @@ jobs:
     name: Build Vagrant Installer Substrates
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     outputs:
-      substrate-identifier: ${{ steps.substrate-code.outputs.identifier }}
+      substrates-identifier: ${{ steps.substrate-code.outputs.identifier }}
     permissions:
       id-token: write
       contents: read
@@ -65,14 +65,7 @@ jobs:
         run: |
           subid="$(git log --format=%h -1 ./substrate)" || exit 1
           printf "Generated id: %s\n" "${subid}"
-          git log ./substrate | head -n 5
           printf "identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
-      - name: Substrate cache
-        id: substrate-cache
-        uses: actions/cache@v3
-        with:
-          path: substrate-assets
-          key: ${{ steps.substrate-code.outputs.identifier }}
       - name: Build Vagrant substrates
         run: ./.ci/build-substrates.sh
         env:
@@ -90,6 +83,7 @@ jobs:
           MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
           WIN_SIGNING_KEY_CONTENT: ${{ steps.secrets.outputs.win_signing_key_content }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
+          SUBSTRATES_IDENTIFIER: ${{ steps.substrate-code.outputs.identifier }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
   build-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
@@ -98,6 +92,7 @@ jobs:
     outputs:
       gem-identifier: ${{ steps.required-artifacts.outputs.gem-identifier }}
       packages-identifier: ${{ steps.required-artifacts.outputs.packages-identifier }}
+      vagrant-version: ${{ steps.required-artifacts.outputs.vagrant-version }}
     permissions:
       id-token: write
       contents: read
@@ -148,32 +143,21 @@ jobs:
         run: |
           id="$(sha256sum ./vagrant-*.gem)" || exit 1
           printf "gem-identifier=rubygem-%s\n" "${id:0:7}"
-          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA}" "${id:0:7}"
+          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA:0:7}" "${id:0:7}"
           printf "gem-identifier=rubygem-%s\n" "${id:0:7}" >> $GITHUB_OUTPUT
-          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA}" "${id:0:7}" >> $GITHUB_OUTPUT
+          printf "packages-identifier=packages-%s-%s\n" "${GIT_SHA:0:7}" "${id:0:7}" >> $GITHUB_OUTPUT
+          # Extract out Vagrant version information from gem
+          vagrant_version="$(gem specification vagrant-*.gem version)" || exit 1
+          vagrant_version="${vagrant_version##*version: }"
+          printf "Vagrant version: %s\n" "${vagrant_version}"
+          printf "vagrant-version=%s\n" "${vagrant_version}" >> $GITHUB_OUTPUT
         env:
           GIT_SHA: ${{ github.sha }}
-      - name: Substrate cache
-        id: substrate-cache
-        uses: actions/cache@v3
-        with:
-          path: substrate-assets
-          key: ${{ needs.build-substrates.outputs.substrate-identifier }}
-      - name: Package cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: pkg
-          key: ${{ steps.required-artifacts.outputs.packages-identifier }}
-      - name: RubyGem cache
-        id: rubygem-cache
-        uses: actions/cache@v3
-        with:
-          path: ./*.gem
-          key: ${{ steps.required-artifacts.outputs.gem-identifier }}
       - name: Build Vagrant packages
         run: ./.ci/build-packages.sh
         env:
+          PACKAGES_IDENTIFIER: ${{ steps.required-artifacts.outputs.packages-identifier }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.build-substrates.outputs.substrates-identifier }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
@@ -199,7 +183,7 @@ jobs:
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
-      contents: read
+      contents: write
     needs: build-packages
     steps:
       - name: Authentication
@@ -213,6 +197,7 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
             kv/data/teams/vagrant/packaging signore_client_id;
             kv/data/teams/vagrant/packaging signore_client_secret;
             kv/data/teams/vagrant/packaging signore_signer;
@@ -220,15 +205,11 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
-      - name: Package cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: pkg
-          key: ${{ needs.build-packages.outputs.packages-identifier }}
       - name: Release Vagrant packages
         run: ./.ci/release-packages.sh
         env:
+          vagrant_version: ${{ needs.build-packages.outputs.vagrant-version }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
           HC_RELEASES_PROD_SNS_TOPIC: ${{ steps.secrets.outputs.package_notification_topic }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}

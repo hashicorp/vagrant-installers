@@ -29,6 +29,13 @@ declare -A substrate_list=(
 # it doesn't already exist
 mkdir -p substrate-assets
 
+# If we have a substrate identifer defined, attempt to fetch them
+if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
+    pushd substrate-assets
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
+    popd
+fi
+
 # Generate a list of substrates we already have (if any)
 for p in "${!substrate_list[@]}"; do
     path=(substrate-assets/${p})
@@ -129,6 +136,9 @@ done
 # Run simple command to pull any built substrates
 wrap_stream_raw packet-exec run \
     -download "./substrate-assets/*:./substrate-assets" -- /bin/true
+
+# Stash the substrates in a draft for reuse
+draft_release "${SUBSTRATES_IDENTIFIER}" ./substrate-assets
 
 # Now that we have finished, destroy any guests we created
 echo "Destroying existing Vagrant guests..."
