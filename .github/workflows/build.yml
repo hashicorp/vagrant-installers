@@ -25,6 +25,9 @@ jobs:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Generate information and identifiers
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: read
     outputs:
       substrates-identifier: ${{ steps.info.outputs.substrates-identifier }}
       gem-identifier: ${{ steps.info.outputs.gem-identifier }}
