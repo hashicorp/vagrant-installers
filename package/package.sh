@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#
 # Builds the package for Vagrant unix-like systems (Mac OS X and Linux).
 
 function fail() {

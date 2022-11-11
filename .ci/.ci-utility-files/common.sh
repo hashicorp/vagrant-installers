@@ -1050,12 +1050,19 @@ function load-signing() {
         local var_name="PKT_SECRET_FILE_${key}"
         local content_variable="${key}_CONTENT"
 
+        if [ -z "${!content_variable}" ]; then
+            fail "Missing content in environment variable: ${content_variable}"
+        fi
+
         # Content will be encoded so first we decode
         local content
-        content="$(base64 --decode - <<< "${!content_variable}")" ||
-            fail "Failed to decode secret file content"
-        # Now we save it into the expected file
-        printf "%s" "${content}" > "${local_path}"
+
+        printf "%s" "${!content_variable}" > ./.load-signing-temp-file
+        wrap gpg --dearmor ./.load-signing-temp-file \
+            "Failed to decode secret file content"
+        wrap mv ./.load-signing-temp-file.gpg "${local_path}" \
+            "Failed to move signing content to destination"
+        rm -f ./.load-signing-temp-file*
 
         result+="export ${var_name}=\"${local_path}\"\n"
     done
