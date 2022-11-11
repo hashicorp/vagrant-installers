@@ -220,6 +220,8 @@ jobs:
       id-token: write
       contents: write
     needs: [generate-info, build-packages]
+    outputs:
+      prerelease-version: ${{ steps.package-release.outputs.prerelease-version }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -241,6 +243,7 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Release Vagrant packages
+        id: package-release
         run: ./.ci/release-packages.sh
         env:
           vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
@@ -285,6 +288,7 @@ jobs:
         if: ${{ needs.generate-info.outputs.is-release == '' }}
         run: ./.ci/post-release-acceptance-tests.sh
         env:
+          prerelease_version: ${{ needs.release-packages.outputs.prerelease-version }}
           vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
           HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
