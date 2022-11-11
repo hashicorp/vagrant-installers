@@ -86,7 +86,7 @@ jobs:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Substrates
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
-    needs: info
+    needs: generate-info
     permissions:
       id-token: write
       contents: write
