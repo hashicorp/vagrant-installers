@@ -145,7 +145,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    needs: build-substrates
+    needs: [generate-info, build-substrates]
     steps:
       - name: Authentication
         id: vault-auth
@@ -219,7 +219,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    needs: build-packages
+    needs: [generate-info, build-packages]
     steps:
       - name: Authentication
         id: vault-auth
@@ -262,7 +262,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    needs: release-packages
+    needs: [generate-info, release-packages]
     steps:
       - name: Authentication
         id: vault-auth
