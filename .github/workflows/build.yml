@@ -199,7 +199,6 @@ jobs:
           PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
           PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
           PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
-          PKT_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
           PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
           PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ steps.secrets.outputs.macos_sign_password }}
           PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: ${{ steps.secrets.outputs.macos_notarize_username }}

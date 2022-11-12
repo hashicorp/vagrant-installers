@@ -30,14 +30,6 @@ declare -A package_list=(
 # doesn't already exist
 mkdir -p pkg substrate-assets
 
-if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
-    pushd substrate-assets
-    github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
-    popd
-else
-    fail "No identifier defined for substrates"
-fi
-
 if [ -n "${PACKAGES_IDENTIFIER}" ]; then
     pushd pkg
     github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
@@ -60,6 +52,21 @@ if [ -z "${packages_needed}" ]; then
     echo "All packages are currently built"
     exit
 fi
+
+# If we are still here, fetch the substrates and any
+# packages that may already exist
+if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
+    pushd substrate-assets
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
+    popd
+else
+    fail "No identifier defined for substrates"
+fi
+
+pushd pkg
+rm -f ./*
+github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
+popd
 
 # Unpack all the vagrant-go binaries
 for file in ./*.zip; do
