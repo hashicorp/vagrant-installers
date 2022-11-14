@@ -8,6 +8,16 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 pushd "${root}"
 
+mkdir -p ./pkg
+
+if [ -n "${PACKAGES_IDENTIFIER}" ]; then
+    pushd pkg
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
+    popd
+else
+    fail "No identifier defined for packages"
+fi
+
 # If this is not a release build, push the prerelease to GitHub
 if [ -z "${release}" ]; then
     if [ -n "${tag}" ]; then
@@ -15,6 +25,9 @@ if [ -z "${release}" ]; then
     else
         prerelease_version="v${vagrant_version}+${ident_ref}"
     fi
+
+    # Make the prerelease version available for other jobs
+    printf "prerelease-version=%s\n" "${prerelease_version}" >> $GITHUB_OUTPUT
 
     echo "Generating GitHub pre-release packages for Vagrant version ${prerelease_version}... "
     # NOTE: We always want to store builds into the vagrant-installers repository since they should

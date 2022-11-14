@@ -28,7 +28,15 @@ declare -A package_list=(
 
 # Create the package assets directory if it
 # doesn't already exist
-mkdir -p pkg
+mkdir -p pkg substrate-assets
+
+if [ -n "${PACKAGES_IDENTIFIER}" ]; then
+    pushd pkg
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
+    popd
+else
+    fail "No identifier defined for packages"
+fi
 
 # Generate a list of packages we already have (if any)
 for p in "${!package_list[@]}"; do
@@ -45,32 +53,23 @@ if [ -z "${packages_needed}" ]; then
     exit
 fi
 
-# Download the Vagrant RubyGem and vagrant-go
-# binaries. These come from different locations
-# depending on how the job was invoked. If the
-# VAGRANT_REF environment variable is set, it was
-# invoked from a non-release job and the artifacts
-# will be retrieved from a draft release on the
-# Vagrant repository. If a tag is set, then the
-# artifacts will be in a proper release within the
-# builders repository. Otherwise, we grab the
-# artifacts from the "main" draft release in the
-# Vagrant repository
-if [ -n "${VAGRANT_REF}" ]; then
-    github_draft_release_assets "hashicorp" "vagrant" "${VAGRANT_REF}"
-elif [ -n "${tag}" ]; then
-    github_release_assets "hashicorp" "vagrant" "${tag}"
+# If we are still here, fetch the substrates and any
+# packages that may already exist
+if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
+    pushd substrate-assets
+    github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
+    popd
 else
-    github_draft_release_assets "hashicorp" "vagrant" "main"
+    fail "No identifier defined for substrates"
 fi
 
-# Extract out Vagrant version information from gem
-vagrant_version="$(gem specification vagrant-*.gem version)" ||
-    fail "Failed to ready version from Vagrant RubyGem"
-vagrant_version="${vagrant_version##*version: }"
+pushd pkg
+rm -f ./*
+github_draft_release_assets "${repo_owner}" "${repo_name}" "${PACKAGES_IDENTIFIER}"
+popd
 
 # Unpack all the vagrant-go binaries
-for file in ./*; do
+for file in ./*.zip; do
     [ -f "${file}" ] || continue
     wrap unzip "${file}" \
         "Failed to unzip vagrant-go binary file (${file})"
@@ -84,6 +83,9 @@ wrap cp vagrant-*.gem package/vagrant.gem \
 # Place the go binary into the package directory for packaging
 wrap cp vagrant-go_* package/ \
      "Failed to move vagrant go binary for packaging"
+
+# Ensure we are ready for using packet
+packet-setup
 
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
@@ -170,6 +172,14 @@ done
 
 # Fetch any built packages
 wrap_stream_raw packet-exec run -download "./pkg/*:./pkg" -- /bin/true
+
+echo "Root contents:"
+ls -la
+echo "Package directory contents:"
+ls -la ./pkg
+
+# Stash the packages in draft for reuse
+draft_release "${PACKAGES_IDENTIFIER}" ./pkg
 
 # Now that we have finished, destroy any guests we created
 echo "Destroying existing Vagrant guests..."

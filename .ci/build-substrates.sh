@@ -29,6 +29,18 @@ declare -A substrate_list=(
 # it doesn't already exist
 mkdir -p substrate-assets
 
+# If we have a substrate identifer defined, start with fetching
+# the names of any artifacts that may exist. We start with just
+# getting the names so that if all of them already exist, we
+# don't waste the time/resources downloading them.
+if [ -n "${SUBSTRATES_IDENTIFIER}" ]; then
+    pushd substrate-assets
+    github_draft_release_asset_names "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
+    popd
+else
+    fail "No identifier defined for substrates"
+fi
+
 # Generate a list of substrates we already have (if any)
 for p in "${!substrate_list[@]}"; do
     path=(substrate-assets/${p})
@@ -43,6 +55,16 @@ if [ -z "${substrates_needed}" ]; then
     echo "All substrates are currently built"
     exit
 fi
+
+# If we are still here then we need to actually fetch any
+# substrates that already exist.
+pushd substrate-assets
+rm -f ./*
+github_draft_release_assets "${repo_owner}" "${repo_name}" "${SUBSTRATES_IDENTIFIER}"
+popd
+
+# Ensure we are ready for using packet
+packet-setup
 
 # Define a custom cleanup function to destroy any orphan guests
 # on the packet instance
@@ -126,6 +148,9 @@ done
 # Run simple command to pull any built substrates
 wrap_stream_raw packet-exec run \
     -download "./substrate-assets/*:./substrate-assets" -- /bin/true
+
+# Stash the substrates in a draft for reuse
+draft_release "${SUBSTRATES_IDENTIFIER}" ./substrate-assets
 
 # Now that we have finished, destroy any guests we created
 echo "Destroying existing Vagrant guests..."
