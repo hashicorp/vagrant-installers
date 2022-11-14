@@ -4,10 +4,10 @@ on:
       - 'main'
       - 'build-*'
     tags: '*'
-    paths:
-      - 'substrate/**'
-      - 'package/**'
-      - 'Vagrantfile'
+    # paths:
+    #   - 'substrate/**'
+    #   - 'package/**'
+    #   - 'Vagrantfile'
   schedule:
     - cron: '15 1 * * *'
   repository_dispatch:
@@ -16,116 +16,243 @@ on:
 
 env:
   vagrant-ref: ${{ github.event.client_payload.vagrant_reference }}
+  PACKET_EXEC_DEVICE_NAME: ci-installers-${{ github.ref_name }}
+
+concurrency: ${{ github.ref_name }}
 
 jobs:
-  slack-vars:
+  generate-info:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/slack-vars.yml
-  hashibot-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/hashibot-vars.yml
-  packet-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/packet-vars.yml
-  packaging-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/packaging-vars.yml
-  vagrantcloud-vars:
-    if: github.repository == 'hashicorp/vagrant-builders'
-    name: Populate vars
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    uses: ./.github/workflows/vagrantcloud-vars.yml
+    name: Generate information and identifiers
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      substrates-identifier: ${{ steps.gen.outputs.substrates-identifier }}
+      gem-identifier: ${{ steps.gen.outputs.gem-identifier }}
+      packages-identifier: ${{ steps.gen.outputs.packages-identifier }}
+      vagrant-version: ${{ steps.gen.outputs.vagrant-version }}
+      is-release: ${{ steps.gen.outputs.is-release }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+      - name: Download upstream artifacts
+        id: upstream-artifacts
+        run: ./.ci/build-packages-requirements.sh
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
+      - name: Information generator
+        id: gen
+        run: |
+          subid="$(git log --format=%h -1 ./substrate)" || exit 1
+          printf "substrates-identifier=substrates-%s\n" "${subid}"
+          printf "substrates-identifier=substrates-%s\n" "${subid}" >> $GITHUB_OUTPUT
+          gemid="$(sha256sum ./vagrant-*.gem)" || exit 1
+          gemid="${gemid:0:7}"
+          printf "gem-identifier=rubygem-%s\n" "${gemid}"
+          printf "gem-identifier=rubygem-%s\n" "${gemid}" >> $GITHUB_OUTPUT
+          pkgid="$(git log --format=%h -1 ./package)" || exit 1
+          printf "packages-identifier=packages-%s-%s-%s\n" "${subid}" "${pkgid}" "${gemid}"
+          printf "packages-identifier=packages-%s-%s-%s\n" "${subid}" "${pkgid}" "${gemid}" >> $GITHUB_OUTPUT
+          vagrant_version="$(gem specification vagrant-*.gem version)" || exit 1
+          vagrant_version="${vagrant_version##*version: }"
+          printf "vagrant-version=%s\n" "${vagrant_version}"
+          printf "vagrant-version=%s\n" "${vagrant_version}" >> $GITHUB_OUTPUT
+          . .ci/.ci-utility-files/common.sh
+          printf "is-release=%s\n" "${release}"
+          printf "is-release=%s\n" "${release}" >> $GITHUB_OUTPUT
   build-substrates:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Installer Substrates
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    needs: generate-info
+    permissions:
+      id-token: write
+      contents: write
     steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/hashibot username | hashibot_username;
+            kv/data/teams/vagrant/packet token | packet_token;
+            kv/data/teams/vagrant/packet project_id | packet_project_id;
+            kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
+            kv/data/teams/vagrant/packaging asset_password;
+            kv/data/teams/vagrant/packaging macos_sign_password;
+            kv/data/teams/vagrant/packaging windows_sign_password;
+            kv/data/teams/vagrant/packaging macos_package_cert_content;
+            kv/data/teams/vagrant/packaging macos_package_key_content;
+            kv/data/teams/vagrant/packaging macos_code_cert_content;
+            kv/data/teams/vagrant/packaging win_signing_key_content;
+            kv/data/teams/vagrant/vagrantcloud token | vagrant_cloud_token;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
-      - name: Substrate cache
-        id: substrate-cache
-        uses: actions/cache@v3
-        with:
-          path: substrate-assets
       - name: Build Vagrant substrates
         run: ./.ci/build-substrates.sh
         env:
-          PACKET_EXEC_TOKEN: ${{ needs.packet-vars.outputs.PACKET_EXEC_TOKEN }}
-          PACKET_EXEC_PROJECT_ID: ${{ needs.packet-vars.outputs.PACKET_EXEC_PROJECT_ID }}
-          PACKET_SSH_KEY_CONTENT: ${{ needs.packet-vars.outputs.PACKET_SSH_KEY_CONTENT }}
-          PKT_SECRET_PHRASE: ${{ needs.packaging-vars.outputs.ASSETS_PASSWORD }}
-          PKT_SignKeyPassword: ${{ needs.packaging-vars.outputs.WINDOWS_SIGN_PASSWORD }}
-          PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ needs.packaging-vars.outputs.WINDOWS_SIGN_PASSWORD }}
-          PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ needs.packaging-vars.outputs.MACOS_SIGN_PASSWORD }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
-          VAGRANT_CLOUD_TOKEN: ${{ needs.vagrantcloud-vars.outputs.VAGRANT_CLOUD_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
+          PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
+          PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
+          PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
+          PKT_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
+          PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
+          PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ steps.secrets.outputs.macos_sign_password }}
+          MACOS_PACKAGE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_package_cert_content }}
+          MACOS_PACKAGE_KEY_CONTENT: ${{ steps.secrets.outputs.macos_package_key_content }}
+          MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
+          WIN_SIGNING_KEY_CONTENT: ${{ steps.secrets.outputs.win_signing_key_content }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.generate-info.outputs.substrates-identifier }}
+          VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
   build-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Vagrant Packages
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    needs: build-substrates
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    needs: [generate-info, build-substrates]
     steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/hashibot username | hashibot_username;
+            kv/data/teams/vagrant/packet token | packet_token;
+            kv/data/teams/vagrant/packet project_id | packet_project_id;
+            kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
+            kv/data/teams/vagrant/packaging asset_password;
+            kv/data/teams/vagrant/packaging macos_notarize_username;
+            kv/data/teams/vagrant/packaging macos_notarize_password;
+            kv/data/teams/vagrant/packaging macos_sign_password;
+            kv/data/teams/vagrant/packaging windows_sign_password;
+            kv/data/teams/vagrant/packaging macos_package_cert_content;
+            kv/data/teams/vagrant/packaging macos_package_key_content;
+            kv/data/teams/vagrant/packaging macos_code_cert_content;
+            kv/data/teams/vagrant/packaging win_signing_key_content;
+            kv/data/teams/vagrant/vagrantcloud token | vagrant_cloud_token;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
-      - name: Substrate cache
-        id: substrate-cache
-        uses: actions/cache@v3
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          path: substrate-assets
-      - name: Package cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: pkg
-      - name: RubyGem cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: ./*.gem
+          ruby-version: 3.1
+      - name: Download upstream artifacts
+        id: upstream-artifacts
+        run: ./.ci/build-packages-requirements.sh
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
       - name: Build Vagrant packages
         run: ./.ci/build-packages.sh
         env:
-          PACKET_EXEC_TOKEN: ${{ needs.packet-vars.outputs.PACKET_EXEC_TOKEN }}
-          PACKET_EXEC_PROJECT_ID: ${{ needs.packet-vars.outputs.PACKET_EXEC_PROJECT_ID }}
-          PACKET_SSH_KEY_CONTENT: ${{ needs.packet-vars.outputs.PACKET_SSH_KEY_CONTENT }}
-          PKT_SECRET_PHRASE: ${{ needs.packaging-vars.outputs.ASSETS_PASSWORD }}
-          PKT_SignKeyPassword: ${{ needs.packaging-vars.outputs.WINDOWS_SIGN_PASSWORD }}
-          PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ needs.packaging-vars.outputs.WINDOWS_SIGN_PASSWORD }}
-          PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ needs.packaging-vars.outputs.MACOS_SIGN_PASSWORD }}
-          PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: releases@hashicorp.com
-          PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ needs.packaging-vars.outputs.MACOS_NOTARIZE_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_IDENTIFIER: ${{ needs.generate-info.outputs.packages-identifier }}
+          SUBSTRATES_IDENTIFIER: ${{ needs.generate-info.outputs.substrates-identifier }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
+          PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
+          PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
+          PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
+          PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
+          PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ steps.secrets.outputs.macos_sign_password }}
+          PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: ${{ steps.secrets.outputs.macos_notarize_username }}
+          PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ steps.secrets.outputs.macos_notarize_password }}
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ''
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
-          VAGRANT_CLOUD_TOKEN: ${{ needs.vagrantcloud-vars.outputs.VAGRANT_CLOUD_TOKEN }}
+          MACOS_PACKAGE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_package_cert_content }}
+          MACOS_PACKAGE_KEY_CONTENT: ${{ steps.secrets.outputs.macos_package_key_content }}
+          MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
+          WIN_SIGNING_KEY_CONTENT: ${{ steps.secrets.outputs.win_signing_key_content }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
+          VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
         working-directory: ${{github.workspace}}
-      - name: Package cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: pkg
   release-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Release Vagrant Packages
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    needs: build-packages
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    needs: [generate-info, build-packages]
+    outputs:
+      prerelease-version: ${{ steps.package-release.outputs.prerelease-version }}
     steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/packaging signore_client_id;
+            kv/data/teams/vagrant/packaging signore_client_secret;
+            kv/data/teams/vagrant/packaging signore_signer;
+            kv/data/teams/vagrant/packaging package_notification_sns_topic_arn | package_notification_topic;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Release Vagrant packages
+        id: package-release
         run: ./.ci/release-packages.sh
         env:
-          SIGNORE_CLIENT_ID: ${{ needs.packaging-vars.outputs.SIGNORE_CLIENT_ID }}
-          SIGNORE_CLIENT_SECRET: ${{ needs.packaging-vars.outputs.SIGNORE_CLIENT_SECRET }}
-          SIGNORE_SIGNER: ${{ needs.packaging-vars.outputs.SIGNORE_SIGNER }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
+          PACKAGES_IDENTIFIER: ${{ needs.generate-info.outputs.packages-identifier }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HC_RELEASES_PROD_SNS_TOPIC: ${{ steps.secrets.outputs.package_notification_topic }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_signer }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
         working-directory: ${{github.workspace}}
       - name: Clean Workspace
         if: always()
@@ -133,39 +260,56 @@ jobs:
   post-release-tasks:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Post Release Tasks
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.nano']
-    needs: release-packages
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: read
+    needs: [generate-info, release-packages]
     steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot email | hashibot_email;
+            kv/data/teams/vagrant/hashibot token | hashibot_token;
+            kv/data/teams/vagrant/hashibot username | hashibot_username;
+            kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
-      - name: RubyGem cache
-        id: package-cache
-        uses: actions/cache@v3
-        with:
-          path: ./*.gem
       - name: Trigger acceptance tests
+        if: ${{ needs.generate-info.outputs.is-release == '' }}
         run: ./.ci/post-release-acceptance-tests.sh
         env:
-          HASHIBOT_EMAIL: ${{ needs.hashibot-vars.outputs.HASHIBOT_EMAIL }}
-          HASHIBOT_TOKEN: ${{ needs.hashibot-vars.outputs.HASHIBOT_TOKEN }}
-          HASHIBOT_USERNAME: ${{ needs.hashibot-vars.outputs.HASHIBOT_USERNAME }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          prerelease_version: ${{ needs.release-packages.outputs.prerelease-version }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
+          HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
       - name: Update Vagrant repository branches
+        if: ${{ needs.generate-info.output.is-release != '' }}
         run: ./.ci/post-release-repo-branches.sh
         env:
-          HASHIBOT_EMAIL: ${{ needs.hashibot-vars.outputs.HASHIBOT_EMAIL }}
-          HASHIBOT_TOKEN: ${{ needs.hashibot-vars.outputs.HASHIBOT_TOKEN }}
-          HASHIBOT_USERNAME: ${{ needs.hashibot-vars.outputs.HASHIBOT_USERNAME }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
+          HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
         working-directory: ${{github.workspace}}
       - name: Create Vagrant repository release
+        if: ${{ needs.generate-info.output.is-release != '' }}
         run: ./.ci/post-release-repo-release.sh
         env:
-          HASHIBOT_EMAIL: ${{ needs.hashibot-vars.outputs.HASHIBOT_EMAIL }}
-          HASHIBOT_TOKEN: ${{ needs.hashibot-vars.outputs.HASHIBOT_TOKEN }}
-          HASHIBOT_USERNAME: ${{ needs.hashibot-vars.outputs.HASHIBOT_USERNAME }}
-          SLACK_WEBHOOK: ${{ needs.slack-vars.outputs.SLACK_WEBHOOK }}
+          vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
+          HASHIBOT_EMAIL: ${{ steps.secrets.outputs.hashibot_email }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashibot_token }}
+          HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
         working-directory: ${{github.workspace}}
-      - name: Clean Workspace
-        if: always()
-        run: rm -rf ${{ github.workspace }}/*

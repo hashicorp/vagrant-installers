@@ -10,13 +10,13 @@ su vagrant -l -c 'brew update'
 su vagrant -l -c 'brew install wget'
 
 # grab new cacert
-curl -o cacert.pem https://curl.se/ca/cacert.pem
-mkdir -p /usr/local/etc/openssl
-chown vagrant:admin /usr/local/etc/openssl
+# curl -o cacert.pem https://curl.se/ca/cacert.pem
+# mkdir -p /usr/local/etc/openssl
+# chown vagrant:admin /usr/local/etc/openssl
 
-mv cacert.pem /usr/local/etc/openssl/cacert.pem
+# mv cacert.pem /usr/local/etc/openssl/cacert.pem
 
-export SSL_CERT_FILE=/usr/local/etc/openssl/cacert.pem
+#export SSL_CERT_FILE=/usr/local/etc/openssl/cacert.pem
 export PATH="$PATH:/usr/local/bin:/usr/local/go/bin"
 
 # Move the SDK into the developer section

@@ -10,6 +10,8 @@ pushd "${root}"
 
 if [ -z "${release}" ]; then
     echo "Not updating Vagrant repository: this is a dev build"
+    exit
+fi
 
 echo -n "Cloning Vagrant repository for signing process... "
 wrap git clone "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/hashicorp/vagrant" vagrant-source \
