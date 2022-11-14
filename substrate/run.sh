@@ -38,10 +38,6 @@ function echo_stderr {
     (>&2 echo "$@")
 }
 
-# Set curl to use updated cert bundle
-echo "cacert = /vagrant/cacert.pem" > ~/.curlrc
-echo "capath = /usr" >> ~/.curlrc
-
 set -ex
 
 # Verify arguments
@@ -437,8 +433,8 @@ cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
 
 # cacert
 echo_stderr " -> Writing cacert.pem..."
-curl -f -s --time-cond /vagrant/cacert.pem -o /vagrant/cacert.pem https://curl.se/ca/cacert.pem
-cp /vagrant/cacert.pem "${embed_dir}/cacert.pem"
+curl -f -s --time-cond /vagrant/cacert.pem -o ./cacert.pem "${dep_cache}/cacert.pem"
+mv ./cacert.pem "${embed_dir}/cacert.pem"
 
 echo_stderr " -> Cleaning cruft..."
 rm -rf "${embed_dir}"/{certs,misc,private,openssl.cnf,openssl.cnf.dist}

@@ -8,26 +8,15 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 pushd "${root}"
 
-# If this is not a release build, push the prerelease to GitHub
+# If this is a release we don't trigger the acceptance tests
 if [ -n "${release}" ]; then
     echo "Not triggering acceptance tests: this is not a dev build"
     exit
 fi
 
-if [ -n "${tag}" ]; then
-    prerelease_version="${tag}"
-else
-    prerelease_version="v${vagrant_version}+${ident_ref}"
+if [ -z "${prerelease_version}" ]; then
+    fail "The 'prerelease_version' environment variable is not set"
 fi
-
-echo "Generating GitHub pre-release packages for Vagrant version ${prerelease_version}... "
-# NOTE: We always want to store builds into the vagrant-installers repository since they should
-# be publicly accessible
-export repo_name="vagrant-installers"
-export GITHUB_TOKEN="${HASHIBOT_TOKEN}"
-prerelease "${prerelease_version}" pkg/
-
-slack -m "New Vagrant development installers available:\n> https://github.com/${repo_owner}/${repo_name}/releases/${prerelease_version}"
 
 echo "Dispatching vagrant-acceptance"
 
