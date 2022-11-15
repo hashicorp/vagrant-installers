@@ -1449,7 +1449,7 @@ function github_release_assets() {
     if [ -n "${gtoken}" ]; then
         curl_args+=("-H" "Authorization: token ${gtoken}")
     fi
-    curl_args+=("-SsL" "--fail" "-H" "Content-Type: application/octet-stream")
+    curl_args+=("-SsL" "--fail" "-H" "Accept: application/octet-stream")
 
     readarray -t assets <  <(printf "%s" "${asset_list}")
     readarray -t asset_names < <(printf "%s" "${name_list}")
@@ -1459,7 +1459,7 @@ function github_release_assets() {
         artifact="${asset_names[$idx]}"
 
         wrap curl "${curl_args[@]}" -o "${artifact}" "${asset}" \
-            "Failed to download asset in release (${release_name}) for ${release_repo}"
+            "Failed to download asset (${artifact}) in release ${release_name} for ${release_repo}"
     done
 }
 
