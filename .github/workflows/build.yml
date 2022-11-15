@@ -241,6 +241,10 @@ jobs:
             kv/data/teams/vagrant/packaging release_aws_access_key_id;
             kv/data/teams/vagrant/packaging release_aws_secret_access_key;
             kv/data/teams/vagrant/packaging release_aws_assume_role_arn;
+            kv/data/teams/vagrant/packaging releases_staging_host;
+            kv/data/teams/vagrant/packaging releases_prod_host;
+            kv/data/teams/vagrant/packaging releases_staging_key;
+            kv/data/teams/vagrant/packaging releases_prod_key;
             kv/data/teams/vagrant/slack webhook | slack_webhook;
       - name: Code Checkout
         uses: actions/checkout@v3
