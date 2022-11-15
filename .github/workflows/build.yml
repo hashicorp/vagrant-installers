@@ -309,7 +309,7 @@ jobs:
           HASHIBOT_USERNAME: ${{ steps.secrets.outputs.hashibot_username }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
       - name: Update Vagrant repository branches
-        if: ${{ needs.generate-info.output.is-release != '' }}
+        if: ${{ needs.generate-info.outputs.is-release != '' }}
         run: ./.ci/post-release-repo-branches.sh
         env:
           vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
@@ -319,7 +319,7 @@ jobs:
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
         working-directory: ${{github.workspace}}
       - name: Create Vagrant repository release
-        if: ${{ needs.generate-info.output.is-release != '' }}
+        if: ${{ needs.generate-info.outputs.is-release != '' }}
         run: ./.ci/post-release-repo-release.sh
         env:
           vagrant_version: ${{ needs.generate-info.outputs.vagrant-version }}
