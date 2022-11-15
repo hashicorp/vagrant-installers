@@ -26,7 +26,6 @@ if [ -z "${ci_bin_dir}" ]; then
     fi
 fi
 
-
 # We are always noninteractive
 export DEBIAN_FRONTEND=noninteractive
 
@@ -618,7 +617,7 @@ function upload_to_staging() {
     local version="${2}"
     local directory="${3}"
 
-    if ! command -v "hc-releases-api"; then
+    if ! command -v "hc-releases"; then
         install_hashicorp_tool "releases-api"
     fi
 
@@ -628,20 +627,17 @@ function upload_to_staging() {
     pushd "${directory}"
 
     # Create -file parameter list for hc-releases upload
-    local fileParams=""
+    local fileParams=()
     for file in *; do
-        fileParams="-file=${file} ${fileParams}"
+        fileParams+=("-file=${file}")
     done
 
     echo -n "Uploading release assets... "
 
-    # shellcheck disable=SC2086
-    # NOTE: Do not quote ${fileParams}, it will expand to
-    #       multiple -file parameters
-    wrap_stream hc-releases-api upload \
+    wrap_stream hc-releases upload \
         -product "${product}" \
         -version "${version}" \
-        ${fileParams} \
+        "${fileParams[@]}" \
         "Failed to upload HashiCorp release assets"
 
     echo "complete!"
@@ -649,7 +645,7 @@ function upload_to_staging() {
 
     echo -n "Creating release metadata... "
 
-    wrap_stream hc-releases-api metadata create \
+    wrap_stream hc-releases metadata create \
         -product "${product}" \
         -input "${hc_releases_metadata_filename}" \
         "Failed to create metadata for HashiCorp release"
