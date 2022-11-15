@@ -1409,7 +1409,8 @@ function packet-setup() {
 # $3: release tag name
 # $4: artifact pattern (optional, all artifacts downloaded if omitted)
 function github_release_assets() {
-    local gtoken auth_header
+    local gtoken curl_args
+    curl_args=()
 
     if [ -n "${HASHIBOT_TOKEN}" ]; then
         gtoken="${HASHIBOT_TOKEN}"
@@ -1418,7 +1419,7 @@ function github_release_assets() {
     fi
 
     if [ -n "${gtoken}" ]; then
-        auth_header="$(printf '-H "Authorization: token %s"' "${gtoken}")"
+        curl_args+=("-H" "Authorization: token ${gtoken}")
     fi
 
     local release_repo release_name asset_pattern release_content
@@ -1426,10 +1427,10 @@ function github_release_assets() {
     release_name="${3}"
     asset_pattern="${4}"
 
-    # shellcheck disable=SC2086
-    release_content=$(curl -SsL --fail ${auth_header} \
-        -H "Content-Type: application/json" \
-        "https://api.github.com/repos/${release_repo}/releases/tags/${release_name}") ||
+    curl_args+=("-SsL" "--fail" "-H" "Content-Type: application/json")
+    curl_args+=("https://api.github.com/repos/${release_repo}/releases/tags/${release_name}")
+
+    release_content=$(curl "${curl_args[@]}") ||
         fail "Failed to request release (${release_name}) for ${release_repo}"
 
     local asset_list query artifact asset
@@ -1441,14 +1442,18 @@ function github_release_assets() {
     asset_list=$(printf "%s" "${release_content}" | jq -r "${query}") ||
         fail "Failed to detect asset in release (${release_name}) for ${release_repo}"
 
+    curl_args=()
+    if [ -n "${gtoken}" ]; then
+        curl_args+=("-H" "Authorization: token ${gtoken}")
+    fi
+    curl_args+=("-SsL" "--fail" "-H" "Content-Type: application/octet-stream")
+
     readarray -t assets <  <(printf "%s" "${asset_list}")
     # shellcheck disable=SC2066
     for asset in "${assets[@}]}"; do
         artifact="${asset##*/}"
 
-        # shellcheck disable=SC2086
-        wrap curl -SsL --fail -o "${artifact}" ${auth_header} \
-            -H "Accept: application/octet-stream" "${asset}" \
+        wrap curl "${curl_args[@]}" "${asset}" \
             "Failed to download asset in release (${release_name}) for ${release_repo}"
     done
 }
@@ -1597,19 +1602,18 @@ function github_repository_dispatch() {
 
     # shellcheck disable=SC2016
     payload_template='{"vagrant-ci": $vagrant_ci'
-    jqargs="--arg vagrant_ci true"
+    jqargs=("--arg" "vagrant_ci" "true")
     for arg in "${@:4}"; do
         payload_key="${arg%%=*}"
         payload_value="${arg##*=}"
-        payload_template+=", ${payload_key}: \$${payload_key}"
-        jqargs+="$(printf ' --arg "%s" "%s"' "${payload_key}" "${payload_value}")"
+        payload_template+=", \"${payload_key}\": \$${payload_key}"
+        # shellcheck disable=SC2089
+        jqargs+=("--arg" "${payload_key}" "${payload_value}")
     done
     payload_template+="}"
 
     # NOTE: we want the arguments to be expanded below
-    # shellcheck disable=SC2086
-    # shellcheck disable=SC2090
-    payload=$(jq -n ${jqargs} "${payload_template}" ) ||
+    payload=$(jq -n "${jqargs[@]}" "${payload_template}" ) ||
         fail "Failed to generate repository dispatch payload"
 
     # shellcheck disable=SC2016
