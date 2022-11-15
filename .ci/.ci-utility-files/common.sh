@@ -555,6 +555,10 @@ function hashicorp_release_validate() {
 #
 # $1: Asset directory
 function hashicorp_release_verify() {
+    if [ -z "${HASHICORP_PUBLIC_GPG_KEY_ID}" ]; then
+        fail "Cannot verify release without GPG key ID. Set HASHICORP_PUBLIC_GPG_KEY_ID."
+    fi
+
     local directory="${1}"
     local gpghome
 
