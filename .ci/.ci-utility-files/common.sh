@@ -1255,6 +1255,7 @@ function slack() {
 # $1: Name of repository
 function install_hashicorp_tool() {
     local tool_name="${1}"
+    local exten="zip"
     local asset release_content tmp
 
     tmp="$(mktemp -d --tmpdir vagrantci-XXXXXX)" ||
@@ -1274,14 +1275,27 @@ function install_hashicorp_tool() {
         '.assets[] | select(.name | contains("linux_amd64.zip")) | .url') ||
         fail "Failed to detect latest release for hashicorp/${tool_name}"
 
-    wrap curl -SsL --fail -o "${tool_name}.zip" -H "Authorization: token ${HASHIBOT_TOKEN}" \
+    if [ -z "${asset}" ]; then
+        asset=$(printf "%s" "${release_content}" | jq -r \
+            '.assets[] | select(.name | contains("linux_x86_64.tar.gz")) | .url') ||
+            fail "Failed to detect latest release for hashicorp/${tool_name}"
+        exten="tar.gz"
+    fi
+
+
+    wrap curl -SsL --fail -o "${tool_name}.${exten}" -H "Authorization: token ${HASHIBOT_TOKEN}" \
         -H "Accept: application/octet-stream" "${asset}" \
         "Failed to download latest release for hashicorp/${tool_name}"
 
-    wrap unzip "${tool_name}.zip" \
-        "Failed to unpack latest release for hashicorp/${tool_name}"
+    if [ "${exten}" = "zip" ]; then
+        wrap unzip "${tool_name}.${exten}" \
+            "Failed to unpack latest release for hashicorp/${tool_name}"
+    else
+        wrap tar xf "${tool_name}.${exten}" \
+            "Failed to unpack latest release for hashicorp/${tool_name}"
+    fi
 
-    rm -f "${tool_name}.zip"
+    rm -f "${tool_name}.${exten}"
 
     wrap chmod 0755 ./* \
         "Failed to change mode on latest release for hashicorp/${tool_name}"
