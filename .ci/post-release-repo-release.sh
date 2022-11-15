@@ -37,4 +37,4 @@ export GITHUB_TOKEN="${HASHIBOT_TOKEN}"
 
 release "v${vagrant_version}" ./"vagrant-${vagrant_version}.gem"
 
-slack -m "New Vagrant GitHub release created for v${vagrant_release} - release process complete."
+slack -m "New Vagrant GitHub release created for v${vagrant_version} - release process complete."
