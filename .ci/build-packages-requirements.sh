@@ -22,7 +22,7 @@ pushd "${root}"
 if [ -n "${VAGRANT_REF}" ]; then
     github_draft_release_assets "hashicorp" "vagrant" "${VAGRANT_REF}"
 elif [ -n "${tag}" ]; then
-    github_release_assets "hashicorp" "vagrant" "${tag}"
+    github_release_assets "hashicorp" "vagrant-builders" "${tag}"
 else
     github_draft_release_assets "hashicorp" "vagrant" "main"
 fi
