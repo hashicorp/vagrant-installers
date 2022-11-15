@@ -1450,7 +1450,7 @@ function github_release_assets() {
 
     readarray -t assets <  <(printf "%s" "${asset_list}")
     # shellcheck disable=SC2066
-    for asset in "${assets[@}]}"; do
+    for asset in "${assets[@]}"; do
         artifact="${asset##*/}"
 
         wrap curl "${curl_args[@]}" "${asset}" \
