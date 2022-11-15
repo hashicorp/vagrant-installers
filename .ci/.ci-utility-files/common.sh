@@ -1433,13 +1433,16 @@ function github_release_assets() {
     release_content=$(curl "${curl_args[@]}") ||
         fail "Failed to request release (${release_name}) for ${release_repo}"
 
-    local asset_list query artifact asset
+    local asset_list name_list asset_names query artifact asset
     query=".assets[]"
     if [ -n "${asset_pattern}" ]; then
         query+="$(printf ' | select(.name | contains("%s"))' "${asset_pattern}")"
     fi
-    query+=" | .url"
-    asset_list=$(printf "%s" "${release_content}" | jq -r "${query}") ||
+
+    asset_list=$(printf "%s" "${release_content}" | jq -r "${query} | .url") ||
+        fail "Failed to detect asset in release (${release_name}) for ${release_repo}"
+
+    name_list=$(printf "%s" "${release_content}" | jq -r "${query} | .name") ||
         fail "Failed to detect asset in release (${release_name}) for ${release_repo}"
 
     curl_args=()
@@ -1449,9 +1452,11 @@ function github_release_assets() {
     curl_args+=("-SsL" "--fail" "-H" "Content-Type: application/octet-stream")
 
     readarray -t assets <  <(printf "%s" "${asset_list}")
-    # shellcheck disable=SC2066
-    for asset in "${assets[@]}"; do
-        artifact="${asset##*/}"
+    readarray -t asset_names < <(printf "%s" "${name_list}")
+
+    for ((idx=0; idx<"${#assets[@]}"; idx++ )); do
+        asset="${assets[$idx]}"
+        artifact="${asset_names[$idx]}"
 
         wrap curl "${curl_args[@]}" -o "${artifact}" "${asset}" \
             "Failed to download asset in release (${release_name}) for ${release_repo}"
