@@ -15,6 +15,10 @@ if [ -z "${release}" ]; then
     exit
 fi
 
+# Fetch the gem
+github_release_assets "hashicorp" "vagrant-builders" "${tag}" ".gem"
+
+
 # Override local variables to create release on vagrant repository
 repo_owner="hashicorp"
 repo_name="vagrant"
