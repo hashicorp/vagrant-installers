@@ -664,7 +664,7 @@ function promote_to_production() {
     local product="${1}"
     local version="${2}"
 
-    if ! command -v "hc-releases-api"; then
+    if ! command -v "hc-releases"; then
         install_hashicorp_tool "releases-api"
     fi
 
@@ -674,7 +674,7 @@ function promote_to_production() {
 
     echo -n "Promoting release to production... "
 
-    wrap_stream hc-releases-api promote \
+    wrap_stream hc-releases promote \
                 -product "${product}" \
                 -version "${version}" \
                 -source-env staging \
