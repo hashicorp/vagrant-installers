@@ -18,11 +18,21 @@ fi
 # Fetch the gem
 github_release_assets "hashicorp" "vagrant-builders" "${tag}" ".gem"
 
+# If this is an annotated tag, git the proper commit-ish value
+commitish=$(git ls-remote --tags https://github.com/hashicorp/vagrant "v${vagrant_version}^{}") ||
+    fail "Annotated tag check failed"
+
+# If we got a commitish value, trim it and use it for the full_sha
+# value since the tag is annotated. Otherwise, just use the tag.
+if [ -n "${commitish}" ]; then
+    full_sha="${commitish%%[[:space:]]*}"
+else
+    full_sha="v${vagrant_version}"
+fi
 
 # Override local variables to create release on vagrant repository
 repo_owner="hashicorp"
 repo_name="vagrant"
-full_sha="v${vagrant_version}"
 export GITHUB_TOKEN="${HASHIBOT_TOKEN}"
 
 release "v${vagrant_version}" ./"vagrant-${vagrant_version}.gem"
