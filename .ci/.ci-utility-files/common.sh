@@ -1453,7 +1453,7 @@ function github_release_assets() {
     for asset in "${assets[@]}"; do
         artifact="${asset##*/}"
 
-        wrap curl "${curl_args[@]}" "${asset}" \
+        wrap curl "${curl_args[@]}" -o "${artifact}" "${asset}" \
             "Failed to download asset in release (${release_name}) for ${release_repo}"
     done
 }
