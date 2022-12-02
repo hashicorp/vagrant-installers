@@ -7,7 +7,7 @@ export PACKET_EXEC_DEVICE_SIZE="${PACKET_EXEC_DEVICE_SIZE:-c3.small.x86,c3.mediu
 export PACKET_EXEC_PREFER_FACILITIES="${PACKET_EXEC_PREFER_FACILITIES:-sv15,sv16,la4,da11,ch3,dc10,dc13,ny5,ny7}"
 export PACKET_EXEC_OPERATING_SYSTEM="${PACKET_EXEC_OPERATING_SYSTEM:-ubuntu_18_04}"
 # set workstation url to point to v15. ref: https://github.com/hashicorp/packer/issues/10009
-export PKT_WORKSTATION_DOWNLOAD_URL="https://download3.vmware.com/software/wkst/file/VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle"
+export PKT_WORKSTATION_DOWNLOAD_URL="https://vagrant-public-cache.s3.amazonaws.com/VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle"
 export PACKET_EXEC_PRE_BUILTINS="${PACKET_EXEC_PRE_BUILTINS:-InstallVmware,InstallVagrant,InstallVagrantVmware,InstallHashiCorpTool}"
 export PACKET_EXEC_QUIET="1"
 export PKT_VAGRANT_HOME="/mnt/data"
