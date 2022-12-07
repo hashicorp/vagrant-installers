@@ -4,7 +4,8 @@ export PATH="/usr/local/bin:$PATH"
 
 sudo pip3 install dmgbuild
 
-git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+#git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+su vagrant -l -c 'brew update'
 su vagrant -l -c 'brew install bash'
 
 # Move the SDK into the developer section
