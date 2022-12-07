@@ -146,22 +146,22 @@ chmod 0755 "${STAGING_DIR}/scripts/postinstall"
 
 # Install and enable package signing if available
 if [ -f "${PKG_SIGN_CERT_PATH}" ] && [ -f "${PKG_SIGN_KEY_PATH}" ]; then
-    security find-identity | grep "Installer.*${PKG_SIGN_IDENTITY}"
-    if [ $? -ne 0 ]; then
+    if ! ( security find-identity | grep "Installer.*${PKG_SIGN_IDENTITY}" ); then
+        echo "==> Installing package signing key..."
         security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
-            fail "Failed to import signing certificate"
-        security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
-            fail "Failed to import signing key"
+            fail "Failed to import package signing cert"
+        security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -P "${PACKAGE_SIGN_PASS}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
+            fail "Failed to import package signing key"
     fi
     SIGN_PKG="1"
 fi
 
 # Install and enable code signing if available
 if [ -f "${CODE_SIGN_CERT_PATH}" ] && [ -n "${CODE_SIGN_PASS}" ]; then
-    if ! security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}"; then
+    if ! ( security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}" ); then
         echo "==> Installing code signing key..."
         security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign ||
-            fail "Failed to import code signing key"
+            fail "Failed to import code signing certificate"
     fi
     SIGN_CODE="1"
 fi
@@ -225,7 +225,7 @@ if [ "${SIGN_PKG}" = "1" ]; then
         --version "${VAGRANT_VERSION}" \
         --install-location "/opt/vagrant" \
         --scripts "${STAGING_DIR}/scripts" \
-        --timestamp=none \
+        --timestamp \
         --sign "${PKG_SIGN_IDENTITY}" \
         "${STAGING_DIR}/core.pkg" ||
         fail "Failed to build core package"
