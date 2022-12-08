@@ -86,7 +86,7 @@ echo "Darwin staging dir: ${STAGING_DIR}"
 # Set information used for package and code signing
 PKG_SIGN_IDENTITY=${VAGRANT_PACKAGE_SIGN_IDENTITY:-D38WU7D763}
 PKG_SIGN_CERT_PATH=${VAGRANT_PACKAGE_SIGN_CERT_PATH:-"/Users/vagrant/MacOS_PackageSigning.cert"}
-PKG_SIGN_KEY_PATH=${VAGRANT_PACKAGE_SIGN_KEY_PATH:-"/Users/vagrant/MacOS_PackageSigning.key"}
+PKG_SIGN_KEY_PATH=${VAGRANT_PACKAGE_SIGN_KEY_PATH:-"/Users/vagrant/MacOS_PackageSigning.p12"}
 
 CODE_SIGN_IDENTITY=${VAGRANT_CODE_SIGN_IDENTITY:-D38WU7D763}
 CODE_SIGN_CERT_PATH=${VAGRANT_CODE_SIGN_CERT_PATH:-"/Users/vagrant/MacOS_CodeSigning.p12"}
