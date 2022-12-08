@@ -169,6 +169,7 @@ jobs:
             kv/data/teams/vagrant/packaging macos_notarize_username;
             kv/data/teams/vagrant/packaging macos_notarize_password;
             kv/data/teams/vagrant/packaging macos_sign_password;
+            kv/data/teams/vagrant/packaging macos_package_password;
             kv/data/teams/vagrant/packaging windows_sign_password;
             kv/data/teams/vagrant/packaging macos_package_cert_content;
             kv/data/teams/vagrant/packaging macos_package_key_content;
@@ -203,6 +204,7 @@ jobs:
           PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
           PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
           PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ steps.secrets.outputs.macos_sign_password }}
+          PKT_VAGRANT_INSTALLER_PACKAGE_SIGN_PASS: ${{ steps.secrets.outputs.macos_package_password }}
           PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: ${{ steps.secrets.outputs.macos_notarize_username }}
           PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ steps.secrets.outputs.macos_notarize_password }}
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ''
