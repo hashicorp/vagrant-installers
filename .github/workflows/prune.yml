@@ -8,7 +8,7 @@ jobs:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Prune stale draft releases
     runs-on: ubuntu-latest
-    permisions:
+    permissions:
       contents: write
     steps:
       - name: Code Checkout
