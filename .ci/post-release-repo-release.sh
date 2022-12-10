@@ -27,7 +27,10 @@ commitish=$(git ls-remote --tags https://github.com/hashicorp/vagrant "v${vagran
 if [ -n "${commitish}" ]; then
     full_sha="${commitish%%[[:space:]]*}"
 else
-    full_sha="v${vagrant_version}"
+    tag_sha=$(git ls-remote --tags https://github.com/hashicorp/vagrant "v${vagrant_version}") ||
+        fail "Tag check failed"
+
+    full_sha="${tag_sha%%[[:space:]]*}"
 fi
 
 # Override local variables to create release on vagrant repository
