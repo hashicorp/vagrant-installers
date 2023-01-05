@@ -259,7 +259,7 @@ libxslt_url="${dep_cache}/${libxslt_file}"
 curl -f -L -s -o libxslt.tar.xz "${libxslt_url}"
 tar -xf libxslt.tar.xz
 pushd libxslt-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-libxml-prefix="${embed_dir}"
+./configure --prefix="${embed_dir}" --with-python=no --disable-dependency-tracking --with-libxml-prefix="${embed_dir}"
 make
 make install
 popd
