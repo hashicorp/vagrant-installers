@@ -20,8 +20,7 @@ libgpg_error_version="1.46"
 libiconv_version="1.17"
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_version="1.8.0"
-# can try 2.10.3, https://gitlab.gnome.org/GNOME/libxml2/-/releases
-libxml2_version="2.9.14"
+libxml2_version="2.10.3"
 libxslt_version="1.1.37"
 libyaml_version="0.2.5"
 openssl_version="1.1.1s"
