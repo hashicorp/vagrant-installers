@@ -21,7 +21,7 @@ libiconv_file="libiconv-${libiconv_version}.tar.gz"          # https://mirrors.k
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_file="libssh2-${libssh2_version}.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
 libxml2_file="libxml2-${libxml2_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.14/libxml2-v2.9.14.tar.gz ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
-libxslt_file="libxslt-${libxslt_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxslt/-/archive/v1.1.35/libxslt-v1.1.35.tar.gz ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
+libxslt_file="libxslt-${libxslt_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxslt/-/archive/${libxslt_version}/libxslt-v${libxslt_version}.tar.gz ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
 libyaml_file="yaml-${libyaml_version}.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
 openssl_file="openssl-${openssl_version}.tar.gz"          # https://www.openssl.org/source/openssl-${openssl_version}.tar.gz
 readline_file="readline-${readline_version}.tar.gz"           # https://ftpmirror.gnu.org/readline/readline-${readline_version}.tar.gz
