@@ -41,6 +41,8 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 VINCE="${DIR}/../vince"
 SUBSTRATE_DIR="${1}"
 VAGRANT_VERSION="${2}"
+# TODO: this signer should be configurable
+SIGNORE_SIGNER="test_macos_signer"
 OUTPUT_PATH="$(pwd)/vagrant_${VAGRANT_VERSION}_darwin_amd64.dmg"
 
 function vince() {
@@ -83,14 +85,9 @@ STAGING_DIR="$(pwd)"
 
 echo "Darwin staging dir: ${STAGING_DIR}"
 
-# Set information used for package and code signing
+# TODO: remove these
 PKG_SIGN_IDENTITY=${VAGRANT_PACKAGE_SIGN_IDENTITY:-D38WU7D763}
-PKG_SIGN_CERT_PATH=${VAGRANT_PACKAGE_SIGN_CERT_PATH:-"/Users/vagrant/MacOS_PackageSigning.cert"}
-PKG_SIGN_KEY_PATH=${VAGRANT_PACKAGE_SIGN_KEY_PATH:-"/Users/vagrant/MacOS_PackageSigning.p12"}
-
 CODE_SIGN_IDENTITY=${VAGRANT_CODE_SIGN_IDENTITY:-D38WU7D763}
-CODE_SIGN_CERT_PATH=${VAGRANT_CODE_SIGN_CERT_PATH:-"/Users/vagrant/MacOS_CodeSigning.p12"}
-SIGN_KEYCHAIN=${VAGRANT_SIGN_KEYCHAIN:-/Library/Keychains/System.keychain}
 
 SIGN_REQUIRED="${VAGRANT_PACKAGE_SIGNING_REQUIRED}"
 #-------------------------------------------------------------------------
@@ -144,25 +141,10 @@ exit 0
 EOF
 chmod 0755 "${STAGING_DIR}/scripts/postinstall"
 
-# Install and enable package signing if available
-if [ -f "${PKG_SIGN_CERT_PATH}" ] && [ -f "${PKG_SIGN_KEY_PATH}" ]; then
-    if ! ( security find-identity | grep "Installer.*${PKG_SIGN_IDENTITY}" ); then
-        echo "==> Installing package signing key..."
-        security import "${PKG_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
-            fail "Failed to import package signing cert"
-        security import "${PKG_SIGN_KEY_PATH}" -k "${SIGN_KEYCHAIN}" -P "${PACKAGE_SIGN_PASS}" -T /usr/bin/codesign -T /usr/bin/pkgbuild -T /usr/bin/productbuild ||
-            fail "Failed to import package signing key"
-    fi
+# Enable signing if signore creds are available
+if [[ -n "$SIGNORE_CLIENT_ID" && -n "$SIGNORE_CLIENT_SECRET" ]]; then
+    echo "enabling code and package signing"
     SIGN_PKG="1"
-fi
-
-# Install and enable code signing if available
-if [ -f "${CODE_SIGN_CERT_PATH}" ] && [ -n "${CODE_SIGN_PASS}" ]; then
-    if ! ( security find-identity | grep "Application.*${CODE_SIGN_IDENTITY}" ); then
-        echo "==> Installing code signing key..."
-        security import "${CODE_SIGN_CERT_PATH}" -k "${SIGN_KEYCHAIN}" -P "${CODE_SIGN_PASS}" -T /usr/bin/codesign ||
-            fail "Failed to import code signing certificate"
-    fi
     SIGN_CODE="1"
 fi
 
@@ -197,17 +179,20 @@ if [ "${SIGN_CODE}" = "1" ]; then
 </dict>
 </plist>
 EOF
+
     echo "Validating plist format..."
     plutil -lint entitlements.plist ||
         fail "Entitlements plist file format is invalid"
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}" -type f -perm +0111 -exec codesign --timestamp --options=runtime --entitlements entitlements.plist -s "${CODE_SIGN_IDENTITY}" {} \; ||
+    # TODO: add entitlements
+    # TODO: remove already signed files from the list of things to sign
+    find "${SUBSTRATE_DIR}"  -type f -exec bash -c "file {} | grep 'Mach-O 64-bit executable'" \; | cut -d ":" -f 1 | cut -d " " -f 1 | uniq | xargs -tI % sh -c "signore sign --file % --out % --signer ${SIGNORE_SIGNER} --signer-options '{\"type\": \"macos\", \"input_format\": \"EXECUTABLE\"}'" ||
         fail "Failure while signing executables"
     echo "Finding all substate bundles..."
-    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \; ||
+    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec signore sign --file {}  --out {} --signer "${SIGNORE_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
         fail "Failure while signing bundles"
     echo "Finding all substrate shared library objects..."
-    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec codesign -f --timestamp --options=runtime -s "${CODE_SIGN_IDENTITY}" {} \; ||
+    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec signore sign --file {}  --out {} --signer "${SIGNORE_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
         fail "Failure while signing share library objects"
     rm entitlements.plist
 fi
@@ -217,29 +202,20 @@ fi
 #-------------------------------------------------------------------------
 # Create the component package using pkgbuild. The component package
 # contains the raw file structure that is installed via the installer package.
+echo "Building core.pkg..."
+pkgbuild \
+    --root "${SUBSTRATE_DIR}" \
+    --identifier com.vagrant.vagrant \
+    --version "${VAGRANT_VERSION}" \
+    --install-location "/opt/vagrant" \
+    --scripts "${STAGING_DIR}/scripts" \
+    --timestamp=none \
+    "${STAGING_DIR}/core.pkg" ||
+    fail "Failed to build core package"
+
+echo "Signing core.pkg..."
 if [ "${SIGN_PKG}" = "1" ]; then
-    echo "Building core.pkg..."
-    pkgbuild \
-        --root "${SUBSTRATE_DIR}" \
-        --identifier com.vagrant.vagrant \
-        --version "${VAGRANT_VERSION}" \
-        --install-location "/opt/vagrant" \
-        --scripts "${STAGING_DIR}/scripts" \
-        --timestamp \
-        --sign "${PKG_SIGN_IDENTITY}" \
-        "${STAGING_DIR}/core.pkg" ||
-        fail "Failed to build core package"
-else
-    echo "Building core.pkg..."
-    pkgbuild \
-        --root "${SUBSTRATE_DIR}" \
-        --identifier com.vagrant.vagrant \
-        --version "${VAGRANT_VERSION}" \
-        --install-location "/opt/vagrant" \
-        --scripts "${STAGING_DIR}/scripts" \
-        --timestamp=none \
-        "${STAGING_DIR}/core.pkg" ||
-        fail "Failed to build core package"
+    signore sign --file "${STAGING_DIR}/core.pkg"  --out "${STAGING_DIR}/core.pkg" --signer "${SIGNORE_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 # Create the distribution definition, an XML file that describes what
@@ -282,24 +258,19 @@ echo "Building Vagrant.pkg..."
 
 # Check is signing certificate is available. Install
 # and sign if found.
+productbuild \
+    --distribution "${STAGING_DIR}/vagrant.dist" \
+    --resources "${STAGING_DIR}/resources" \
+    --package-path "${STAGING_DIR}" \
+    --timestamp=none \
+    "${STAGING_DIR}/Vagrant.pkg" ||
+    fail "Failed to build Vagrant package"
+
+echo "Signing Vagrant.pkg..."
 if [ "${SIGN_PKG}" = "1" ]; then
-    productbuild \
-        --distribution "${STAGING_DIR}/vagrant.dist" \
-        --resources "${STAGING_DIR}/resources" \
-        --package-path "${STAGING_DIR}" \
-        --timestamp=none \
-        --sign "${PKG_SIGN_IDENTITY}" \
-        "${STAGING_DIR}/Vagrant.pkg" ||
-        fail "Failed to build Vagrant package"
-else
-    productbuild \
-        --distribution "${STAGING_DIR}/vagrant.dist" \
-        --resources "${STAGING_DIR}/resources" \
-        --package-path "${STAGING_DIR}" \
-        --timestamp=none \
-        "${STAGING_DIR}/Vagrant.pkg" ||
-        fail "Failed to build Vagrant package"
+    signore sign --file "${STAGING_DIR}/Vagrant.pkg"  --out "${STAGING_DIR}/Vagrant.pkg" --signer "${SIGNORE_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
+
 #-------------------------------------------------------------------------
 # DMG
 #-------------------------------------------------------------------------
@@ -323,8 +294,10 @@ if [ "${SIGN_PKG}" != "1" ]; then
     echo
 else
     echo "==> Signing DMG..."
-    codesign -s "${PKG_SIGN_IDENTITY}" --timestamp "${OUTPUT_PATH}" ||
-        fail "Failed to sign the Vagrant DMG"
+    # codesign -s "${PKG_SIGN_IDENTITY}" --timestamp "${OUTPUT_PATH}" ||
+    #     fail "Failed to sign the Vagrant DMG"
+    # TODO: does signore do dmg?
+    signore sign --file "${OUTPUT_PATH}"  --out "${OUTPUT_PATH}" --signer "${SIGNORE_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME}" != "" ]; then

@@ -133,6 +133,8 @@ jobs:
           PKT_VAGRANT_INSTALLER_SignKeyPassword: ${{ steps.secrets.outputs.windows_sign_password }}
           PKT_VAGRANT_INSTALLER_CODE_SIGN_PASS: ${{ steps.secrets.outputs.macos_sign_password }}
           PKT_VAGRANT_INSTALLER_PACKAGE_SIGN_PASS: ${{ steps.secrets.outputs.macos_package_password }}
+          PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_SECRET: ''
+          PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_ID: ''
           MACOS_PACKAGE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_package_cert_content }}
           MACOS_PACKAGE_KEY_CONTENT: ${{ steps.secrets.outputs.macos_package_key_content }}
           MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
@@ -208,6 +210,8 @@ jobs:
           PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: ${{ steps.secrets.outputs.macos_notarize_username }}
           PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ steps.secrets.outputs.macos_notarize_password }}
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ''
+          PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_SECRET: ''
+          PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_ID: ''
           MACOS_PACKAGE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_package_cert_content }}
           MACOS_PACKAGE_KEY_CONTENT: ${{ steps.secrets.outputs.macos_package_key_content }}
           MACOS_CODE_CERT_CONTENT: ${{ steps.secrets.outputs.macos_code_cert_content }}
