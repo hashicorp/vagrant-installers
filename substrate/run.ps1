@@ -9,10 +9,6 @@ Param(
     [parameter(Mandatory=$true)]
     [string] $OutputDir,
     [parameter(Mandatory=$false)]
-    [string] $SignKeyFile=$null,
-    [parameter(Mandatory=$false)]
-    [string] $SignKeyPassword=$null,
-    [parameter(Mandatory=$false)]
     [switch] $Disable32,
     [parameter(Mandatory=$false)]
     [switch] $Disable64
@@ -593,17 +589,16 @@ if($Build64) {
     Pop-Location
 }
 
-if($SignKeyFile -and !$SignKeyPassword) {
-    Write-Warning "SignKey path provided but no SignKeyPassword given. Embedded binaries will be unsigned!"
-} elseif(!$SignKeyFile -and $SignKeyPassword) {
-    Write-Warning "SignKeyPassword provided but no SignKey path given. Embedded binaries will be unsigned!"
-} elseif(!$SignKeyFile -and !$SignKeyPassword) {
-    Write-Warning "SignKey and SignKeyPassword not given. Embedded binaries will be unsigned!"
-} else {
+if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET -and $Env:SIGNORE_TOKEN) {
     Write-Output "Signing embedded binaries..."
     $binaries = Get-ChildItem "${StageDir}" -Filter *.exe -Recurse
     foreach($binary in $binaries) {
-        $SignProc = Create-Process signtool.exe "sign /t http://timestamp.digicert.com /f ${SignKeyFile} /p ${SignKeyPassword} $($binary.FullName)"
+        # $SignProc = Create-Process signtool.exe "sign /t http://timestamp.digicert.com /f ${SignKeyFile} /p ${SignKeyPassword} $($binary.FullName)"
+        # TODO:
+        #  1. get signore path
+        #  2. setup the real signer
+        $SignProc = Create-Process c:\vagrant\signore.exe "sign --file $($binary.FullName) --out $($binary.FullName) --signer test_signer"
+
         Wait-Process $SignProc
         if($SignProc.ExitCode -ne 0) {
             Write-Error "Failed to sign embedded binary -> $($binary.FullName)"
