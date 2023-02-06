@@ -593,11 +593,7 @@ if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET -and $Env:SIGNORE_TOK
     Write-Output "Signing embedded binaries..."
     $binaries = Get-ChildItem "${StageDir}" -Filter *.exe -Recurse
     foreach($binary in $binaries) {
-        # $SignProc = Create-Process signtool.exe "sign /t http://timestamp.digicert.com /f ${SignKeyFile} /p ${SignKeyPassword} $($binary.FullName)"
-        # TODO:
-        #  1. get signore path
-        #  2. setup the real signer
-        $SignProc = Create-Process c:\vagrant\signore.exe "sign --file $($binary.FullName) --out $($binary.FullName) --signer test_signer"
+        $SignProc = Create-Process c:\signore.exe "sign --file $($binary.FullName) --out $($binary.FullName) --signer $($Env:WIN_BUILD_SIGNER)"
 
         Wait-Process $SignProc
         if($SignProc.ExitCode -ne 0) {

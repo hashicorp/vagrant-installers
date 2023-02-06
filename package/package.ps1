@@ -507,10 +507,9 @@ if(!$?) {
 # Sign
 #--------------------------------------------------------------------
 if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET -and $Env:SIGNORE_TOKEN) {
-    # TODO: replace this with the actual signore executable
-    $Signore = "c:\vagrant\signore.exe"
+    $Signore = "c:\signore.exe"
 
-    $SignProc = Create-Process c:\vagrant\signore.exe "sign --file $(OutputPath) --out $($binary.FullName) --signer test_signer"
+    $SignProc = Create-Process $Signore "sign --file $(OutputPath) --out $($binary.FullName) --signer $($Env:WIN_BUILD_SIGNER)"
 
     Wait-Process $SignProc
     if($SignProc.ExitCode -ne 0) {
