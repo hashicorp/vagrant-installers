@@ -41,9 +41,11 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 VINCE="${DIR}/../vince"
 SUBSTRATE_DIR="${1}"
 VAGRANT_VERSION="${2}"
-# TODO: this signer should be configurable
-SIGNORE_SIGNER="test_macos_signer"
 OUTPUT_PATH="$(pwd)/vagrant_${VAGRANT_VERSION}_darwin_amd64.dmg"
+# Set the default signer
+if [ -z "${MACOS_SIGNORE_BUILD_SIGNER}" ]; then
+    MACOS_SIGNORE_BUILD_SIGNER="test_macos_signer"
+fi
 
 function vince() {
     "${VINCE}" -u "${NOTARIZE_USERNAME}" -p "${NOTARIZE_PASSWORD}" "${@}"
@@ -184,15 +186,13 @@ EOF
     plutil -lint entitlements.plist ||
         fail "Entitlements plist file format is invalid"
     echo "Signing all substrate executables..."
-    # TODO: add entitlements
-    # TODO: remove already signed files from the list of things to sign
-    find "${SUBSTRATE_DIR}"  -type f -exec bash -c "file {} | grep 'Mach-O 64-bit executable'" \; | cut -d ":" -f 1 | cut -d " " -f 1 | uniq | xargs -tI % sh -c "signore sign --file % --out % --signer ${SIGNORE_SIGNER} --signer-options '{\"type\": \"macos\", \"input_format\": \"EXECUTABLE\"}'" ||
+    find "${SUBSTRATE_DIR}"  -type f -exec bash -c "file {} | grep 'Mach-O 64-bit executable'" \; | cut -d ":" -f 1 | cut -d " " -f 1 | uniq | xargs -tI % sh -c "signore sign --file % --out % --signer ${MACOS_SIGNORE_BUILD_SIGNER}  --entitlements entitlements.plist --signer-options '{\"type\": \"macos\", \"input_format\": \"EXECUTABLE\"}'" ||
         fail "Failure while signing executables"
     echo "Finding all substate bundles..."
-    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec signore sign --file {}  --out {} --signer "${SIGNORE_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
+    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec signore sign --file {}  --out {} --signer "${MACOS_SIGNORE_BUILD_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
         fail "Failure while signing bundles"
     echo "Finding all substrate shared library objects..."
-    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec signore sign --file {}  --out {} --signer "${SIGNORE_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
+    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec signore sign --file {}  --out {} --signer "${MACOS_SIGNORE_BUILD_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
         fail "Failure while signing share library objects"
     rm entitlements.plist
 fi
@@ -215,7 +215,7 @@ pkgbuild \
 
 echo "Signing core.pkg..."
 if [ "${SIGN_PKG}" = "1" ]; then
-    signore sign --file "${STAGING_DIR}/core.pkg"  --out "${STAGING_DIR}/core.pkg" --signer "${SIGNORE_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
+    signore sign --file "${STAGING_DIR}/core.pkg"  --out "${STAGING_DIR}/core.pkg" --signer "${MACOS_SIGNORE_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 # Create the distribution definition, an XML file that describes what
@@ -268,7 +268,7 @@ productbuild \
 
 echo "Signing Vagrant.pkg..."
 if [ "${SIGN_PKG}" = "1" ]; then
-    signore sign --file "${STAGING_DIR}/Vagrant.pkg"  --out "${STAGING_DIR}/Vagrant.pkg" --signer "${SIGNORE_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
+    signore sign --file "${STAGING_DIR}/Vagrant.pkg"  --out "${STAGING_DIR}/Vagrant.pkg" --signer "${MACOS_SIGNORE_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 #-------------------------------------------------------------------------
@@ -297,7 +297,7 @@ else
     # codesign -s "${PKG_SIGN_IDENTITY}" --timestamp "${OUTPUT_PATH}" ||
     #     fail "Failed to sign the Vagrant DMG"
     # TODO: does signore do dmg?
-    signore sign --file "${OUTPUT_PATH}"  --out "${OUTPUT_PATH}" --signer "${SIGNORE_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
+    signore sign --file "${OUTPUT_PATH}"  --out "${OUTPUT_PATH}" --signer "${MACOS_SIGNORE_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME}" != "" ]; then
