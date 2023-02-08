@@ -177,15 +177,26 @@ EOF
     echo "Validating plist format..."
     plutil -lint entitlements.plist ||
         fail "Entitlements plist file format is invalid"
+
     echo "Signing all substrate executables..."
-    find "${SUBSTRATE_DIR}"  -type f -exec bash -c "file {} | grep 'Mach-O 64-bit executable'" \; | cut -d ":" -f 1 | cut -d " " -f 1 | uniq | xargs -tI % sh -c "signore sign --file % --out % --signer ${MACOS_BUILD_SIGNER}  --entitlements entitlements.plist --signer-options '{\"type\": \"macos\", \"input_format\": \"EXECUTABLE\"}'" ||
-        fail "Failure while signing executables"
+    while IFS= read -rd '' f; do
+        if [[ "$(file ${f})" == *"Mach-O"* ]]; then
+            signore sign --file "${f}" --out "${f}" --signer ${MACOS_BUILD_SIGNER}  --entitlements entitlements.plist --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
+                fail "Failure while signing executables"
+        fi
+    done < <( find "${SUBSTRATE_DIR}"  -type f -perm +0111 -print0 )
+
     echo "Finding all substate bundles..."
-    find "${SUBSTRATE_DIR}" -name "*.bundle" -exec signore sign --file {}  --out {} --signer "${MACOS_BUILD_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
-        fail "Failure while signing bundles"
+    for f in $( find "${SUBSTRATE_DIR}" -name "*.bundle" ); do
+        signore sign --file "${f}" --out "${f}" --signer ${MACOS_BUILD_SIGNER} --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
+            fail "Failure while signing bundles"
+    done
+
     echo "Finding all substrate shared library objects..."
-    find "${SUBSTRATE_DIR}" -name "*.dylib" -exec signore sign --file {}  --out {} --signer "${MACOS_BUILD_SIGNER}" --signer-options '{"type": "macos", "input_format": "EXECUTABLE"}' \; ||
-        fail "Failure while signing share library objects"
+    for f in $( find "${SUBSTRATE_DIR}" -name "*.dylib" ); do
+        signore sign --file "${f}" --out "${f}" --signer ${MACOS_BUILD_SIGNER} --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
+            fail "Failure while signing share library objects"
+    done
     rm entitlements.plist
 fi
 
