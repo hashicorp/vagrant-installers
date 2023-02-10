@@ -27,20 +27,8 @@ if($env:VAGRANT_SUBSTRATE_OUTPUT_DIR) {
     $out_dir = "substrate-assets"
 }
 
-if(!$env:SignKeyPath) {
-    $SignKeyPath = "C:\users\vagrant\Win_CodeSigning.p12"
-} else {
-    $SignKeyPath = $env:SignKeyPath
-}
-
-$SignKeyPassword = $env:SignKeyPassword
-$SignKeyExists = Test-Path -LiteralPath $SignKeyPath
 $SubstrateArgs = @{
     "OutputDir"="C:\vagrant\${out_dir}";
-}
-if($SignKeyExists -and $SignKeyPassword) {
-    $SubstrateArgs["SignKeyFile"] = $SignKeyPath
-    $SubstrateArgs["SignKeyPassword"] = $SignKeyPassword
 }
 
 try {

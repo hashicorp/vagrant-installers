@@ -24,34 +24,15 @@ if($SubstrateExists) {
     Write-Output "Starting 64-bit package build"
     Set-Location -Path "C:\vagrant\${pkg_dir}"
 
-    if(!$env:SignKeyPath) {
-        $SignKeyPath = "C:\users\vagrant\Win_CodeSigning.p12"
-    } else {
-        $SignKeyPath = $env:SignKeyPath
-    }
-    $SignKeyExists = Test-Path -LiteralPath $SignKeyPath
     $PackageScript = "C:\vagrant\package\package.ps1"
 
     Write-Output "Starting 64-bit package process"
 
-    if($SignKeyExists) {
-        if(!$env:SignKeyPassword) {
-            Write-Error "Error: No password provided for code signing key!"
-        }
-        $PackageArgs = @{
-            "SubstratePath"="${SubstratePath}";
-            "VagrantRevision"="main";
-            "SignKey"="${SignKeyPath}";
-            "SignKeyPassword"="${env:SignKeyPassword}";
-            "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
-        }
-    } else {
-        $PackageArgs = @{
+    $PackageArgs = @{
             "SubstratePath"="${SubstratePath}";
             "VagrantRevision"="main";
             "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
         }
-    }
 
     & $PackageScript @PackageArgs
     if(!$?){
@@ -65,24 +46,11 @@ $SubstrateExists = Test-Path -LiteralPath $SubstratePath
 if($SubstrateExists) {
     Write-Output "Starting 32-bit package process..."
 
-    if($SignKeyExists) {
-        if(!$env:SignKeyPassword) {
-            Write-Error "Error: No password provided for code signing key!"
-        }
-        $PackageArgs = @{
-            "SubstratePath"="${SubstratePath}";
-            "VagrantRevision"="main";
-            "SignKey"="${SignKeyPath}";
-            "SignKeyPassword"="${env:SignKeyPassword}";
-            "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
-        }
-    } else {
-        $PackageArgs = @{
+    $PackageArgs = @{
             "SubstratePath"="${SubstratePath}";
             "VagrantRevision"="main";
             "SignRequired"="${env:VAGRANT_PACKAGE_SIGNING_REQUIRED}";
         }
-    }
 
     & $PackageScript @PackageArgs
     if(!$?){

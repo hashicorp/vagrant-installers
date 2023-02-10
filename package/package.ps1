@@ -27,11 +27,7 @@ param(
 
     [string]$VagrantSourceBaseURL="https://github.com/hashicorp/vagrant/archive/",
 
-    [string]$SignKey="",
-    [string]$SignKeyPassword="",
-    [string]$SignPath="",
     [string]$SignRequired="",
-
     [string]$BuildStyle="ephemeral",
     [string]$ScrubCache="no"
 )
@@ -510,23 +506,16 @@ if(!$?) {
 #--------------------------------------------------------------------
 # Sign
 #--------------------------------------------------------------------
-if ($SignKey) {
-    $SignTool = "signtool.exe"
-    if ($SignPath) {
-        $SignTool = $SignPath
-    }
+if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET) {
+    $Signore = "c:\signore.exe"
 
-    & $SignTool sign `
-      /d Vagrant `
-      /t http://timestamp.digicert.com `
-      /f $SignKey `
-      /p $SignKeyPassword `
-      $OutputPath
+    $SignProc = Create-Process $Signore "sign --file $(OutputPath) --out $($binary.FullName) --signer $($Env:WIN_BUILD_SIGNER)"
 
-    if(!$?) {
-        Write-Output "Error: Failed to sign package"
-        exit 1
+    Wait-Process $SignProc
+    if($SignProc.ExitCode -ne 0) {
+        Write-Error "Failed to sign embedded binary -> $($binary.FullName)"
     }
+    Cleanup-Process $SignProc
 } else {
     if ($SignRequired -eq "1") {
         Write-Output "Error: Package signing is required but package is not signed"
