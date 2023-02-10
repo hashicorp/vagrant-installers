@@ -70,8 +70,16 @@
     },
     {
       "environment_vars": [
-        "GO_INSTALL_VERSION={{user `go_version`}}",
         "HASHIBOT_TOKEN={{user `hashibot_token`}}"
+      ],
+      "scripts": [
+        "{{template_dir}}/scripts/windows/signore_download.ps1"
+      ],
+      "type": "powershell"
+    },
+    {
+      "environment_vars": [
+        "GO_INSTALL_VERSION={{user `go_version`}}"
       ],
       "scripts": [
         "{{template_dir}}/scripts/windows/vagrant.bat",
