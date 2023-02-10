@@ -589,7 +589,7 @@ if($Build64) {
     Pop-Location
 }
 
-if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET -and $Env:SIGNORE_TOKEN) {
+if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET) {
     Write-Output "Signing embedded binaries..."
     $binaries = Get-ChildItem "${StageDir}" -Filter *.exe -Recurse
     foreach($binary in $binaries) {

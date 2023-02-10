@@ -112,8 +112,9 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
             kv/data/teams/vagrant/packaging signore_client_id;
             kv/data/teams/vagrant/packaging signore_client_secret;
-            kv/data/teams/vagrant/packaging win_signore_signer;
-            kv/data/teams/vagrant/packaging macos_signore_signer;
+            kv/data/teams/vagrant/packaging signore_windows_signer;
+            kv/data/teams/vagrant/packaging signore_macos_binary_signer;
+            kv/data/teams/vagrant/packaging signore_macos_installer_signer;
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Build Vagrant substrates
@@ -128,8 +129,9 @@ jobs:
           PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
           PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}
           PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
-          PKT_VAGRANT_INSTALLER_WIN_BUILD_SIGNER: ${{ steps.secrets.outputs.win_signore_signer }}
-          PKT_VAGRANT_INSTALLER_MACOS_BUILD_SIGNER: ${{ steps.secrets.outputs.macos_signore_signer }}
+          PKT_VAGRANT_INSTALLER_WIN_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+          PKT_VAGRANT_INSTALLER_MACOS_BINARY_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_macos_binary_signer }}
+          PKT_VAGRANT_INSTALLER_MACOS_INSTALLER_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_macos_installer_signer }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
           SUBSTRATES_IDENTIFIER: ${{ needs.generate-info.outputs.substrates-identifier }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
@@ -165,8 +167,9 @@ jobs:
             kv/data/teams/vagrant/slack webhook | slack_webhook;
             kv/data/teams/vagrant/packaging signore_client_id;
             kv/data/teams/vagrant/packaging signore_client_secret;
-            kv/data/teams/vagrant/packaging win_signore_signer;
-            kv/data/teams/vagrant/packaging macos_signore_signer;
+            kv/data/teams/vagrant/packaging signore_windows_signer;
+            kv/data/teams/vagrant/packaging signore_macos_binary_signer;
+            kv/data/teams/vagrant/packaging signore_macos_installer_signer;
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Setup Ruby
@@ -197,8 +200,9 @@ jobs:
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ''
           PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}
           PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
-          PKT_VAGRANT_INSTALLER_WIN_BUILD_SIGNER: ${{ steps.secrets.outputs.win_signore_signer }}
-          PKT_VAGRANT_INSTALLER_MACOS_BUILD_SIGNER: ${{ steps.secrets.outputs.macos_signore_signer }}
+          PKT_VAGRANT_INSTALLER_WIN_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+          PKT_VAGRANT_INSTALLER_MACOS_BINARY_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_macos_binary_signer }}
+          PKT_VAGRANT_INSTALLER_MACOS_INSTALLER_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_macos_installer_signer }}
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.slack_webhook }}
           VAGRANT_CLOUD_TOKEN: ${{ steps.secrets.outputs.vagrant_cloud_token }}
         working-directory: ${{github.workspace}}

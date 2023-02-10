@@ -506,7 +506,7 @@ if(!$?) {
 #--------------------------------------------------------------------
 # Sign
 #--------------------------------------------------------------------
-if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET -and $Env:SIGNORE_TOKEN) {
+if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET) {
     $Signore = "c:\signore.exe"
 
     $SignProc = Create-Process $Signore "sign --file $(OutputPath) --out $($binary.FullName) --signer $($Env:WIN_BUILD_SIGNER)"

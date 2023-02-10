@@ -181,20 +181,20 @@ EOF
     echo "Signing all substrate executables..."
     while IFS= read -rd '' f; do
         if [[ "$(file ${f})" == *"Mach-O"* ]]; then
-            signore sign --file "${f}" --out "${f}" --signer ${MACOS_BUILD_SIGNER}  --entitlements entitlements.plist --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
+            signore sign --file "${f}" --out "${f}" --signer ${MACOS_BINARY_BUILD_SIGNER}  --entitlements entitlements.plist --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
                 fail "Failure while signing executables"
         fi
     done < <( find "${SUBSTRATE_DIR}"  -type f -perm +0111 -print0 )
 
     echo "Finding all substate bundles..."
     for f in $( find "${SUBSTRATE_DIR}" -name "*.bundle" ); do
-        signore sign --file "${f}" --out "${f}" --signer ${MACOS_BUILD_SIGNER} --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
+        signore sign --file "${f}" --out "${f}" --signer ${MACOS_BINARY_BUILD_SIGNER} --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
             fail "Failure while signing bundles"
     done
 
     echo "Finding all substrate shared library objects..."
     for f in $( find "${SUBSTRATE_DIR}" -name "*.dylib" ); do
-        signore sign --file "${f}" --out "${f}" --signer ${MACOS_BUILD_SIGNER} --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
+        signore sign --file "${f}" --out "${f}" --signer ${MACOS_BINARY_BUILD_SIGNER} --signer-options '{"type": "macos", "input_format": "EXECUTABLE", "binary_identifier": "'"$(basename $f)"'"}' ||
             fail "Failure while signing share library objects"
     done
     rm entitlements.plist
@@ -218,7 +218,7 @@ pkgbuild \
 
 echo "Signing core.pkg..."
 if [ "${SIGN_PKG}" = "1" ]; then
-    signore sign --file "${STAGING_DIR}/core.pkg"  --out "${STAGING_DIR}/core.pkg" --signer "${MACOS_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
+    signore sign --file "${STAGING_DIR}/core.pkg"  --out "${STAGING_DIR}/core.pkg" --signer "${MACOS_INSTALLER_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 # Create the distribution definition, an XML file that describes what
@@ -271,7 +271,7 @@ productbuild \
 
 echo "Signing Vagrant.pkg..."
 if [ "${SIGN_PKG}" = "1" ]; then
-    signore sign --file "${STAGING_DIR}/Vagrant.pkg"  --out "${STAGING_DIR}/Vagrant.pkg" --signer "${MACOS_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
+    signore sign --file "${STAGING_DIR}/Vagrant.pkg"  --out "${STAGING_DIR}/Vagrant.pkg" --signer "${MACOS_INSTALLER_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 #-------------------------------------------------------------------------
@@ -297,7 +297,7 @@ if [ "${SIGN_PKG}" != "1" ]; then
     echo
 else
     echo "==> Signing DMG..."
-    signore sign --file "${OUTPUT_PATH}"  --out "${OUTPUT_PATH}" --signer "${MACOS_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
+    signore sign --file "${OUTPUT_PATH}"  --out "${OUTPUT_PATH}" --signer "${MACOS_BINARY_BUILD_SIGNER}" --signer-options '{"type":"macos", "input_format":"EXECUTABLE"}'
 fi
 
 if [ "${SIGN_PKG}" = "1" ] && [ "${SIGN_CODE}" = "1" ] && [ "${NOTARIZE_USERNAME}" != "" ]; then
