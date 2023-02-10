@@ -70,7 +70,8 @@
     },
     {
       "environment_vars": [
-        "GO_INSTALL_VERSION={{user `go_version`}}"
+        "GO_INSTALL_VERSION={{user `go_version`}}",
+        "HASHIBOT_TOKEN={{user `hashibot_token`}}"
       ],
       "scripts": [
         "{{template_dir}}/scripts/windows/vagrant.bat",
@@ -108,6 +109,7 @@
     "version": "0.1",
     "vm_name": "eval-win81x64-enterprise",
     "vm_suffix": "",
-    "go_version": "{{env `GO_INSTALL_VERSION`}}"
+    "go_version": "{{env `GO_INSTALL_VERSION`}}",
+    "hashibot_token": "{{ env `HASHIBOT_TOKEN`}}"
   }
 }
