@@ -1,5 +1,8 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
-$cl = New-Object System.Net.WebClient
-$cl.Headers["Content-Type"] = "application/json"
-$cl.Headers["Authorization"] = "token ${env:HASHIBOT_TOKEN}"
-$cl.DownloadFile("https://github.com/hashicorp/signore/releases/download/v0.1.14/signore_0.1.14_windows_x86_64.zip", "C:\Windows\Temp\signore.zip")
+
+$file = "C:\Windows\Temp\signore.zip"
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Authorization", "token ${env:HASHIBOT_TOKEN}")
+$headers.Add("Accept", "application/octet-stream")
+$download = "https://api.github.com/repos/hashicorp/signore/releases/assets/94533456"
+Invoke-WebRequest -Uri $download -Headers $headers -OutFile $file
