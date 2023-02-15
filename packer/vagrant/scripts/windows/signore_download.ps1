@@ -13,11 +13,6 @@ try {
     exit 1
 }
 
-if ($response.StatusCode -ne 200) {
-    Write-Error "Request for latest signore release returned unexpected status code: ${response.StatusCode} != 200"
-    exit 1
-}
-
 $response_content = $response.Content | ConvertFrom-Json
 $artifactUrl = $response_content.assets | where { $_.Name -like "*windows_x86_64.zip" } | Select -ExpandProperty url
 
@@ -27,23 +22,15 @@ if ($artifactUrl -eq "") {
 }
 
 # Download signore release artifact
-$request = @{
-    Uri = $artifactUrl
-    Headers = @{
-        Authentication = "token ${env:HASHIBOT_TOKEN}"
-    }
-    OutFile = "C:\Windows\Temp\signore.zip"
-}
+$signore_zip_file = "C:\Windows\Temp\signore.zip"
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Authorization", "token ${env:HASHIBOT_TOKEN}")
+$headers.Add("Accept", "application/octet-stream")
 
 try {
-    $response = Invoke-WebRequest @request
+    $response = Invoke-WebRequest -Uri $artifactUrl -Headers $headers -OutFile $signore_zip_file
 } catch {
     Write-Error "Request for latest signore release artifact failed: ${PSItem}"
-}
-
-if ($response.StatusCode -ne 200) {
-    Write-Error "Request for latest signore release artifact returned unexpected status code: ${response.StatusCode} != 200"
-    exit 1
 }
 
 New-Item -ItemType "directory" -Path "c:\hashicorp\tools"
