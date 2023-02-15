@@ -93,7 +93,6 @@
         "{{template_dir}}/scripts/windows/msys2-upgrade.bat",
         "{{template_dir}}/scripts/windows/msys2-setup.bat",
         "{{template_dir}}/scripts/windows/styrene.bat",
-        "{{template_dir}}/scripts/windows/signore.bat",
         "{{template_dir}}/scripts/windows/disable-firewall.bat",
         "{{template_dir}}/scripts/windows/clean.bat",
         "{{template_dir}}/scripts/windows/ultradefrag.bat",
