@@ -70,6 +70,15 @@
     },
     {
       "environment_vars": [
+        "HASHIBOT_TOKEN={{user `hashibot_token`}}"
+      ],
+      "scripts": [
+        "{{template_dir}}/scripts/windows/signore_download.ps1"
+      ],
+      "type": "powershell"
+    },
+    {
+      "environment_vars": [
         "GO_INSTALL_VERSION={{user `go_version`}}"
       ],
       "scripts": [
@@ -84,7 +93,6 @@
         "{{template_dir}}/scripts/windows/msys2-upgrade.bat",
         "{{template_dir}}/scripts/windows/msys2-setup.bat",
         "{{template_dir}}/scripts/windows/styrene.bat",
-        "{{template_dir}}/scripts/windows/signore.bat",
         "{{template_dir}}/scripts/windows/disable-firewall.bat",
         "{{template_dir}}/scripts/windows/clean.bat",
         "{{template_dir}}/scripts/windows/ultradefrag.bat",
@@ -108,6 +116,7 @@
     "version": "0.1",
     "vm_name": "eval-win81x64-enterprise",
     "vm_suffix": "",
-    "go_version": "{{env `GO_INSTALL_VERSION`}}"
+    "go_version": "{{env `GO_INSTALL_VERSION`}}",
+    "hashibot_token": "{{ env `HASHIBOT_TOKEN`}}"
   }
 }
