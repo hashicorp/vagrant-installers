@@ -37,27 +37,6 @@ guests=$(vagrant status | grep vmware | awk '{print $1}')
 
 vagrant up --no-provision
 
-declare -A upids
-
-if [ "${PACKET_EXEC}" == "1" ]; then
-    # macos uploads
-    if [ -f "MacOS_CodeSigning.cert" ]; then
-        if [[ "${guests[*]}" = *"osx"* ]]; then
-            vagrant upload MacOS_CodeSigning.cert "/tmp/" osx-10.9
-            vagrant upload MacOS_CodeSigning.key "/tmp/" osx-10.9
-            export VAGRANT_INSTALLER_VAGRANT_PACKAGE_SIGN_CERT_PATH="/tmp/MacOS_CodeSigning.cert"
-            export VAGRANT_INSTALLER_VAGRANT_PACKAGE_SIGN_KEY_PATH="/tmp/MacOS_CodeSigning.key"
-        fi
-    fi
-    # win uploads
-    if [ -f "Win_CodeSigning.p12" ]; then
-        if [[ "${guests[*]}" = *"win"* ]]; then
-            vagrant upload Win_CodeSigning.p12 "~/" win-7
-            export VAGRANT_INSTALLER_SignKeyPath="C:\\Users\\vagrant\\Win_CodeSigning.p12"
-        fi
-    fi
-fi
-
 set +e
 declare -A pids
 
