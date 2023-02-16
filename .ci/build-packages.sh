@@ -100,11 +100,6 @@ if ! packet-exec info; then
         "Failed to create packet device"
 fi
 
-# Make signing files available
-secrets="$(load-signing)" ||
-    fail "Failed to load signing files"
-eval "${secrets}"
-
 echo "Setting up remote packet device for current job..."
 
 # NOTE: We only need to call packet-exec with the -upload option once

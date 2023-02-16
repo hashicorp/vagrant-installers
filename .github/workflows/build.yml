@@ -107,7 +107,6 @@ jobs:
             kv/data/teams/vagrant/packet token | packet_token;
             kv/data/teams/vagrant/packet project_id | packet_project_id;
             kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
-            kv/data/teams/vagrant/packaging asset_password;
             kv/data/teams/vagrant/vagrantcloud token | vagrant_cloud_token;
             kv/data/teams/vagrant/slack webhook | slack_webhook;
             kv/data/teams/vagrant/packaging signore_client_id;
@@ -126,7 +125,6 @@ jobs:
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
           PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
           PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
-          PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
           PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}
           PKT_VAGRANT_INSTALLER_SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
           PKT_VAGRANT_INSTALLER_WIN_BUILD_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
@@ -160,7 +158,6 @@ jobs:
             kv/data/teams/vagrant/packet token | packet_token;
             kv/data/teams/vagrant/packet project_id | packet_project_id;
             kv/data/teams/vagrant/packet ssh_key_content | packet_ssh_key_content;
-            kv/data/teams/vagrant/packaging asset_password;
             kv/data/teams/vagrant/packaging macos_notarize_username;
             kv/data/teams/vagrant/packaging macos_notarize_password;
             kv/data/teams/vagrant/vagrantcloud token | vagrant_cloud_token;
@@ -194,7 +191,6 @@ jobs:
           PACKET_EXEC_TOKEN: ${{ steps.secrets.outputs.packet_token }}
           PACKET_EXEC_PROJECT_ID: ${{ steps.secrets.outputs.packet_project_id }}
           PACKET_SSH_KEY_CONTENT: ${{ steps.secrets.outputs.packet_ssh_key_content }}
-          PKT_SECRET_PHRASE: ${{ steps.secrets.outputs.asset_password }}
           PKT_VAGRANT_INSTALLER_NOTARIZE_USERNAME: ${{ steps.secrets.outputs.macos_notarize_username }}
           PKT_VAGRANT_INSTALLER_NOTARIZE_PASSWORD: ${{ steps.secrets.outputs.macos_notarize_password }}
           PKT_VAGRANT_INSTALLER_DISABLE_NOTARIZATION: ''
