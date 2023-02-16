@@ -6,3 +6,4 @@ mkdir C:\Windows\Temp\build-tools-installer
 start /wait c:\Windows\Temp\build-tools-installer\visualcppbuildtools_full.exe /adminfile a:\buildtools-adminfile.xml /passive /norestart /norefresh
 
 setx PATH "%PATH%;C:\Program Files (x86)\Windows Kits\8.1\bin\x86" /m
+setx PATH "%PATH%;c:\hashicorp\tools" /m
