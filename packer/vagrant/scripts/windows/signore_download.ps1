@@ -41,7 +41,3 @@ try {
     Write-Error "Expansion of signore release artifact failed: ${PSItem}"
     exit 1
 }
-
-$current_path = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name path).path
-$new_path = "$old;c:\hashicorp\tools"
-Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name path -Value $new_path
