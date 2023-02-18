@@ -593,13 +593,7 @@ if ($Env:SIGNORE_CLIENT_ID -and $Env:SIGNORE_CLIENT_SECRET) {
     Write-Output "Signing embedded binaries..."
     $binaries = Get-ChildItem "${StageDir}" -Filter *.exe -Recurse
     foreach($binary in $binaries) {
-        $SignProc = Create-Process c:\signore.exe "sign --file $($binary.FullName) --out $($binary.FullName) --signer $($Env:WIN_BUILD_SIGNER)"
-
-        Wait-Process $SignProc
-        if($SignProc.ExitCode -ne 0) {
-            Write-Error "Failed to sign embedded binary -> $($binary.FullName)"
-        }
-        Cleanup-Process $SignProc
+        signore sign --file $($binary.FullName) --out $($binary.FullName) --signer $($Env:WIN_BUILD_SIGNER)
     }
 }
 
