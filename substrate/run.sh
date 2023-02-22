@@ -32,7 +32,7 @@ zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${
 # Used for centos builds
 libxcrypt_file="libxcrypt-v4.4.28.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
 
-macos_deployment_target="10.9"
+macos_deployment_target="10.11"
 
 function echo_stderr {
     (>&2 echo "$@")
@@ -407,10 +407,11 @@ curl -f -L -s -o ruby.zip "${ruby_url}"
 unzip -q ruby.zip
 pushd ruby-*
 o_cflags="${CFLAGS}"
-export CFLAGS="${CFLAGS} -I./include -O3 -std=c99"
-./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
-            --enable-shared --with-opt-dir="${embed_dir}" --enable-load-relative
-make && make install
+export CFLAGS="${CFLAGS} -I./include"
+./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking \
+    --disable-install-doc --enable-shared --with-opt-dir="${embed_dir}" --enable-load-relative
+make
+make install
 export CFLAGS="${o_cflags}"
 popd
 
