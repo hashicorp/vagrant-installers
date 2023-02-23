@@ -11,7 +11,7 @@ if [ "$#" -ne "2" ]; then
   exit 1
 fi
 
-macos_deployment_target="10.9"
+macos_deployment_target="10.11"
 
 sdk_root="/Library/Developer/CommandLineTools/SDKs"
 sdk_path="${sdk_root}/MacOSX.sdk"
