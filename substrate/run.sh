@@ -407,7 +407,7 @@ curl -f -L -s -o ruby.zip "${ruby_url}"
 unzip -q ruby.zip
 pushd ruby-*
 o_cflags="${CFLAGS}"
-export CFLAGS="${CFLAGS} -I./include"
+export CFLAGS="${CFLAGS} -I./include -O3 -std=c99"
 ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking \
     --disable-install-doc --enable-shared --with-opt-dir="${embed_dir}" --enable-load-relative
 make
