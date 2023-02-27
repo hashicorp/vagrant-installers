@@ -1,4 +1,7 @@
 #!/bin/sh -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # should output one of 'redhat' 'centos' 'oraclelinux'
 distro="`rpm -qf --queryformat '%{NAME}' /etc/redhat-release | cut -f 1 -d '-'`"

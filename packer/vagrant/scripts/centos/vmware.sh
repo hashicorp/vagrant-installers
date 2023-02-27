@@ -1,4 +1,7 @@
 #!/bin/bash -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # set a default HOME_DIR environment variable if not set
 HOME_DIR="${HOME_DIR:-/home/vagrant}";

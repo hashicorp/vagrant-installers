@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 pushd /private/tmp
 su vagrant -c "/usr/local/bin/brew install python"

@@ -1,4 +1,7 @@
 #!/bin/bash -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Disable the release upgrader
 echo "==> Disabling the release upgrader"

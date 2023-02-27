@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 # This file is supposed to be sourced by each Recipe
 # that wants to use the functions contained herein
 # like so:

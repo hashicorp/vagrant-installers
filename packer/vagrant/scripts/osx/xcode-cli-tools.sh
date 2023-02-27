@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Get and install Xcode CLI tools
 OSX_VERS=$(sw_vers -productVersion | awk -F "." '{print $2}')

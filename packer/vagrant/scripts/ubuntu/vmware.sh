@@ -1,4 +1,7 @@
 #!/bin/sh -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Ensure we have kernel headers installed
 apt-get install -yq linux-headers-generic

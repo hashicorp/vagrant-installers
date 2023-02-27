@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 class Dmgbuild < Formula
   desc "Command-line tool to create OS X disk images"
   homepage "https://bitbucket.org/al45tair/dmgbuild"

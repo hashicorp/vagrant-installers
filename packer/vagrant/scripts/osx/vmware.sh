@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 TOOLS_PATH="/private/tmp/darwin.iso"
 if [ ! -e "$TOOLS_PATH" ]; then

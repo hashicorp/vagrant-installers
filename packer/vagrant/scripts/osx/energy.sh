@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 echo ==> 'Disabling screensaver'
 defaults -currentHost write com.apple.screensaver idleTime 0

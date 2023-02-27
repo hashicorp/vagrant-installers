@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 DEBIAN_FRONTEND=noninteractive apt-add-repository -y ppa:brightbox/ruby-ng
 DEBIAN_FRONTEND=noninteractive apt-get update

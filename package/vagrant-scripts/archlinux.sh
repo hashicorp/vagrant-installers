@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Expected file mode
 chmod 755 /vagrant/package/support/package_archlinux.sh

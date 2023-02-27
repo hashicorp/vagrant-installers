@@ -1,4 +1,7 @@
 #!/usr/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 echo "Running host updates before build"
 pacman -Syu --noconfirm

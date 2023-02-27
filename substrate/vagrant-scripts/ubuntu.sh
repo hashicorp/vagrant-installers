@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Force a DNS update
 echo "dns-nameservers 8.8.8.8" >> /etc/network/interfaces

@@ -1,4 +1,7 @@
 #!/bin/sh -e
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 #
 # Preparation script for an OS X automated installation for use with VeeWee/Packer/Vagrant
 # 
