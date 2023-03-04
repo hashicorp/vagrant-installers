@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 (New-Object System.Net.WebClient).DownloadFile('https://github.com/msys2/msys2-installer/releases/download/2020-06-02/msys2-x86_64-20200602.exe', 'C:\Windows\Temp\msys2.exe')
 
 Start-Process "C:\Windows\Temp\msys2.exe" "--script A:\msys2-install.qs" -Wait

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # shellcheck disable=SC1091
 echo "🤖 Loading VagrantCI 🤖"

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright (c) HashiCorp, Inc.
+ SPDX-License-Identifier: MIT
+-->
+
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
     <servicing/>
     <settings pass="windowsPE">

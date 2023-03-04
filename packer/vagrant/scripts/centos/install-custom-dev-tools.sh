@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 custom_dir="$(mktemp -d vagrant-substrate.XXXXX)"
 pushd "${custom_dir}" || exit 255

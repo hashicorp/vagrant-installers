@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 #
 # Builds the package for Vagrant unix-like systems (Mac OS X and Linux).
 

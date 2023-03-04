@@ -1,4 +1,7 @@
 #!/bin/sh -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Delete all Linux headers
 dpkg --list \

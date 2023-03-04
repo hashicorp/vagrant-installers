@@ -1,4 +1,7 @@
 #!/bin/bash -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 result=1
 attempts=0

@@ -1,4 +1,7 @@
 #!/bin/bash -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 OSX_VERS=$(sw_vers -productVersion | awk -F "." '{print $2}')
 

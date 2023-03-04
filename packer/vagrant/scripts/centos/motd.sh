@@ -1,4 +1,7 @@
 #!/bin/bash -eux
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 echo "==> Recording box generation date"
 date > /etc/vagrant_box_build_date

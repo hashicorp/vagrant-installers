@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # Port of Gavin Brock's Perl kcpassword generator to Python, by Tom Taylor
 # <tom@tomtaylor.co.uk>.

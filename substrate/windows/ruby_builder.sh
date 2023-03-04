@@ -1,4 +1,7 @@
 #!/usr/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 echo "Building for ${1}"
 
