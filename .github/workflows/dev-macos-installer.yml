@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - 'build-macos-*'
+
+jobs:
+  build-macos-package:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build macOS package
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-macos.yml
+    secrets: inherit
+  publish:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [build-macos-package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch macOS DMG
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-macos-package.outputs.dmg-cache-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create prerelease
+        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_VERSION: ${{ needs.build-macos-package.outputs.vagrant-version }}
