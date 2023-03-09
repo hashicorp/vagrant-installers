@@ -41,7 +41,9 @@ if [ -z "${SIGNORE_SIGNER}" ]; then
     failure "SIGNORE_SIGNER environment variable is required for signing"
 fi
 
-install_hashicorp_tool "signore"
+if ! command -v "signore" > /dev/null; then
+    install_hashicorp_tool "signore"
+fi
 
 # Base args for signing
 signore_args=("sign" "--file" "${input_file}" "--out" "${input_file}" "--match-file-mode")

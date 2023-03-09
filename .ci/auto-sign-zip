@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+
+# Output: signed-zip-artifact-path
+
+# NOTE: This script will take a zip compressed file
+#       as input, decompress it, and then sign any
+#       binary file it can locate which needs to be
+#       signed.
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+# List of macOS executable names which should have
+# the disable library validation entitlement applied.
+# NOTE: Right now this is just the ruby executable
+#       which allows it to properly load user plugins.
+macho_entitled_binary_names=( "ruby" )
+
+# Simple helper to check if binary at given path should
+# have entitlements applied
+function is_entitled() {
+    local check_path="${1}"
+    debug "entitlement check on path %s" "${check_path}"
+    if [ -z "${check_path}" ]; then
+        failure "Path parameter is required for entitlement check"
+    fi
+
+    local bin_name
+    for bin_name in "${macho_entitled_binary_names[@]}"; do
+        if [ "${check_path##*/}" = "${bin_name}" ]; then
+            debug "entitlement name match (%s = %s)" "${check_path}" "${bin_name}"
+            return 0
+        fi
+    done
+    debug "no entitlement match for path %s" "${check_path}"
+    return 1
+}
+
+zip_file="${1}"
+if [ ! -f "${zip_file}" ]; then
+    failure "Invalid path provided for zip file (%s)" "${zip_file}"
+fi
+zip_file="$(realpath "${zip_file}")" ||
+    failure "Could not determine real path of zip file (%s)" "${zip_file}"
+
+cwd="$(pwd)" ||
+    failure "Unable to determine current working directory"
+
+# Signing helper script
+signer="${root}/.ci/sign-file"
+if [ ! -f "${signer}" ]; then
+    failure "Expected signing helper script not found (%s)" "${signer}"
+fi
+
+# Create a work directory to unpack in
+work_dir="$(mktemp -d signing-zip.XXXXXX)" ||
+    failure "Cannot create work directory"
+pushd "${work_dir}"
+work_dir="$(pwd)" ||
+    failure "Cannot determine working directory"
+
+debug "created working directory: %s" "${work_dir}"
+info "Unpacking zip file..."
+unzip -q "${zip_file}" ||
+    failure "Unable to unpack zip file"
+popd
+
+shopt -s globstar ||
+    failure "Could not enable globstar bash option"
+debug "generating entries list"
+entries=( "${work_dir}/"**/* )
+shopt -u globstar ||
+    failure "Could not disable globstar bash option"
+
+info "Generating executable and library files list..."
+macho_entitled_execs=()
+macho_execs=()
+macho_libs=()
+win_binaries=()
+
+# Find all binaries for signing and separate them if
+# required. For Windows, only one form of signing is
+# used so they are collected into a single list. For
+# macOS, signing is different based on library or
+# executable so isolate them into different lists.
+for file in "${entries[@]}"; do
+    # If entry is not a file, skip
+    if [ ! -f "${file}" ]; then
+        debug "skipping non-file entry (%s)" "${file}"
+        continue
+    fi
+
+    # Get information on file
+    info="$(file "${file}")" ||
+        failure "Could not get file information (%s)" "${file}"
+
+    # Start with check for Windows. If file is executable then
+    # it can be signed. DLL files will be listed as executable.
+    if [[ "${info}" = "*Windows"* ]] && [[ "${info}" = *"executable"* ]]; then
+        debug "discovered windows binary for signing: %s" "${file}"
+        win_binaries+=( "${file}" )
+        continue
+    fi
+
+    # Now do the check for Mach-O
+    if [[ "${info}" = *"Mach-O"* ]]; then
+        # If it's a library just add it
+        if [[ "${info}" = *"library"* ]] || [[ "${info}" = *"bundle"* ]]; then
+            # Ignore .a and .o files
+            # TODO: determine if these can every be signed
+            if [[ "${file}" = *".a" ]] || [[ "${file}" = *".o" ]]; then
+                continue
+            fi
+            debug "discovered mach-o library for signing: %s" "${file}"
+            macho_libs+=( "${file}" )
+            continue
+        fi
+        # If it's an executable we need to check
+        # if it should be entitled
+        if [[ "${info}" = *"executable"* ]]; then
+            if is_entitled "${file}"; then
+                debug "discovered mach-o executable for signing (entitled): %s" "${file}"
+                macho_entitled_execs+=( "${file}" )
+            else
+                debug "discovered mach-o executable for signing: %s" "${file}"
+                macho_execs+=( "${file}" )
+            fi
+            continue
+        fi
+    fi
+
+    debug "ignoring path which does not require signing: %s" "${file}"
+done
+
+# Now that files are separated into lists, cycle
+# through them and sign the files
+info "Signing files..."
+# Windows signing
+for file in "${win_binaries[@]}"; do
+    debug "signing windows binary: %s" "${file}"
+    "${signer}" "${file}" ||
+        failure "Could not sign Windows binary file (%s)" "${file}"
+done
+
+# Mach-O library signing
+for file in "${macho_libs[@]}"; do
+    debug "signing mach-o library binary: %s" "${file}"
+    "${signer}" "${file}" ||
+        failure "Could not sign Mach-O library file (%s)" "${file}"
+done
+
+# Mach-O executable signing
+for file in "${macho_execs[@]}"; do
+    debug "signing mach-o executable binary: %s" "${file}"
+    "${signer}" "${file}" -b "${file##*/}" ||
+        failure "Could not sign Mach-O executable file (%s)" "${file}"
+done
+
+# Mach-O executable with entitlements signing
+# Write the entitlements file to use for signing
+cat <<EOF >entitlements.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>com.apple.security.cs.disable-library-validation</key>
+<true/>
+</dict>
+</plist>
+EOF
+for file in "${macho_entitled_execs[@]}"; do
+    debug "signing mach-o executable binary file with entitlements: %s" "${file}"
+    "${signer}" "${file}" -b "${file##*/}" -e ./entitlements.plist ||
+        failure "Could not sign Mach-O executable file with entitlements (%s)" "${file}"
+done
+# Remove the entitlements file
+rm -f ./entitlements.plist
+
+info "Repacking zip file..."
+output_file="${cwd}/${zip_file##*/}"
+pushd "${work_dir}"
+zip -q -r "${output_file}" .
+popd
+
+# Clean up after ourselves
+rm -rf "${work_dir}"
+
+# Write the artifact path only to stdout
+printf "Signed zip artifact: " >&2
+printf "%s" "${output_file}"
+
+# If we are running in a workflow, set the output
+if [ -n "${GITHUB_OUTPUT}" ]; then
+    printf "signed-zip-artifact-path=%s\n" "${output_file}" >> "${GITHUB_OUTPUT}"
+fi
