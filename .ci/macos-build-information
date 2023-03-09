@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# Generate substrate information
+
+run_sha="$(git log --format=%h -1 ./substrate/run.sh)" ||
+    failure "Could not generate commit sha for ./substrate/run.sh"
+deps_sha="$(git log --format=%h -1 ./substrate/deps.sh)" ||
+    failure "Could not generate commit sha for ./substrate/deps.sh"
+
+sub_cache_base="substrate-${run_sha}+${deps_sha}"
+
+sub_arm_unsigned_id="${sub_cache_base}-arm-unsigned"
+printf "substrate-arm-unsigned-id=%s\n" "${sub_arm_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub_arm_unsigned_id}"; then
+    printf "substrate-arm-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+sub_arm_signed_id="${sub_cache_base}-arm-signed"
+printf "substrate-arm-signed-id=%s\n" "${sub_arm_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub_arm_signed_id}"; then
+    printf "substrate-arm-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+sub_x86_unsigned_id="${sub_cache_base}-x86-unsigned"
+printf "substrate-x86-unsigned-id=%s\n" "${sub_x86_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub_x86_unsigned_id}"; then
+    printf "substrate-x86-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+sub_x86_signed_id="${sub_cache_base}-x86-signed"
+printf "substrate-x86-signed-id=%s\n" "${sub_x86_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub_x86_signed_id}"; then
+    printf "substrate-x86-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+sub_universal_id="${sub_cache_base}-universal"
+printf "substrate-universal-id=%s\n" "${sub_universal_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub_universal_id}"; then
+    printf "substrate-universal-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+# Generate package information
+
+pkg_sha="$(git log --format=%h -1 ./package/darwin)" ||
+    failure "Could not generate commit sha for ./package/darwin"
+pkg_support_sha="$(git log --format=%h -1 ./package/support/darwin)" ||
+    failure "Could not generate commit sha for ./package/support/darwin"
+
+pkg_cache_base="pkg-${VAGRANT_SHASUM:0:10}_${pkg_sha}+${pkg_support_sha}"
+
+gems_unsigned_id="${pkg_cache_base}-gems-unsigned"
+printf "gems-unsigned-id=%s\n" "${gems_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${gems_unsigned_id}"; then
+    printf "gems-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+gems_signed_id="${pkg_cache_base}-gems-signed"
+printf "gems-signed-id=%s\n" "${gems_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${gems_signed_id}"; then
+    printf "gems-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+corepkg_unsigned_id="${pkg_cache_base}-core-pkg-unsigned"
+printf "core-pkg-unsigned-id=%s\n" "${corepkg_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${corepkg_unsigned_id}"; then
+    printf "core-pkg-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+corepkg_signed_id="${pkg_cache_base}-core-pkg-signed"
+printf "core-pkg-signed-id=%s\n" "${corepkg_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${corepkg_signed_id}"; then
+    printf "core-pkg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+instpkg_unsigned_id="${pkg_cache_base}-installer-pkg-unsigned"
+printf "installer-pkg-unsigned-id=%s\n" "${instpkg_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${instpkg_unsigned_id}"; then
+    printf "installer-pkg-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+instpkg_signed_id="${pkg_cache_base}-installer-pkg-signed"
+printf "installer-pkg-signed-id=%s\n" "${instpkg_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${instpkg_signed_id}"; then
+    printf "installer-pkg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+dmg_unsigned_id="${pkg_cache_base}-dmg-unsigned"
+printf "dmg-unsigned-id=%s\n" "${dmg_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${dmg_unsigned_id}"; then
+    printf "dmg-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+dmg_signed_id="${pkg_cache_base}-dmg-signed"
+printf "dmg-signed-id=%s\n" "${dmg_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${dmg_signed_id}"; then
+    printf "dmg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
