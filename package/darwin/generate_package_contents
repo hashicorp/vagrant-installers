@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/package/darwin/common-setup"
+
+if [ "${#}" -ne 2 ]; then
+    printf "Usage: %s SUBSTRATE-FILE VAGRANT-GEM" "${0}" >&2
+    exit 1
+fi
+
+# Remember our current working directory
+cwd="$(pwd)" || exit
+
+# Grab the parameter values
+substrate_file="${1}"
+vagrant_gem="${2}"
+
+substrate_file="$(file_directory "${substrate_file}")/${substrate_file##*/}"
+vagrant_gem="$(file_directory "${vagrant_gem}")/${vagrant_gem##*/}"
+
+# Validate the provided values
+if [ ! -f "${substrate_file}" ]; then
+    error "Invalid path provided for Vagrant substrate (%s)" "${substrate_file}"
+fi
+
+if [ ! -f "${vagrant_gem}" ]; then
+    error "Invalid path provided for Vagrant gem (%s)" "${vagrant_gem}"
+fi
+
+# Make sure the go modules are installed
+pushd "${root}" > /dev/null || exit
+go mod download || exit
+popd > /dev/null || exit
+
+# Create a working directory for unpacking
+# the substrate
+substrate_dir="$(mktemp -d vagrant-substrate.XXXXXX)" || exit
+
+# Hop in and unpack our substrate
+info "Unpacking substrate..."
+pushd "${substrate_dir}" > /dev/null || exit
+# Grab the full path while we are here
+substrate_dir="$(pwd)" || exit
+# Unzip the substrate
+unzip -q "${substrate_file}" || exit
+
+# Define some variables for clarity
+embed_dir="${substrate_dir}/embedded"
+embed_bindir="${embed_dir}/bin"
+embed_libdir="${embed_dir}/lib"
+embed_etcdir="${embed_dir}/etc"
+embed_gemsdir="${embed_dir}/gems"
+
+# Set some environment variables so rubygems will
+# install into the substrate
+export GEM_PATH="${embed_gemsdir}"
+export GEM_HOME="${GEM_PATH}"
+export GEMRC="${embed_etcdir}/gemrc"
+
+# Update our PATH so we pick up the gem command
+# from the substrate
+export PATH="${embed_bindir}:${PATH}"
+
+# Before we install the Vagrant gem we need
+# to update the rbconfig file so anything that
+# needs to be compiled is universal. The changes
+# won't matter outside of this operation as they
+# are not persisted
+rbconf_files=( "${embed_libdir}/ruby/3."*/*-darwin*/rbconfig.rb )
+
+info "Updating rbconfig to build universal extensions..."
+
+# Both configuration files are modified so it
+# will not matter what the host architecture
+# is that may be running this
+for rbconfig_file in "${rbconf_files[@]}"; do
+    if [ ! -f "${rbconfig_file}" ]; then
+        error "Invalid detected path for rbconfig.rb file (%s)" "${rbconfig_file}"
+    fi
+    # Create the file to store the updated contents
+    rbconfig_file_new="${rbconfig_file}.new"
+    touch "${rbconfig_file_new}" || exit
+
+    # Read the file and apply the required updates
+    while read -r line; do
+        # Ensure both architectures are defined in flags for building
+        if [[ "${line}" = *'CONFIG["CFLAGS"]'* ]] ||
+               [[ "${line}" = *'CONFIG["CPPFLAGS"]'* ]] ||
+               [[ "${line}" = *'CONFIG["CXXFLAGS"]'* ]] ||
+               [[ "${line}" = *'CONFIG["LDFLAGS"]'* ]]; then
+            # Trim the final quote from the line
+            line="${line%\"}"
+            # Append architecture flags and closing quote
+            line+=" -arch arm64 -arch x86_64\""
+        fi
+        # Write line to new file
+        printf "%s\n" "${line}" >> "${rbconfig_file_new}"
+    done < "${rbconfig_file}"
+    # Now replace the original
+    mv -f "${rbconfig_file_new}" "${rbconfig_file}"
+done
+
+# Now we are ready for the gem installation
+info "Installing Vagrant RubyGem..."
+# Install the vagrant gem. Most gems will be installed
+# as "ruby" platform which means the extensions that
+# are built will be universal due to the previous
+# configuration updates. The protobuf and grpc gems
+# will end up installed as platform specific pre-built
+# gems. We do this instead of explicitly defining the
+# `--platform` as ruby because the protobuf library
+# will fail when attempting to compile the extensions.
+gem install "${vagrant_gem}" || exit
+
+# Move into the gems directory before starting to fix
+# things up
+pushd "${embed_gemsdir}" > /dev/null || exit
+
+# Determine versions of gems for reinstall
+matches=( ./cache/google-protobuf-* )
+protobuf_version="${matches[0]}"
+if [ ! -f "${protobuf_version}" ]; then
+    info "Failed to locate cached protobuf gem (%s)" "${protobuf_version}"
+    exit 1
+fi
+protobuf_version="${protobuf_version##*google-protobuf-}"
+protobuf_version="${protobuf_version%%-*}"
+
+matches=( ./cache/grpc-* )
+grpc_version="${matches[0]}"
+if [ ! -f "${grpc_version}" ]; then
+    info "Failed to locate cached grpc gem (%s)" "${grpc_version}"
+    exit 1
+fi
+grpc_version="${grpc_version##*grpc-}"
+grpc_version="${grpc_version%%-*}"
+
+# Remove the gprc and protobuf gems
+gem uninstall --force google-protobuf || exit
+gem uninstall --force grpc || exit
+
+# Now we can start fixing the gem installs
+info "Fixing google-protobuf installation..."
+# Add the protobuf gem to the internal cache
+pushd ./cache > /dev/null || exit
+gem fetch --platform ruby --version "${protobuf_version}" google-protobuf || exit
+popd > /dev/null || exit
+
+# Unpack the protobuf gem
+pushd ./gems > /dev/null || exit
+gem unpack "../cache/google-protobuf-${protobuf_version}.gem" || exit
+popd > /dev/null || exit
+
+# Add the protobuf specification
+pushd ./specifications > /dev/null || exit
+gem specification --ruby \
+    "../cache/google-protobuf-${protobuf_version}.gem" > "google-protobuf-${protobuf_version}.gemspec" || exit
+popd > /dev/null || exit
+
+# Create a temp directory for fetching and
+# mashing platform specific versions
+mash_dir="$(mktemp -d mash-XXXXXX)" || exit
+pushd "${mash_dir}" > /dev/null || exit
+mash_dir="$(pwd)" || exit
+# Fetch the platform versions
+gem fetch --platform x86_64-darwin --version "${protobuf_version}" google-protobuf || exit
+gem fetch --platform arm64-darwin --version "${protobuf_version}" google-protobuf || exit
+# Unpack the gems
+gem unpack ./google-protobuf* || exit
+
+real_proto_dir="${embed_gemsdir}/gems/google-protobuf-${protobuf_version}"
+
+# Collect list of files
+shopt -s globstar || exit
+entries=( "${mash}/google-protobuf-*arm*/**/*" )
+shopt -u globstar || exit
+
+# Mash bundles together and store within the final unpacked path
+for arm_path in "${entries[@]}"; do
+    # We only care about bundles
+    if [[ "${arm_path}" != *".bundle" ]]; then
+        continue
+    fi
+
+    base_path="${arm_path##*arm-darwin/}"
+    x86_path="./google-protobuf-${protobuf_version}-x86_64-darwin/${base_path}"
+    universal_path="${real_proto_dir}/${base_path}"
+    go run github.com/randall77/makefat "${universal_path}" "${arm_path}" "${x86_path}" || exit
+done
+# Hop out of our temporary mashing directory
+# and then remove it
+popd > /dev/null || exit
+rm -rf "${mash_dir}"
+
+# Now that the protobuf gem has been fixed and installed,
+# install the grpc gem
+
+# NOTE: This environment variable is found in the grpc gem
+# extconf.rb file. Setting this environment variable will
+# prevent it from attempting to override arch flags
+export RCD_HOST_RUBY_VERSION=1
+
+# Only install grpc
+gem install --platform ruby --ignore-dependencies grpc || exit
+
+# Once the gem has been fully built, it will keep all the intermediate
+# build artifacts which ends up adding over a gig of size to the package
+# contents. Remove all that cruft before finishing
+pushd gems/grpc-*/src/ruby/ext/grpc > /dev/null || exit
+rm -rf ./libs ./objs
+popd > /dev/null || exit
+
+# And now we are done fixing up the proto related gems
+popd > /dev/null || exit
+
+# Now pack up the gem contents to return
+output_file="${cwd}/vagrant-package-contents.zip"
+
+info "Packing Vagrant gem installation..."
+zip -q -r "${output_file}" "./embedded/gems" || exit
+
+# Hop out of substrate
+popd > /dev/null || exit
+
+# Clean up our substrate directory
+rm -rf "${substrate_dir}"
+
+# Write artifact path only to stdout
+printf "Vagrant gem installation artifact: " >&2
+printf "%s" "${output_file}"

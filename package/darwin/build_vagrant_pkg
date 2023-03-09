@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/package/darwin/common-setup"
+
+if [ "${#}" -ne 1 ]; then
+    printf "Usage: %s CORE-PKG-FILE" "${0}" >&2
+    exit 1
+fi
+
+# Remember our current working directory
+cwd="$(pwd)" || exit
+
+# Validate we have a file to work with
+core_pkg="${1}"
+core_pkg="$(file_directory "${core_pkg}")/${core_pkg##*/}"
+if [ ! -f "${core_pkg}" ]; then
+    error "Invalid path provided for Vagrant core pkg (%s)" "${core_pkg}"
+fi
+
+# Create a staging directory and copy
+# the core package there
+info "Setting up staging area..."
+staging_dir="$(mktemp -d vagrant-staging.XXXXX)" || exit
+pushd "${staging_dir}" > /dev/null || exit
+staging_dir="$(pwd)"
+popd > /dev/null || exit
+
+# NOTE: Regardless of the name of the package file
+# provided, it must be named "core.pkg" since that
+# is what it is defined as within the vagrant.dist
+# file
+cp "${core_pkg}" "${staging_dir}/core.pkg" || exit
+# Copy over resources for the installer
+mkdir -p "${staging_dir}/resources"
+cp "${root}/package/support/darwin/dist/background.png" \
+    "${staging_dir}/resources/" || exit
+cp "${root}/package/support/darwin/dist/welcome.html" \
+    "${staging_dir}/resources/" || exit
+cp "${root}/package/support/darwin/dist/license.html" \
+    "${staging_dir}/resources/" || exit
+
+info "Building Vagrant.pkg..."
+output_file="${cwd}/Vagrant.pkg"
+
+productbuild \
+    --distribution "${root}/package/support/darwin/dist/vagrant.dist" \
+    --resources "${staging_dir}/resources" \
+    --package-path "${staging_dir}" \
+    "${output_file}" || exit
+
+# Clean up the staging directory
+rm -rf "${staging_dir}"
+
+# Write the artifact path only to stdout
+printf "Vagrant install package artifact: " >&2
+printf "%s" "${output_file}"

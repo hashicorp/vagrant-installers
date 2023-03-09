@@ -1,44 +1,66 @@
 #!/usr/bin/env bash
 
-function fail() {
-    echo "ERROR: ${1}"
+# Minimum macos version target
+macos_deployment_target="10.9"
+
+function info() {
+    local msg_template="${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
+}
+
+function error() {
+    local msg_template="ERROR: ${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
     exit 1
 }
 
 # Verify arguments
 if [ "$#" -ne "2" ]; then
-  echo "Usage: $0 SUBSTRATE-DIR VAGRANT-VERSION" >&2
+  printf "Usage: %s SUBSTRATE-FILE VAGRANT-GEM VAGRANT-VERSION" "${0}" >&2
   exit 1
 fi
 
-macos_deployment_target="10.9"
+substrate_dir="${1}"
+vagrant_gem="${2}"
+vagrant_version="${3}"
 
-sdk_root="/Library/Developer/CommandLineTools/SDKs"
-sdk_path="${sdk_root}/MacOSX.sdk"
-versioned_sdk_path="${sdk_root}/MacOSX${macos_deployment_target}.sdk"
-# Check that deployment target sdk exists
-if [ ! -d "${versioned_sdk_path}" ]; then
-    echo_stderr " !! Requested macOS SDK version is not available: ${macos_deployment_target}"
-    exit 1
-else
-    rm -f "${sdk_path}"
-    ln -s "${versioned_sdk_path}" "${sdk_path}"
+working_dir="$(pwd)" ||
+    fail "Could not determine local working directory"
+
+
+
+if [ ! -d "${substrate_dir}" ]; then
+    error "Invalid substrate directory provided: %s" "${substrate_dir}"
 fi
-export MACOSX_DEPLOYMENT_TARGET="${macos_deployment_target}"
-export SDKROOT="${sdk_path}" #"$(xcrun --sdk macosx --show-sdk-path)"
-export ISYSROOT="-isysroot ${SDKROOT}"
-export SYSLIBROOT="-syslibroot ${SDKROOT}"
-export SYS_ROOT="${SDKROOT}"
-export CFLAGS="-mmacosx-version-min=${macos_deployment_target} ${ISYSROOT}"
-export CXXFLAGS="${CFLAGS}"
-export LDFLAGS="-mmacosx-version-min=${macos_deployment_target} ${SYSLIBROOT}"
 
 # Get our directory
 SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+while [ -h "${SOURCE}" ] ; do SOURCE="$(readlink "${SOURCE}")"; done
+script_dir="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
 
-VINCE="${DIR}/../vince"
+# Define the path for the completed artifact
+output_path="${working_dir}/vagrant_${vagrant_version}_darwin_universal.dmg"
+
+embed_dir="${substrate_dir}/embedded"
+embed_bindir="${embed_dir}/bin"
+embed_libdir="${embed_dir}/lib"
+
+# Define environment variables so rubygems will
+# install into our substrate
+export GEM_PATH="${embed_dir}/gems/${VAGRANT_VERSION}"
+export GEM_HOME="${GEM_PATH}"
+export GEMRC="${embed_dir}/etc/gemrc"
+
+# Update our PATH to include substrate binaries since
+# we want the substrate gem command
+export PATH="${embed_bindir}:${PATH}"
+
+
+
 SUBSTRATE_DIR="${1}"
 VAGRANT_VERSION="${2}"
 OUTPUT_PATH="$(pwd)/vagrant_${VAGRANT_VERSION}_darwin_amd64.dmg"
