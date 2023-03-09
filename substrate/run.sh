@@ -11,6 +11,9 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 dep_cache="https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
 
 #### Update these as required
+#### NOTE: Versions are now defined within the deps.sh file. URLs are maintained here to show
+####       origin and identify where to pull sources. Actual sources are cached and pulled from
+####       our own store.
 curl_file="curl-${curl_version}.tar.gz"                # https://curl.haxx.se/download/curl-${curl_version}.tar.gz
 libarchive_file="libarchive-${libarchive_version}.tar.gz"    # https://github.com/libarchive/libarchive/archive/v${libarchive_version}.tar.gz
 libffi_file="libffi-${libffi_version}.tar.gz"               # https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
@@ -32,26 +35,65 @@ zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${
 # Used for centos builds
 libxcrypt_file="libxcrypt-v4.4.28.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
 
-macos_deployment_target="10.9"
-
-function echo_stderr {
-    (>&2 echo "$@")
+function info() {
+    local msg_template="${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
 }
 
-set -ex
+function error() {
+    local msg_template="ERROR: ${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
+    exit 1
+}
+
+function needs_build() {
+    local tracker="${1}"
+    local package="${2}"
+
+    # If tracker file doesn't exist, build
+    # is required
+    if [ ! -f "${tracker}" ]; then
+        return 0
+    fi
+
+    if [[ "$(< "${tracker}" )" = *"${package}"* ]]; then
+        return 1
+    fi
+
+    return 0
+}
+
+function mark_build() {
+    local tracker="${1}"
+    local package="${2}"
+
+    printf "%s\n" "${package}" >> "${tracker}"
+}
 
 # Verify arguments
 if [ "$#" -ne "1" ]; then
-    echo_stderr "Usage: $0 OUTPUT-DIR"
+    info "Usage: $0 OUTPUT-DIR"
     exit 1
 fi
 
-output_dir=$1
+# Get the full path to the output directory
+# so we write to the correct final location
+output_dir="${1}"
+if [ ! -d "${output_dir}" ]; then
+    mkdir -p "${output_dir}" || exit
+fi
+pushd "${output_dir}" > /dev/null || exit
+output_dir="$(pwd)" || exit
+popd > /dev/null || exit
 
-echo_stderr "Building Vagrant substrate..."
+info "Building Vagrant substrate..."
 
-echo_stderr " -> Performing setup..."
-echo_stderr -n "  -> Detecting host system... "
+info " -> Performing setup..."
+info "  -> Detecting host system... "
 uname=$(uname -a)
 
 if [[ "${uname}" = *"86_64"* ]]; then
@@ -78,377 +120,611 @@ else
     host_ident="darwin_${host_arch}"
 fi
 
-echo_stderr "${host_ident}"
-echo_stderr "  -> Readying build directories..."
+info "  -> Detected host system: %s" "${host_ident}"
+info "  -> Readying build directories..."
 
-cache_dir=$(mktemp -d vagrant-substrate.XXXXX)
+cache_dir="$(mktemp -d vagrant-substrate.XXXXX)" || exit
+pushd "${cache_dir}" > /dev/null || exit
+cache_dir="$(pwd)" || exit
+popd > /dev/null || exit
 build_dir="/opt/vagrant"
 base_bindir="${build_dir}/bin"
 embed_dir="${build_dir}/embedded"
 embed_bindir="${embed_dir}/bin"
+embed_libdir="${embed_dir}/lib"
 
-rm -rf "${build_dir}"
-mkdir -p "${base_bindir}"
-mkdir -p "${embed_bindir}"
-mkdir -p "${output_dir}"
-mkdir -p "${embed_dir}/lib64"
-
-if [ "${host_os}" = "darwin" ]; then
-    su vagrant -l -c 'brew install automake autoconf pkg-config'
+if [ -z "${ENABLE_REBUILD}" ]; then
+    rm -rf "${build_dir:?}/"* || exit
 fi
+mkdir -p "${base_bindir}" || exit
+mkdir -p "${embed_bindir}" || exit
+mkdir -p "${embed_libdir}" || exit
+mkdir -p "${output_dir}" || exit
+mkdir -p "${embed_dir}/lib64" || exit
 
-setupdir=$(mktemp -d vagrant-substrate-setup.XXXXX)
-pushd "${setupdir}"
+tracker_file="${build_dir}/.tracker"
+touch "${tracker_file}" || exit
 
-echo_stderr "  -> Installing any required packages..."
+# if [ "${host_os}" = "darwin" ]; then
+#     su vagrant -l -c 'brew install automake autoconf pkg-config' || exit
+# fi
 
-if [[ "${host_os}" = "darwin" ]]; then
-    pushd "/tmp"
-    TRAVIS=1 su vagrant -l -c "brew install libtool"
-    popd
-fi
+pushd "${cache_dir}" > /dev/null || exit
 
-popd
-
-pushd "${cache_dir}"
-
-echo_stderr " -> Building substrate requirements..."
+info " -> Building substrate requirements..."
 
 export PKG_CONFIG_PATH="${embed_dir}/lib/pkgconfig"
 export CFLAGS="-I${embed_dir}/include"
 export CPPFLAGS="-I${embed_dir}/include"
 export LDFLAGS="-L${embed_dir}/lib"
-ORIGINAL_LDFLAGS="${LDFLAGS}"
+
+# Default these cross configure variables to empty arrays
+macos_cross_configure=()
+macos_cross_configure_libffi=()
+macos_cross_configure_zlib=()
+macos_cross_configure_ruby=()
+
 if [[ "${host_os}" = "darwin" ]]; then
-    sdk_root="/Library/Developer/CommandLineTools/SDKs"
-    sdk_path="${sdk_root}/MacOSX.sdk"
-    versioned_sdk_path="${sdk_root}/MacOSX${macos_deployment_target}.sdk"
-    # Check that deployment target sdk exists
-    if [ ! -d "${versioned_sdk_path}" ]; then
-        echo_stderr " !! Requested macOS SDK version is not available: ${macos_deployment_target}"
-        exit 1
-    else
-        rm -f "${sdk_path}"
-        ln -s "${versioned_sdk_path}" "${sdk_path}"
+    info  " ** Configuring build for macOS"
+
+    # Defines the minimum version of macOS to target
+    macos_deployment_target="10.9"
+    macos_cross_configure_ruby+=(
+        "--with-rubylibprefix=${embed_libdir}/ruby"
+        "--with-rubyarchprefix=${embed_libdir}/ruby"
+        "--with-rubyhdrdir=${embed_dir}/include"
+        "--with-rubyarchhdrdir=${embed_dir}/include/ruby"
+        "--includedir=${embed_dir}/include"
+        "--oldincludedir=${embed_dir}/include"
+        "--enable-rpath"
+    )
+
+    # If we are cross compiling for an arm64 build, make the required adjustments
+    if [ "${MACOS_TARGET}" = "arm64" ]; then
+        info "   ** Cross building for arm64"
+
+        macos_deployment_target="11.0"
+        build_host="x86_64-darwin"
+        target_host="arm64-darwin"
+
+        # Modifications required to configure scripts for cross building
+        macos_cross_configure+=(
+            "--host=${target_host}"
+            "--target=${target_host}"
+            "--build=${build_host}"
+        ) # applicable to most but not all
+        macos_cross_configure_libffi+=("--with-gcc-arch=arm64")
+        macos_cross_configure_zlib+=("--archs=-arch arm64") # zlib specific configuration
+        macos_cross_configure_ruby+=("--with-arch=arm64") # ruby specific configuration
+
+        # Update the host_ident value which is used for
+        # writing our substrate asset
+        host_ident="darwin_arm64"
+        info "   ** Host identifier detection override to: %s" "${host_ident}"
+        host_arch="arm64"
+        info "   ** Host arch detection override to: %s" "${host_arch}"
+
+        # Tell go to build for arm64
+        export GOARCH="arm64"
+
+        # Set the arch in the compiler and linker
+        export CFLAGS="${CFLAGS} -arch arm64"
+        export LDFLAGS="${LDFLAGS} -arch arm64"
+        export ARCHFLAGS="-arch arm64"
     fi
+
+    sdk_path="$(xcrun --sdk macosx --show-sdk-path)" || exit
+
     export MACOSX_DEPLOYMENT_TARGET="${macos_deployment_target}"
-    export SDKROOT="${sdk_path}" #"$(xcrun --sdk macosx --show-sdk-path)"
+    export SDKROOT="${sdk_path}"
     export ISYSROOT="-isysroot ${SDKROOT}"
     export SYSLIBROOT="-syslibroot ${SDKROOT}"
     export SYS_ROOT="${SDKROOT}"
     export CFLAGS="${CFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT}"
     export CXXFLAGS="${CFLAGS}"
     export CPPFLAGS="${CFLAGS}"
-    export LDFLAGS="${LD_FLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT}" # ${SYSLIBROOT}"
-
-    export LD_RPATH="/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
-    libtool="glibtool"
+    export LDFLAGS="${LDFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT} -Wl,-rpath,${embed_libdir}"
 else
     export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
-    libtool="libtool"
 fi
 
 # libxcrypt-compat
 # We can't upgrade gcc on 32bit so don't attempt to build libxcrypt
 if [ "${linux_os}" = "centos" ]; then
     if [ "${host_arch}" != "i686" ]; then
-        echo_stderr "   -> Installing libxcrypt-compat..."
-        curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}"
-        tar xzf libxcrypt.tar.gz
-        pushd libxcrypt*
+        if needs_build "${tracker_file}" "libxcrypt"; then
+            info "   -> Installing libxcrypt-compat..."
+            curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" ||
+                error "libxcrypt download error encountered"
+            tar xzf libxcrypt.tar.gz || exit
+            pushd libxcrypt* > /dev/null || exit
 
-        ./autogen.sh
-        ./configure --prefix="${embed_dir}" --libdir="${embed_dir}/lib"
-        make
-        make install
-        popd
+            ./autogen.sh || exit
+            ./configure --prefix="${embed_dir}" --libdir="${embed_libdir}" || exit
+            make || exit
+            make install || exit
+            mark_build "${tracker_file}" "libxcrypt"
+            popd > /dev/null || exit
+        fi
     fi
 fi
 
 # libffi
-echo_stderr "   -> Building libffi..."
-libffi_url="${dep_cache}/${libffi_file}"
-curl -f -L -s -o libffi.tar.gz "${libffi_url}"
-tar -xzf libffi.tar.gz
-pushd libffi-*
-./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --libdir="${embed_dir}/lib"
-make
-make install
-popd
+if needs_build "${tracker_file}" "libffi"; then
+    info "   -> Building libffi..."
+    libffi_url="${dep_cache}/${libffi_file}"
+    curl -f -L -s -o libffi.tar.gz "${libffi_url}" ||
+        error "libffi download error encountered"
+    tar -xzf libffi.tar.gz || exit
+    pushd libffi-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --disable-static --enable-shared --disable-debug \
+        --enable-portable-binary --disable-docs --disable-dependency-tracking \
+        --libdir="${embed_libdir}" "${macos_cross_configure_libffi[@]}" \
+        "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libffi"
+    popd > /dev/null || exit
+fi
 
 # libiconv
-echo_stderr "   -> Building libiconv..."
-libiconv_url="${dep_cache}/${libiconv_file}"
-curl -f -L -s -o libiconv.tar.gz "${libiconv_url}"
-tar -xzf libiconv.tar.gz
-pushd libiconv-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking
-make
-make install
-popd
-
-$libtool --finish "${embed_dir}/lib"
+if needs_build "${tracker_file}" "libiconv"; then
+    info "   -> Building libiconv..."
+    libiconv_url="${dep_cache}/${libiconv_file}"
+    curl -f -L -s -o libiconv.tar.gz "${libiconv_url}" ||
+        error "libiconv download error encountered"
+    tar -xzf libiconv.tar.gz || exit
+    pushd libiconv-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --enable-shared --disable-static --disable-dependency-tracking \
+        "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libiconv"
+    popd > /dev/null || exit
+fi
 
 ## Start - Linux only
 if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
-    echo_stderr "   -> Building libgmp..."
-    libgmp_url="${dep_cache}/${libgmp_file}"
-    curl -f -L -s -o libgmp.tar.bz2 "${libgmp_url}"
-    tar -xjf libgmp.tar.bz2
-    pushd gmp-*
-    if [[ "${host_arch}" = "i686" ]]; then
-        ABI=32
-    else
-        ABI=64
+    if needs_build "${tracker_file}" "libgmp"; then
+        info "   -> Building libgmp..."
+        libgmp_url="${dep_cache}/${libgmp_file}"
+        curl -f -L -s -o libgmp.tar.bz2 "${libgmp_url}" ||
+            error "libgmp download error encountered"
+        tar -xjf libgmp.tar.bz2 || exit
+        pushd gmp-* > /dev/null || exit
+        if [[ "${host_arch}" = "i686" ]]; then
+            ABI=32
+        else
+            ABI=64
+        fi
+        ./configure --prefix="${embed_dir}" ABI="${ABI}" || exit
+        make || exit
+        make install || exit
+        mark_build "${tracker_file}" "libgmp"
+        popd > /dev/null || exit
     fi
-    ./configure --prefix="${embed_dir}" ABI=$ABI
-    make
-    make install
-    popd
 
     # libgpg_error
-    echo_stderr "   -> Building libgpg_error..."
-    libgpg_error_url="${dep_cache}/${libgpg_error_file}"
-    curl -f -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}"
-    tar -xjf libgpg-error.tar.bz2
-    pushd libgpg-error-*
-    ./configure --prefix="${embed_dir}" --enable-static
-    make
-    make install
-    popd
+    if needs_build "${tracker_file}" "libgpg_error"; then
+        info "   -> Building libgpg_error..."
+        libgpg_error_url="${dep_cache}/${libgpg_error_file}"
+        curl -f -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}" ||
+            error "libgpg-error download error encountered"
+        tar -xjf libgpg-error.tar.bz2 || exit
+        pushd libgpg-error-* > /dev/null || exit
+        ./configure --prefix="${embed_dir}" --enable-shared --disable-static || exit
+        make || exit
+        make install || exit
+        mark_build "${tracker_file}" "libgpg_error"
+        popd > /dev/null || exit
+    fi
 
     # libgcrypt
-    echo_stderr "   -> Building libgcrypt..."
-    libgcrypt_url="${dep_cache}/${libgcrypt_file}"
-    curl -f -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}"
-    tar -xjf libgcrypt.tar.bz2
-    pushd libgcrypt-*
-    ./configure --prefix="${embed_dir}" --enable-static --with-libgpg-error-prefix="${embed_dir}"
-    make
-    make install
-    popd
+    if needs_build "${tracker_file}" "libgcrypt"; then
+        info "   -> Building libgcrypt..."
+        libgcrypt_url="${dep_cache}/${libgcrypt_file}"
+        curl -f -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}" ||
+            error "libgcrypt download error encountered"
+        tar -xjf libgcrypt.tar.bz2 || exit
+        pushd libgcrypt-* > /dev/null || exit
+        ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
+            --with-libgpg-error-prefix="${embed_dir}" || exit
+        make || exit
+        make install || exit
+        mark_build "${tracker_file}" "libgcrypt"
+        popd > /dev/null || exit
+    fi
 fi
 ## End - Linux only
 
 # xz
-echo_stderr "   -> Building xz..."
-xz_url="${dep_cache}/${xz_file}"
-curl -f -L -s -o xz.tar.gz "${xz_url}"
-tar -xzf xz.tar.gz
-pushd xz-*
-./configure --prefix="${embed_dir}" --disable-xz --disable-xzdec --disable-dependency-tracking --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts
-make
-make install
-popd
+if needs_build "${tracker_file}" "xz"; then
+    info "   -> Building xz..."
+    xz_url="${dep_cache}/${xz_file}"
+    curl -f -L -s -o xz.tar.gz "${xz_url}" ||
+        error "xz download error encountered"
+    tar -xzf xz.tar.gz || exit
+    pushd xz-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --disable-xz --disable-xzdec --disable-dependency-tracking \
+        --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts \
+        --enable-shared --disable-static "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "xz"
+    popd > /dev/null || exit
+fi
 
 # libxml2
-echo_stderr "   -> Building libxml2..."
-libxml2_url="${dep_cache}/${libxml2_file}"
-curl -f -L -s -o libxml2.tar.xz "${libxml2_url}"
-tar -xf libxml2.tar.xz
-pushd libxml2-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python --without-lzma --with-zlib="${embed_dir}/lib"
-make
-make install
-popd
+if needs_build "${tracker_file}" "libxml2"; then
+    info "   -> Building libxml2..."
+    libxml2_url="${dep_cache}/${libxml2_file}"
+    curl -f -L -s -o libxml2.tar.xz "${libxml2_url}" ||
+        error "libxml2 download error encountered"
+    tar -xf libxml2.tar.xz || exit
+    pushd libxml2-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python \
+        --without-lzma --with-zlib="${embed_libdir}" --enable-shared \
+        --disable-static "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libxml2"
+    popd > /dev/null || exit
+fi
 
 # libxslt
-echo_stderr "   -> Building libxslt..."
-libxslt_url="${dep_cache}/${libxslt_file}"
-curl -f -L -s -o libxslt.tar.xz "${libxslt_url}"
-tar -xf libxslt.tar.xz
-pushd libxslt-*
-./configure --prefix="${embed_dir}" --with-python=no --disable-dependency-tracking --with-libxml-prefix="${embed_dir}"
-make
-make install
-popd
+if needs_build "${tracker_file}" "libxslt"; then
+    info "   -> Building libxslt..."
+    libxslt_url="${dep_cache}/${libxslt_file}"
+    curl -f -L -s -o libxslt.tar.xz "${libxslt_url}" ||
+        error "libxslt download error encountered"
+    tar -xf libxslt.tar.xz || exit
+    pushd libxslt-* > /dev/null || exit
+    rm -f config.sub
+    cp ../libxml2-*/config.sub ./config.sub || exit
+    OLDLD="${LDFLAGS}"
+    export LDFLAGS="${LDFLAGS} -Wl,-undefined,dynamic_lookup" # Required for shared library to build
+    ./configure --prefix="${embed_dir}" --enable-shared --disable-static --with-python=no \
+        --disable-dependency-tracking --with-libxml-prefix="${embed_dir}" "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libxslt"
+    export LDFLAGS="${OLDLD}"
+    popd > /dev/null || exit
+fi
 
 # libyaml
-echo_stderr "   -> Building libyaml..."
-libyaml_url="${dep_cache}/${libyaml_file}"
-curl -f -L -s -o libyaml.tar.gz "${libyaml_url}"
-tar -xzf libyaml.tar.gz
-pushd yaml-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking
-make
-make install
-popd
+if needs_build "${tracker_file}" "libyaml"; then
+    info "   -> Building libyaml..."
+    libyaml_url="${dep_cache}/${libyaml_file}"
+    curl -f -L -s -o libyaml.tar.gz "${libyaml_url}" ||
+        error "libyaml download error encountered"
+    tar -xzf libyaml.tar.gz || exit
+    pushd yaml-* > /dev/null || exit
+    rm -f ./config/config.sub
+    cp ../libxml2-*/config.sub ./config/config.sub || exit
+    ./configure --prefix="${embed_dir}" --disable-dependency-tracking --enable-shared \
+        --disable-static "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libyaml"
+    popd > /dev/null || exit
+fi
 
 # zlib
-echo_stderr "   -> Building zlib..."
-zlib_url="${dep_cache}/${zlib_file}"
-curl -f -L -s -o zlib.tar.gz "${zlib_url}"
-tar -xzf zlib.tar.gz
-pushd zlib-*
-./configure --prefix="${embed_dir}"
-make
-make install
-popd
+if needs_build "${tracker_file}" "zlib"; then
+    info "   -> Building zlib..."
+    zlib_url="${dep_cache}/${zlib_file}"
+    curl -f -L -s -o zlib.tar.gz "${zlib_url}" ||
+        error "zlib download error encountered"
+    tar -xzf zlib.tar.gz || exit
+    pushd zlib-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" \
+        "${macos_cross_configure_zlib[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "zlib"
+    popd > /dev/null || exit
+fi
 
 # readline
-echo_stderr "   -> Building readline..."
-readline_url="${dep_cache}/${readline_file}"
-curl -f -L -s -o readline.tar.gz "${readline_url}"
-tar -xzf readline.tar.gz
-pushd readline-*
-if [[ "${linux_os}" = "archlinux" ]]; then
-    CURRENT_LDFLAGS="${LDFLAGS}"
-    export LDFLAGS="${LDFLAGS} -lncurses"
+if needs_build "${tracker_file}" "readline"; then
+    info "   -> Building readline..."
+    readline_url="${dep_cache}/${readline_file}"
+    curl -f -L -s -o readline.tar.gz "${readline_url}" ||
+        error "readlin download error encountered"
+    tar -xzf readline.tar.gz || exit
+    pushd readline-* > /dev/null || exit
+    if [[ "${linux_os}" = "archlinux" ]]; then
+        CURRENT_LDFLAGS="${LDFLAGS}"
+        export LDFLAGS="${LDFLAGS} -lncurses"
+    fi
+    ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
+        "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "readline"
+    if [[ "${linux_os}" = "archlinux" ]]; then
+        export LDFLAGS="${CURRENT_LDFLAGS}"
+    fi
+    popd > /dev/null || exit
 fi
-./configure --prefix="${embed_dir}"
-make
-make install
-if [[ "${linux_os}" = "archlinux" ]]; then
-    export LDFLAGS="${CURRENT_LDFLAGS}"
-fi
-popd
 
 # openssl
-echo_stderr "   -> Building openssl..."
-openssl_url="${dep_cache}/${openssl_file}"
-curl -f -L -f -s -o openssl.tar.gz "${openssl_url}"
-tar -xzf openssl.tar.gz
-pushd openssl-*
-if [ -z "${LD_RPATH}" ]; then
-    CURRENT_LDFLAGS="${LDFLAGS}"
-    export LDFLAGS="${ORIGINAL_LDFLAGS} -Wl,-rpath=/opt/vagrant/embedded/lib"
+if needs_build "${tracker_file}" "openssl"; then
+    info "   -> Building openssl..."
+    openssl_url="${dep_cache}/${openssl_file}"
+    curl -f -L -f -s -o openssl.tar.gz "${openssl_url}" ||
+        error "openssl download error encountered"
+    tar -xzf openssl.tar.gz || exit
+    pushd openssl-* > /dev/null || exit
+    # NOTE: openssl does not provide the option disable the static version of
+    #       the library, only the option to enable the shared version
+    #       https://github.com/openssl/openssl/issues/8823
+    if [ "${MACOS_TARGET}" = "arm64" ]; then
+        ./Configure zlib no-asm no-tests shared --prefix="${embed_dir}" darwin64-arm64-cc || exit
+    else
+        ./config --prefix="${embed_dir}" --openssldir="${embed_dir}" zlib shared || exit
+    fi
+    make || exit
+    make install_sw || exit
+    mark_build "${tracker_file}" "openssl"
+    if [ -z "${LD_RPATH}" ]; then
+        export LDFLAGS="${CURRENT_LDFLAGS}"
+    fi
+    popd > /dev/null || exit
 fi
-./config --prefix="${embed_dir}" --openssldir="${embed_dir}" shared
-make
-make install_sw
-if [ -z "${LD_RPATH}" ]; then
-    export LDFLAGS="${CURRENT_LDFLAGS}"
-fi
-popd
 
 # libssh2
-echo_stderr "   -> Building libssh2..."
-libssh2_url="${dep_cache}/${libssh2_file}"
-curl -f -L -s -o libssh2.tar.gz "${libssh2_url}"
-tar -xzf libssh2.tar.gz
-pushd libssh2-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-libssl-prefix="${embed_dir}"
-make
-make install
-popd
+if needs_build "${tracker_file}" "libssh2"; then
+    info "   -> Building libssh2..."
+    libssh2_url="${dep_cache}/${libssh2_file}"
+    curl -f -L -s -o libssh2.tar.gz "${libssh2_url}" ||
+        error "libssh2 download error encountered"
+    tar -xzf libssh2.tar.gz || exit
+    pushd libssh2-* > /dev/null || exit
+    rm -f config.sub
+    cp ../libxml2-*/config.sub ./config.sub || exit
+    ./configure --prefix="${embed_dir}" --disable-dependency-tracking --enable-shared \
+        --disable-static --with-libssl-prefix="${embed_dir}" "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libssh2"
+    popd > /dev/null || exit
+fi
 
 # bsdtar / libarchive
-echo_stderr "   -> Building bsdtar / libarchive..."
-libarchive_url="${dep_cache}/${libarchive_file}"
-curl -f -L -s -o libarchive.tar.gz "${libarchive_url}"
-tar -xzf libarchive.tar.gz
-pushd libarchive-*
+if needs_build "${tracker_file}" "libarchive"; then
+    info "   -> Building bsdtar / libarchive..."
+    libarchive_url="${dep_cache}/${libarchive_file}"
+    curl -f -L -s -o libarchive.tar.gz "${libarchive_url}" ||
+        error "libarchive download error encountered"
+    tar -xzf libarchive.tar.gz || exit
+    pushd libarchive-* > /dev/null || exit
 
-if [ "${host_os}" = "darwin" ] || [ "${linux_os}" = "archlinux" ]; then
-    conf_file=$(<configure.ac)
-    if [[ "${conf_file}" != *"AC_PROG_CPP"* ]]; then
-        sed -i.old 's/^AM_PROG_CC_C_O/AM_PROG_CC_C_O\'$'\nAC_PROG_CPP/' configure.ac
+    if [ "${host_os}" = "darwin" ] || [ "${linux_os}" = "archlinux" ]; then
+        conf_file=$(<configure.ac)
+        if [[ "${conf_file}" != *"AC_PROG_CPP"* ]]; then
+            sed -i.old 's/^AM_PROG_CC_C_O/AM_PROG_CC_C_O\'$'\nAC_PROG_CPP/' configure.ac || exit
+        fi
+    fi
+
+    if [[ "${host_os}" = "linux" ]]; then
+        export PATH=/usr/local/bin:$PATH
+        PATH=/usr/local/bin:$PATH
+        export ACLOCAL_PATH="-I/usr/local/share/aclocal:/usr/local/share/aclocal-1.13:/usr/local/share/autoconf:/usr/share/autoconf:/usr/share/aclocal"
+        rm -f aclocal.m4
+        aclocal
+        libtoolize --force
+        autoheader
+        autoreconf -vfi
+        ./build/autogen.sh
+        rm -f aclocal.m4
+        aclocal
+        libtoolize --force
+        autoheader
+        autoreconf -vfi
+    else
+        ./build/autogen.sh
+    fi
+
+    ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-zlib --without-bz2lib \
+        --without-iconv --without-libiconv-prefix --without-nettle --without-openssl \
+        --without-xml2 --without-expat --enable-shared --disable-static "${macos_cross_configure[@]}" || exit
+
+    # This is a quick hack to work around glibc-2.36 updates that
+    # causes problems when attempting to include linux/fs.h. It
+    # should be removed once the headers have been syncrhonized
+    # https://sourceware.org/glibc/wiki/Synchronizing_Headers
+    # https://sourceware.org/glibc/wiki/Release/2.36#Usage_of_.3Clinux.2Fmount.h.3E_and_.3Csys.2Fmount.h.3E
+    if [[ "${linux_os}" = "archlinux" ]]; then
+        sed -i.bak 's/#include <linux\/mount.h>/\/\/#include <linux\/mount.h>/' /usr/include/linux/fs.h
+    fi
+
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libarchive"
+    unset ACLOCAL_PATH
+    popd > /dev/null || exit
+
+    # Restore the modified header file
+    if [[ "${linux_os}" = "archlinux" ]]; then
+        mv /usr/include/linux/fs.h.bak /usr/include/linux/fs.h
     fi
 fi
 
-if [[ "${host_os}" = "linux" ]]; then
-    export PATH=/usr/local/bin:$PATH
-    PATH=/usr/local/bin:$PATH
-    export ACLOCAL_PATH="-I/usr/local/share/aclocal:/usr/local/share/aclocal-1.13:/usr/local/share/autoconf:/usr/share/autoconf:/usr/share/aclocal"
-    rm -f aclocal.m4
-    aclocal
-    libtoolize --force
-    autoheader
-    autoreconf -vfi
-    ./build/autogen.sh
-    rm -f aclocal.m4
-    aclocal
-    libtoolize --force
-    autoheader
-    autoreconf -vfi
-else
-    ./build/autogen.sh
-fi
-
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-zlib --without-bz2lib \
-            --without-iconv --without-libiconv-prefix --without-nettle --without-openssl \
-            --without-xml2 --without-expat
-
-# This is a quick hack to work around glibc-2.36 updates that
-# causes problems when attempting to include linux/fs.h. It
-# should be removed once the headers have been syncrhonized
-# https://sourceware.org/glibc/wiki/Synchronizing_Headers
-# https://sourceware.org/glibc/wiki/Release/2.36#Usage_of_.3Clinux.2Fmount.h.3E_and_.3Csys.2Fmount.h.3E
-if [[ "${linux_os}" = "archlinux" ]]; then
-    sed -i.bak 's/#include <linux\/mount.h>/\/\/#include <linux\/mount.h>/' /usr/include/linux/fs.h
-fi
-
-make
-make install
-unset ACLOCAL_PATH
-popd
-
-# Restore the modified header file
-if [[ "${linux_os}" = "archlinux" ]]; then
-    mv /usr/include/linux/fs.h.bak /usr/include/linux/fs.h
-fi
-
 # curl
-echo_stderr "   -> Building curl..."
-curl_url="${dep_cache}/${curl_file}"
-curl -f -L -s -o curl.tar.gz "${curl_url}"
-tar -xzf curl.tar.gz
-pushd curl-*
-./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 --disable-ldap --with-libssh2 --with-ssl
-make
-make install
-popd
+if needs_build "${tracker_file}" "curl"; then
+    info "   -> Building curl..."
+    curl_url="${dep_cache}/${curl_file}"
+    curl -f -L -s -o curl.tar.gz "${curl_url}" ||
+        error "curl download error encountered"
+    tar -xzf curl.tar.gz || exit
+    pushd curl-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 \
+        --disable-ldap --with-libssh2 --with-ssl --enable-shared --disable-static \
+        "${macos_cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "curl"
+    popd > /dev/null || exit
+fi
+
+# If we are on darwin, update our shared libraries to make
+# them relocatable
+if [ "${host_os}" = "darwin" ]; then
+    # Update the base libraries
+    libcontent=( "${embed_libdir}/"* )
+    for libpath in "${libcontent[@]}"; do
+        if [[ "${libpath}" != *".dylib" ]]; then
+            continue
+        fi
+        name_id="$(otool -D "${libpath}")" || exit
+        name_id="/${name_id#*:*/}"
+
+        # Only modify if it has static path prefix
+        if [[ "${name_id}" = "${embed_libdir}/"* ]]; then
+            new_id="${name_id#"${embed_libdir}"/}"
+            new_id="@rpath/${new_id}"
+
+            info "Updating install name from %s to %s on %s" "${name_id}" "${new_id}" "${libpath}"
+            install_name_tool -id "${new_id}" "${libpath}" || exit
+        fi
+
+        while IFS= read -rd $'\n' line; do
+            if [[ "${line}" = *":" ]]; then
+                continue
+            fi
+            rpath="${line%* (*}"
+            rpath="/${rpath#*/}"
+            if [[ "${rpath}" = "${embed_libdir}"* ]]; then
+                new_rpath="@rpath/${rpath#"${embed_libdir}"/}"
+                info "Updating rpath from %s to %s on %s" "${rpath}" "${new_rpath}" "${libpath}"
+                install_name_tool -change "${rpath}" "${new_rpath}" "${libpath}"
+            fi
+        done < <(otool -L "${libpath}")
+
+        # Add rpath entries
+        install_name_tool -add_rpath "@executable_path/../lib" "${libpath}"
+        install_name_tool -add_rpath "@loader_path" "${libpath}"
+        install_name_tool -add_rpath "${embed_libdir}" "${libpath}"
+
+        # TODO: need to update engines files
+    done
+fi
 
 # ruby
-echo_stderr "   -> Building ruby..."
-ruby_url="${dep_cache}/${ruby_file}"
-curl -f -L -s -o ruby.zip "${ruby_url}"
-unzip -q ruby.zip
-pushd ruby-*
-o_cflags="${CFLAGS}"
-export CFLAGS="${CFLAGS} -I./include -O3 -std=c99"
-./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
-            --enable-shared --with-opt-dir="${embed_dir}" --enable-load-relative
-make && make install
-export CFLAGS="${o_cflags}"
-popd
+if needs_build "${tracker_file}" "ruby"; then
+    info "   -> Building ruby..."
+    ruby_url="${dep_cache}/${ruby_file}"
+    curl -f -L -s -o ruby.zip "${ruby_url}" ||
+        error "ruby download error encountered"
+    unzip -q ruby.zip || exit
+    pushd ruby-* > /dev/null || exit
+    # NOTE: Ruby uses downcased environment variables for appending. If upcased
+    #       variables are used, they are a full replacement
+    export cflags="${CFLAGS}"
+    export cppflags="${CPPFLAGS}"
+    export cxxflags="${CXXFLAGS}"
+    unset CFLAGS
+    unset CPPFLAGS
+    unset CXXFLAGS
+    # NOTE: --enable-shared is required for getting (https://bugs.ruby-lang.org/issues/18912)
+    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
+        --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
+        --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
+        "${macos_cross_configure[@]}" "${macos_cross_configure_ruby[@]}" || exit
+    make miniruby || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "ruby"
+    popd > /dev/null || exit
+fi
+
+# In some cases we end up with duplicate installations
+# of some ruby stuff in the bare lib directory. If they
+# exist, remove them.
+if [ -d "${embed_libdir}/gems" ]; then
+    rm -rf "${embed_libdir}/gems"
+fi
+
+check_dirs=( "${embed_libdir}/3."* )
+if [ -d "${check_dirs[0]}" ]; then
+    rm -rf "${check_dirs[0]}"
+fi
+
+# We need to muck with the generated rbconfig.rb file
+# to adjust how paths are built so they use the topdir
+# instead of static paths. This will allow for relocation
+# and let things like a `gem install` still function
+# correctly (This is macos only, at least for now)
+if [ "${host_os}" = "darwin" ]; then
+    rbconf_files=( "${embed_dir}/lib/ruby/3."*/*-darwin*/rbconfig.rb )
+    rbconfig_file="${rbconf_files[0]}"
+
+    if [ ! -f "${rbconfig_file}" ]; then
+        error "Failed to locate rbconfig.rb file for required modification"
+    fi
+
+    info "Updating rbconfig.rb file"
+    rbconfig_file_new="${cache_dir}/rbconfig.rb"
+    # If the new file exists for some reason, remove it
+    rm -f "${rbconfig_file_new}"
+    # And make sure it exists
+    touch "${rbconfig_file_new}" || exit
+    while read -r line; do
+        # Only adjust paths when not the prefix value or the
+        # original configure arguments
+        if [[ "${line}" != *'CONFIG["prefix"]'* ]] && [[ "${line}" != *'CONFIG["configure_args"]'* ]]; then
+            line="${line//"${embed_dir}"/\$(prefix)}"
+        fi
+        printf "%s\n" "${line}" >> "${rbconfig_file_new}"
+    done < "${rbconfig_file}"
+    mv -f "${rbconfig_file_new}" "${rbconfig_file}" || exit
+fi
+
+# Update the rpath in any bundles that ruby created
+if [ "${host_os}" = "darwin" ]; then
+    while IFS= read -rd '' bundle; do
+        info "Updating rpath on bundle file: %s" "${bundle}"
+        install_name_tool -add_rpath "@executable_path/../lib/" "${bundle}"
+        install_name_tool -add_rpath "@loader_path/" "${bundle}"
+        install_name_tool -add_rpath "${embed_libdir}/" "${bundle}"
+    done < <( find "${embed_libdir}" -name "*.bundle" )
+fi
 
 # go launcher
-echo_stderr "   -> Building vagrant launcher..."
-export GOPATH="$(mktemp -d)"
-export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
-
-mkdir launcher
-cp /vagrant/substrate/launcher/* launcher/
-pushd launcher
-go mod download
-go build -o "${build_dir}/bin/vagrant" main.go
-popd
+info "   -> Building vagrant launcher..."
+pushd "${root}" > /dev/null || exit
+make bin/launcher || exit
+mv bin/vagrant "${build_dir}/bin/vagrant" || exit
+popd > /dev/null || exit
 
 # install gemrc file
-echo_stderr " -> Writing default gemrc file..."
+info " -> Writing default gemrc file..."
 mkdir -p "${embed_dir}/etc"
-cp /vagrant/substrate/common/gemrc "${embed_dir}/etc/gemrc"
+cp "${root}/substrate/common/gemrc" "${embed_dir}/etc/gemrc" || exit
 
 # cacert
-echo_stderr " -> Writing cacert.pem..."
-curl -f -s --time-cond /vagrant/cacert.pem -o ./cacert.pem "${dep_cache}/cacert.pem"
-mv ./cacert.pem "${embed_dir}/cacert.pem"
+info " -> Writing cacert.pem..."
+curl -f -s --time-cond /vagrant/cacert.pem -o ./cacert.pem "${dep_cache}/cacert.pem" ||
+    error "cacert.pem download error encountered"
+mv ./cacert.pem "${embed_dir}/cacert.pem" || exit
 
-echo_stderr " -> Cleaning cruft..."
+info " -> Cleaning cruft..."
 rm -rf "${embed_dir}"/{certs,misc,private,openssl.cnf,openssl.cnf.dist}
 rm -rf "${embed_dir}/share"/{info,man,doc,gtk-doc}
+rm -f "${tracker_file}"
 
 # package up the substrate
-echo_stderr " -> Packaging substrate..."
+info " -> Packaging substrate..."
 output_file="${output_dir}/substrate_${host_ident}.zip"
-pushd "${build_dir}"
-zip -q -r "${output_file}" .
-popd
+pushd "${build_dir}" > /dev/null || exit
+zip -q -r "${output_file}" . || exit
+popd > /dev/null || exit
 
-echo_stderr " -> Cleaning up..."
+info " -> Cleaning up..."
 rm -rf "${cache_dir}"
 rm -rf "${build_dir}"
 
-echo_stderr "Substrate build complete: ${output_file}"
+info "Substrate build complete: ${output_file}"
