@@ -1,0 +1,8 @@
+module github.com/hashicorp/vagrant-installers
+
+go 1.19
+
+require (
+	github.com/mitchellh/osext v0.0.0-20151018003038-5e2d6d41470f
+	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844
+)
