@@ -1,0 +1,372 @@
+#!/usr/bin/env bash
+
+# Output: universal-substrate-path
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+pushd "${root}"
+
+# Make sure go dependencies are installed
+go mod download ||
+    failure "Could not install go modules"
+
+# Detect if the given path is a mach-o binary and
+# report if it is an executable or library file.
+# If the optional expected architecture is provided
+# the function will result in a hard fail if the
+# architecture is not matched
+#
+# $1: path to file
+# $2: expected architecture (optional)
+function macho_binary_file() {
+    local path="${1}"
+    local arch="${2}"
+
+    if [ ! -f "${path}" ]; then
+        return 1
+    fi
+
+    if ! info="$(file "${path}")"; then
+        # If the file command failed to run, hard fail
+        fail "Could not get file information on '%s'" "${path}"
+    fi
+
+    # We always want to be sure we are dealing with
+    # a Mach-O binary
+    if [[ "${info}" != *"Mach-O"* ]]; then
+        return 1
+    fi
+
+    # If arch is provided and is not included, hard fail
+    # since it is expected
+    if [ -n "${arch}" ]; then
+        if [[ "${info}" != *"${arch}"* ]]; then
+            fail "File is not expected architecture '%s' (%s)" "${info}"
+            return 1
+        fi
+    fi
+
+    # Check if file is executable
+    if [[ "${info}" = *"executable"* ]]; then
+        printf "executable"
+        return 0
+    fi
+
+    # Check if file is a library
+    if [[ "${info}" = *"library"* ]]; then
+        printf "library"
+        return 0
+    fi
+
+    # If we're still here, it's not a valid match
+    return 1
+}
+
+# Check for required commands
+required_commands=("zip" "unzip" "jq")
+for cmd in "${required_commands[@]}"; do
+    if ! command -v "${cmd}" > /dev/null; then
+        fail "Missing required command '%s'" "${cmd}"
+    fi
+done
+
+# Ensure we have a substrate directory and
+# the value is a full path
+substrate_dir="${1}"
+if [ -z "${substrate_dir}" ]; then
+    fail "Substrate directory path is required"
+fi
+
+pushd "${substrate_dir}" ||
+    fail "Invalid substrate directory value (%s)" "${substrate_dir}"
+substrate_dir="$(pwd)" || fail "Cannot determine substrate directory"
+popd
+
+# Check for both expected substrates
+arm_substrate="${substrate_dir}/substrate_darwin_arm64.zip"
+x86_substrate="${substrate_dir}/substrate_darwin_x86_64.zip"
+universal_substrate="${substrate_dir}/substrate_darwin_universal.zip"
+
+debug "arm substrate path: %s" "${arm_substrate}"
+debug "x86 substrate path: %s" "${x86_substrate}"
+debug "universal substrate path: %s" "${universal_substrate}"
+
+if [ ! -f "${arm_substrate}" ]; then
+    fail "Missing darwin arm64 substrate (path: %s)" "${arm_substrate}"
+fi
+
+if [ ! -f "${x86_substrate}" ]; then
+    fail "Missing darwin x86_64 substrate (path: %s)" "${x86_substrate}"
+fi
+
+# Create directories for working on substrates
+arm_dir="$(mktemp -d "vagrant-substrate-arm-XXXXX")" ||
+    fail "Could not create arm substrate working directory"
+x86_dir="$(mktemp -d "vagrant-substrate-x86-XXXXX")" ||
+    fail "Could not create x86 substrate working directory"
+universal_dir="$(mktemp -d "vagrant-substrate-universal-XXXXX")" ||
+    fail "Could not create universal substrate working directory"
+
+debug "arm substrate dir: %s" "${arm_dir}"
+debug "x86 substrate dir: %s" "${x86_dir}"
+debug "universal substrate dir: %s" "${universal_dir}"
+
+# Expand arm substrate
+pushd "${arm_dir}"
+debug "unpacking arm substrate"
+unzip -q "${arm_substrate}" || exit
+popd
+
+# Expand x86 substrate
+pushd "${x86_dir}"
+debug "unpacking x86 substrate"
+unzip -q "${x86_substrate}"
+popd
+
+# We now need to create two lists of files. The first is the
+# list of executables and second is the list of libraries
+shopt -s globstar || fail "Could not enable globstar bash option"
+arm_all_entries=( "${arm_dir}/"**/* )
+x86_all_entries=( "${x86_dir}/"**/* )
+shopt -u globstar || fail "Could not disable globstar bash option"
+
+arm_executable_files=()
+arm_library_files=()
+arm_remaining_files=()
+x86_executable_files=()
+x86_library_files=()
+x86_remaining_files=()
+
+debug "starting file information collection"
+
+# Separate all our ARM64 files
+for path in "${arm_all_entries[@]}"; do
+    # If it's not a file, just skip it
+    if [ ! -f "${path}" ]; then
+        continue
+    fi
+
+    # If it's not a mach-o binary file, add it to list
+    # of remaining files
+    if ! bin_type="$(macho_binary_file "${path}" "arm64")"; then
+        debug "regular file: %s" "${path}"
+        arm_remaining_files+=("${path}")
+        continue
+    fi
+
+    if [ "${bin_type}" = "executable" ]; then
+        debug "arm executable file: %s" "${path}"
+        arm_executable_files+=("${path}")
+    else
+        debug "arm library file: %s" "${path}"
+        arm_library_files+=("${path}")
+    fi
+done
+
+# Separate all our x86_64 files
+for path in "${x86_all_entries[@]}"; do
+    # If it's not a file, just skip it
+    if [ ! -f "${path}" ]; then
+        continue
+    fi
+
+    # If it's not a mach-o binary file, add it to list
+    # of remaining files
+    if ! bin_type="$(macho_binary_file "${path}" "x86_64")"; then
+        debug "regular file: %s" "${path}"
+        x86_remaining_files+=("${path}")
+        continue
+    fi
+
+    if [ "${bin_type}" = "executable" ]; then
+        debug "x86 executable file: %s" "${path}"
+        x86_executable_files+=("${path}")
+    else
+        debug "x86 library file: %s" "${path}"
+        x86_library_files+=("${path}")
+    fi
+done
+
+debug "starting universal substate build"
+
+# Start with arm executables
+for arm_path in "${arm_executable_files[@]}"; do
+    # Create the x86 path
+    partial_name="${arm_path#"${arm_dir}"}"
+    x86_path="${x86_dir}/${partial_name}"
+    universal_path="${universal_dir}/${partial_name}"
+    universal_dirname="${universal_path%/*}"
+
+    # Make sure the directory exists before we attempt
+    # to move any files
+    mkdir -p "${universal_dirname}" ||
+        fail "Could not create directory: %s" "${universal_dirname}"
+
+    # Now, if we don't have a matching x86 path, we
+    # can just relocate the file
+    if [ ! -f "${x86_path}" ]; then
+        debug "no x86 match file for %s, installing arm only" "${partial_name}"
+        mv "${arm_path}" "${universal_path}" ||
+            fail "Failed to relocate file to universal path (source: %s dest: %s)" \
+                "${arm_path}" "${universal_path}"
+        continue
+    fi
+
+    debug "creating fat file of %s and installing %s" "${partial_name}" "${universal_path}"
+    # Now we need to combine the files and
+    # store the result in the universal path
+    go run github.com/randall77/makefat "${universal_path}" "${x86_path}" "${arm_path}" ||
+        fail "Could not create fat binary"
+done
+
+# Now move on to the x86 executables.
+for x86_path in "${x86_executable_files[@]}"; do
+    # First we need to create the universal path
+    partial_name="${x86_path#"${x86_dir}"}"
+    universal_path="${universal_dir}/${partial_name}"
+    universal_dirname="${universal_path%/*}"
+
+    # If the universal path already exists, then this file was
+    # already processed and can be ignored
+    if [ -f "${universal_path}" ]; then
+        debug "universal path exists for %s, skipping x86 file: %s" "${partial_name}" "${x86_path}"
+        continue
+    fi
+
+    # Make sure the directory exists before we attempt
+    # to move any files
+    mkdir -p "${universal_dirname}" ||
+        fail "Could not create directory: %s" "${universal_dirname}"
+
+    debug "installing x86 only file: %s" "${x86_path}"
+    # And finally move the file
+    mv "${x86_path}" "${universal_path}" ||
+        fail "Failed to relocate file to universal path (source: %s dest: %s)" \
+                "${x86_path}" "${universal_path}"
+done
+
+# Now arm libraries
+for arm_path in "${arm_library_files[@]}"; do
+    # Create the x86 path
+    partial_name="${arm_path#"${arm_dir}"}"
+    x86_path="${x86_dir}/${partial_name}"
+    universal_path="${universal_dir}/${partial_name}"
+    universal_dirname="${universal_path%/*}"
+
+    # Make sure the directory exists before we attempt
+    # to move any files
+    mkdir -p "${universal_dirname}" ||
+        fail "Could not create directory: %s" "${universal_dirname}"
+
+    # Now, if we don't have a matching x86 path, we
+    # can just relocate the file
+    if [ ! -f "${x86_path}" ]; then
+        debug "no x86 match file for %s, installing arm only" "${partial_name}"
+        mv "${arm_path}" "${universal_path}" ||
+            fail "Failed to relocate file to universal path (source: %s dest: %s)" \
+                "${arm_path}" "${universal_path}"
+        continue
+    fi
+
+    debug "creating fat file of %s and installing %s" "${partial_name}" "${universal_path}"
+    # Now we need to combine the files and
+    # store the result in the universal path
+    go run github.com/randall77/makefat "${universal_path}" "${x86_path}" "${arm_path}" ||
+        fail "Could not create fat binary"
+done
+
+# And the x86 libraries
+for x86_path in "${x86_library_files[@]}"; do
+    # First we need to create the universal path
+    partial_name="${x86_path#"${x86_dir}"}"
+    universal_path="${universal_dir}/${partial_name}"
+    universal_dirname="${universal_path%/*}"
+
+    # If the universal path already exists, then this file was
+    # already processed and can be ignored
+    if [ -f "${universal_path}" ]; then
+        debug "universal path exists for %s, skipping x86 file: %s" \
+            "${partial_name}" "${x86_path}"
+        continue
+    fi
+
+    # Make sure the directory exists before we attempt
+    # to move any files
+    mkdir -p "${universal_dirname}" ||
+        fail "Could not create directory: %s" "${universal_dirname}"
+
+    debug "installing x86 only file: %s" "${x86_path}"
+    # And finally move the file
+    mv "${x86_path}" "${universal_path}" ||
+        fail "Failed to relocate x86 file to universal path (source: %s dest: %s)" \
+                "${x86_path}" "${universal_path}"
+done
+
+# Move any remaining arm64 files
+for arm_path in "${arm_remaining_files[@]}"; do
+    # First we need to create the universal path
+    partial_name="${arm_path#"${arm_dir}"}"
+    universal_path="${universal_dir}/${partial_name}"
+    universal_dirname="${universal_path%/*}"
+
+    # Make sure the directory exists before we attempt
+    # to move any files
+    mkdir -p "${universal_dirname}" ||
+        fail "Could not create directory: %s" "${universal_dirname}"
+
+    debug "installing remaining arm file: %s" "${partial_name}"
+    # And finally move the file
+    mv "${arm_path}" "${universal_path}" ||
+        fail "Failed to relocate arm64 file to universal path (source: %s dest: %s)" \
+                "${arm_path}" "${universal_path}"
+done
+
+# And finally any remaning x86 files
+for x86_path in "${x86_remaining_files[@]}"; do
+    # First we need to create the universal path
+    partial_name="${x86_path#"${x86_dir}"}"
+    universal_path="${universal_dir}/${partial_name}"
+    universal_dirname="${universal_path%/*}"
+
+    if [ -f "${universal_path}" ]; then
+        debug "universal path exists for %s, skipping remaining x86 file: %s" \
+            "${partial_name}" "${x86_path}"
+        continue
+    fi
+
+    # Make sure the directory exists before we attempt
+    # to move any files
+    mkdir -p "${universal_dirname}" ||
+        fail "Could not create directory: %s" "${universal_dirname}"
+
+    debug "installing remaining x86 file: %s" "${partial_name}"
+    # And finally move the file
+    mv "${x86_path}" "${universal_path}" ||
+        fail "Failed to relocate x86 file to universal path (source: %s dest: %s)" \
+                "${x86_path}" "${universal_path}"
+done
+
+# Now that we have our new substrate constructed, pack
+# it up to be stored
+pushd "${universal_dir}"
+debug "compressing universal substrate artifacts"
+zip -q -r "${universal_substrate}" . ||
+    fail "Could not package universal substrate"
+popd
+
+debug "removing substrate working directories"
+rm -rf "${arm_dir}"
+rm -rf "${x86_dir}"
+rm -rf "${universal_dir}"
+
+printf "Universal substrate build: " >&2
+printf "%s\n" "${universal_substrate}"
+
+# If we are running in a workflow, set the output
+if [ -n "${GITHUB_OUTPUT}" ]; then
+    printf "universal-substrate-path=%s\n" "${universal_substrate}" >> "${GITHUB_OUTPUT}"
+fi
