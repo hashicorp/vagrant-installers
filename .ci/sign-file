@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# Set 100M to be a largish file
+largish_file_size="104857600"
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+# NOTE: Don't move to the root directory since we don't care and want
+#       to be sure we don't muck paths provided
+
+binary_identifier=""
+entitlements=""
+
+while getopts ":b:e:" opt; do
+    case "${opt}" in
+        "b") binary_identifier="${OPTARG}" ;;
+        "e") entitlements="${OPTARG}" ;;
+        *) failure "Invalid flag provided" ;;
+    esac
+    shift $((OPTIND-1))
+done
+
+input_file="${1}"
+
+if [ -z "${input_file}" ]; then
+    failure "Input file is required for signing"
+fi
+
+if [ -z "${SIGNORE_CLIENT_ID}" ]; then
+    failure "SIGNORE_CLIENT_ID environment variable is required for signing"
+fi
+
+if [ -z "${SIGNORE_CLIENT_SECRET}" ]; then
+    failure "SIGNORE_CLIENT_SECRET environment variable is required for signing"
+fi
+
+if [ -z "${SIGNORE_SIGNER}" ]; then
+    failure "SIGNORE_SIGNER environment variable is required for signing"
+fi
+
+if ! command -v "signore" > /dev/null; then
+    install_hashicorp_tool "signore"
+fi
+
+# Base args for signing
+signore_args=("sign" "--file" "${input_file}" "--out" "${input_file}" "--match-file-mode")
+
+# Check the size of the file to be signed. If it's relatively
+# large, push up the max retries and lengthen the retry interval
+file_size="$(wc -c <"${input_file}")" ||
+    failure "Could not determine input file size"
+
+if [ "${file_size}" -gt "${largish_file_size}" ]; then
+    signore+=("--max-retries" "10" "--retry-interval" "10")
+fi
+
+# If a binary identifier was provided, then it's a macOS signing
+if [ -n "${binary_identifier}" ]; then
+    template='{type: "macos", input_format: "EXECUTABLE", binary_identifier: $identifier}'
+    payload="$(jq -n --arg identifier "${binary_identifier}" "${template}")"
+    signore_args+=("--signer-options" "${payload}")
+fi
+
+# If an entitlement was provided, validate the provided
+# path and add it to the args
+if [ -n "${entitlements}" ]; then
+    if [ ! -f "${entitlements}" ]; then
+        failure "Invalid path for entitlements (%s)" "${entitlements}"
+    fi
+    signore_args+=("--entitlements" "${entitlements}")
+fi
+
+debug "signing file %s with arguments - %s" "${input_file}" "${signore_args[*]}"
+
+signore "${signore_args[@]}" ||
+    failure "Failed to sign file '%s'" "${input_file}"
+
+info "successfully signed file (%s)" "${input_file}"
