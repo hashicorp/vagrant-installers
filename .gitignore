@@ -5,7 +5,7 @@
 Gemfile*
 Thumbs.db
 cache
-dist
+bin
 packer/packer_cache
 packer/var-file.json
 substrate/launcher/launcher.exe

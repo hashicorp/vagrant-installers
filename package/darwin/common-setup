@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+function info() {
+    local msg_template="${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
+}
+
+function error() {
+    local msg_template="ERROR: ${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
+    exit 1
+}
+
+function file_directory() {
+    local path="${1?File path is required}"
+    local dir="${path%/*}"
+    if [ ! -d "${dir}" ]; then
+        dir="."
+    fi
+    pushd "${dir}" > /dev/null || exit
+    dir="$(pwd)" || exit
+    popd > /dev/null || exit
+    printf "%s" "${dir}"
+}

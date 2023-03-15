@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+[ -d /opt/vagrant ] && rm -rf /opt/vagrant/
+
+exit 0

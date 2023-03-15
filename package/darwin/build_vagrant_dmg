@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/package/darwin/common-setup"
+
+if [ "${#}" -ne 2 ]; then
+    printf "Usage: %s VAGRANT-PKG VAGRANT-VERSION" "${0}" >&2
+    exit 1
+fi
+
+# Remember our current working directory
+cwd="$(pwd)" || exit
+
+# Validate path provided is a file
+vagrant_pkg="${1}"
+vagrant_pkg="$(file_directory "${vagrant_pkg}")/${vagrant_pkg##*/}"
+if [ ! -f "${vagrant_pkg}" ]; then
+    error "Invalid path provided for Vagrant installer (%s)" "${vagrant_pkg}"
+fi
+
+vagrant_version="${2}"
+if [ -z "${vagrant_version}" ]; then
+    error "Vagrant version is required for Vagrant installer"
+fi
+
+if ! command -v dmgbuild > /dev/null; then
+    error "Missing required command: dmgbuild"
+fi
+
+info "Setting up staging area..."
+staging_dir="$(mktemp -d vagrant-staging.XXXXX)" || exit
+pushd "${staging_dir}" > /dev/null || exit
+staging_dir="$(pwd)" || exit
+popd > /dev/null || exit
+
+darwin_support="${root}/package/support/darwin"
+
+# Copy the package into the staging area. Name
+# it Vagrant.pkg as that's the historical name
+# used
+cp "${vagrant_pkg}" "${staging_dir}/Vagrant.pkg" || exit
+# Include the uninstall in the staging directory
+cp "${darwin_support}/uninstall.tool" \
+    "${staging_dir}/uninstall.tool" || exit
+
+info "Building Vagrant DMG..."
+output_file="${cwd}/vagrant_${vagrant_version}_darwin_universal.dmg"
+dmgbuild \
+    -s "${darwin_support}/dmgbuild.py" \
+    -D srcfolder="${staging_dir}" \
+    -D backgroundimg="${darwin_support}/background_installer.png" \
+    "Vagrant" \
+    "${output_file}" || exit
+
+# Clean up staging directory
+rm -rf "${staging_dir}"
+
+# Write the artifact path only to stdout
+printf "Vagrant DMG installer artifact: " >&2
+printf "%s" "${output_file}"

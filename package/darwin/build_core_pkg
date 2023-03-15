@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/package/darwin/common-setup"
+
+if [ "${#}" -ne 3 ]; then
+    printf "Usage: %s SUBSTRATE-FILE GEMS-PACKAGE-FILE VAGRANT-VERSION" "${0}" >&2
+    exit 1
+fi
+
+# Remember our current working directory
+cwd="$(pwd)" || exit
+
+# Grab the parameter values
+substrate_file="${1}"
+gems_package_file="${2}"
+vagrant_version="${3}"
+
+substrate_file="$(file_directory "${substrate_file}")/${substrate_file##*/}"
+gems_package_file="$(file_directory "${gems_package_file}")/${gems_package_file##*/}"
+
+# Validate the provided values
+if [ ! -f "${substrate_file}" ]; then
+    error "Invalid path provided for Vagrant substrate (%s)" "${substrate_file}"
+fi
+
+if [ ! -f "${gems_package_file}" ]; then
+    error "Invalid path provided for Vagrant gems package (%s)" "${gems_package_file}"
+fi
+
+if [ -z "${vagrant_version}" ]; then
+    error "Missing Vagrant version, value not provided"
+fi
+
+# Create a working directory for unpacking
+# the substrate
+substrate_dir="$(mktemp -d vagrant-substrate.XXXXXX)" || exit
+
+# Hop in and unpack the substrate
+info "Unpacking substrate..."
+pushd "${substrate_dir}" > /dev/null || exit
+# Grab directory full path
+substrate_dir="$(pwd)" || exit
+# Unpack the substrate
+unzip -q "${substrate_file}" || exit
+
+# Unpack the gems package
+info "Unpacking gems package..."
+unzip -q "${gems_package_file}" || exit
+
+# Hop out of the substrate
+popd > /dev/null || exit
+
+# Build the core package
+info "Creating core.pkg..."
+output_file="${cwd}/core.pkg"
+
+pkgbuild \
+    --root "${substrate_dir}" \
+    --identifier com.vagrant.vagrant \
+    --version "${vagrant_version}" \
+    --install-location /opt/vagrant \
+    --scripts "${root}/package/support/darwin/scripts" \
+    "${output_file}" || exit
+
+# Clean up our substrate directory
+rm -rf "${substrate_dir}"
+
+# Write artifact path only to stdout
+printf "Vagrant core.pkg artifact: " >&2
+printf "%s" "${output_file}"
