@@ -410,6 +410,10 @@ function release() {
     local assets="${2}"
     local body
 
+    if [ -z "${body}" ]; then
+        body="$(release_details "${tag_name}")"
+    fi
+
     response="$(github_create_release -o "${repo_owner}" -r "${repo_name}" -t "${tag_name}" -n "${tag_name}" -b "${body}")" ||
         failure "Failed to create GitHub release"
     local release_id
@@ -1683,7 +1687,7 @@ function github_create_release() {
             "p") prerelease="true" ;;
             "g") generate_notes="true" ;;
             "m") make_latest="true" ;;
-            *) failure "Invalid flag provided to lock_issues" ;;
+            *) failure "Invalid flag provided to github_create_release" ;;
         esac
     done
     shift $((OPTIND-1))
@@ -2373,11 +2377,6 @@ function lock_issues() {
         if ! since="$(date --iso-8601=seconds --date="${start}" 2> /dev/null)"; then
             failure "$(printf "Start date provided for issue locking could not be parsed (%s)" "${start}")"
         fi
-    fi
-
-    # GITHUB_TOKEN must be set for locking
-    if [ -z "${GITHUB_TOKEN}" ]; then
-        failure "GITHUB_TOKEN is required for locking issues"
     fi
 
     debug "locking issues that have been closed for at least %d days" "${days}"
