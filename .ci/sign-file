@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Set 100M to be a largish file
-largish_file_size="104857600"
+# Set 50M to be a largish file
+largish_file_size="52428800"
 
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
@@ -54,7 +54,8 @@ file_size="$(wc -c <"${input_file}")" ||
     failure "Could not determine input file size"
 
 if [ "${file_size}" -gt "${largish_file_size}" ]; then
-    signore+=("--max-retries" "10" "--retry-interval" "10")
+    info "Largish file being signed, adjusting retries"
+    signore_args+=("--max-retries" "30" "--retry-interval" "10s")
 fi
 
 # If a binary identifier was provided, then it's a macOS signing
