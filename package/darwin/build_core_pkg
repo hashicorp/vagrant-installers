@@ -39,6 +39,10 @@ fi
 # the substrate
 substrate_dir="$(mktemp -d vagrant-substrate.XXXXXX)" || exit
 
+# Ensure directory is accessible since permissions
+# are used within packaging
+chmod a+rx "${substrate_dir}" || exit
+
 # Hop in and unpack the substrate
 info "Unpacking substrate..."
 pushd "${substrate_dir}" > /dev/null || exit
