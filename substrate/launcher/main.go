@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -13,38 +11,16 @@ import (
 	"sort"
 	"strings"
 	"syscall"
-
-	"github.com/mitchellh/osext"
 )
 
 const envPrefix = "VAGRANT_OLD_ENV"
-
-type VagrantConfig struct {
-	Vagrant_version string
-}
-
-func readVagrantManifest(manifestPath string) VagrantConfig {
-	raw, err := ioutil.ReadFile(manifestPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read Vagrant manifest file at %s: %s\n", manifestPath, err)
-		os.Exit(1)
-	}
-
-	var conf VagrantConfig
-	err = json.Unmarshal(raw, &conf)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse json in Vagrant manifest file at %s: %s\n", manifestPath, err)
-		os.Exit(1)
-	}
-	return conf
-}
 
 func main() {
 	debug := os.Getenv("VAGRANT_DEBUG_LAUNCHER") != ""
 
 	// Get the path to the executable. This path doesn't resolve symlinks
 	// so we have to do that afterwards to find the real binary.
-	path, err := osext.Executable()
+	path, err := os.Executable()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load Vagrant: %s\n", err)
 		os.Exit(1)
@@ -52,48 +28,19 @@ func main() {
 	if debug {
 		log.Printf("launcher: path = %s", path)
 	}
-
-	for {
-		fi, err := os.Lstat(path)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to stat executable: %s\n", err)
-			os.Exit(1)
-		}
-		if fi.Mode()&os.ModeSymlink == 0 {
-			break
-		}
-
-		// The executable is a symlink, so resolve it
-		path, err = os.Readlink(path)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to load Vagrant: %s\n", err)
-			os.Exit(1)
-		}
-		if debug {
-			log.Printf("launcher: resolved symlink = %s", path)
-		}
+	path, err = filepath.EvalSymlinks(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load Vagrant: %s\n", err)
 	}
-
-	// Determine some basic directories that we use throughout
-	path = filepath.Dir(filepath.Clean(path))
-	installerDir := filepath.Dir(path)
+	installerDir := filepath.Dir(filepath.Dir(path))
 	embeddedDir := filepath.Join(installerDir, "embedded")
 	if debug {
 		log.Printf("launcher: installerDir = %s", installerDir)
 		log.Printf("launcher: embeddedDir = %s", embeddedDir)
 	}
 
-	manifestPath := filepath.Join(embeddedDir, "manifest.json")
-	vagrantConfig := readVagrantManifest(manifestPath)
-	vagrantVersion := vagrantConfig.Vagrant_version
-
-	if vagrantVersion == "" {
-		log.Printf("launcher: Failed to set vagrant version from manifest file")
-		os.Exit(1)
-	}
-
 	// Find the Vagrant gem
-	filePath := filepath.Join(embeddedDir, "gems", vagrantVersion, "gems", "vagrant-*")
+	filePath := filepath.Join(embeddedDir, "gems", "gems", "vagrant-*")
 	gemPaths, err := filepath.Glob(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to find Vagrant: %s\n", err)
@@ -195,8 +142,8 @@ func main() {
 		"CXXFLAGS":       cxxflags,
 		"CPPFLAGS":       cppflags,
 		"CFLAGS":         cflags,
-		"GEM_HOME":       filepath.Join(embeddedDir, "gems", vagrantVersion),
-		"GEM_PATH":       filepath.Join(embeddedDir, "gems", vagrantVersion),
+		"GEM_HOME":       filepath.Join(embeddedDir, "gems"),
+		"GEM_PATH":       filepath.Join(embeddedDir, "gems"),
 		"GEMRC":          filepath.Join(embeddedDir, "etc", "gemrc"),
 		"LDFLAGS":        ldflags,
 		"PATH":           path,
