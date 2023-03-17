@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+
+# This script will install a provided vagrant gem into
+# the provided substrate and saves the result in the
+# output directory.
+# NOTE: architecture is determined based on substrate file
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+gem_dir="${1?Directory of gem file required}"
+substrate_dir="${2?Directory of substrate file required}"
+output_dir="${3?Directory for output file required}"
+
+# If the script isn't being run as root, fail
+debug "performing root user check"
+if [ "$(id -u)" != "0" ]; then
+    failure "Script must be run as root"
+fi
+
+if [ -f "${gem_dir}" ]; then
+    debug "gem dir was provided as file to gem (%s)" "${gem_dir}"
+    gem_file="${gem_dir}"
+elif [ ! -d "${gem_dir}" ]; then
+    failure "Invalid path provided for gem directory (%s)" \
+        "${gem_dir}"
+else
+    gem_files=( "${gem_dir}"/* )
+    for f in "${gem_files[@]}"; do
+        debug "checking dir entry for gem - %s" "${f}"
+        if [[ "${f}" = *".gem" ]]; then
+            debug "gem file discovered - %s" "${f}"
+            gem_file="${f}"
+            break
+        fi
+    done
+    if [ -z "${gem_file}" ]; then
+        failure "Did not locate gem within gem directory (%s)" \
+            "${gem_dir}"
+    fi
+fi
+# Get the full path of the gem
+if [[ "${gem_dir}" != *"/"* ]]; then
+    gd="."
+else
+    gd="${gem_dir%/*}"
+fi
+pushd "${gd}"
+gd="$(pwd)" || failure "Could not read gem file directory"
+popd
+gem_file="${gd}/${gem_file##*/}"
+
+debug "gem file for install - %s" "${gem_file}"
+
+if [ -f "${substrate_dir}" ]; then
+    debug "substrate dir was provided as file to substrate (%s)" "${substrate_dir}"
+    substrate_file="${substate_dir}"
+elif [ ! -d "${substrate_dir}" ]; then
+    failure "Invalid path provided for substrate directory (%s)" "${substrate_dir}"
+else
+    substrate_files=( "${substrate_dir}"/* )
+    for f in "${substrate_files[@]}"; do
+        debug "checking dir entry for substrate - %s" "${f}"
+        if [[ "${f}" = *".zip" ]]; then
+            debug "substrate file discovered - %s" "${f}"
+            substrate_file="${f}"
+            break
+        fi
+    done
+    if [ -z "${substrate_file}" ]; then
+        failure "Did not locate substrate within substrate directory (%s)" \
+            "${substrate_dir}"
+    fi
+fi
+# Get the full path of the substrate
+if [[ "${substrate_dir}" != *"/"* ]]; then
+    sd="."
+else
+    sd="${substrate_dir%/*}"
+fi
+pushd "${sd}"
+sd="$(pwd)" || failure "Could not read substrate file directory"
+popd
+substrate_file="${sd}/${substrate_file##*/}"
+
+debug "validating output directory - %s" "${output_dir}"
+mkdir -p "${output_dir}" ||
+    failure "Invalid path provided for output directory (%s)" "${output_dir}"
+pushd "${output_dir}"
+output_dir="$(pwd)" ||
+    failure "Could not read full path of output directory"
+popd
+debug "validated output directory - %s" "${output_dir}"
+
+# Define the directory to use for the chroot
+chroot_dir="/var/chroot"
+# Define the project name since this is used in the chroot
+# for access to the repository
+project_name="${root##*/}"
+
+# Determine if we are using a 32-bit chroot based on the
+# substate. Check for both 32 and 64-bit mainly so that
+# if no match is found, we can bail early
+if [[ "${substrate_file}" = *"386"* ]]; then
+    debug "detected 32-bit architecture - %s" "${substrate_file}"
+    substrate_arch="32"
+elif [[ "${substrate_file}" = *"x86_64"* ]]; then
+    debug "detected 64-bit architecture - %s" "${substrate_file}"
+    substrate_arch="64"
+else
+    failure "Unabled to determine architecture from substrate file (%s)" \
+        "${substrate_file}"
+fi
+
+# Create the substrate
+debug "creating ubuntu chroot"
+"${root}/.ci/helpers/ubuntu-chroot-create" "${substrate_arch}" "${chroot_dir}" ||
+    failure "Could not create ubuntu chroot environment"
+
+# Setup the chroot
+debug "preparing ubuntu chroot for gem install"
+chroot "${chroot_dir}" "${project_name}/.ci/helpers/ubuntu-chroot-setup" ||
+    failure "Could not fully setup ubuntu chroot environment"
+
+# Define the directory within the chroot for the artifacts
+# to be left
+chroot_output="artifacts"
+chroot_output_directory="${chroot_dir}/${chroot_output}"
+
+debug "creating directory for artifacts in chroot (%s)" "${chroot_output_directory}"
+mkdir -p "${chroot_output_directory}" ||
+    failure "Could not create chroot output directory (%s)" "${chroot_output_directory}"
+
+# Copy in the gem
+chroot_gem="vagrant.gem"
+chroot_gem_path="${chroot_dir}/${chroot_gem}"
+# Add the gem into the chroot
+debug "copying gem %s -> %s" "${gem_file}" "${chroot_gem_path}"
+cp "${gem_file}" "${chroot_gem_path}" ||
+    failure "Could not copy gem into chroot"
+
+# Copy in the substrate
+chroot_substrate="substrate.zip"
+chroot_substrate_path="${chroot_dir}/${chroot_substrate}"
+debug "copying substrate %s -> %s" "${substrate_file}" "${chroot_substrate_path}"
+cp "${substrate_file}" "${chroot_substrate_path}" ||
+    failure "Could not copy substrate into chroot"
+
+debug "running vagrant gem install"
+chroot "${chroot_dir}" "${project_name}/package/install-vagrant" "/${chroot_substrate}" \
+    "/${chroot_gem}" "/${chroot_output}" ||
+    failure "Failed to install vagrant gem into substrate"
+
+# Include the architecture in the file name
+if [ "${substrate_arch}" = "32" ]; then
+    out_file="installed_ubuntu_386.zip"
+else
+    out_file="installed_ubuntu_x86_64.zip"
+fi
+
+debug "install build is complete, moving artifacts - %s -> %s" \
+    "${chroot_output_directory}/vagrant-installed.zip" "${output_dir}/${out_file}"
+
+mv -f "${chroot_output_directory}/vagrant-installed.zip" "${output_dir}/${out_file}" ||
+    failure "Unable to relocate install build artifacts to final destination"
