@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# This script should not be called directly. It handles
+# doing the internal setup of the ubuntu chroot for the
+# substrate build.
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "$(id -u)" != "0" ]; then
+    failure "Script must be run as root"
+fi
+
+apt-get update
+
+debug "install toolchain repository to get recent build tools"
+apt-get install -yq software-properties-common || exit
+apt-add-repository --yes ppa:ubuntu-toolchain-r/test || exit
+
+apt-get update
+
+debug "installing required packages"
+apt-get install -yq build-essential pkg-config autoconf automake chrpath \
+    libtool libpython-dev gcc-9 g++-9 curl zip unzip || exit
+
+debug "updating gcc and g++ to use newer versions"
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-9 \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-9
