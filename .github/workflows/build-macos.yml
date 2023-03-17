@@ -1,5 +1,14 @@
 on:
   workflow_call:
+    inputs:
+      vagrant_draft_name:
+        description: Name of the Vagrant repository draft release containing gem for build
+        required: false
+        type: string
+      vagrant_release_name:
+        description: Name of the Vagrant repository release containing gem for build
+        required: false
+        type: string
     outputs:
       dmg-cache-id:
         description: Cache identifier for macOS universal dmg
@@ -69,8 +78,8 @@ jobs:
         id: vagrant-gem
         run: ./.ci/fetch-vagrant-rubygem
         env:
-          VAGRANT_DRAFT_NAME: ${{ github.event.client_payload.draft_name }}
-          VAGRANT_RELEASE_NAME: ${{ github.event.client_payload.release_name }}
+          VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
+          VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
       - name: Gather information
         id: inspect
