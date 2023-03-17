@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+# This script should not be called directly. It handles
+# doing the internal creation of the ubuntu chroot.
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "$(id -u)" != "0" ]; then
+    failure "Script must be run as root"
+fi
+
+substrate_arch="${1?Chroot architecture required}"
+chroot_dir="${2?Path to chroot is required}"
+mkdir -p "${chroot_dir}" || exit
+pushd "${chroot_dir}"
+chroot_dir="$(pwd)" || exit
+popd
+
+debug "created chroot directory - %s" "${chroot_dir}"
+
+# Install required packages for chroot setup
+apt-get install -qy debootstrap ||
+    failure "could not install required packages"
+
+# Use debootstrap to create the environment
+debug "creating trusty chroot"
+if [ "${substrate_arch}" = "32" ]; then
+    debug "creating 32 bit ubuntu chroot"
+    bootstrap_args=( "--arch" "i386" )
+else
+    debug "creating 64 bit ubuntu chroot"
+    bootstrap_args=()
+fi
+bootstrap_args+=( "trusty" "/var/chroot" "http://archive.ubuntu.com/ubuntu/" )
+debootstrap "${bootstrap_args[@]}" ||
+    failure "failed to create trusty chroot"
+
+# Copy in the sources.list from the host and update the code name
+# so we have proper access to all repositories
+debug "copying in sources.list"
+cp /etc/apt/sources.list /var/chroot/etc/apt/sources.list ||
+    failure "failed to install sources.list"
+
+. /etc/lsb-release ||
+    failure "Could not source lsb-release file"
+
+debug "updating sources.list distrib reference %s -> trusty" "${DISTRIB_CODENAME}"
+sed -ibak "s/${DISTRIB_CODENAME}/trusty/" /var/chroot/etc/apt/sources.list ||
+    failure "could not update apt sources file"
+
+# Add a mount point for ourselves so the project is accessible
+debug "mounting project directory into chroot - %s" "${root}"
+project_name="${root##*/}"
+mount_dir="${chroot_dir}/${project_name}"
+printf "%s %s none rbind 0 0\n" "${root}" "${mount_dir}" >> /etc/fstab ||
+    failure "Could not update local fstab file"
+mkdir -p "${mount_dir}" ||
+    failure "Could not create mount point within chroot"
+mount "${mount_dir}" ||
+    failure "Could not mount project within chroot"
+
+# Also need to mount /proc in since the Ruby build relies on it
+debug "mounting /proc into chroot"
+pushd "${chroot_dir}"
+mount -t proc /proc proc/ ||
+    failure "Could not mount /proc within chroot"
+popd
