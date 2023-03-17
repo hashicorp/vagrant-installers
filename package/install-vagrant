@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+# This script takes a substrate and a vagrant rubygem,
+# unpacks the substrate, and installs the vagrant rubygem
+# along with its depdencencies into the substrate. It then
+# repacks it all back up.
+
+substrate_file="${1?Substrate file path required}"
+gem_file="${2?Vagrant gem path required}"
+output_dir="${3?Artifact output directory required}"
+
+function info() {
+    local msg_template="${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
+}
+
+function error() {
+    local msg_template="ERROR: ${1}\n"
+    local i=$(( ${#} - 1 ))
+    local msg_args=("${@:2:$i}")
+    printf "${msg_template}" "${msg_args[@]}" >&2
+    exit 1
+}
+
+# Validate our paramters
+if [ ! -f "${substrate_file}" ]; then
+    error "Invalid path for substrate file (%s)" "${substrate_file}"
+fi
+
+if [ ! -f "${gem_file}" ]; then
+    error "Invalid path for vagrant gem file (%s)" "${gem_file}"
+fi
+
+mkdir -p "${output_dir}" ||
+    error "Invalid path for output directory %s" "${output_dir}"
+pushd "${output_dir}" > /dev/null || exit
+output_dir="$(pwd)" || exit
+popd > /dev/null || exit
+
+# Create a working directory
+substrate_dir="$(mktemp -d vagrant-install.XXXXXX)" || exit
+pushd "${substrate_dir}" > /dev/null || exit
+substrate_dir="$(pwd)" || exit
+popd > /dev/null || exit
+
+info "Unpacking substrate..."
+
+# Hop into substrate directory and unpack the substrate
+pushd "${substrate_dir}" > /dev/null || exit
+unzip -q "${substrate_file}" || exit
+popd > /dev/null || exit
+
+# Path to embedded within substrate
+embed_dir="${substrate_dir}/embedded"
+
+# Set some environment variables so rubygems will
+# install into the substrate
+export GEM_PATH="${embed_dir}/gems"
+export GEM_HOME="${GEM_PATH}"
+export GEMRC="${embed_dir}/etc/gemrc"
+
+# Update our PATH so we pick up the gem command
+# from the substrate
+export PATH="${embed_dir}/bin:${PATH}"
+
+info "Installing Vagrant RubyGem..."
+gem install "${gem_file}" || exit
+
+# In case the GRPC gem is installed with the ruby platform,
+# make sure any intermediate build files are removed.
+rm -rf "${embed_dir}/gems/gems/grpc-"*/src/ruby/ext/grpc/libs
+rm -rf "${embed_dir}/gems/gems/grpc-"*/src/ruby/ext/grpc/objs
+
+output_file="${output_dir}/vagrant-installed.zip"
+
+info "Packing Vagrant gem installation..."
+pushd "${substrate_dir}" > /dev/null || exit
+zip -q -r "${output_file}" . || exit
+popd > /dev/null || exit
+
+# Clean up our substrate directory
+rm -rf "${substrate_dir}"
+
+printf "Vagrant installation artifact: %s" "${output_file}"
