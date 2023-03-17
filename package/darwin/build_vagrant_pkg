@@ -4,7 +4,7 @@ csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
 
-. "${root}/package/darwin/common-setup"
+. "${root}/package/common-setup"
 
 if [ "${#}" -ne 1 ]; then
     printf "Usage: %s CORE-PKG-FILE" "${0}" >&2
