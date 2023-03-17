@@ -97,13 +97,15 @@ info "  -> Detecting host system... "
 uname=$(uname -a)
 
 if [[ "${uname}" = *"86_64"* ]]; then
-    host_arch="x86_64"
+    target_arch="x86_64"
+elif [[ "${uname}" = *"arm"* ]]; then
+    target_arch="arm64"
 else
-    host_arch="i686"
+    target_arch="i686"
 fi
 
 if [[ "${uname}" = *"Linux"* ]]; then
-    host_os="linux"
+    target_os="linux"
     if [[ -f /etc/centos-release ]]; then
         linux_os="centos"
     elif [[ "$(</etc/lsb-release)" = *"Ubuntu"* ]]; then
@@ -114,11 +116,19 @@ if [[ "${uname}" = *"Linux"* ]]; then
     else
         linux_os="linux"
     fi
-    host_ident="${linux_os}_${host_arch}"
+    target_ident="${linux_os}_${target_arch}"
 else
-    host_os="darwin"
-    host_ident="darwin_${host_arch}"
+    target_os="darwin"
+    target_ident="darwin_${target_arch}"
 fi
+
+# NOTE: We keep a copy in host_ prefixed variables
+#       so we can query about the actual host. The
+#       target_ prefixed variables may change if the
+#       build is targeting something different
+host_os="${target_os}"
+host_arch="${target_arch}"
+host_ident="${target_ident}"
 
 info "  -> Detected host system: %s" "${host_ident}"
 info "  -> Readying build directories..."
@@ -132,22 +142,20 @@ base_bindir="${build_dir}/bin"
 embed_dir="${build_dir}/embedded"
 embed_bindir="${embed_dir}/bin"
 embed_libdir="${embed_dir}/lib"
+tracker_file="${build_dir}/.tracker"
 
 if [ -z "${ENABLE_REBUILD}" ]; then
+    info "   * Rebuild support is currently disabled"
     rm -rf "${build_dir:?}/"* || exit
+    rm -f "${tracker_file}" || exit
 fi
+
 mkdir -p "${base_bindir}" || exit
 mkdir -p "${embed_bindir}" || exit
 mkdir -p "${embed_libdir}" || exit
 mkdir -p "${output_dir}" || exit
-mkdir -p "${embed_dir}/lib64" || exit
 
-tracker_file="${build_dir}/.tracker"
 touch "${tracker_file}" || exit
-
-# if [ "${host_os}" = "darwin" ]; then
-#     su vagrant -l -c 'brew install automake autoconf pkg-config' || exit
-# fi
 
 pushd "${cache_dir}" > /dev/null || exit
 
@@ -164,28 +172,30 @@ macos_cross_configure_libffi=()
 macos_cross_configure_zlib=()
 macos_cross_configure_ruby=()
 
-if [[ "${host_os}" = "darwin" ]]; then
+if [[ "${target_os}" = "darwin" ]]; then
     info  " ** Configuring build for macOS"
 
-    # Defines the minimum version of macOS to target
-    macos_deployment_target="10.9"
     macos_cross_configure_ruby+=(
         "--with-rubylibprefix=${embed_libdir}/ruby"
-        "--with-rubyarchprefix=${embed_libdir}/ruby"
         "--with-rubyhdrdir=${embed_dir}/include"
-        "--with-rubyarchhdrdir=${embed_dir}/include/ruby"
         "--includedir=${embed_dir}/include"
         "--oldincludedir=${embed_dir}/include"
         "--enable-rpath"
     )
 
+    # Set the host system value
+    build_host="${host_arch}-apple-darwin"
+
+    # Go is building for darwin (which it should be anyway)
+    export GOOS="darwin"
+
     # If we are cross compiling for an arm64 build, make the required adjustments
     if [ "${MACOS_TARGET}" = "arm64" ]; then
-        info "   ** Cross building for arm64"
+        info "   ** macOS build target architecture: arm64"
 
+        # arm64 requires a deployment target of at least 11
         macos_deployment_target="11.0"
-        build_host="x86_64-darwin"
-        target_host="arm64-darwin"
+        target_host="arm64-apple-darwin"
 
         # Modifications required to configure scripts for cross building
         macos_cross_configure+=(
@@ -193,16 +203,23 @@ if [[ "${host_os}" = "darwin" ]]; then
             "--target=${target_host}"
             "--build=${build_host}"
         ) # applicable to most but not all
+
         macos_cross_configure_libffi+=("--with-gcc-arch=arm64")
         macos_cross_configure_zlib+=("--archs=-arch arm64") # zlib specific configuration
-        macos_cross_configure_ruby+=("--with-arch=arm64") # ruby specific configuration
+        macos_cross_configure_ruby+=(
+            "--with-arch=arm64"
+            "--with-rubyarchprefix=${embed_libdir}/ruby/arm64"
+            "--with-rubyarchhdrdir=${embed_dir}/include/ruby/arm64"
+        ) # ruby specific configuration
 
-        # Update the host_ident value which is used for
-        # writing our substrate asset
-        host_ident="darwin_arm64"
-        info "   ** Host identifier detection override to: %s" "${host_ident}"
-        host_arch="arm64"
-        info "   ** Host arch detection override to: %s" "${host_arch}"
+        if [ "${target_arch}" != "arm64" ]; then
+            # Update the target_ident value which is used for
+            # writing our substrate asset.
+            target_ident="darwin_arm64"
+            info "   ** Target identifier detection override to: %s" "${target_ident}"
+            target_arch="arm64"
+            info "   ** Target arch detection override to: %s" "${target_arch}"
+        fi
 
         # Tell go to build for arm64
         export GOARCH="arm64"
@@ -211,6 +228,47 @@ if [[ "${host_os}" = "darwin" ]]; then
         export CFLAGS="${CFLAGS} -arch arm64"
         export LDFLAGS="${LDFLAGS} -arch arm64"
         export ARCHFLAGS="-arch arm64"
+    else # By default we target x86_64
+        info "   ** macOS build target architecture: x86_64"
+
+        # Defines the minimum version of macOS to target
+        # NOTE: Ruby depends on features only available starting with
+        #       10.13. Check if we can pull in the 10.9 sdk manually
+        #       and build with that.
+        macos_deployment_target="10.13"
+        target_host="x86_64-apple-darwin"
+
+        # Modifications required to configure scripts for cross building
+        macos_cross_configure+=(
+            "--host=${target_host}"
+            "--target=${target_host}"
+            "--build=${build_host}"
+        ) # applicable to most but not all
+
+        macos_cross_configure_libffi+=("--with-gcc-arch=x86_64")
+        macos_cross_configure_zlib+=("--archs=-arch x86_64") # zlib specific configuration
+        macos_cross_configure_ruby+=(
+            "--with-arch=x86_64"
+            "--with-rubyarchprefix=${embed_libdir}/ruby/x86_64"
+            "--with-rubyarchhdrdir=${embed_dir}/include/ruby/x86_64"
+        ) # ruby specific configuration
+
+        if [ "${target_arch}" != "x86_64" ]; then
+            # Update the target_ident value which is used for
+            # writing our substrate asset.
+            target_ident="darwin_x86_64"
+            info "   ** Target identifier detection override to: %s" "${target_ident}"
+            target_arch="x86_64"
+            info "   ** Target arch detection override to: %s" "${target_arch}"
+        fi
+
+        # Tell go to build for arm64
+        export GOARCH="amd64"
+
+        # Set the arch in the compiler and linker
+        export CFLAGS="${CFLAGS} -arch x86_64"
+        export LDFLAGS="${LDFLAGS} -arch x86_64"
+        export ARCHFLAGS="-arch x86_64"
     fi
 
     sdk_path="$(xcrun --sdk macosx --show-sdk-path)" || exit
@@ -225,13 +283,13 @@ if [[ "${host_os}" = "darwin" ]]; then
     export CPPFLAGS="${CFLAGS}"
     export LDFLAGS="${LDFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT} -Wl,-rpath,${embed_libdir}"
 else
-    export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib64 -Wl,-rpath=/opt/vagrant/embedded/lib:/opt/vagrant/embedded/lib64"
+    export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib -Wl,-rpath=/opt/vagrant/embedded/lib"
 fi
 
 # libxcrypt-compat
 # We can't upgrade gcc on 32bit so don't attempt to build libxcrypt
 if [ "${linux_os}" = "centos" ]; then
-    if [ "${host_arch}" != "i686" ]; then
+    if [ "${target_arch}" != "i686" ]; then
         if needs_build "${tracker_file}" "libxcrypt"; then
             info "   -> Installing libxcrypt-compat..."
             curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" ||
@@ -293,7 +351,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
             error "libgmp download error encountered"
         tar -xjf libgmp.tar.bz2 || exit
         pushd gmp-* > /dev/null || exit
-        if [[ "${host_arch}" = "i686" ]]; then
+        if [[ "${target_arch}" = "i686" ]]; then
             ABI=32
         else
             ABI=64
@@ -464,7 +522,7 @@ if needs_build "${tracker_file}" "openssl"; then
     if [ "${MACOS_TARGET}" = "arm64" ]; then
         ./Configure zlib no-asm no-tests shared --prefix="${embed_dir}" darwin64-arm64-cc || exit
     else
-        ./config --prefix="${embed_dir}" --openssldir="${embed_dir}" zlib shared || exit
+        ./config --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" zlib shared || exit
     fi
     make || exit
     make install_sw || exit
@@ -501,32 +559,6 @@ if needs_build "${tracker_file}" "libarchive"; then
         error "libarchive download error encountered"
     tar -xzf libarchive.tar.gz || exit
     pushd libarchive-* > /dev/null || exit
-
-    if [ "${host_os}" = "darwin" ] || [ "${linux_os}" = "archlinux" ]; then
-        conf_file=$(<configure.ac)
-        if [[ "${conf_file}" != *"AC_PROG_CPP"* ]]; then
-            sed -i.old 's/^AM_PROG_CC_C_O/AM_PROG_CC_C_O\'$'\nAC_PROG_CPP/' configure.ac || exit
-        fi
-    fi
-
-    if [[ "${host_os}" = "linux" ]]; then
-        export PATH=/usr/local/bin:$PATH
-        PATH=/usr/local/bin:$PATH
-        export ACLOCAL_PATH="-I/usr/local/share/aclocal:/usr/local/share/aclocal-1.13:/usr/local/share/autoconf:/usr/share/autoconf:/usr/share/aclocal"
-        rm -f aclocal.m4
-        aclocal
-        libtoolize --force
-        autoheader
-        autoreconf -vfi
-        ./build/autogen.sh
-        rm -f aclocal.m4
-        aclocal
-        libtoolize --force
-        autoheader
-        autoreconf -vfi
-    else
-        ./build/autogen.sh
-    fi
 
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-zlib --without-bz2lib \
         --without-iconv --without-libiconv-prefix --without-nettle --without-openssl \
@@ -572,7 +604,7 @@ fi
 
 # If we are on darwin, update our shared libraries to make
 # them relocatable
-if [ "${host_os}" = "darwin" ]; then
+if [ "${target_os}" = "darwin" ]; then
     # Update the base libraries
     libcontent=( "${embed_libdir}/"* )
     for libpath in "${libcontent[@]}"; do
@@ -629,7 +661,6 @@ if needs_build "${tracker_file}" "ruby"; then
     unset CFLAGS
     unset CPPFLAGS
     unset CXXFLAGS
-    # NOTE: --enable-shared is required for getting (https://bugs.ruby-lang.org/issues/18912)
     ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
         --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
         --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
@@ -658,7 +689,7 @@ fi
 # instead of static paths. This will allow for relocation
 # and let things like a `gem install` still function
 # correctly (This is macos only, at least for now)
-if [ "${host_os}" = "darwin" ]; then
+if [ "${target_os}" = "darwin" ]; then
     rbconf_files=( "${embed_dir}/lib/ruby/3."*/*-darwin*/rbconfig.rb )
     rbconfig_file="${rbconf_files[0]}"
 
@@ -684,7 +715,7 @@ if [ "${host_os}" = "darwin" ]; then
 fi
 
 # Update the rpath in any bundles that ruby created
-if [ "${host_os}" = "darwin" ]; then
+if [ "${target_os}" = "darwin" ]; then
     while IFS= read -rd '' bundle; do
         info "Updating rpath on bundle file: %s" "${bundle}"
         install_name_tool -add_rpath "@executable_path/../lib/" "${bundle}"
@@ -718,7 +749,7 @@ rm -f "${tracker_file}"
 
 # package up the substrate
 info " -> Packaging substrate..."
-output_file="${output_dir}/substrate_${host_ident}.zip"
+output_file="${output_dir}/substrate_${target_ident}.zip"
 pushd "${build_dir}" > /dev/null || exit
 zip -q -r "${output_file}" . || exit
 popd > /dev/null || exit
