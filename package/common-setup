@@ -17,9 +17,14 @@ function error() {
 
 function file_directory() {
     local path="${1?File path is required}"
-    local dir="${path%/*}"
-    if [ ! -d "${dir}" ]; then
+    local dir
+    if [[ "${dir}" != *"/"* ]]; then
         dir="."
+    else
+        dir="${path%/*}"
+    fi
+    if [ ! -d "${dir}" ]; then
+        mkdir -p "${dir}" || exit
     fi
     pushd "${dir}" > /dev/null || exit
     dir="$(pwd)" || exit
