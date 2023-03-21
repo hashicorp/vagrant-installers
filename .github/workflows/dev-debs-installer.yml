@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - 'build-debs-*'
+
+jobs:
+  build-deb-packages:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build deb packages
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-debs.yml
+    secrets: inherit
+  publish:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [build-deb-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch deb packages
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-deb-packages.outputs.deb-packages-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create prerelease
+        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_VERSION: ${{ needs.build-deb-packages.outputs.vagrant-version }}

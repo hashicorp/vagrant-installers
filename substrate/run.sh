@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# NOTE: This script assumes that the architecture specific
+#       launcher has been created prior to running via `make`.
+
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
@@ -101,7 +104,7 @@ if [[ "${uname}" = *"86_64"* ]]; then
 elif [[ "${uname}" = *"arm"* ]]; then
     target_arch="arm64"
 else
-    target_arch="i686"
+    target_arch="386"
 fi
 
 if [[ "${uname}" = *"Linux"* ]]; then
@@ -167,15 +170,15 @@ export CPPFLAGS="-I${embed_dir}/include"
 export LDFLAGS="-L${embed_dir}/lib"
 
 # Default these cross configure variables to empty arrays
-macos_cross_configure=()
-macos_cross_configure_libffi=()
-macos_cross_configure_zlib=()
-macos_cross_configure_ruby=()
+cross_configure=()
+cross_configure_libffi=()
+cross_configure_zlib=()
+cross_configure_ruby=()
 
 if [[ "${target_os}" = "darwin" ]]; then
     info  " ** Configuring build for macOS"
 
-    macos_cross_configure_ruby+=(
+    cross_configure_ruby+=(
         "--with-rubylibprefix=${embed_libdir}/ruby"
         "--with-rubyhdrdir=${embed_dir}/include"
         "--includedir=${embed_dir}/include"
@@ -186,9 +189,6 @@ if [[ "${target_os}" = "darwin" ]]; then
     # Set the host system value
     build_host="${host_arch}-apple-darwin"
 
-    # Go is building for darwin (which it should be anyway)
-    export GOOS="darwin"
-
     # If we are cross compiling for an arm64 build, make the required adjustments
     if [ "${MACOS_TARGET}" = "arm64" ]; then
         info "   ** macOS build target architecture: arm64"
@@ -198,15 +198,15 @@ if [[ "${target_os}" = "darwin" ]]; then
         target_host="arm64-apple-darwin"
 
         # Modifications required to configure scripts for cross building
-        macos_cross_configure+=(
+        cross_configure+=(
             "--host=${target_host}"
             "--target=${target_host}"
             "--build=${build_host}"
         ) # applicable to most but not all
 
-        macos_cross_configure_libffi+=("--with-gcc-arch=arm64")
-        macos_cross_configure_zlib+=("--archs=-arch arm64") # zlib specific configuration
-        macos_cross_configure_ruby+=(
+        cross_configure_libffi+=("--with-gcc-arch=arm64")
+        cross_configure_zlib+=("--archs=-arch arm64") # zlib specific configuration
+        cross_configure_ruby+=(
             "--with-arch=arm64"
             "--with-rubyarchprefix=${embed_libdir}/ruby/arm64"
             "--with-rubyarchhdrdir=${embed_dir}/include/ruby/arm64"
@@ -221,8 +221,6 @@ if [[ "${target_os}" = "darwin" ]]; then
             info "   ** Target arch detection override to: %s" "${target_arch}"
         fi
 
-        # Tell go to build for arm64
-        export GOARCH="arm64"
 
         # Set the arch in the compiler and linker
         export CFLAGS="${CFLAGS} -arch arm64"
@@ -239,15 +237,15 @@ if [[ "${target_os}" = "darwin" ]]; then
         target_host="x86_64-apple-darwin"
 
         # Modifications required to configure scripts for cross building
-        macos_cross_configure+=(
+        cross_configure+=(
             "--host=${target_host}"
             "--target=${target_host}"
             "--build=${build_host}"
         ) # applicable to most but not all
 
-        macos_cross_configure_libffi+=("--with-gcc-arch=x86_64")
-        macos_cross_configure_zlib+=("--archs=-arch x86_64") # zlib specific configuration
-        macos_cross_configure_ruby+=(
+        cross_configure_libffi+=("--with-gcc-arch=x86_64")
+        cross_configure_zlib+=("--archs=-arch x86_64") # zlib specific configuration
+        cross_configure_ruby+=(
             "--with-arch=x86_64"
             "--with-rubyarchprefix=${embed_libdir}/ruby/x86_64"
             "--with-rubyarchhdrdir=${embed_dir}/include/ruby/x86_64"
@@ -261,9 +259,6 @@ if [[ "${target_os}" = "darwin" ]]; then
             target_arch="x86_64"
             info "   ** Target arch detection override to: %s" "${target_arch}"
         fi
-
-        # Tell go to build for arm64
-        export GOARCH="amd64"
 
         # Set the arch in the compiler and linker
         export CFLAGS="${CFLAGS} -arch x86_64"
@@ -283,13 +278,23 @@ if [[ "${target_os}" = "darwin" ]]; then
     export CPPFLAGS="${CFLAGS}"
     export LDFLAGS="${LDFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT} -Wl,-rpath,${embed_libdir}"
 else
-    export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib -Wl,-rpath=/opt/vagrant/embedded/lib"
+    export CFLAGS="${CFLAGS} -fPIC"
+    export LDFLAGS="${LDFLAGS} -Wl,-rpath=/opt/vagrant/embedded/lib"
+fi
+
+# Now that we have any overrides in place
+# for our target, check that the launcher
+# has been built and is available
+launcher_path="${root}/bin/launcher-${target_os}_${target_arch}"
+if [ ! -f "${launcher_path}" ]; then
+    error "Vagrant launcher not found, create with 'make bin/launcher/%s-%s' (checked: %s)" \
+        "${target_os}" "${target_arch}" "${launcher_path}"
 fi
 
 # libxcrypt-compat
 # We can't upgrade gcc on 32bit so don't attempt to build libxcrypt
 if [ "${linux_os}" = "centos" ]; then
-    if [ "${target_arch}" != "i686" ]; then
+    if [ "${target_arch}" != "386" ]; then
         if needs_build "${tracker_file}" "libxcrypt"; then
             info "   -> Installing libxcrypt-compat..."
             curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" ||
@@ -317,8 +322,8 @@ if needs_build "${tracker_file}" "libffi"; then
     pushd libffi-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-static --enable-shared --disable-debug \
         --enable-portable-binary --disable-docs --disable-dependency-tracking \
-        --libdir="${embed_libdir}" "${macos_cross_configure_libffi[@]}" \
-        "${macos_cross_configure[@]}" || exit
+        --libdir="${embed_libdir}" "${cross_configure_libffi[@]}" \
+        "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "libffi"
@@ -334,7 +339,7 @@ if needs_build "${tracker_file}" "libiconv"; then
     tar -xzf libiconv.tar.gz || exit
     pushd libiconv-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --enable-shared --disable-static --disable-dependency-tracking \
-        "${macos_cross_configure[@]}" || exit
+        "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "libiconv"
@@ -351,7 +356,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
             error "libgmp download error encountered"
         tar -xjf libgmp.tar.bz2 || exit
         pushd gmp-* > /dev/null || exit
-        if [[ "${target_arch}" = "i686" ]]; then
+        if [[ "${target_arch}" = "386" ]]; then
             ABI=32
         else
             ABI=64
@@ -371,7 +376,8 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
             error "libgpg-error download error encountered"
         tar -xjf libgpg-error.tar.bz2 || exit
         pushd libgpg-error-* > /dev/null || exit
-        ./configure --prefix="${embed_dir}" --enable-shared --disable-static || exit
+        ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
+            "${cross_configure[@]}" || exit
         make || exit
         make install || exit
         mark_build "${tracker_file}" "libgpg_error"
@@ -386,8 +392,8 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
             error "libgcrypt download error encountered"
         tar -xjf libgcrypt.tar.bz2 || exit
         pushd libgcrypt-* > /dev/null || exit
-        ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
-            --with-libgpg-error-prefix="${embed_dir}" || exit
+        ./configure --prefix="${embed_dir}" --enable-shared --disable-static --disable-asm \
+            --disable-doc --with-libgpg-error-prefix="${embed_dir}" "${cross_configure[@]}" || exit
         make || exit
         make install || exit
         mark_build "${tracker_file}" "libgcrypt"
@@ -406,10 +412,26 @@ if needs_build "${tracker_file}" "xz"; then
     pushd xz-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-xz --disable-xzdec --disable-dependency-tracking \
         --disable-lzmadec --disable-lzmainfo --disable-lzma-links --disable-scripts \
-        --enable-shared --disable-static "${macos_cross_configure[@]}" || exit
+        --enable-shared --disable-static "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "xz"
+    popd > /dev/null || exit
+fi
+
+# zlib
+if needs_build "${tracker_file}" "zlib"; then
+    info "   -> Building zlib..."
+    zlib_url="${dep_cache}/${zlib_file}"
+    curl -f -L -s -o zlib.tar.gz "${zlib_url}" ||
+        error "zlib download error encountered"
+    tar -xzf zlib.tar.gz || exit
+    pushd zlib-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" \
+        "${cross_configure_zlib[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "zlib"
     popd > /dev/null || exit
 fi
 
@@ -423,7 +445,7 @@ if needs_build "${tracker_file}" "libxml2"; then
     pushd libxml2-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-python \
         --without-lzma --with-zlib="${embed_libdir}" --enable-shared \
-        --disable-static "${macos_cross_configure[@]}" || exit
+        --disable-static "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "libxml2"
@@ -443,7 +465,7 @@ if needs_build "${tracker_file}" "libxslt"; then
     OLDLD="${LDFLAGS}"
     export LDFLAGS="${LDFLAGS} -Wl,-undefined,dynamic_lookup" # Required for shared library to build
     ./configure --prefix="${embed_dir}" --enable-shared --disable-static --with-python=no \
-        --disable-dependency-tracking --with-libxml-prefix="${embed_dir}" "${macos_cross_configure[@]}" || exit
+        --disable-dependency-tracking --with-libxml-prefix="${embed_dir}" "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "libxslt"
@@ -462,26 +484,10 @@ if needs_build "${tracker_file}" "libyaml"; then
     rm -f ./config/config.sub
     cp ../libxml2-*/config.sub ./config/config.sub || exit
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --enable-shared \
-        --disable-static "${macos_cross_configure[@]}" || exit
+        --disable-static "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "libyaml"
-    popd > /dev/null || exit
-fi
-
-# zlib
-if needs_build "${tracker_file}" "zlib"; then
-    info "   -> Building zlib..."
-    zlib_url="${dep_cache}/${zlib_file}"
-    curl -f -L -s -o zlib.tar.gz "${zlib_url}" ||
-        error "zlib download error encountered"
-    tar -xzf zlib.tar.gz || exit
-    pushd zlib-* > /dev/null || exit
-    ./configure --prefix="${embed_dir}" \
-        "${macos_cross_configure_zlib[@]}" || exit
-    make || exit
-    make install || exit
-    mark_build "${tracker_file}" "zlib"
     popd > /dev/null || exit
 fi
 
@@ -498,7 +504,7 @@ if needs_build "${tracker_file}" "readline"; then
         export LDFLAGS="${LDFLAGS} -lncurses"
     fi
     ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
-        "${macos_cross_configure[@]}" || exit
+        "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "readline"
@@ -527,9 +533,6 @@ if needs_build "${tracker_file}" "openssl"; then
     make || exit
     make install_sw || exit
     mark_build "${tracker_file}" "openssl"
-    if [ -z "${LD_RPATH}" ]; then
-        export LDFLAGS="${CURRENT_LDFLAGS}"
-    fi
     popd > /dev/null || exit
 fi
 
@@ -544,7 +547,7 @@ if needs_build "${tracker_file}" "libssh2"; then
     rm -f config.sub
     cp ../libxml2-*/config.sub ./config.sub || exit
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --enable-shared \
-        --disable-static --with-libssl-prefix="${embed_dir}" "${macos_cross_configure[@]}" || exit
+        --disable-static --with-libssl-prefix="${embed_dir}" "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "libssh2"
@@ -562,7 +565,7 @@ if needs_build "${tracker_file}" "libarchive"; then
 
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --with-zlib --without-bz2lib \
         --without-iconv --without-libiconv-prefix --without-nettle --without-openssl \
-        --without-xml2 --without-expat --enable-shared --disable-static "${macos_cross_configure[@]}" || exit
+        --without-xml2 --without-expat --enable-shared --disable-static "${cross_configure[@]}" || exit
 
     # This is a quick hack to work around glibc-2.36 updates that
     # causes problems when attempting to include linux/fs.h. It
@@ -595,7 +598,7 @@ if needs_build "${tracker_file}" "curl"; then
     pushd curl-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 \
         --disable-ldap --with-libssh2 --with-ssl --enable-shared --disable-static \
-        "${macos_cross_configure[@]}" || exit
+        "${cross_configure[@]}" || exit
     make || exit
     make install || exit
     mark_build "${tracker_file}" "curl"
@@ -664,7 +667,7 @@ if needs_build "${tracker_file}" "ruby"; then
     ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
         --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
         --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
-        "${macos_cross_configure[@]}" "${macos_cross_configure_ruby[@]}" || exit
+        "${cross_configure[@]}" "${cross_configure_ruby[@]}" || exit
     make miniruby || exit
     make || exit
     make install || exit
@@ -724,12 +727,9 @@ if [ "${target_os}" = "darwin" ]; then
     done < <( find "${embed_libdir}" -name "*.bundle" )
 fi
 
-# go launcher
-info "   -> Building vagrant launcher..."
-pushd "${root}" > /dev/null || exit
-make bin/launcher || exit
-mv bin/vagrant "${build_dir}/bin/vagrant" || exit
-popd > /dev/null || exit
+# Install the launcher
+info "   -> Installing vagrant launcher..."
+cp "${launcher_path}" "${build_dir}/bin/vagrant" || exit
 
 # install gemrc file
 info " -> Writing default gemrc file..."

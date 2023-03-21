@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# Generate substrate information
+
+run_sha="$(git log --format=%h -1 ./substrate/run.sh)" ||
+    failure "Could not generate commit sha for ./substrate/run.sh"
+deps_sha="$(git log --format=%h -1 ./substrate/deps.sh)" ||
+    failure "Could not generate commit sha for ./substrate/deps.sh"
+
+sub_cache_base="substrate-${run_sha}+${deps_sha}"
+
+sub32="deb-${sub_cache_base}-32"
+printf "deb-32-substrate-id=%s\n" "${sub32}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub32}"; then
+    printf "deb-32-substrate-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+sub64="deb-${sub_cache_base}-64"
+printf "deb-64-substrate-id=%s\n" "${sub64}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub64}"; then
+    printf "deb-64-substrate-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+pkg_sha="$(git log --format=%h -1 ./package/build-deb)" ||
+    failure "Could not generate commit sha for ./package/build-deb"
+pkg_support_sha="$(git log --format=%h -1 ./package/support/deb)" ||
+    failure "Could not generate commit sha for ./package/support/deb"
+vagrant_sha="${VAGRANT_SHASUM:0:10}"
+pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_support_sha}"
+
+inst32="deb-install-${pkg_base}-32"
+printf "deb-32-install-id=%s\n" "${inst32}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${inst32}"; then
+    printf "deb-32-install-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+inst64="deb-install-${pkg_base}-64"
+printf "deb-64-install-id=%s\n" "${inst64}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${inst64}"; then
+    printf "deb-64-install-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+pkgs="deb-pkgs-${pkg_base}"
+printf "deb-packages-id=%s\n" "${pkgs}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${pkgs}"; then
+    printf "deb-packages-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi

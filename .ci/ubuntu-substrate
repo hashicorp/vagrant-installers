@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+# This script will build a 32 or 64 bit ubuntu substrate. It
+# requires root permissions as it does this within a chroot
+# environment.
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+substrate_arch="${1}"
+output_dir="${2}"
+
+if [ "${substrate_arch}" != "32" ] && [ "${substrate_arch}" != "64" ]; then
+    failure "Invalid architecture value provided (%s), valid values: 32 or 64" \
+        "${substrate_arch}"
+fi
+
+mkdir -p "${output_dir}" ||
+    failure "Invalid output directory path provided: %s" "${output_dir}"
+pushd "${output_dir}"
+output_dir="$(pwd)" ||
+    failure "Could not read full path of output directory"
+popd
+
+# If the script isn't being run as root, fail
+debug "performing root user check"
+if [ "$(id -u)" != "0" ]; then
+    failure "Script must be run as root"
+fi
+
+# Define the directory to use for the chroot
+chroot_dir="/var/chroot"
+# Define the project name since this is used in the chroot
+# for access to the repository
+project_name="${root##*/}"
+
+# Create the chroot
+debug "creating ubuntu chroot"
+"${root}/.ci/helpers/ubuntu-chroot-create" "${substrate_arch}" "${chroot_dir}" ||
+    failure "Could not create ubuntu chroot environment"
+
+# The initial chroot is created. Now we need to get it prepared
+# for the substrate build.
+debug "preparing ubuntu chroot for substrate build"
+chroot "${chroot_dir}" "/${project_name}/.ci/helpers/ubuntu-chroot-setup" ||
+    failure "Could not fully setup ubuntu chroot environment"
+
+# Define the directory within the chroot for the artifacts
+# to be left
+chroot_output="artifacts"
+chroot_output_directory="${chroot_dir}/${chroot_output}"
+
+debug "creating directory for artifacts in chroot (%s)" "${chroot_output_directory}"
+mkdir -p "${chroot_output_directory}" ||
+    failure "Could not create chroot output directory (%s)" "${chroot_output_directory}"
+
+# Build the substrate. If a 32 bit substrate build
+# was requested, use setarch to provide a 32 bit environment
+if [ "${substrate_arch}" = "32" ]; then
+    debug "starting the substrate build (32-bit mode)"
+    chroot "${chroot_dir}" setarch i386 "/${project_name}/substrate/run.sh" "/${chroot_output}" ||
+        failure "Failed to successfully build substrate"
+else
+    debug "starting the substrate build"
+    chroot "${chroot_dir}" "/${project_name}/substrate/run.sh" "/${chroot_output}" ||
+        failure "Failed to successfully build substrate"
+fi
+debug "substrate build is complete, moving artifacts - %s -> %s" \
+    "${chroot_output_directory}" "${output_dir}"
+
+mv -f "${chroot_output_directory}"/* "${output_dir}"/ ||
+    failure "Unable to relocate substrate build artifacts to final destination"
+
+# And we are done!
