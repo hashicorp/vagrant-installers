@@ -56,6 +56,9 @@ export GEMRC="${embed_dir}/etc/gemrc"
 # from the substrate
 export PATH="${embed_dir}/bin:${PATH}"
 
+# Mark where the libraries can be found
+export LD_LIBRARY_PATH="${embed_dir}/lib"
+
 info "Installing Vagrant RubyGem..."
 gem install "${gem_file}" || exit
 
