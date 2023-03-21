@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - 'build-arch-*'
+
+jobs:
+  build-archlinux-package:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build Arch Linux Package
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-arch.yml
+    secrets: inherit
+  publish:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [build-archlinux-package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Arch Linux package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-archlinux-package.outputs.arch-package-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create prerelease
+        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_VERSION: ${{ needs.build-archlinux-package.outputs.vagrant-version }}
