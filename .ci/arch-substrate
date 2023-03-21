@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+# This script will build an arch linux substrate.
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+output_dir="${1}"
+
+if [ -z "${output_dir}" ]; then
+    failure "Output directory path is required"
+fi
+
+mkdir -p "${output_dir}" ||
+    failure "Invalid output directory path provided: %s" "${output_dir}"
+pushd "${output_dir}"
+output_dir="$(pwd)" ||
+    failure "Could not read full path of output directory"
+popd
+
+# Name for the arch linux container
+ctn_name="archlinux"
+# Name for the project (root directory will be mounted using this)
+proj_name="${root##*/}"
+
+debug "setting up archlinux"
+"${root}/.ci/helpers/archlinux-setup" "${ctn_name}" ||
+    failure "Failed to setup archlinux"
+
+# Set names for where the output should end up
+o_dirname="generated-output"
+o_fullpath="${root}/${o_dirname}"
+# NOTE: $root is mounted as /$proj_name via setup script
+o_ctnpath="/tmp/${o_dirname}"
+
+debug "starting building substrate"
+lxc exec "${ctn_name}" -- "/${proj_name}/substrate/run.sh" "${o_ctnpath}" ||
+    failure "Failed to build the arch linux substrate"
+
+debug "extracting substrate artifact from container"
+lxc file pull --recursive "${ctn_name}${o_ctnpath}" "${root}" ||
+    failure "Unable to extract substrate artifact from container"
+
+# Stop the container
+# NOTE: We don't error since we don't really
+#       care if it stops or not
+debug "stopping the archlinux container"
+lxc stop "${ctn_name}"
+
+contents=( "${o_fullpath}"/* )
+debug "output of substrate build: ${contents[*]}"
+
+# Move substrate to destination directory
+mv "${o_fullpath}/"* "${output_dir}/" ||
+    failure "Unable to move substrate artifacts to output directory"
+
+contents=( "${output_dir}/"* )
+printf "Substrate artifact build complete: %s\n" "${contents[*]}"
