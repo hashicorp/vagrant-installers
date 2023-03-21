@@ -109,12 +109,12 @@ fi
 
 if [[ "${uname}" = *"Linux"* ]]; then
     target_os="linux"
-    if [[ -f /etc/centos-release ]]; then
+    if [ -f /etc/centos-release ]; then
         linux_os="centos"
-    elif [[ "$(</etc/lsb-release)" = *"Ubuntu"* ]]; then
+    elif [ -f /etc/lsb-release ] && [[ "$(</etc/lsb-release)" = *"Ubuntu"* ]]; then
         export DEBIAN_FRONTEND=noninteractive
         linux_os="ubuntu"
-    elif [[ -f /etc/arch-release ]]; then
+    elif [ -f /etc/arch-release ]; then
         linux_os="archlinux"
     else
         linux_os="linux"
@@ -279,7 +279,9 @@ if [[ "${target_os}" = "darwin" ]]; then
     export LDFLAGS="${LDFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT} -Wl,-rpath,${embed_libdir}"
 else
     export CFLAGS="${CFLAGS} -fPIC"
-    export LDFLAGS="${LDFLAGS} -Wl,-rpath=/opt/vagrant/embedded/lib"
+    # NOTE: The weird quoting here is required to get the $ORIGIN value to pass through
+    #       unaltered to the linker
+    export LDFLAGS="${LDFLAGS} -Wl,-rpath=${embed_libdir}:"'\$$ORIGIN/../lib,--enable-new-dtags'
 fi
 
 # Now that we have any overrides in place
