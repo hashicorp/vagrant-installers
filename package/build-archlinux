@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+# This script takes a compressed artifact of a
+# vagrant install directory, unpacks it, and
+# creates an installer deb
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/package/common-setup"
+
+installer_file="${1?Vagrant installed zip file required}"
+output_dir="${2?Package output directory required}"
+version="${3?Vagrant version is required}"
+release="${4}"
+
+# Release isn't really supported now but in case it
+# ever is we allow it to be set
+if [ -z "${release}" ]; then
+    release="1"
+fi
+
+# Get full paths
+installer_file="$(file_directory "${installer_file}")/${installer_file##*/}"
+mkdir -p "${output_dir}" || exit
+pushd "${output_dir}" > /dev/null || exit
+output_dir="$(pwd)" || exit
+popd > /dev/null || exit
+
+# Create our output file path
+output_path="${output_dir}/vagrant-${version}-${release}-x86_64.pkg.tar.zst"
+
+# Create a working directory and expand the artifact
+install_dir="$(mktemp -p /tmp -d vagrant-install.XXXXXX)" || exit
+pushd "${install_dir}" > /dev/null || exit
+install_dir="$(pwd)" || exit
+
+info "Expanding vagrant installation..."
+unzip -q "${installer_file}" || exit
+popd > /dev/null || exit
+
+# Create a working directory for building the package
+package_dir="$(mktemp -p /tmp -d vagrant-package.XXXXX)" || exit
+pushd "${package_dir}" > /dev/null || exit
+package_dir="$(pwd)"
+popd > /dev/null || exit
+
+# Copy in our PKGBUILD file
+cp "${root}/package/support/archlinux/PKGBUILD.local" \
+    "${package_dir}/PKGBUILD" || exit
+
+# Update the Vagrant version and release numbers
+sed -i "s/%VAGRANT_VERSION%/${version}/" "${package_dir}/PKGBUILD" || exit
+sed -i "s/%RELEASE_NUMBER%/${release}/" "${package_dir}/PKGBUILD" || exit
+
+# Compress the install for the package build
+pushd "${package_dir}" > /dev/null || exit
+
+tar -f substrate.tar.gz --directory="${install_dir}" -cz ./ || exit
+
+# If we are running as root then we need to create a user
+# account to execute makepkg as it won't let us as root
+if [ "$(id -u)" = "0" ]; then
+    useradd -s /usr/bin/bash -M pkg || exit
+    # Make sure the directories we need are accessible and
+    # that we can write the result
+    chmod a+rx "${install_dir}" || exit
+    chmod a+rwx "${package_dir}" || exit
+    chmod a+rwx "${output_dir}" || exit
+
+    echo "pkg ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/all
+    chmod 600 /etc/sudoers.d/all || exit
+    su pkg -c "makepkg --syncdeps --force --noconfirm" || exit
+else
+    # Build the package
+    makepkg --syncdeps --force --noconfirm || exit
+fi
+
+# Move the package to the destination path
+mv ./*.zst "${output_path}" || exit
+
+# Clean up directories
+popd > /dev/null || exit
+rm -rf "${package_dir}" "${install_dir}"

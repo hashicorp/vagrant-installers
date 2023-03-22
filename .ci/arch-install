@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+# This script will install a provided vagrant gem into
+# the provided substrate and saves the result in the
+# output directory.
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+
+gem_dir="${1?Directory of gem file required}"
+substrate_dir="${2?Directory of substrate file required}"
+output_dir="${3?Directory for output file required}"
+
+if [ ! -d "${gem_dir}" ]; then
+    failure "Invalid path provided for gem directory (%s)" \
+        "${gem_dir}"
+fi
+
+pushd "${gem_dir}"
+gem_dir="$(pwd)" ||
+    failure "Unable to determine gem directory (%s)" "${gem_dir}"
+popd
+
+gem_files=( "${gem_dir}"/* )
+for f in "${gem_files[@]}"; do
+    debug "checking dir entry for gem - %s" "${f}"
+    if [[ "${f}" = *".gem" ]]; then
+        debug "gem file discovered - %s" "${f}"
+        gem_file="${f}"
+        break
+    fi
+done
+
+if [ -z "${gem_file}" ]; then
+    failure "Did not locate gem within gem directory (%s)" \
+        "${gem_dir}"
+fi
+
+debug "gem file for install - %s" "${gem_file}"
+
+if [ ! -d "${substrate_dir}" ]; then
+    failure "Invalid path provided for substrate directory (%s)" \
+        "${substrate_dir}"
+fi
+
+pushd "${substrate_dir}"
+substrate_dir="$(pwd)" ||
+    failure "Unable to determine substrate directory (%s)" \
+        "${substrate_dir}"
+popd
+
+substrate_files=( "${substrate_dir}"/* )
+for f in "${substrate_files[@]}"; do
+    debug "checking dir entry for substrate - %s" "${f}"
+    if [[ "${f}" = *".zip" ]]; then
+        debug "substrate file discovered - %s" "${f}"
+        substrate_file="${f}"
+        break
+    fi
+done
+if [ -z "${substrate_file}" ]; then
+    failure "Did not locate substrate within substrate directory (%s)" \
+        "${substrate_dir}"
+fi
+
+debug "substrate file for install - %s" "${substrate_file}"
+
+debug "validating output directory - %s" "${output_dir}"
+mkdir -p "${output_dir}" ||
+    failure "Invalid path provided for output directory (%s)" "${output_dir}"
+pushd "${output_dir}"
+output_dir="$(pwd)" ||
+    failure "Could not read full path of output directory"
+popd
+debug "validated output directory - %s" "${output_dir}"
+
+# Set default names
+ctn_name="archlinux"
+proj_name="${root##*/}"
+
+# Place substrate and gem in known accessible directories
+mkdir -p "${root}/install-requirements/"{substrate,gem} ||
+    failure "Failed to create temporary artifact directories"
+
+cp "${substrate_file}" "${root}/install-requirements/substrate/" ||
+    failure "Failed to copy substrate to temporary directory"
+cp "${gem_file}" "${root}/install-requirements/gem/" ||
+    failure "Failed to copy vagrant gem to temporary directory"
+
+debug "setting up archlinux"
+"${root}/.ci/helpers/archlinux-setup" "${ctn_name}"
+
+debug "installing vagrant into substrate"
+lxc exec "${ctn_name}" -- "/${proj_name}/package/install-vagrant" \
+    "/${proj_name}/install-requirements/substrate/${substrate_file##*/}" \
+    "/${proj_name}/install-requirements/gem/${gem_file##*/}" \
+    "/tmp/vagrant-install" ||
+    fail "Failed to install vagrant into substrate"
+
+debug "extracting install artifact from container -> %s" "${root}"
+lxc file pull --recursive --verbose "${ctn_name}/tmp/vagrant-install" "${root}" ||
+    failure "Unable to extract install artifact from container"
+
+# NOTE: we don't care if the stop fails
+debug "stopping the archlinux container"
+#lxc stop "${ctn_name}"
+
+# Move contents to output directory
+mv "${root}/vagrant-install/"* "${output_dir}/" ||
+    failure "Unable to move install artifacts to destination directory"
+
+contents=( "${output_dir}"* )
+printf "Install artifact build complete: %s\n" "${contents[*]}"

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# Generate substrate information
+
+run_sha="$(git log --format=%h -1 ./substrate/run.sh)" ||
+    failure "Could not generate commit sha for ./substrate/run.sh"
+deps_sha="$(git log --format=%h -1 ./substrate/deps.sh)" ||
+    failure "Could not generate commit sha for ./substrate/deps.sh"
+
+sub_cache_base="substrate-${run_sha}+${deps_sha}"
+
+sub="arch-${sub_cache_base}"
+printf "arch-substrate-id=%s\n" "${sub}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub}"; then
+    printf "arch-substrate-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+pkg_sha="$(git log --format=%h -1 ./package/build-archlinux)" ||
+    failure "Could not generate commit sha for ./package/build-archlinux"
+pkg_support_sha="$(git log --format=%h -1 ./package/support/archlinux)" ||
+    failure "Could not generate commit sha for ./package/support/archlinux"
+vagrant_sha="${VAGRANT_SHASUM:0:10}"
+pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_support_sha}"
+
+inst="arch-install-${pkg_base}"
+printf "arch-install-id=%s\n" "${inst}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${inst}"; then
+    printf "arch-install-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+pkgs="arch-pkgs-${pkg_base}"
+printf "arch-package-id=%s\n" "${pkgs}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${pkgs}"; then
+    printf "arch-package-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
