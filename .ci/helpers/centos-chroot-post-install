@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+prefix="${1}"
+
+if [ ! -d "${prefix}" ]; then
+  printf "Named directory does not exist - %s\n" "${prefix}"
+  exit 1
+fi
+
+rm -f "${prefix}/"*.rpm
+touch "${prefix}/etc/mtab"
+
+umount "${prefix}/proc"
+umount "${prefix}/sys"
+
+if [ -e "${prefix}/etc/modprobe.d/modprobe.conf.dist" ]; then
+    cp  "${prefix}/etc/modprobe.d/modprobe.conf.dist" "${prefix}/etc/modprobe.conf"
+fi

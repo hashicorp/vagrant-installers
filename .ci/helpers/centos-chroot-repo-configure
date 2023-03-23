@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+prefix="${1?Prefix required}"
+
+/usr/lib/rinse/common/10-resolv.conf.sh "${prefix}" || exit
+/usr/lib/rinse/common/15-mount-proc.sh "${prefix}" || exit
+/usr/lib/rinse/common/20-dev-zero.sh "${prefix}" || exit
+
+sed -i 's/$releasever/6.10/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+#sed -i 's/\/centos//' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+sed -i 's/mirror.centos/vault.centos/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+sed -i 's/^#baseurl/baseurl/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+sed -i 's/^mirrorlist/#mirrorlist/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+
+sed -i 's/vault.centos.org/archive.kernel.org\/centos-vault/' \
+    "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+
+sed -i 's/https:/http:/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit

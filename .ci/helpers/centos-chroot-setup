@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+# This script should not be called directly. It handles
+# doing the internal setup of the centos chroot
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "$(id -u)" != "0" ]; then
+    failure "Script must be run as root"
+fi
+
+if [ -f /.is-32-bit ]; then
+    arch="i386"
+else
+    arch="x86_64"
+fi
+
+debug "installing scl repository for updated build tools"
+setarch "${arch}" yum install -y -q centos-release-scl || exit
+
+debug "updating scl repo list"
+sed -i 's/\/centos//' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+sed -i 's/mirror.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+sed -i 's/buildlogs.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+sed -i 's/debuginfo.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+sed -i 's/^# *baseurl/baseurl/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+
+sed -i 's/\/centos//' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+sed -i 's/mirror.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+sed -i 's/buildlogs.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+sed -i 's/debuginfo.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+sed -i 's/^# *baseurl/baseurl/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+
+debug "updating scl to kernel.org repo"
+sed -i 's/vault.centos.org/archive.kernel.org\/centos-vault\/centos/' \
+    /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
+sed -i 's/vault.centos.org/archive.kernel.org\/centos-vault\/centos/' \
+    /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
+
+# Now do an intial update
+debug "running system update"
+yum update -y
+
+# Install base tooling
+debug "installing base tools"
+yum groupinstall -y "development tools" || exit
+yum install -y \
+    autoconf \
+    curl \
+    git \
+    make \
+    perl \
+    python-devel \
+    tar || exit
+
+# Now install updated build tools
+debug "installing build tools"
+
+yum install -y \
+    chrpath \
+    devtoolset-8-toolchain \
+    gcc \
+    rh-perl524 \
+    rh-perl524-perl-open \
+    rh-perl524-perl-Data-Dumper \
+    rh-perl524-perl-Thread-Queue \
+    glibc-*.i686 \
+    libgcc-*.i686 \
+    libstdc++-*.i686 || exit
+
+# Enable the updated versions
+echo '. /opt/rh/devtoolset-8/enable' >> /etc/profile
+echo '. /opt/rh/rh-perl524/enable' >> /etc/profile
+
+debug "enabling new dev tools for auto builds"
+. /opt/rh/devtoolset-8/enable
+. /opt/rh/rh-perl524/enable
