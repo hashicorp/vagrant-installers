@@ -36,7 +36,7 @@ xz_file="xz-${xz_version}.tar.gz"                     # https://tukaani.org/xz/x
 zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
 
 # Used for centos builds
-libxcrypt_file="libxcrypt-v4.4.28.tar.gz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.gz
+libxcrypt_file="libxcrypt-4.4.33.tar.xz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.xz
 
 function info() {
     local msg_template="${1}\n"
@@ -301,10 +301,9 @@ if [ "${linux_os}" = "centos" ]; then
             info "   -> Installing libxcrypt-compat..."
             curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" ||
                 error "libxcrypt download error encountered"
-            tar xzf libxcrypt.tar.gz || exit
+            tar xf libxcrypt.tar.gz || exit
             pushd libxcrypt* > /dev/null || exit
 
-            ./autogen.sh || exit
             ./configure --prefix="${embed_dir}" --libdir="${embed_libdir}" || exit
             make || exit
             make install || exit
