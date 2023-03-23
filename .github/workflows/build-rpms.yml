@@ -1,0 +1,221 @@
+on:
+  workflow_call:
+    inputs:
+      vagrant_draft_name:
+        description: Name of the Vagrant repository draft release containing gem for build
+        required: false
+        type: string
+      vagrant_release_name:
+        description: Name of the Vagrant repository release containing gem for build
+        required: false
+        type: string
+    outputs:
+      rpm-packages-id:
+        description: Cache identifier for rpm packages
+        value: ${{ jobs.info.outputs.rpm-packages-id }}
+      vagrant-version:
+        description: Version of Vagrant package built
+        value: ${{ jobs.info.outputs.vagrant-version }}
+
+jobs:
+  info:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    outputs:
+      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      rpm-32-substrate-id: ${{ steps.inspect.outputs.rpm-32-substrate-id }}
+      rpm-32-substrate-exists: ${{ steps.inspect.outputs.rpm-32-substrate-exists }}
+      rpm-32-install-id: ${{ steps.inspect.outputs.rpm-32-install-id }}
+      rpm-32-install-exists: ${{ steps.inspect.outputs.rpm-32-install-exists }}
+      rpm-64-substrate-id: ${{ steps.inspect.outputs.rpm-64-substrate-id }}
+      rpm-64-substrate-exists: ${{ steps.inspect.outputs.rpm-64-substrate-exists }}
+      rpm-64-install-id: ${{ steps.inspect.outputs.rpm-64-install-id }}
+      rpm-64-install-exists: ${{ steps.inspect.outputs.rpm-64-install-exists }}
+      rpm-packages-id: ${{ steps.inspect.outputs.rpm-packages-id }}
+      rpm-packages-exists: ${{ steps.inspect.outputs.rpm-packages-exists }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot vagrant_token;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+      - name: Install Ruby
+        run: sudo apt-get install -yq ruby
+        env:
+          RPMIAN_FRONTEND: noninteractive
+      - name: Fetch Vagrant RubyGem
+        id: vagrant-gem
+        run: ./.ci/fetch-vagrant-rubygem
+        env:
+          VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
+          VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+      - name: Gather information
+        id: inspect
+        run: ./.ci/rpm-build-information
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      - name: Store Vagrant RubyGem
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-rubygem
+          path: ./gem
+      - name: Build launchers
+        run: make bin/launcher/linux
+      - name: Store Launchers
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+  build-substrate-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-substrate-exists != 'true' }}
+    needs: [info]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Launchers
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+      - name: Build Substrate 32-bit
+        run: sudo ./.ci/centos-substrate 32 ./artifacts
+      - name: Cache Substrate 32-bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-32-substrate-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-substrate-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-64-substrate-exists != 'true' }}
+    needs: [info]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Launchers
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+      - name: Build Substrate 64-bit
+        run: sudo ./.ci/centos-substrate 64 ./artifacts
+      - name: Cache Substrate 64-bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-64-substrate-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-install-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-install-exists != 'true' && !cancelled() && !failure() }}
+    needs: [info, build-substrate-32]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrate
+        run: ./.ci/restore-cache "${CACHE_ID}" ./substrates
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-32-substrate-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch RubyGem
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-rubygem
+          path: ./gem
+      - name: Run install
+        run: sudo ./.ci/centos-install ./gem ./substrates ./artifacts
+      - name: Cache Install 32-bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-32-install-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-install-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-64-install-exists != 'true' && !cancelled() && !failure() }}
+    needs: [info, build-substrate-64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrate
+        run: ./.ci/restore-cache "${CACHE_ID}" ./substrates
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-64-substrate-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch RubyGem
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-rubygem
+          path: ./gem
+      - name: Run install
+        run: sudo ./.ci/centos-install ./gem ./substrates ./artifacts
+      - name: Cache Install 64-bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-64-install-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-packages:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-packages-exists != 'true' && !cancelled() && !failure() }}
+    needs: [info, build-install-32, build-install-64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Install 32-bit
+        run: ./.ci/restore-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-32-install-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch Install 64-bit
+        run: ./.ci/restore-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-64-install-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+      - name: Install fpm
+        run: gem install --no-document fpm
+      - name: Package 32-bit
+        run: ./package/build-rpm ./artifacts/installed_centos_386.zip ./pkgs "${VERSION}"
+        env:
+          VERSION: ${{ needs.info.outputs.vagrant-version }}
+      - name: Package 64-bit
+        run: ./package/build-rpm ./artifacts/installed_centos_x86_64.zip ./pkgs "${VERSION}"
+        env:
+          VERSION: ${{ needs.info.outputs.vagrant-version }}
+      - name: Cache Vagrant rpms
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkgs
+        env:
+          CACHE_ID: ${{ needs.info.outputs.rpm-packages-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
