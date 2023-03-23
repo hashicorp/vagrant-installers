@@ -80,10 +80,11 @@ fpm -p "${output_path}" \
     --prefix '/' \
     --maintainer "HashiCorp <support@hashicorp.com>" \
     --url "https://www.vagrantup.com" \
-    --epoch 1 \
+    --epoch "${release}" \
     --deb-user root \
     --deb-group root \
-    "${package_dir}" || exit
+    -C "${package_dir}" \
+    . || exit
 
 # Clean up our working directories
 rm -rf "${install_dir}"
