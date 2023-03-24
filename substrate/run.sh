@@ -78,20 +78,26 @@ function mark_build() {
 }
 
 # Verify arguments
-if [ "$#" -ne "1" ]; then
-    info "Usage: $0 OUTPUT-DIR"
+if [ "$#" -gt "2" ]; then
+    info "Usage: $0 OUTPUT-DIR [ARCH]"
     exit 1
 fi
 
 # Get the full path to the output directory
 # so we write to the correct final location
-output_dir="${1}"
+output_dir="${1?Output directory required}"
 if [ ! -d "${output_dir}" ]; then
     mkdir -p "${output_dir}" || exit
 fi
 pushd "${output_dir}" > /dev/null || exit
 output_dir="$(pwd)" || exit
 popd > /dev/null || exit
+
+# The second argument is optional and can
+# be used to force a target architecture.
+# This is currently used for doing 32bit
+# builds for centos
+forced_arch="${2}"
 
 info "Building Vagrant substrate..."
 
@@ -136,10 +142,6 @@ host_ident="${target_ident}"
 info "  -> Detected host system: %s" "${host_ident}"
 info "  -> Readying build directories..."
 
-cache_dir="$(mktemp -d vagrant-substrate.XXXXX)" || exit
-pushd "${cache_dir}" > /dev/null || exit
-cache_dir="$(pwd)" || exit
-popd > /dev/null || exit
 build_dir="/opt/vagrant"
 base_bindir="${build_dir}/bin"
 embed_dir="${build_dir}/embedded"
@@ -148,9 +150,24 @@ embed_libdir="${embed_dir}/lib"
 tracker_file="${build_dir}/.tracker"
 
 if [ -z "${ENABLE_REBUILD}" ]; then
+    cache_dir="$(mktemp -d vagrant-substrate.XXXXX)" || exit
+    pushd "${cache_dir}" > /dev/null || exit
+    cache_dir="$(pwd)" || exit
+    popd > /dev/null || exit
     info "   * Rebuild support is currently disabled"
-    rm -rf "${build_dir:?}/"* || exit
-    rm -f "${tracker_file}" || exit
+    rm -rf "${build_dir:?}" || exit
+else
+    info "   * Rebuild support is currently enabled"
+    cache_dir="./vagrant-substrate-cache-rebuild-enabled"
+    if [ -d "${build_dir}" ] && [ ! -d "${cache_dir}" ]; then
+        info "  + Removing existing /opt/vagrant directory"
+        rm -rf "${build_dir:?}"
+    fi
+
+    mkdir -p "${cache_dir}" || exit
+    pushd "${cache_dir}" > /dev/null || exit
+    cache_dir="$(pwd)" || exit
+    popd > /dev/null || exit
 fi
 
 mkdir -p "${base_bindir}" || exit
@@ -165,15 +182,64 @@ pushd "${cache_dir}" > /dev/null || exit
 info " -> Building substrate requirements..."
 
 export PKG_CONFIG_PATH="${embed_dir}/lib/pkgconfig"
-export CFLAGS="-I${embed_dir}/include"
-export CPPFLAGS="-I${embed_dir}/include"
-export LDFLAGS="-L${embed_dir}/lib"
+export CFLAGS="${CFLAGS} -I${embed_dir}/include"
+export CPPFLAGS="${CPPFLAGS} -I${embed_dir}/include"
+export LDFLAGS="${LDFLAGS} -L${embed_dir}/lib"
 
 # Default these cross configure variables to empty arrays
 cross_configure=()
 cross_configure_libffi=()
 cross_configure_zlib=()
 cross_configure_ruby=()
+
+if [ "${target_os}" = "linux" ] && [ -n "${forced_arch}" ]; then
+    info " ** Configuring build for forced architecture (%s)" "${forced_arch}"
+
+    # Set the build to what we are actually building on. Define
+    # the target with the forced architecture.
+    build_host="${host_arch}-linux-gnu"
+    target_host="${forced_arch}-linux-gnu"
+
+    if [[ "${forced_arch}" = *"386"* ]] || [[ "${forced_arch}" = *"686"* ]]; then
+        target_arch="386"
+    elif [[ "${forced_arch}" = *"amd64"* ]] || [[ "${forced_arch}" = *"86"*"64"* ]]; then
+        target_arch="x86_64"
+    else
+        target_arch="${forced_arch}"
+    fi
+    target_ident="${linux_os}_${target_arch}"
+
+    # Modifications required to configure scripts
+    cross_configure+=(
+        "--host=${target_host}"
+        "--target=${target_host}"
+        "--build=${build_host}"
+    )
+
+    if [ "${target_arch}" = "386" ]; then
+        export CFLAGS="${CFLAGS} -m32 -march=${forced_arch}"
+        export LDFLAGS="${LDFLAGS} -m32"
+
+    fi
+
+    info "  ** Build host: %s" "${build_host}"
+    info "  ** Target host: %s" "${target_host}"
+    info "  ** Target arch: %s" "${target_arch}"
+    info "  ** Target ident: %s" "${target_ident}"
+
+    # Add some adjustments so assembly code in the Ruby
+    # source is handled properly
+    if [ "${target_arch}" = "386" ]; then
+        # The following environment variables were required to get
+        # Ruby to build properly without throwing errors on when
+        # dealing with assembly
+        gcc_path="$(command -v gcc)" || exit
+        export CC="${gcc_path} -m32"
+        export CC_FOR_TARGET="${CC}"
+        export CXX="${CC}"
+        export CXX_FOR_TARGET="${CC}"
+    fi
+fi
 
 if [[ "${target_os}" = "darwin" ]]; then
     info  " ** Configuring build for macOS"
@@ -279,6 +345,8 @@ if [[ "${target_os}" = "darwin" ]]; then
     export LDFLAGS="${LDFLAGS} -mmacosx-version-min=${macos_deployment_target} ${ISYSROOT} -Wl,-rpath,${embed_libdir}"
 else
     export CFLAGS="${CFLAGS} -fPIC"
+    export CXXFLAGS="${CXXFLAGS} ${CFLAGS}"
+    export CPPFLAGS="${CPPFLAGS} ${CFLAGS}"
     # NOTE: The weird quoting here is required to get the $ORIGIN value to pass through
     #       unaltered to the linker
     export LDFLAGS="${LDFLAGS} -Wl,-rpath=${embed_libdir}:"'\$$ORIGIN/../lib,--enable-new-dtags'
@@ -378,7 +446,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
         tar -xjf libgpg-error.tar.bz2 || exit
         pushd libgpg-error-* > /dev/null || exit
         ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
-            "${cross_configure[@]}" || exit
+            --enable-install-gpg-error-config "${cross_configure[@]}" || exit
         make || exit
         make install || exit
         mark_build "${tracker_file}" "libgpg_error"
@@ -528,6 +596,8 @@ if needs_build "${tracker_file}" "openssl"; then
     #       https://github.com/openssl/openssl/issues/8823
     if [ "${MACOS_TARGET}" = "arm64" ]; then
         ./Configure zlib no-asm no-tests shared --prefix="${embed_dir}" darwin64-arm64-cc || exit
+    elif [ "${target_os}" = "linux" ] && [ "${target_arch}" = "386" ]; then
+        ./Configure zlib no-tests shared --prefix="${embed_dir}" linux-generic32 || exit
     else
         ./config --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" zlib shared || exit
     fi
@@ -657,6 +727,24 @@ if needs_build "${tracker_file}" "ruby"; then
         error "ruby download error encountered"
     unzip -q ruby.zip || exit
     pushd ruby-* > /dev/null || exit
+    # If we are building on centos and the target architecture doesn't
+    # match the host we need to build a ruby for the host architecture
+    # as it's required for doing a cross compilation
+    if [ "${linux_os}" = "centos" ] && [ "${target_arch}" != "${host_arch}" ]; then
+        # Only build the host Ruby if one isn't already available
+        if [ ! -f "/usr/local/bin/ruby" ]; then
+            info "    ** Building Ruby for host to enable cross compile"
+            ./configure --disable-debug --disable-install-doc --disable-install-rdoc || exit
+            make miniruby || exit
+            make || exit
+            make install || exit
+            popd > /dev/null || exit
+            rm -rf ./ruby-* || exit
+            unzip -q ruby.zip || exit
+            pushd ruby-* > /dev/null || exit
+            info "    ** Proceeding to substrate Ruby build"
+        fi
+    fi
     # NOTE: Ruby uses downcased environment variables for appending. If upcased
     #       variables are used, they are a full replacement
     export cflags="${CFLAGS}"
@@ -665,7 +753,7 @@ if needs_build "${tracker_file}" "ruby"; then
     unset CFLAGS
     unset CPPFLAGS
     unset CXXFLAGS
-    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc \
+    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc --disable-install-rdoc\
         --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
         --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
         "${cross_configure[@]}" "${cross_configure_ruby[@]}" || exit
