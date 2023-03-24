@@ -58,6 +58,10 @@ export PATH="${embed_dir}/bin:${PATH}"
 
 # Mark where the libraries can be found
 export LD_LIBRARY_PATH="${embed_dir}/lib"
+# Use our cacert bundle if it exists
+if [ -f "${embed_dir}/cacert.pem" ]; then
+    export SSL_CERT_FILE="${embed_dir}/cacert.pem"
+fi
 
 info "Installing Vagrant RubyGem..."
 gem install "${gem_file}" || exit
