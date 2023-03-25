@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+# This script should not be called directly. It handles
+# doing the internal creation of the ubuntu chroot.
+
+# CA certs are fetched from here: https://curl.se/docs/caextract.html
+
+# Date of cacert.pem file to fetch
+cacert_date="2023-01-10"
+# Checksum of cacert.pem file
+cacert_sum="fb1ecd641d0a02c01bc9036d513cb658bbda62a75e246bedbc01764560a639f0"
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "$(id -u)" != "0" ]; then
+    failure "Script must be run as root"
+fi
+
+substrate_arch="${1?Chroot architecture required}"
+chroot_dir="${2?Path to chroot is required}"
+mkdir -p "${chroot_dir}" || exit
+pushd "${chroot_dir}"
+chroot_dir="$(pwd)" || exit
+popd
+
+debug "created chroot directory - %s" "${chroot_dir}"
+
+# Install required packages for chroot setup
+apt-get install -qy rinse ||
+    failure "could not install required packages"
+
+# Collect arguments for passing to rinse
+rinse_args=(
+    "--distribution" "centos-6"
+    "--directory" "${chroot_dir}"
+    "--post-install" "${root}/.ci/helpers/centos-chroot-post-install"
+    "--before-post-install" "${root}/.ci/helpers/centos-chroot-repo-configure"
+    "--after-post-install" "${root}/.ci/helpers/centos-chroot-repo-finalize"
+)
+
+if [ "${substrate_arch}" = "64" ]; then
+    rinse_args+=(
+        "--arch" "amd64"
+        "--mirror" "http://archive.kernel.org/centos-vault/6.10/os/x86_64/Packages/"
+    )
+else
+    rinse_args+=(
+        "--arch" "i386"
+        "--mirror" "http://archive.kernel.org/centos-vault/6.10/os/i386/Packages/"
+    )
+fi
+
+debug "executing rinse with: %s" "${rinse_args[*]}"
+
+rinse "${rinse_args[@]}" || exit
+
+debug "installing ca certificates package"
+chroot "${chroot_dir}" yum install -y "ca-certificates" || exit
+
+debug "updating ca certificates"
+cert_dir="$(mktemp -d vagrant-cert.XXXXX)" || exit
+pushd "${cert_dir}"
+
+# Get a recent copy of ca-certs
+curl -sfLo cacert.pem "https://curl.se/ca/cacert-${cacert_date}.pem" || exit
+check_sum="$(sha256sum ./cacert.pem)"
+
+check_sum="${check_sum%% *}"
+debug "cacert.pem checksum - %s" "${check_sum}"
+
+if [ "${check_sum}" != "${cacert_sum}" ]; then
+    failure "Checksum mismatch for CA certificates file - %s != %s" \
+        "${check_sum}" "${cacert_sum}"
+fi
+
+debug "installing new ca certificates"
+mv -f ./cacert.pem "${chroot_dir}/etc/ssl/certs/ca-bundle.crt" || exit
+popd
+rm -rf "${cert_dir}"
+
+# Add a mount point for ourselves so the project is accessible
+debug "mounting project directory into chroot - %s" "${root}"
+project_name="${root##*/}"
+mount_dir="${chroot_dir}/${project_name}"
+printf "%s %s none rbind 0 0\n" "${root}" "${mount_dir}" >> /etc/fstab ||
+    failure "Could not update local fstab file"
+mkdir -p "${mount_dir}" ||
+    failure "Could not create mount point within chroot"
+mount "${mount_dir}" ||
+    failure "Could not mount project within chroot"
+
+# Also need to mount /proc in since the Ruby build relies on it
+debug "mounting /proc into chroot"
+pushd "${chroot_dir}"
+mount -t proc /proc proc/ ||
+    failure "Could not mount /proc within chroot"
+popd

@@ -2,7 +2,7 @@
 
 # This script takes a compressed artifact of a
 # vagrant install directory, unpacks it, and
-# creates an installer deb
+# creates an installer rpm
 
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
@@ -25,7 +25,7 @@ fi
 if [[ "${installer_file}" = *"386"* ]]; then
     arch="i686"
 elif [[ "${installer_file}" = *"x86_64"* ]]; then
-    arch="amd64"
+    arch="x86_64"
 else
     fail "Cannot determine architecture from installer path (%s)" \
         "${installer_file}"
@@ -39,7 +39,7 @@ output_dir="$(pwd)" || exit
 popd > /dev/null || exit
 
 # Create our output file path
-output_path="${output_dir}/vagrant_${version}-${release}_${arch}.deb"
+output_path="${output_dir}/vagrant-${version}-${release}.${arch}.rpm"
 
 # Create a working directory and expand the artifact
 install_dir="$(mktemp -d vagrant-install.XXXXXX)" || exit
@@ -67,8 +67,8 @@ mv "${install_dir}/bin" "${package_dir}/opt/vagrant" || exit
 mv "${install_dir}/embedded" "${package_dir}/opt/vagrant" || exit
 
 # Add helper scripts
-cp "${root}/package/support/deb/vagrant" "${package_dir}/usr/bin" || exit
-cp "${root}/package/support/deb/vagrant-go" "${package_dir}/usr/bin" || exit
+cp "${root}/package/support/rpm/vagrant" "${package_dir}/usr/bin" || exit
+cp "${root}/package/support/rpm/vagrant-go" "${package_dir}/usr/bin" || exit
 
 info "Building package..."
 
@@ -76,13 +76,16 @@ fpm -p "${output_path}" \
     -n vagrant \
     -v "${version}" \
     -s dir \
-    -t deb \
+    -t rpm \
     --prefix '/' \
+    --rpm-auto-add-directories \
+    --rpm-digest sha256 \
     --maintainer "HashiCorp <support@hashicorp.com>" \
     --url "https://www.vagrantup.com" \
     --epoch "${release}" \
-    --deb-user root \
-    --deb-group root \
+    --url "https://www.vagrantup.com" \
+    --license "MIT" \
+    --description "Vagrant is a tool for building and distributing development environments." \
     -C "${package_dir}" \
     . || exit
 

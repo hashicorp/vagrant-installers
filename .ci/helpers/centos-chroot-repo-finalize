@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+prefix="${1?Prefix required}"
+
+chroot "${prefix}" yum install -y -q ca-certificates || exit
+sed -i 's/http:/https:/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit

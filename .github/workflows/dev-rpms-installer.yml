@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - 'build-rpms-*'
+
+jobs:
+  build-rpm-packages:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build rpm packages
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-rpms.yml
+    secrets: inherit
+  publish:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [build-rpm-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch rpm packages
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-rpm-packages.outputs.rpm-packages-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create prerelease
+        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_VERSION: ${{ needs.build-rpm-packages.outputs.vagrant-version }}
