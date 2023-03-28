@@ -22,8 +22,15 @@ if [ -z "${release}" ]; then
 fi
 
 # Determine architecture based on file name
+# NOTE: Debian/Ubuntu use their own names for package architectures that
+#       are different from what shows up in `uname -m`.
+#         i686 -> i386
+#         x86_64 -> amd64
+#         aarch64 -> arm64
+#       We have to to honor that convention in fpm for packages to install
+#       properly, and it makes sense to also match it in filenames too.
 if [[ "${installer_file}" = *"386"* ]]; then
-    arch="i686"
+    arch="i386"
 elif [[ "${installer_file}" = *"x86_64"* ]]; then
     arch="amd64"
 else
@@ -78,6 +85,7 @@ fpm -p "${output_path}" \
     -s dir \
     -t deb \
     --prefix '/' \
+    --architecture "${arch}" \
     --maintainer "HashiCorp <support@hashicorp.com>" \
     --url "https://www.vagrantup.com" \
     --epoch "${release}" \
