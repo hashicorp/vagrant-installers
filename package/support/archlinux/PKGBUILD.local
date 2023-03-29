@@ -23,7 +23,8 @@ makedepends=('libffi>=3.2.1' 'libxml2>=2.9.4' 'libxslt>=1.1.29'
 
 package() {
     mkdir -p "${pkgdir}/opt/vagrant"
-    cp -r "${srcdir}"/* "${pkgdir}/opt/vagrant/"
+    cp -r "${srcdir}"/bin "${pkgdir}/opt/vagrant/"
+    cp -r "${srcdir}"/embedded "${pkgdir}/opt/vagrant/"
     mkdir -p "${pkgdir}/usr/bin"
     ln -s /opt/vagrant/bin/vagrant "${pkgdir}/usr/bin/vagrant"
     ln -s /opt/vagrant/bin/vagrant-go "${pkgdir}/usr/bin/vagrant-go"
