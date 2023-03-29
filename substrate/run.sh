@@ -669,6 +669,7 @@ if needs_build "${tracker_file}" "curl"; then
     pushd curl-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 \
         --disable-ldap --with-libssh2 --with-ssl --enable-shared --disable-static \
+        --without-nghttp2 --without-nghttp3 \
         "${cross_configure[@]}" || exit
     make || exit
     make install || exit
