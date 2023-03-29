@@ -818,9 +818,9 @@ fi
 
 # Install the launcher
 info "   -> Installing vagrant launcher..."
-chmod 755 "${launcher_path}" ||
-    error "Failed setting permissions on launcher"
 cp "${launcher_path}" "${build_dir}/bin/vagrant" || exit
+chmod 755 "${build_dir}/bin/vagrant" ||
+    error "Failed setting permissions on launcher"
 
 # install gemrc file
 info " -> Writing default gemrc file..."
