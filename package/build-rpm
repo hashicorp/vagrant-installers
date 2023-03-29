@@ -78,6 +78,7 @@ fpm -p "${output_path}" \
     -s dir \
     -t rpm \
     --prefix '/' \
+    --architecture "${arch}" \
     --rpm-auto-add-directories \
     --rpm-digest sha256 \
     --maintainer "HashiCorp <support@hashicorp.com>" \
