@@ -155,7 +155,11 @@ if [ -z "${ENABLE_REBUILD}" ]; then
     cache_dir="$(pwd)" || exit
     popd > /dev/null || exit
     info "   * Rebuild support is currently disabled"
-    rm -rf "${build_dir:?}" || exit
+    # Skip build dir removal for darwin; it requires sudo and it is already
+    # done in the "Prep filesystem" step in build-macos.yml
+    if [[ "${host_os}" != "darwin" ]]; then
+        rm -rf "${build_dir:?}" || exit
+    fi
 else
     info "   * Rebuild support is currently enabled"
     cache_dir="./vagrant-substrate-cache-rebuild-enabled"
