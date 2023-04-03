@@ -55,7 +55,7 @@ pkg_sha="$(git log --format=%h -1 ./package/darwin)" ||
 pkg_support_sha="$(git log --format=%h -1 ./package/support/darwin)" ||
     failure "Could not generate commit sha for ./package/support/darwin"
 
-pkg_id="${pkg_sha}+${pkg_support_sha}"
+pkg_id="${pkg_sha}+${pkg_support_sha}-${sub_id}"
 pkg_cache_base="pkg-${VAGRANT_SHASUM:0:10}_${pkg_id}"
 
 gems_unsigned_id="${pkg_cache_base}-gems-unsigned"
@@ -80,7 +80,7 @@ if github_draft_release_exists "${repo_name}" "${corepkg_signed_id}"; then
     printf "core-pkg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
 
-inst_id="inst-${sub_id}-${pkg_id}"
+inst_id="inst-${pkg_id}"
 
 instpkg_unsigned_id="${inst_id}-pkg-unsigned"
 printf "installer-pkg-unsigned-id=%s\n" "${instpkg_unsigned_id}" >> "${GITHUB_OUTPUT}"
