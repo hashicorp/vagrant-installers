@@ -10,7 +10,7 @@ source=("local://substrate.tar.gz")
 conflicts=('vagrant' 'vagrant-substrate')
 options=('!emptydirs')
 md5sums=('SKIP')
-depends=('libffi>=3.2.1' 'libxml2>=2.9.4' 'libxslt>=1.1.29'
+makedepends=('libffi>=3.2.1' 'libxml2>=2.9.4' 'libxslt>=1.1.29'
          'libyaml' 'zlib>=1.2.11' 'xz>=5.2.3' 'readline>=6.3'
          'openssl>=1.0.2l' 'libssh2>=1.8.0' 'libarchive' 'curl>=7.54.0' 'ruby>=3.0.0'
          'rsync' 'autoconf' 'automake' 'binutils' 'bison' 'flex' 'gawk' 'gcc' 'gettext'
@@ -23,7 +23,8 @@ depends=('libffi>=3.2.1' 'libxml2>=2.9.4' 'libxslt>=1.1.29'
 
 package() {
     mkdir -p "${pkgdir}/opt/vagrant"
-    cp -r "${srcdir}"/* "${pkgdir}/opt/vagrant/"
+    cp -r "${srcdir}"/bin "${pkgdir}/opt/vagrant/"
+    cp -r "${srcdir}"/embedded "${pkgdir}/opt/vagrant/"
     mkdir -p "${pkgdir}/usr/bin"
     ln -s /opt/vagrant/bin/vagrant "${pkgdir}/usr/bin/vagrant"
     ln -s /opt/vagrant/bin/vagrant-go "${pkgdir}/usr/bin/vagrant-go"
