@@ -19,7 +19,8 @@ run_sha="$(git log --format=%h -1 ./substrate/run.sh)" ||
 deps_sha="$(git log --format=%h -1 ./substrate/deps.sh)" ||
     failure "Could not generate commit sha for ./substrate/deps.sh"
 
-sub_cache_base="substrate-${run_sha}+${deps_sha}"
+sub_id="${run_sha}+${deps_sha}"
+sub_cache_base="substrate-${sub_id}"
 
 sub="arch-${sub_cache_base}"
 printf "arch-substrate-id=%s\n" "${sub}" >> "${GITHUB_OUTPUT}"
@@ -32,7 +33,7 @@ pkg_sha="$(git log --format=%h -1 ./package/build-archlinux)" ||
 pkg_support_sha="$(git log --format=%h -1 ./package/support/archlinux)" ||
     failure "Could not generate commit sha for ./package/support/archlinux"
 vagrant_sha="${VAGRANT_SHASUM:0:10}"
-pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_support_sha}"
+pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_support_sha}-${sub_id}"
 
 inst="arch-install-${pkg_base}"
 printf "arch-install-id=%s\n" "${inst}" >> "${GITHUB_OUTPUT}"
