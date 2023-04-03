@@ -19,7 +19,8 @@ run_sha="$(git log --format=%h -1 ./substrate/run.sh)" ||
 deps_sha="$(git log --format=%h -1 ./substrate/deps.sh)" ||
     failure "Could not generate commit sha for ./substrate/deps.sh"
 
-sub_cache_base="substrate-${run_sha}+${deps_sha}"
+sub_id="${run_sha}+${deps_sha}"
+sub_cache_base="substrate-${sub_id}"
 
 sub_arm_unsigned_id="${sub_cache_base}-arm-unsigned"
 printf "substrate-arm-unsigned-id=%s\n" "${sub_arm_unsigned_id}" >> "${GITHUB_OUTPUT}"
@@ -54,7 +55,8 @@ pkg_sha="$(git log --format=%h -1 ./package/darwin)" ||
 pkg_support_sha="$(git log --format=%h -1 ./package/support/darwin)" ||
     failure "Could not generate commit sha for ./package/support/darwin"
 
-pkg_cache_base="pkg-${VAGRANT_SHASUM:0:10}_${pkg_sha}+${pkg_support_sha}"
+pkg_id="${pkg_sha}+${pkg_support_sha}"
+pkg_cache_base="pkg-${VAGRANT_SHASUM:0:10}_${pkg_id}"
 
 gems_unsigned_id="${pkg_cache_base}-gems-unsigned"
 printf "gems-unsigned-id=%s\n" "${gems_unsigned_id}" >> "${GITHUB_OUTPUT}"
@@ -78,23 +80,25 @@ if github_draft_release_exists "${repo_name}" "${corepkg_signed_id}"; then
     printf "core-pkg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
 
-instpkg_unsigned_id="${pkg_cache_base}-installer-pkg-unsigned"
+inst_id="inst-${sub_id}-${pkg_id}"
+
+instpkg_unsigned_id="${inst_id}-pkg-unsigned"
 printf "installer-pkg-unsigned-id=%s\n" "${instpkg_unsigned_id}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${instpkg_unsigned_id}"; then
     printf "installer-pkg-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
-instpkg_signed_id="${pkg_cache_base}-installer-pkg-signed"
+instpkg_signed_id="${inst_id}-pkg-signed"
 printf "installer-pkg-signed-id=%s\n" "${instpkg_signed_id}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${instpkg_signed_id}"; then
     printf "installer-pkg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
 
-dmg_unsigned_id="${pkg_cache_base}-dmg-unsigned"
+dmg_unsigned_id="${inst_id}-dmg-unsigned"
 printf "dmg-unsigned-id=%s\n" "${dmg_unsigned_id}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${dmg_unsigned_id}"; then
     printf "dmg-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
-dmg_signed_id="${pkg_cache_base}-dmg-signed"
+dmg_signed_id="${inst_id}-dmg-signed"
 printf "dmg-signed-id=%s\n" "${dmg_signed_id}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${dmg_signed_id}"; then
     printf "dmg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"

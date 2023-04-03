@@ -19,7 +19,8 @@ run_sha="$(git log --format=%h -1 ./substrate/run.sh)" ||
 deps_sha="$(git log --format=%h -1 ./substrate/deps.sh)" ||
     failure "Could not generate commit sha for ./substrate/deps.sh"
 
-sub_cache_base="substrate-${run_sha}+${deps_sha}"
+sub_id="${run_sha}+${deps_sha}"
+sub_cache_base="substrate-${sub_id}"
 
 sub32="rpm-${sub_cache_base}-32"
 printf "rpm-32-substrate-id=%s\n" "${sub32}" >> "${GITHUB_OUTPUT}"
@@ -37,7 +38,7 @@ pkg_sha="$(git log --format=%h -1 ./package/build-rpm)" ||
 pkg_support_sha="$(git log --format=%h -1 ./package/support/rpm)" ||
     failure "Could not generate commit sha for ./package/support/rpm"
 vagrant_sha="${VAGRANT_SHASUM:0:10}"
-pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_support_sha}"
+pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_support_sha}-${sub_id}"
 
 inst32="rpm-install-${pkg_base}-32"
 printf "rpm-32-install-id=%s\n" "${inst32}" >> "${GITHUB_OUTPUT}"
