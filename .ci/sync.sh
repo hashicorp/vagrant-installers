@@ -2,16 +2,12 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MIT
 
-
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/load-ci.sh"
-
-export PATH="${PATH}:${root}/.ci"
-
-pushd "${root}" > "${output}"
+pushd "${root}"
 
 # Configure for hashibot
 hashibot_git
@@ -24,7 +20,6 @@ fi
 
 wrap git config pull.rebase false \
      "Failed to configure git pull strategy"
-
 
 echo "Adding remote mirror repository '${remote_repository}'..."
 wrap git remote add mirror "https://${HASHIBOT_USERNAME}:${HASHIBOT_TOKEN}@github.com/${remote_repository}" \
