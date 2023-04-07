@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2164
+# SC2164: pushd/popd are redefined as functions that exit in common.sh
+
+# This script follows the pattern of ubuntu-install by setting up a chroot for
+# an older version of ubuntu and running build-appimage inside it.
+#
+# This makes the resulting appimage more compatible, per
+# https://docs.appimage.org/introduction/concepts.html#build-on-old-systems-run-on-newer-systems
+
+# Load CI helpers
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+gem_dir="${1?Directory of gem file required}"
+substrate_dir="${2?Directory of substrate file required}"
+output_dir="${3?Directory for output file required}"
+
+if [ ! -d "${gem_dir}" ]; then
+    failure "Invalid path provided for gem directory (%s)" \
+        "${gem_dir}"
+fi
+
+pushd "${gem_dir}"
+gem_dir="$(pwd)" ||
+    failure "Unable to determine gem directory (%s)" "${gem_dir}"
+popd
+
+gem_files=( "${gem_dir}"/* )
+for f in "${gem_files[@]}"; do
+    debug "checking dir entry for gem - %s" "${f}"
+    if [[ "${f}" = *".gem" ]]; then
+        debug "gem file discovered - %s" "${f}"
+        gem_file="${f}"
+        break
+    fi
+done
+
+if [ -z "${gem_file}" ]; then
+    failure "Did not locate gem within gem directory (%s)" \
+        "${gem_dir}"
+fi
+
+debug "gem file for appimage - %s" "${gem_file}"
+
+if [ ! -d "${substrate_dir}" ]; then
+    failure "Invalid path provided for substrate directory (%s)" \
+        "${substrate_dir}"
+fi
+
+pushd "${substrate_dir}"
+substrate_dir="$(pwd)" ||
+    failure "Unable to determine substrate directory (%s)" \
+        "${substrate_dir}"
+popd
+
+substrate_files=( "${substrate_dir}"/* )
+for f in "${substrate_files[@]}"; do
+    debug "checking dir entry for substrate - %s" "${f}"
+    if [[ "${f}" = *".zip" ]]; then
+        debug "substrate file discovered - %s" "${f}"
+        substrate_file="${f}"
+        break
+    fi
+done
+if [ -z "${substrate_file}" ]; then
+    failure "Did not locate substrate within substrate directory (%s)" \
+        "${substrate_dir}"
+fi
+
+debug "substrate file for appimage - %s" "${substrate_file}"
+
+debug "validating output directory - %s" "${output_dir}"
+mkdir -p "${output_dir}" ||
+    failure "invalid path provided for output directory (%s)" "${output_dir}"
+pushd "${output_dir}" || exit
+output_dir="$(pwd)" ||
+    failure "Could not read full path of output directory"
+popd || exit
+debug "validated output directory - %s" "${output_dir}"
+
+# Define the directory to use for the chroot
+chroot_dir="/var/chroot"
+# Define the project name since this is used in the chroot
+# for access to the repository
+project_name="${root##*/}"
+
+# Create the substrate
+debug "creating ubuntu chroot"
+substrate_arch="64" # we only build a 64-bit appimage
+"${root}/.ci/helpers/ubuntu-chroot-create" "${substrate_arch}" "${chroot_dir}" ||
+    failure "Could not create ubuntu chroot environment"
+
+# Setup the chroot
+debug "preparing ubuntu chroot for gem install"
+chroot "${chroot_dir}" "${project_name}/.ci/helpers/ubuntu-chroot-setup" ||
+    failure "Could not fully setup ubuntu chroot environment"
+
+# Define the directory within the chroot for the artifacts
+# to be left
+chroot_output="artifacts"
+chroot_output_directory="${chroot_dir}/${chroot_output}"
+
+debug "creating directory for artifacts in chroot (%s)" "${chroot_output_directory}"
+mkdir -p "${chroot_output_directory}" ||
+    failure "Could not create chroot output directory (%s)" "${chroot_output_directory}"
+
+# Copy in the gem
+chroot_gem="vagrant.gem"
+chroot_gem_path="${chroot_dir}/${chroot_gem}"
+# Add the gem into the chroot
+debug "copying gem %s -> %s" "${gem_file}" "${chroot_gem_path}"
+cp "${gem_file}" "${chroot_gem_path}" ||
+    failure "Could not copy gem into chroot"
+
+# Copy in the substrate
+chroot_substrate="substrate.zip"
+chroot_substrate_path="${chroot_dir}/${chroot_substrate}"
+debug "copying substrate %s -> %s" "${substrate_file}" "${chroot_substrate_path}"
+cp "${substrate_file}" "${chroot_substrate_path}" ||
+    failure "Could not copy substrate into chroot"
+
+debug "running vagrant appimage build"
+chroot "${chroot_dir}" "${project_name}/package/build-appimage" "/${chroot_substrate}" \
+    "/${chroot_gem}" "/${chroot_output}" ||
+    failure "Failed to install vagrant gem into substrate"
+
+debug "install build is complete, moving artifacts - %s -> %s" \
+    "${chroot_output_directory}/*" "${output_dir}/"
+
+mv "${chroot_output_directory}"/*.zip "${output_dir}/" ||
+    failure "Failed to move Vagrant appimage asset to destination"
