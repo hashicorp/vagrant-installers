@@ -29,12 +29,15 @@ script:
   - LD_LIBRARY_PATH="usr/lib:usr/lib64" GEM_PATH="gems" GEM_HOME="gems" usr/bin/gem install pkg-config --no-document
   - cp "${WORK_DIR}/vagrant_wrapper.sh" usr/bin/vagrant
   - chmod a+x usr/bin/vagrant
+  # In order to help keep the appimage as small as possible, remove some extra files we know won't be used
+  # This is important for performance since the appimage is extracted on every invocation
   - rm -rf usr/share/man
   - rm -rf usr/share/info
   - rm -rf gems/cache
   - rm -rf gems/gems/grpc-*-x86_64-linux/third_party
-  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/2.{5,6}
-  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/3.*
+  # Remove all versions of prebuilt GRPC C extensions except the one for our version of ruby (currently 3.1)
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/2.*
+  - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/3.{0,2}
   - rm -rf gems/gems/grpc-*-x86_64-linux/src/ruby/lib/grpc/grpc_c.so
   - rm -rf gems/gems/grpc-*-x86_64-linux/src/core/ext/upb-generated
   - rm -rf gems/gems/grpc-*-x86_64-linux/src/core/ext/upbdefs-generated

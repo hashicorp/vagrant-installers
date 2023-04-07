@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - 'build-appimage-*'
+
+jobs:
+  build-appimage-package:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build appimage package
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-appimage.yml
+    secrets: inherit
+  publish:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [build-appimage-package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch appimage package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-appimage-package.outputs.appimage-package-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create prerelease
+        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_VERSION: ${{ needs.build-appimage-package.outputs.vagrant-version }}

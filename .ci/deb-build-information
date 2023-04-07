@@ -56,3 +56,17 @@ printf "deb-packages-id=%s\n" "${pkgs}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${pkgs}"; then
     printf "deb-packages-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
+
+# the appimage build uses this script too, and has its own cached assets
+pkg_sha="$(git log --format=%h -1 ./package/build-appimage)" ||
+    failure "Could not generate commit sha for ./package/build-appimage"
+pkg_chroot_sha="$(git log --format=%h -1 ./.ci/build-appimage-in-chroot)" ||
+    failure "Could not generate commit sha for ./.ci/build-appimage-in-chroot"
+pkg_support_sha="$(git log --format=%h -1 ./package/appimage)" ||
+    failure "Could not generate commit sha for ./package/appimage"
+pkg_base="${vagrant_sha}+${pkg_sha}+${pkg_chroot_sha}+${pkg_support_sha}-${sub_id}"
+pkgs="appimage-pkg-${pkg_base}"
+printf "appimage-package-id=%s\n" "${pkgs}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${pkgs}"; then
+    printf "appimage-package-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
