@@ -155,7 +155,11 @@ if [ -z "${ENABLE_REBUILD}" ]; then
     cache_dir="$(pwd)" || exit
     popd > /dev/null || exit
     info "   * Rebuild support is currently disabled"
-    rm -rf "${build_dir:?}" || exit
+    # Skip build dir removal for darwin; it requires sudo and it is already
+    # done in the "Prep filesystem" step in build-macos.yml
+    if [[ "${host_os}" != "darwin" ]]; then
+        rm -rf "${build_dir:?}" || exit
+    fi
 else
     info "   * Rebuild support is currently enabled"
     cache_dir="./vagrant-substrate-cache-rebuild-enabled"
@@ -669,6 +673,7 @@ if needs_build "${tracker_file}" "curl"; then
     pushd curl-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-dependency-tracking --without-libidn2 \
         --disable-ldap --with-libssh2 --with-ssl --enable-shared --disable-static \
+        --without-nghttp2 --without-nghttp3 \
         "${cross_configure[@]}" || exit
     make || exit
     make install || exit
