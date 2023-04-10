@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - 'build-windows-*'
+
+jobs:
+  build-windows-packages:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build Windows Packages
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-windows.yml
+    secrets: inherit
+  publish:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [build-windows-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch 32 Bit Windows Package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-32-signed-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch 64 Bit Windows Package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create prerelease
+        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_VERSION: ${{ needs.build-windows-packages.outputs.vagrant-version }}
