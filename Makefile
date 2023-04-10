@@ -9,11 +9,11 @@ bin/launcher/windows:
 
 .PHONY: bin/launcher/windows-x86_64
 bin/launcher/windows-x86_64:
-	GOOS=windows GOARCH=amd64 go build -o ./bin/launcher-windows_x86_64 ./substrate/launcher
+	GOOS=windows GOARCH=amd64 go build -o ./bin/launcher-windows_x86_64.exe ./substrate/launcher
 
 .PHONY: bin/launcher/windows-386
 bin/launcher/windows-386:
-	GOOS=windows GOARCH=386 go build -o ./bin/launcher-windows_386 ./substrate/launcher
+	GOOS=windows GOARCH=386 go build -o ./bin/launcher-windows_386.exe ./substrate/launcher
 
 .PHONY: bin/launcher/darwin
 bin/launcher/darwin:
