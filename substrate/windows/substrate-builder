@@ -1,0 +1,342 @@
+#!/usr/bin/env bash
+
+# Remove the defined logout command if possible to prevent
+# clearing the terminal when complete
+if [ -f /etc/bash.bash_logout ]; then
+    # NOTE: Don't exit on error here since it's only
+    # an attempt and failure does not affect the
+    # actual build
+    rm -f /etc/bash.bash_logout
+fi
+
+# Store substrates here
+output_dir="${1?Output directory is required}"
+# Find launchers here
+launcher_dir="${2?Launcher directory is required}"
+
+# Check for required tools and install if needed
+tools=( "git" "zip" "unzip" "python3" "curl" )
+needed=()
+
+for t in "${tools[@]}"; do
+    if ! command -v "${t}" > /dev/null; then
+        needed+=( "${t}" )
+    fi
+done
+
+if ! command -v dirname > /dev/null; then
+    needed+=( "coreutils" )
+fi
+
+if [ "${#needed[@]}" -gt 0 ]; then
+    pacman -S --noconfirm "${needed[@]}" || exit
+fi
+
+# Determine the root directory of the repository
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+printf "formatting paths to unix style...\n"
+# Clean the path if it's needed
+output_dir="$(cygpath -u "${output_dir}")"
+launcher_dir="$(cygpath -u "${launcher_dir}")"
+
+# Validate the launcher binaries exist before any
+# work is started
+if [ ! -f "${launcher_dir}/launcher-windows_386.exe" ] || [ ! -f "${launcher_dir}/launcher-windows_x86_64.exe" ]; then
+    printf "missing required vagrant launcher binaries in launcher directory (%s)" \
+        "${launcher_dir}" >&2
+    exit 1
+fi
+
+printf "building substrates and storing to: %s\n" "${output_dir}"
+
+# Create output directory if required and get full path
+if [ ! -d "${output_dir}" ]; then
+    mkdir -p "${output_dir}" || exit
+fi
+pushd "${output_dir}" > /dev/null || exit
+output_dir="$(pwd)" || exit
+popd > /dev/null || exit
+
+# Do work within an isolated work directory
+work_dir="$(mktemp -d vagrant-substrate.XXXXX)" || exit
+pushd "${work_dir}" > /dev/null || exit
+work_dir="$(pwd)" || exit
+
+# Grab styrene as it's what's building our substrate
+printf "checking out styrene...\n"
+git clone https://github.com/chrisroberts/styrene ./styrene  || exit
+
+# Move into styrene so we can build
+pushd ./styrene > /dev/null || exit
+sty_dir="$(pwd)" || exit
+
+# Copy in our configuration for building the substrate
+cp "${root}/substrate/windows/vagrant.cfg" ./vagrant.cfg || exit
+
+pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-nsis mingw-w64-x86_64-binutils || exit
+pacman -S --noconfirm mingw-w64-i686-gcc mingw-w64-i686-nsis mingw-w64-i686-binutils || exit
+
+printf "building the substrate internals...\n"
+./styrene.sh --output-dir=./output --no-exe --color=no ./vagrant.cfg || exit
+
+# Get paths for the generated substrate internals so
+# we can build the full substrates
+sub32_files=( "${sty_dir}/output/vagrant"*32*".zip" )
+sub32="${sub32_files[0]}"
+if [ ! -f "${sub32}" ]; then
+    printf "ERROR: cannot find 32 bit substrate (%s)\n" "${sub32}"
+    exit 1
+fi
+sub64_files=( "${sty_dir}/output/vagrant"*64*".zip" )
+sub64="${sub64_files[0]}"
+if [ ! -f "${sub64}" ]; then
+    printf "ERROR: cannot find 64 bit substrate (%s)\n" "${sub64}"
+    exit 1
+fi
+
+popd > /dev/null || exit # back to work directory
+
+# output paths for the substrates
+output_file32="${output_dir}/substrate_windows_386.zip"
+output_file64="${output_dir}/substrate_windows_x86_64.zip"
+
+# write paths for the substrates
+write_file32="${work_dir}/substrate-32.zip"
+write_file64="${work_dir}/substrate-64.zip"
+
+printf "constructing the full 32 bit substrate...\n"
+construct_dir="$(mktemp -d "${work_dir}/substrate-construct-32.XXXXX")" || exit
+pushd "${construct_dir}" > /dev/null || exit
+# create the substrate directory layout
+mkdir -p ./bin ./embedded || exit
+
+# add the launcher to the substrate
+cp "${launcher_dir}/launcher-windows_386.exe" ./bin/vagrant.exe || exit
+
+# unpack the substrate internals into embedded
+pushd ./embedded > /dev/null || exit
+unzip -q "${sub32}" || exit
+
+rbconf_files=( ./mingw*/lib/ruby/3.*/*-mingw*/rbconfig.rb )
+rbconfig_file="${rbconf_files[0]}"
+
+if [ ! -f "${rbconfig_file}" ]; then
+    printf "Failed to locate rbconfig.rb file for required modification (%s)\n" "${rbconfig_file}" >&2
+    exit 1
+fi
+
+# The rbconfig.rb file needs to be updated to adjust the
+# build_os value
+printf "Updating rbconfig.rb file\n"
+rbconfig_file_new="${work_dir}/rbconfig.rb"
+# If the new file exists for some reason, remove it
+rm -f "${rbconfig_file_new}"
+# And make sure it exists
+touch "${rbconfig_file_new}" || exit
+while read -r line; do
+    # NOTE: this modification is done to force ruby
+    # to process paths with cygpath when handling
+    # extensions
+    if [[ "${line}" = *'CONFIG["build_os"]'* ]]; then
+        line='CONFIG["build_os"] = "cygwin"'
+    fi
+    printf "%s\n" "${line}" >> "${rbconfig_file_new}"
+done < "${rbconfig_file}"
+mv -f "${rbconfig_file_new}" "${rbconfig_file}" || exit
+
+# The rubygems/installer.rb file needs to be updated so
+# a hook can be injected allowing file modifications after
+# a rubygem has been unpacked. The use case specifically
+# being enabled by this is allowing modifications to
+# extensions before they are built.
+installer_files=( ./mingw*/lib/ruby/3.*/rubygems/installer.rb )
+installer_file="${installer_files[0]}"
+
+if [ ! -f "${installer_file}" ]; then
+    printf "Failed to locate rubygems/installer.rb file for required modification (%s)\n" "${installer_file}" >&2
+    exit 1
+fi
+
+printf "Updating the rubygems/installer.rb file\n"
+installer_file_new="${work_dir}/installer.rb"
+# Remove new file if it already exists
+rm -f "${installer_file_new}"
+# Create the new file
+touch "${installer_file_new}" || exit
+while read -r line; do
+    if [[ "${line}" = *"@package.extract_files gem_dir"* ]]; then
+        # add hook
+        line="$(printf "val = %s\nif ENV['RUBYGEMS_POST_EXTRACT_HOOK']\n  puts 'Running post extract hook: '+ENV['RUBYGEMS_POST_EXTRACT_HOOK']\n  raise 'post extract hook failed' if !system 'bash', ENV['RUBYGEMS_POST_EXTRACT_HOOK'], gem_dir\nend\nval\n" "${line}")"#
+    fi
+    printf "%s\n" "${line}" >> "${installer_file_new}"
+done < "${installer_file}"
+mv -f "${installer_file_new}" "${installer_file}"
+
+# Finally, the sys/time.h header needs to be modified to
+# prevent the gettimeofday function from being defined as
+# ruby provides its own implementation
+systime_files=( ./mingw*/include/sys/time.h )
+systime_file="${systime_files[0]}"
+
+if [ ! -f "${systime_file}" ]; then
+    printf "Failed to locate sys/time.h file for required modification (%s)\n" "${systime_file}" >&2
+    exit 1
+fi
+
+# The gettimeofday function is disabled by adding a define
+# to the start of the file which will prevent the function
+# from being declared.
+systime_file_new="${work_dir}/time.h"
+rm -f "${systime_file_new}"
+touch "${systime_file_new}" || exit
+echo "#define _GETTIMEOFDAY_DEFINED" > "${systime_file_new}"
+cat <"${systime_file}" >> "${systime_file_new}"
+mv -f "${systime_file_new}" "${systime_file}" || exit
+
+# add in the gemrc file
+mkdir -p ./etc || exit
+cp "${root}/substrate/common/gemrc" ./etc/gemrc || exit
+
+# include a certificate bundle
+curl -o cacert.pem -SsLf https://curl.se/ca/cacert.pem || exit
+
+# clean out some leftover directories
+rm -rf ./_scripts ./tmp ./var
+
+# and keep the tmp directory so bash doesn't complain
+mkdir -p ./tmp
+
+popd > /dev/null || exit # back to the root of the substrate
+
+# repackage the substrate and save it to the output directory
+printf "writing substrate output file (%s)\n" "${write_file32}"
+zip -q -r "${write_file32}" . || exit
+
+popd > /dev/null || exit # back to work directory
+# clean up the construction directory
+rm -rf "${construct_dir}"
+
+printf "constructing the full 64 bit substrate...\n"
+construct_dir="$(mktemp -d "${work_dir}/substrate-construct-64.XXXXX")" || exit
+pushd "${construct_dir}" > /dev/null || exit
+# create the substrate directory layout
+mkdir -p ./bin ./embedded || exit
+
+# add the launcher to the substrate
+cp "${launcher_dir}/launcher-windows_x86_64.exe" ./bin/vagrant.exe || exit
+
+# unpack the substrate internals into embedded
+pushd ./embedded > /dev/null || exit
+unzip -q "${sub64}" || exit
+
+rbconf_files=( ./mingw*/lib/ruby/3.*/*-mingw*/rbconfig.rb )
+rbconfig_file="${rbconf_files[0]}"
+
+if [ ! -f "${rbconfig_file}" ]; then
+    printf "Failed to locate rbconfig.rb file for required modification (%s)\n" "${rbconfig_file}" >&2
+    exit 1
+fi
+
+printf "Updating rbconfig.rb file\n"
+# The CFLAGS and LDFLAGS need to be adjusted to add proper
+# lookup locations for headers and libraries
+rbconfig_file_new="${work_dir}/rbconfig.rb"
+# If the new file exists for some reason, remove it
+rm -f "${rbconfig_file_new}"
+# And make sure it exists
+touch "${rbconfig_file_new}" || exit
+while read -r line; do
+    # NOTE: this modification is done to force ruby
+    # to process paths with cygpath when handling
+    # extensions
+    if [[ "${line}" = *'CONFIG["build_os"]'* ]]; then
+        line='CONFIG["build_os"] = "cygwin"'
+    fi
+    printf "%s\n" "${line}" >> "${rbconfig_file_new}"
+done < "${rbconfig_file}"
+mv -f "${rbconfig_file_new}" "${rbconfig_file}" || exit
+
+# The rubygems/installer.rb file needs to be updated so
+# a hook can be injected allowing file modifications after
+# a rubygem has been unpacked. The use case specifically
+# being enabled by this is allowing modifications to
+# extensions before they are built.
+installer_files=( ./mingw*/lib/ruby/3.*/rubygems/installer.rb )
+installer_file="${installer_files[0]}"
+
+if [ ! -f "${installer_file}" ]; then
+    printf "Failed to locate rubygems/installer.rb file for required modification (%s)\n" "${installer_file}" >&2
+    exit 1
+fi
+
+printf "Updating the rubygems/installer.rb file\n"
+installer_file_new="${work_dir}/installer.rb"
+# Remove new file if it already exists
+rm -f "${installer_file_new}"
+# Create the new file
+touch "${installer_file_new}" || exit
+while read -r line; do
+    if [[ "${line}" = *"@package.extract_files gem_dir"* ]]; then
+        # add hook
+        line="$(printf "val = %s\nif ENV['RUBYGEMS_POST_EXTRACT_HOOK']\n  puts 'Running post extract hook: '+ENV['RUBYGEMS_POST_EXTRACT_HOOK']\n  raise 'post extract hook failed' if !system 'bash', ENV['RUBYGEMS_POST_EXTRACT_HOOK'], gem_dir\nend\nval\n" "${line}")"
+    fi
+    printf "%s\n" "${line}" >> "${installer_file_new}"
+done < "${installer_file}"
+mv -f "${installer_file_new}" "${installer_file}"
+
+# Finally, the sys/time.h header needs to be modified to
+# prevent the gettimeofday function from being defined as
+# ruby provides its own implementation
+systime_files=( ./mingw*/include/sys/time.h )
+systime_file="${systime_files[0]}"
+
+if [ ! -f "${systime_file}" ]; then
+    printf "Failed to locate sys/time.h file for required modification (%s)\n" "${systime_file}" >&2
+    exit 1
+fi
+
+# The gettimeofday function is disabled by adding a define
+# to the start of the file which will prevent the function
+# from being declared.
+systime_file_new="${work_dir}/time.h"
+rm -f "${systime_file_new}"
+touch "${systime_file_new}" || exit
+echo "#define _GETTIMEOFDAY_DEFINED" > "${systime_file_new}"
+cat <"${systime_file}" >> "${systime_file_new}"
+mv -f "${systime_file_new}" "${systime_file}" || exit
+
+# add in the gemrc file
+mkdir -p ./etc || exit
+cp "${root}/substrate/common/gemrc" ./etc/gemrc || exit
+
+# clean out some leftover directories
+rm -rf ./_scripts ./tmp ./var
+
+# and keep the tmp directory so bash doesn't complain
+mkdir -p ./tmp
+
+popd > /dev/null || exit # back to the root of the substrate
+
+# repackage the substrate and save it to the output directory
+printf "writing substrate output file (%s)\n" "${write_file64}"
+zip -q -r "${write_file64}" . || exit
+
+popd > /dev/null || exit # back to work directory
+
+# relocate substrate artifacts to output directory
+printf "finalizing 32 bit substrate artifact: %s\n" "${output_file32}"
+mv -f "${write_file32}" "${output_file32}" || exit
+printf "finalizing 64 bit substrate artifact: %s\n" "${output_file64}"
+mv -f "${write_file64}" "${output_file64}"
+
+popd > /dev/null || exit # back to starting directory
+
+# clean up the construction directory
+rm -rf "${construct_dir}"
+# clean up the work directory
+rm -rf "${work_dir}"
+
+exit 0
