@@ -1,0 +1,63 @@
+on:
+  workflow_call:
+    outputs:
+      substrate-id:
+        description: Cache identifier for deb 64 substrate
+        value: ${{ jobs.info.outputs.deb-64-substrate-id }}
+
+# Since this workflow is used in multiple locations
+# only allow one of them to run at a time to prevent
+# them attempting to run on top of eachother
+concurrency: ${{ github.workflow }}
+
+jobs:
+  info:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      deb-64-substrate-id: ${{ steps.inspect.outputs.deb-64-substrate-id }}
+      deb-64-substrate-exists: ${{ steps.inspect.outputs.deb-64-substrate-exists }}
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+      - name: Build launchers
+        run: make bin/launcher/linux-x86_64
+      - name: Store Launchers
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+      - name: Gather information
+        id: inspect
+        run: ./.ci/deb-build-information
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-substrate-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
+    needs: [info]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Launchers
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+      - name: Build Substrate 64-bit
+        run: sudo ./.ci/ubuntu-substrate 64 ./artifacts
+      - name: Cache Substrate 64-bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
+        env:
+          CACHE_ID: ${{ needs.info.outputs.deb-64-substrate-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

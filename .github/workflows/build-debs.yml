@@ -108,27 +108,15 @@ jobs:
         env:
           CACHE_ID: ${{ needs.info.outputs.deb-32-substrate-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # The 64 bit substrate is also used by appimage so it was
+  # extracted to an isolated workflow to be shared
   build-substrate-64:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
     needs: [info]
-    runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - name: Code Checkout
-        uses: actions/checkout@v3
-      - name: Fetch Launchers
-        uses: actions/download-artifact@v3
-        with:
-          name: vagrant-launchers
-          path: ./bin
-      - name: Build Substrate 64-bit
-        run: sudo ./.ci/ubuntu-substrate 64 ./artifacts
-      - name: Cache Substrate 64-bit
-        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
-        env:
-          CACHE_ID: ${{ needs.info.outputs.deb-64-substrate-id }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build-deb-substrate64.yml
+    secrets: inherit
   build-install-32:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-32-install-exists != 'true' && !cancelled() && !failure() }}
     needs: [info, build-substrate-32]
