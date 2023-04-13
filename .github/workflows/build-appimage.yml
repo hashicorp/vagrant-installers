@@ -70,52 +70,13 @@ jobs:
         with:
           name: vagrant-rubygem
           path: ./gem
-  build-launchers:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
-    needs: [info]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Code Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup Go
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: go.mod
-      - name: Build launchers
-        run: make bin/launcher/linux
-      - name: Store Launchers
-        uses: actions/upload-artifact@v3
-        with:
-          name: vagrant-launchers
-          path: ./bin
-  # TODO: This is exactly the same substrate step as the one in build-debs.yml.
-  # It can use cached builds from that job and produce builds that job can use.
-  # Instead of duplicating the steps, it would be cleaner to have the
-  # build-substrate behavior factored out into its own set of jobs that both
-  # build-debs and build-appimage could depend on.
   build-substrate-64:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
-    needs: [info, build-launchers]
-    runs-on: ubuntu-latest
+    needs: [info]
     permissions:
       contents: write
-    steps:
-      - name: Code Checkout
-        uses: actions/checkout@v3
-      - name: Fetch Launchers
-        uses: actions/download-artifact@v3
-        with:
-          name: vagrant-launchers
-          path: ./bin
-      - name: Build Substrate 64-bit
-        run: sudo ./.ci/ubuntu-substrate 64 ./artifacts
-      - name: Cache Substrate 64-bit
-        run: ./.ci/create-cache "${CACHE_ID}" ./artifacts
-        env:
-          CACHE_ID: ${{ needs.info.outputs.deb-64-substrate-id }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build-deb-substrate64.yml
+    secrets: inherit
   build-package:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.appimage-package-exists != 'true' && !cancelled() && !failure() }}
     needs: [info, build-substrate-64]
