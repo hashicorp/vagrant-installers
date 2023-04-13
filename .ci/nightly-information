@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+version="${1?Vagrant version is required}"
+sha="${2?Vagrant RubyGem shasum is required}"
+
+# Create the name for the nightly release
+nightly_name="${version}+${sha:7}"
+debug "nightly release name: %s" "${nightly_name}"
+
+# Create the output for the release name
+printf "release-name=%s\n" "${nightly_name}"
+
+# Check if the nightly already exists
+if github_release_exists "vagrant" "${nightly_name}"; then
+    debug "nightly release '%s' already exists" "${nightly_name}"
+    printf "release-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
