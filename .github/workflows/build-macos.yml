@@ -447,7 +447,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build installer package
         run: ./package/darwin/build_vagrant_pkg ./artifacts/core.pkg
-      - name: Store core package
+      - name: Store install package
         run: ./.ci/create-cache "${CACHE_NAME}" ./Vagrant.pkg
         env:
           CACHE_NAME: ${{ needs.info.outputs.installer-pkg-unsigned-id }}
