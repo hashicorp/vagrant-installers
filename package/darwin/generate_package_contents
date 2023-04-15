@@ -123,6 +123,22 @@ gem install --platform ruby "${vagrant_gem}" || exit
 rm -rf "${embed_gemsdir}/gems/grpc-"*/src/ruby/ext/grpc/libs
 rm -rf "${embed_gemsdir}/gems/grpc-"*/src/ruby/ext/grpc/objs
 
+# Remove cached gems
+rm -f "${embed_gemsdir}/cache/*.gem"
+
+# RubyGems 3.4 introduced extension cleanup and should run `make clean`
+# after building gem extensions. Ruby 3.1.4 includes RubyGems 3.4.8 but
+# artifacts still remain from the build process. They can be located as
+# .o files, so scan for them and delete them.
+shopt -s globstar || exit
+entries=( "${embed_gemsdir}/gems/"**/*.o )
+shopt -u globstar || exit
+for leftover in "${entries[@]}"; do
+    if [ -f "${leftover}" ]; then
+        rm -f "${leftover}"
+    fi
+done
+
 # For gems with extensions, RubyGems determines if the gem
 # has been built based on the existence of a file (gem.build_complete).
 # This file is located in the embedded gems extension directory
