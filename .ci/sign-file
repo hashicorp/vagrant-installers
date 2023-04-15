@@ -61,7 +61,8 @@ fi
 # If a binary identifier was provided, then it's a macOS signing
 if [ -n "${binary_identifier}" ]; then
     template='{type: "macos", input_format: "EXECUTABLE", binary_identifier: $identifier}'
-    payload="$(jq -n --arg identifier "${binary_identifier}" "${template}")"
+    payload="$(jq -n --arg identifier "${binary_identifier}" "${template}")" ||
+        failure "Could not generate signer options JSON payload"
     signore_args+=("--signer-options" "${payload}")
 fi
 
@@ -79,4 +80,4 @@ debug "signing file %s with arguments - %s" "${input_file}" "${signore_args[*]}"
 signore "${signore_args[@]}" ||
     failure "Failed to sign file '%s'" "${input_file}"
 
-info "successfully signed file (%s)" "${input_file}"
+info "successfully signed file (%s) - args: %s" "${input_file}" "${signore_args[*]}"

@@ -113,7 +113,7 @@ for file in "${entries[@]}"; do
         # If it's a library just add it
         if [[ "${info}" = *"library"* ]] || [[ "${info}" = *"bundle"* ]]; then
             # Ignore .a and .o files
-            # TODO: determine if these can every be signed
+            # TODO: determine if these can even be signed
             if [[ "${file}" = *".a" ]] || [[ "${file}" = *".o" ]]; then
                 continue
             fi
