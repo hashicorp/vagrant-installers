@@ -37,4 +37,4 @@ function cleanup() {
 printf "%s" "${NOTARIZE_KEY}" > "${key_file}"
 
 # Now notarize the file
-notarize_file -j "${key_file}" "${input_file}"
+notarize_file -m 3600 -j "${key_file}" "${input_file}"
