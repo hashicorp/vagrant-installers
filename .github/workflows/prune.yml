@@ -20,5 +20,5 @@ jobs:
         run: |
           . ./.ci/.ci-utility-files/common.sh
 
-          # Prune draft releases over 20 days old
-          github_draft_release_prune "20"
+          # Prune draft releases over 2 days old
+          github_draft_release_prune "2"
