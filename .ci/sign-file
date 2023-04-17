@@ -20,8 +20,8 @@ while getopts ":b:e:" opt; do
         "e") entitlements="${OPTARG}" ;;
         *) failure "Invalid flag provided" ;;
     esac
-    shift $((OPTIND-1))
 done
+shift $((OPTIND-1))
 
 input_file="${1}"
 
