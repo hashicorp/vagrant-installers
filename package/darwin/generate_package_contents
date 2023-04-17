@@ -126,6 +126,9 @@ rm -rf "${embed_gemsdir}/gems/grpc-"*/src/ruby/ext/grpc/objs
 # Remove cached gems
 rm -f "${embed_gemsdir}/cache/"*.gem
 
+# Remove binary from fsevent as it uses an SDK that is unsupported
+rm -f "${embed_gemsdir}/gems/rb-fsevent"*/bin/fsevent_watch
+
 # RubyGems 3.4 introduced extension cleanup and should run `make clean`
 # after building gem extensions. Ruby 3.1.4 includes RubyGems 3.4.8 but
 # artifacts still remain from the build process. They can be located as
