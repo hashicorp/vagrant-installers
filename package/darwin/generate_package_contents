@@ -154,6 +154,10 @@ if [ "${#ext_entries[@]}" -ne 1 ]; then
     exit 1
 fi
 
+# Need to scrub the cache again to be sure no executables/libraries
+# get picked up when notarizing.
+rm -f "${embed_gemsdir}/cache/*.gem"
+
 source_entry="${ext_entries[0]}"
 if [[ "${source_entry}" = *"${x86_platform}"* ]]; then
     target_platform="${arm64_platform}"
