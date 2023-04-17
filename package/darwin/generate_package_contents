@@ -124,7 +124,7 @@ rm -rf "${embed_gemsdir}/gems/grpc-"*/src/ruby/ext/grpc/libs
 rm -rf "${embed_gemsdir}/gems/grpc-"*/src/ruby/ext/grpc/objs
 
 # Remove cached gems
-rm -f "${embed_gemsdir}/cache/*.gem"
+rm -f "${embed_gemsdir}/cache/"*.gem
 
 # RubyGems 3.4 introduced extension cleanup and should run `make clean`
 # after building gem extensions. Ruby 3.1.4 includes RubyGems 3.4.8 but
@@ -153,10 +153,6 @@ if [ "${#ext_entries[@]}" -ne 1 ]; then
         "${#ext_entries[@]}" "${ext_entries[*]}"
     exit 1
 fi
-
-# Need to scrub the cache again to be sure no executables/libraries
-# get picked up when notarizing.
-rm -f "${embed_gemsdir}/cache/*.gem"
 
 source_entry="${ext_entries[0]}"
 if [[ "${source_entry}" = *"${x86_platform}"* ]]; then
