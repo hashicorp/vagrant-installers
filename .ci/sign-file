@@ -80,4 +80,4 @@ debug "signing file %s with arguments - %s" "${input_file}" "${signore_args[*]}"
 signore "${signore_args[@]}" ||
     failure "Failed to sign file '%s'" "${input_file}"
 
-info "successfully signed file (%s) - args: %s" "${input_file}" "${signore_args[*]}"
+info "successfully signed file (%s)" "${input_file}"
