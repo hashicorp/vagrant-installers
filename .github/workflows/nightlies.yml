@@ -1,4 +1,7 @@
 on:
+  push:
+    branches:
+      - 'nightlies'
   workflow_dispatch:
 
 jobs:
