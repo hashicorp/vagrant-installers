@@ -9,6 +9,7 @@ jobs:
     if: github.repository == 'hashicorp/vagrant-builders'
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
+      contents: write
       id-token: write
     outputs:
       release-name: ${{ steps.generate.outputs.release-name }}
