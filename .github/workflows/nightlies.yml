@@ -101,7 +101,7 @@ jobs:
   nightlies-release:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
     name: Nightly Release
-    needs: [info, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
+    needs: [info, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages] #, build-windows-packages]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
