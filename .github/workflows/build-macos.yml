@@ -447,7 +447,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build installer package
         run: ./package/darwin/build_vagrant_pkg ./artifacts/core.pkg
-      - name: Store core package
+      - name: Store install package
         run: ./.ci/create-cache "${CACHE_NAME}" ./Vagrant.pkg
         env:
           CACHE_NAME: ${{ needs.info.outputs.installer-pkg-unsigned-id }}
@@ -541,6 +541,7 @@ jobs:
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
             kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders notarization_key;
             kv/data/github/hashicorp/vagrant-builders signore_client_id;
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
@@ -558,6 +559,10 @@ jobs:
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
           SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_macos_binary_signer }}
+      - name: Notarize Installer Package
+        run: ./.ci/notarize-file ./artifacts/*.dmg
+        env:
+          NOTARIZE_KEY: ${{ steps.secrets.outputs.notarization_key }}
       - name: Store installer package
         run: ./.ci/create-cache "${CACHE_NAME}" ./artifacts
         env:

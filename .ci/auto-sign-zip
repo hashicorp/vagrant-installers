@@ -112,11 +112,6 @@ for file in "${entries[@]}"; do
     if [[ "${info}" = *"Mach-O"* ]]; then
         # If it's a library just add it
         if [[ "${info}" = *"library"* ]] || [[ "${info}" = *"bundle"* ]]; then
-            # Ignore .a and .o files
-            # TODO: determine if these can every be signed
-            if [[ "${file}" = *".a" ]] || [[ "${file}" = *".o" ]]; then
-                continue
-            fi
             debug "discovered mach-o library for signing: %s" "${file}"
             macho_libs+=( "${file}" )
             continue
@@ -190,7 +185,7 @@ done
 for file in "${macho_execs[@]}"; do
     background_jobs_limit "${max_jobs}"
     debug "signing mach-o executable binary: %s" "${file}"
-    "${signer}" "${file}" -b "${file##*/}" &
+    "${signer}" -b "${file##*/}" "${file}" &
     jobs+=( "${file}" "${!}" )
 done
 
@@ -222,7 +217,7 @@ EOF
 for file in "${macho_entitled_execs[@]}"; do
     background_jobs_limit "${max_jobs}"
     debug "signing mach-o executable binary file with entitlements: %s" "${file}"
-    "${signer}" "${file}" -b "${file##*/}" -e ./entitlements.plist &
+    "${signer}" -b "${file##*/}" -e ./entitlements.plist "${file}" &
     jobs+=( "${file}" "${!}" )
 done
 

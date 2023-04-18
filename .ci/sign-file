@@ -20,8 +20,8 @@ while getopts ":b:e:" opt; do
         "e") entitlements="${OPTARG}" ;;
         *) failure "Invalid flag provided" ;;
     esac
-    shift $((OPTIND-1))
 done
+shift $((OPTIND-1))
 
 input_file="${1}"
 
@@ -61,7 +61,8 @@ fi
 # If a binary identifier was provided, then it's a macOS signing
 if [ -n "${binary_identifier}" ]; then
     template='{type: "macos", input_format: "EXECUTABLE", binary_identifier: $identifier}'
-    payload="$(jq -n --arg identifier "${binary_identifier}" "${template}")"
+    payload="$(jq -n --arg identifier "${binary_identifier}" "${template}")" ||
+        failure "Could not generate signer options JSON payload"
     signore_args+=("--signer-options" "${payload}")
 fi
 
