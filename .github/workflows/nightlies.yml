@@ -1,4 +1,5 @@
 on:
+  workflow_dispatch:
 
 jobs:
   info:
@@ -85,15 +86,15 @@ jobs:
       id-token: write
     uses: ./.github/workflows/build-rpms.yml
     secrets: inherit
-  build-windows-packages:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
-    name: Build Windows Packages
-    needs: [info]
-    permissions:
-      contents: write
-      id-token: write
-    uses: ./.github/workflows/build-windows.yml
-    secrets: inherit
+  # build-windows-packages:
+  #   if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+  #   name: Build Windows Packages
+  #   needs: [info]
+  #   permissions:
+  #     contents: write
+  #     id-token: write
+  #   uses: ./.github/workflows/build-windows.yml
+  #   secrets: inherit
   nightlies-release:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
     name: Nightly Release
@@ -142,16 +143,16 @@ jobs:
         env:
           CACHE_ID: ${{ needs.build-rpm-packages.outputs.rpm-packages-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Fetch 32 Bit Windows Package
-        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
-        env:
-          CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-32-signed-id }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Fetch 64 Bit Windows Package
-        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
-        env:
-          CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Fetch 32 Bit Windows Package
+      #   run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+      #   env:
+      #     CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-32-signed-id }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Fetch 64 Bit Windows Package
+      #   run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+      #   env:
+      #     CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Nightly Build
         run: ./.ci/publish-nightlies "${RELEASE_NAME}" ./pkg
         env:
