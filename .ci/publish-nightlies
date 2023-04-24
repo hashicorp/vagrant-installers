@@ -23,7 +23,8 @@ popd
 
 # Create the release
 debug "creating nightly vagrant release - %s" "${release_name}"
-release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -p -m)"
+release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -p -m)" ||
+    failure "Could not create GitHub prerelease"
 debug "new release created: %s" "${release_output}"
 release_id="$(printf "%s" "${release_output}" | jq -r '.id')" ||
     failure "Could not get release ID from release creation response"
