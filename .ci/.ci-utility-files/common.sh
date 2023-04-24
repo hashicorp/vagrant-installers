@@ -384,8 +384,9 @@ function background_jobs_limit() {
     local jobs
     read -r -a jobs <<< "$(jobs -l)" || failure "Could not read background job list"
     while [ "${#jobs[@]}" -gt "${max}" ]; do
-        debug "max background jobs reached (%d), waiting"
+        debug "max background jobs reached (%d), waiting" "${max}"
         sleep 1
+        read -r -a jobs <<< "$(jobs -l)" || failure "Could not read background job list"
     done
 }
 
