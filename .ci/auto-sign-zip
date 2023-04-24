@@ -20,7 +20,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 macho_entitled_binary_names=( "ruby" )
 
 # Maximum number of background jobs to allow
-max_jobs="100"
+max_jobs="20"
 
 # Simple helper to check if binary at given path should
 # have entitlements applied
