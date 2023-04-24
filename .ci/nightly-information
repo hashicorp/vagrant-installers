@@ -16,11 +16,11 @@ version="${1?Vagrant version is required}"
 sha="${2?Vagrant RubyGem shasum is required}"
 
 # Create the name for the nightly release
-nightly_name="${version}+${sha:7}"
+nightly_name="${version}+${sha:0:7}"
 debug "nightly release name: %s" "${nightly_name}"
 
 # Create the output for the release name
-printf "release-name=%s\n" "${nightly_name}"
+printf "release-name=%s\n" "${nightly_name}" >> "${GITHUB_OUTPUT}"
 
 # Check if the nightly already exists
 if github_release_exists "vagrant" "${nightly_name}"; then
