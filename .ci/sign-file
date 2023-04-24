@@ -78,7 +78,7 @@ fi
 debug "signing file %s with arguments - %s" "${input_file}" "${signore_args[*]}"
 
 if ! signore "${signore_args[@]}"; then
-    pause_time=$(( 1 + "${RANDOM}" % 5 ))
+    pause_time=$(( 30 + (1 + "${RANDOM}" % 50) ))
     debug "initial signing failure of file %s, pausing %d seconds and retrying" "${pause_time}" "${input_file}"
     sleep "${pause_time}"
 
