@@ -381,13 +381,46 @@ function background_jobs_limit() {
         failure "Maximum number of background jobs required"
     fi
 
+    local debug_printed
     local jobs
-    read -r -a jobs <<< "$(jobs -l)" || failure "Could not read background job list"
+    mapfile -t jobs <<< "$(jobs -p)" ||
+        failure "Could not read background job list"
     while [ "${#jobs[@]}" -gt "${max}" ]; do
-        debug "max background jobs reached (%d), waiting" "${max}"
+        if [ -z "${debug_printed}" ]; then
+            debug "max background jobs reached (%d), waiting for free process" "${max}"
+            debug_printed="1"
+        fi
         sleep 1
-        read -r -a jobs <<< "$(jobs -l)" || failure "Could not read background job list"
+        mapfile -t jobs <<< "$(jobs -p)" ||
+            failure "Could not read background job list"
     done
+    if [ -n "${debug_printed}" ]; then
+        debug "background jobs count (%s) under max, continuing" "${#jobs[@]}"
+        printf "waited"
+    fi
+}
+
+function reap_completed_background_job() {
+    local pid="${1}"
+    if [ -z "${pid}" ]; then
+        failure "PID of process to reap is required"
+    fi
+    local current_jobs
+    mapfile -t current_jobs <<< "$(jobs -p)" ||
+        failure "Could not read background job list"
+    # If the current jobs include the pid just bail
+    for c_pid in "${current_jobs[@]}"; do
+        if [ "${c_pid}" = "${pid}" ]; then
+            debug "requested pid to reap (%d) has not completed, ignoring"
+            return 0
+        fi
+    done
+    # The pid can be reaped so output the pid to indicate
+    # any error is from the job
+    printf "%s" "${pid}"
+    wait "${pid}" || return 1
+
+    return 0
 }
 
 # Submit given file to Apple's notarization service and

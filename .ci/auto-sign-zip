@@ -133,74 +133,73 @@ for file in "${entries[@]}"; do
     debug "ignoring path which does not require signing: %s" "${file}"
 done
 
+function sign_collection() {
+    unset jobs
+    declare -A jobs
+    local ref="${1}"
+    local list=( "${!ref}" )
+    local b_cmd=( "${@:2:}" )
+    local waited
+    local file
+    for file in "${list[@]}"; do
+        waited="$( background_jobs_limit "${max_jobs}" )" ||
+            failure "Unexpected error while waiting on background jobs"
+        local cmd=()
+        local i
+        for i in "${b_cmd[@]}"; do
+            if [ "${i}" = "%FILE%" ]; then
+                cmd+=( "${file##*/}" )
+                continue
+            fi
+            cmd+=( "${i}" )
+        done
+        debug "signing file: %s" "${file}"
+        "${cmd[@]}" "${file}" &
+        jobs["${!}"]="${file}"
+        # If we had to wait, we know there's a pid that can
+        # be reaped, so do that
+        if [ "${waited}" = "waited" ]; then
+            local reaped
+            local pid
+            for pid in "${!jobs[@]}"; do
+                if ! reaped="$( reap_completed_background_job "${pid}" )"; then
+                    # If the output matches the given pid, it was the signing that failed
+                    if [ "${reaped}" = "${pid}" ]; then
+                        failure "Failed to sign file (%s)" "${jobs[$pid]}"
+                    fi
+                    # Otherwise the error was internal
+                    failure "Unexpected error while reaping background PID"
+                fi
+                # If the output matches the given pid, and no error was encountered
+                # then the pid can be removed
+                unset "jobs[${pid}]"
+            done
+        fi
+    done
+
+    # Now iterate through remaining jobs and reap processes
+    local pid
+    for pid in "${!jobs[@]}"; do
+        wait "${pid}" ||
+            failure "Failed to sign file (%s)" "${jobs[${pid}]}"
+    done
+}
+
 # Store job information
-jobs=()
+declare -A jobs
 
 # Now that files are separated into lists, cycle
 # through them and sign the files
 info "Signing files..."
-# Windows signing
-for file in "${win_binaries[@]}"; do
-    background_jobs_limit "${max_jobs}"
-    debug "signing windows binary: %s" "${file}"
-    "${signer}" "${file}" &
-    jobs+=( "${file}" "${!}" )
-done
 
-# Check that windows files were properly signed
-while [ "${#jobs[@]}" -gt "0" ]; do
-    file="${jobs[0]}"
-    pid="${jobs[1]}"
-    if ! wait "${pid}"; then
-        failure "Could not sign Windows binary file (%s)" "${file}"
-    fi
-    unset 'jobs[0]'
-    unset 'jobs[1]'
-    # compact jobs array
-    jobs=( "${jobs[@]}" )
-done
+debug "signing windows binary files"
+sign_collection "win_binaries" "${signer}"
 
-# Mach-O library signing
-for file in "${macho_libs[@]}"; do
-    background_jobs_limit "${max_jobs}"
-    debug "signing mach-o library binary: %s" "${file}"
-    "${signer}" "${file}" &
-    jobs+=( "${file}" "${!}" )
-done
+debug "signing macho library files"
+sign_collection "macho_libs" "${signer}"
 
-# Check that Mach-O library files were properly signed
-while [ "${#jobs[@]}" -gt "0" ]; do
-    file="${jobs[0]}"
-    pid="${jobs[1]}"
-    if ! wait "${pid}"; then
-        failure "Could not sign Mach-O library file (%s)" "${file}"
-    fi
-    unset 'jobs[0]'
-    unset 'jobs[1]'
-    # compact jobs array
-    jobs=( "${jobs[@]}" )
-done
-
-# Mach-O executable signing
-for file in "${macho_execs[@]}"; do
-    background_jobs_limit "${max_jobs}"
-    debug "signing mach-o executable binary: %s" "${file}"
-    "${signer}" -b "${file##*/}" "${file}" &
-    jobs+=( "${file}" "${!}" )
-done
-
-# Check that Mach-O executable files were properly signed
-while [ "${#jobs[@]}" -gt "0" ]; do
-    file="${jobs[0]}"
-    pid="${jobs[1]}"
-    if ! wait "${pid}"; then
-        failure "Could not sign Mach-O executable file (%s)" "${file}"
-    fi
-    unset 'jobs[0]'
-    unset 'jobs[1]'
-    # compact jobs array
-    jobs=( "${jobs[@]}" )
-done
+debug "signing macho executable files"
+sign_collection "macho_execs" "${signer}" "-b" "%FILE%"
 
 # Mach-O executable with entitlements signing
 # Write the entitlements file to use for signing
@@ -214,25 +213,8 @@ cat <<EOF >entitlements.plist
 </dict>
 </plist>
 EOF
-for file in "${macho_entitled_execs[@]}"; do
-    background_jobs_limit "${max_jobs}"
-    debug "signing mach-o executable binary file with entitlements: %s" "${file}"
-    "${signer}" -b "${file##*/}" -e ./entitlements.plist "${file}" &
-    jobs+=( "${file}" "${!}" )
-done
-
-# Check that Mach-O entitled executable files were properly signed
-while [ "${#jobs[@]}" -gt "0" ]; do
-    file="${jobs[0]}"
-    pid="${jobs[1]}"
-    if ! wait "${pid}"; then
-        failure "Could not sign Mach-O executable file with entitlements (%s)" "${file}"
-    fi
-    unset 'jobs[0]'
-    unset 'jobs[1]'
-    # compact jobs array
-    jobs=( "${jobs[@]}" )
-done
+debug "signing macho executable files with entitlements"
+sign_collection "macho_entitled_execs" "${signer}" "-b" "%FILE%" "-e" "./entitlements.plist"
 
 # Remove the entitlements file
 rm -f ./entitlements.plist
