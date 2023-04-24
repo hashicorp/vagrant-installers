@@ -23,9 +23,9 @@ popd
 
 # Create the release
 debug "creating nightly vagrant release - %s" "${release_name}"
-release="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -p -m)"
-debug "new release created: %s" "${release}"
-release_id="$(jq -r '.id' <( printf "%s" "${release}" ))" ||
+release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -p -m)"
+debug "new release created: %s" "${release_output}"
+release_id="$(jq -r '.id' <( printf "%s" "${release_output}" ))" ||
     failure "Could not get release ID from release creation response"
 
 # Upload artifacts for the release
