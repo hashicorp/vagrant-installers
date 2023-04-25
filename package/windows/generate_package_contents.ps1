@@ -210,6 +210,9 @@ if ( $GemProc.ExitCode -ne 0 ) {
     Write-Error "Failed to install the Vagrant gem"
 }
 
+# Remove the fsevent_watch binary
+Remove-Item -Path "${GemsDirectory}\gems\rb-fsevent-*\bin\fsevent_watch"
+
 Write-Output "Creating installed artifact..."
 
 # Create the artifact
