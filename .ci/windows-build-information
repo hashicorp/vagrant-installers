@@ -25,12 +25,12 @@ if github_draft_release_exists "${repo_name}" "${sub_unsigned_id}"; then
     printf "substrates-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
 
-sub32_signed_id="${sub_cache_base}-signed"
+sub32_signed_id="${sub_cache_base}-32-signed"
 printf "substrates-32-signed-id=%s\n" "${sub32_signed_id}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${sub32_signed_id}"; then
     printf "substrates-32-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
-sub64_signed_id="${sub_cache_base}-signed"
+sub64_signed_id="${sub_cache_base}-64-signed"
 printf "substrates-64-signed-id=%s\n" "${sub64_signed_id}" >> "${GITHUB_OUTPUT}"
 if github_draft_release_exists "${repo_name}" "${sub64_signed_id}"; then
     printf "substrates-64-signed-exists=true\n" >> "${GITHUB_OUTPUT}"

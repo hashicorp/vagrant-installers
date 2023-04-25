@@ -142,7 +142,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.substrates-unsigned-id }}
   sign-32-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-32-signed-exsts != 'true' && !cancelled() && !failure() }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-32-signed-exists != 'true' && !cancelled() && !failure() }}
     needs: [info, cache-substrates]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -191,7 +191,7 @@ jobs:
         run: ./.ci/create-cache "${CACHE_ID}" ./signed-substrates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.substrates-32-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-32-signed-id }}
       - name: Upload Substrates
         uses: actions/upload-artifact@v3
         with:
@@ -201,7 +201,7 @@ jobs:
         id: final
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   sign-64-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-64-signed-exsts != 'true' && !cancelled() && !failure() }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-64-signed-exists != 'true' && !cancelled() && !failure() }}
     needs: [info, cache-substrates]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -250,7 +250,7 @@ jobs:
         run: ./.ci/create-cache "${CACHE_ID}" ./signed-substrates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.substrates-64-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-64-signed-id }}
       - name: Upload Substrates
         uses: actions/upload-artifact@v3
         with:
@@ -314,7 +314,7 @@ jobs:
           name: vagrant-rubygem
           path: ./gem
       - name: Install Vagrant RubyGem
-        run: powershell -File .\package\windows\generate_package_contents -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
+        run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
         uses: actions/upload-artifact@v3
         with:
@@ -357,7 +357,7 @@ jobs:
           name: vagrant-rubygem
           path: ./gem
       - name: Install Vagrant RubyGem
-        run: powershell -File .\package\windows\generate_package_contents -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
+        run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
         uses: actions/upload-artifact@v3
         with:

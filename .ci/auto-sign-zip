@@ -136,11 +136,12 @@ done
 function sign_collection() {
     unset jobs
     declare -A jobs
-    local ref="${1}"
+    local ref="${1}[@]"
     local list=( "${!ref}" )
-    local b_cmd=( "${@:2:}" )
+    local b_cmd=( "${@:2:$#}" )
     local waited
     local file
+    local pid
     for file in "${list[@]}"; do
         waited="$( background_jobs_limit "${max_jobs}" )" ||
             failure "Unexpected error while waiting on background jobs"
@@ -153,15 +154,16 @@ function sign_collection() {
             fi
             cmd+=( "${i}" )
         done
-        debug "signing file: %s" "${file}"
         "${cmd[@]}" "${file}" &
-        jobs["${!}"]="${file}"
+        pid="${!}"
+        jobs["${pid}"]="${file}"
+        debug "signing file: %s (pid: %d)" "${file}" "${pid}"
         # If we had to wait, we know there's a pid that can
         # be reaped, so do that
         if [ "${waited}" = "waited" ]; then
             local reaped
-            local pid
             for pid in "${!jobs[@]}"; do
+                debug "attempting to reap pid %d (signing %s)" "${pid}" "${jobs[$pid]}"
                 if ! reaped="$( reap_completed_background_job "${pid}" )"; then
                     # If the output matches the given pid, it was the signing that failed
                     if [ "${reaped}" = "${pid}" ]; then
@@ -170,9 +172,12 @@ function sign_collection() {
                     # Otherwise the error was internal
                     failure "Unexpected error while reaping background PID"
                 fi
-                # If the output matches the given pid, and no error was encountered
-                # then the pid can be removed
-                unset "jobs[${pid}]"
+                if [ "${reaped}" = "${pid}" ]; then
+                    debug "successfully reaped pid %d (signing %s)" "${pid}" "${jobs[$pid]}"
+                    # If the output matches the given pid, and no error was encountered
+                    # then the pid can be removed
+                    unset "jobs[${pid}]"
+                fi
             done
         fi
     done
@@ -180,8 +185,9 @@ function sign_collection() {
     # Now iterate through remaining jobs and reap processes
     local pid
     for pid in "${!jobs[@]}"; do
+        debug "waiting for pid (%d) to complete (siging %s)" "${pid}" "${jobs[$pid]}"
         wait "${pid}" ||
-            failure "Failed to sign file (%s)" "${jobs[${pid}]}"
+            failure "Failed to sign file (%s)" "${jobs[$pid]}"
     done
 }
 

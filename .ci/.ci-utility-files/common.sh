@@ -370,7 +370,10 @@ function file_directory() {
 }
 
 # Wait until the number of background jobs falls below
-# the maximum number provided.
+# the maximum number provided. If the max number was reached
+# and waiting was performed until a process completed, the
+# string "waited" will be printed to stdout.
+#
 # NOTE: using `wait -n` would be cleaner but only became
 #       available in bash as of 4.3
 #
@@ -385,14 +388,21 @@ function background_jobs_limit() {
     local jobs
     mapfile -t jobs <<< "$(jobs -p)" ||
         failure "Could not read background job list"
-    while [ "${#jobs[@]}" -gt "${max}" ]; do
+    while [ "${#jobs[@]}" -ge "${max}" ]; do
         if [ -z "${debug_printed}" ]; then
             debug "max background jobs reached (%d), waiting for free process" "${max}"
             debug_printed="1"
         fi
         sleep 1
-        mapfile -t jobs <<< "$(jobs -p)" ||
+        jobs=()
+        local j_pids
+        mapfile -t j_pids <<< "$(jobs -p)" ||
             failure "Could not read background job list"
+        for j in "${j_pids[@]}"; do
+            if kill -0 "${j}" > /dev/null 2>&1; then
+                jobs+=( "${j}" )
+            fi
+        done
     done
     if [ -n "${debug_printed}" ]; then
         debug "background jobs count (%s) under max, continuing" "${#jobs[@]}"
@@ -400,25 +410,30 @@ function background_jobs_limit() {
     fi
 }
 
+# Reap a completed background process. If the process is
+# not complete, the process is ignored. The success/failure
+# returned from this function only applies to the process
+# identified by the provided PID _if_ the matching PID value
+# was written to stdout
+#
+# $1: PID
 function reap_completed_background_job() {
     local pid="${1}"
     if [ -z "${pid}" ]; then
         failure "PID of process to reap is required"
     fi
-    local current_jobs
-    mapfile -t current_jobs <<< "$(jobs -p)" ||
-        failure "Could not read background job list"
-    # If the current jobs include the pid just bail
-    for c_pid in "${current_jobs[@]}"; do
-        if [ "${c_pid}" = "${pid}" ]; then
-            debug "requested pid to reap (%d) has not completed, ignoring"
-            return 0
-        fi
-    done
+    if kill -0 "${pid}" > /dev/null 2>&1; then
+        debug "requested pid to reap (%d) has not completed, ignoring" "${pid}"
+        return 0
+    fi
     # The pid can be reaped so output the pid to indicate
     # any error is from the job
     printf "%s" "${pid}"
-    wait "${pid}" || return 1
+    if ! wait "${pid}"; then
+        local code="${?}"
+        debug "wait error code %d returned for pid %d" "${code}" "${pid}"
+        return "${code}"
+    fi
 
     return 0
 }
