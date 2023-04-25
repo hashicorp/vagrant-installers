@@ -259,7 +259,7 @@ jobs:
       - name: Marked As Run
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-32-signed-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && needs.sign-32-substrate.outputs.was_run != 'true' && !failure() && !cancelled() }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-32-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, sign-32-substrate]
     runs-on: ubuntu-latest
     permissions:
@@ -268,17 +268,17 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Fetch Substrates
-        run: ./.ci/restore-cache "${CACHE_NAME}" ./signed-substrates
+        run: ./.ci/restore-cache "${CACHE_ID}" ./signed-substrates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.substrates-32-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-32-signed-id }}
       - name: Upload Substrates
         uses: actions/upload-artifact@v3
         with:
           name: signed-substrates-32
           path: ./signed-substrates
   upload-64-signed-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && needs.sign-64-substrate.outputs.was_run != 'true' && !failure() && !cancelled() }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-64-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, sign-64-substrate]
     runs-on: ubuntu-latest
     permissions:
@@ -287,10 +287,10 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Fetch Substrates
-        run: ./.ci/restore-cache "${CACHE_NAME}" ./signed-substrates
+        run: ./.ci/restore-cache "${CACHE_ID}" ./signed-substrates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.substrates-64-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-64-signed-id }}
       - name: Upload Substrates
         uses: actions/upload-artifact@v3
         with:
@@ -424,7 +424,7 @@ jobs:
         run: ./.ci/create-cache "${CACHE_ID}" "${ARTIFACT}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.gems-32-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.gems-32-signed-id }}
           ARTIFACT: ${{ steps.signer.outputs.signed-zip-artifact-path }}
       - name: Move For Upload
         run: mkdir -p ./signed-gems && mv "${SIGNED_GEMS}" ./signed-gems
@@ -464,7 +464,7 @@ jobs:
         run: ./.ci/restore-cache "${CACHE_ID}" ./installed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_ID: ${{ needs.info.outputs.gems-32-unsigned-id }}
+          CACHE_ID: ${{ needs.info.outputs.gems-64-unsigned-id }}
       - name: Sign 64 Bit Installed Gems
         id: signer
         run: ./.ci/auto-sign-zip ./installed/installed_windows_x86_64.zip
@@ -477,7 +477,7 @@ jobs:
         run: ./.ci/create-cache "${CACHE_ID}" "${ARTIFACT}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.gems-64-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.gems-64-signed-id }}
           ARTIFACT: ${{ steps.signer.outputs.signed-zip-artifact-path }}
       - name: Move For Upload
         run: mkdir -p ./signed-gems && mv "${SIGNED_GEMS}" ./signed-gems
@@ -488,8 +488,10 @@ jobs:
         with:
           name: signed-gems-64
           path: ./signed-gems
+      - name: Marked As Run
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-gems-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-signed-exists == 'true' && !failure() && !cancelled() }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-32.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, sign-gems-32]
     runs-on: ubuntu-latest
     permissions:
@@ -507,8 +509,10 @@ jobs:
         with:
           name: signed-gems-32
           path: ./signed-gems
+      - name: Marked As Run
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-gems-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-signed-exists == 'true' && !failure() && !cancelled() }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-64.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, sign-gems-64]
     runs-on: ubuntu-latest
     permissions:
@@ -544,9 +548,9 @@ jobs:
           name: signed-gems-32
           path: ./signed-gems
       - name: Build 32 Bit Windows MSI
-        run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -Installed .\signed-gems\installed_windows_386.zip -VagrantVersion $env:VagrantVersion -Destination .\pkg
+        run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -Installed .\signed-gems\installed_windows_386.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
         env:
-          VagrantVersion: ${{ needs.info.outputs.vagrant_version }}
+          VagrantVersion: ${{ needs.info.outputs.vagrant-version }}
       - name: Upload 32 Bit Vagrant MSI
         uses: actions/upload-artifact@v3
         with:
@@ -570,16 +574,16 @@ jobs:
           name: signed-gems-64
           path: ./signed-gems
       - name: Build 64 Bit Windows MSI
-        run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -Installed .\signed-gems\installed_windows_x86_64.zip -VagrantVersion $env:VagrantVersion -Destination .\pkg
+        run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -Installed .\signed-gems\installed_windows_x86_64.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
         env:
-          VagrantVersion: ${{ needs.info.outputs.vagrant_version }}
+          VagrantVersion: ${{ needs.info.outputs.vagrant-version }}
       - name: Upload 64 Bit Vagrant MSI
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-msi-64
           path: ./pkg
   cache-vagrant-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true'  }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, build-vagrant-32]
     runs-on: ubuntu-latest
     permissions:
@@ -593,12 +597,12 @@ jobs:
           name: vagrant-msi-32
           path: ./pkg
       - name: Cache 32 Bit Windows MSI
-        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.msi-32-unsigned-id }}
   cache-vagrant-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' }}
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, build-vagrant-64]
     runs-on: ubuntu-latest
     permissions:
@@ -612,7 +616,7 @@ jobs:
           name: vagrant-msi-64
           path: ./pkg
       - name: Cache 64 Bit Windows MSI
-        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.msi-64-unsigned-id }}
@@ -645,21 +649,20 @@ jobs:
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_ID: ${{ needs.info.outputs.msi-32-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.msi-32-unsigned-id }}
       - name: Sign 32 Bit Windows MSI
         id: signer
-        run: ./.ci/auto-sign-zip ./pkg/*.zip
+        run: ./.ci/sign-file ./pkg/*.msi
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
           SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
       - name: Store Signed 32 Bit Windows MSI
-        run: ./.ci/create-cache "${CACHE_ID}" "${ARTIFACT}"
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.msi-32-signed-id }}
-          ARTIFACT: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+          CACHE_ID: ${{ needs.info.outputs.msi-32-signed-id }}
   sign-vagrant-64:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-signed-exists != 'true' && !failure() && !cancelled() }}
     needs: [info, cache-vagrant-64]
@@ -689,18 +692,17 @@ jobs:
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_ID: ${{ needs.info.outputs.msi-64-signed-id }}
+          CACHE_ID: ${{ needs.info.outputs.msi-64-unsigned-id }}
       - name: Sign 64 Bit Windows MSI
         id: signer
-        run: ./.ci/auto-sign-zip ./pkg/*.zip
+        run: ./.ci/sign-file ./pkg/*.msi
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
           SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
       - name: Store Signed 64 Bit Windows MSI
-        run: ./.ci/create-cache "${CACHE_ID}" "${ARTIFACT}"
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CACHE_NAME: ${{ needs.info.outputs.msi-64-signed-id }}
-          ARTIFACT: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+          CACHE_ID: ${{ needs.info.outputs.msi-64-signed-id }}

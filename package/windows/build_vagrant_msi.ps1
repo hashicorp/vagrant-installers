@@ -137,8 +137,10 @@ $Destination = Resolve-Path $Destination
 
 # Do a basic check on the version string that it
 # at least kind of resembles a version
-if ( ! ($VagrantVersion -match '^[0-9]+\.[0-9]+\.[0-9]+') ) {
+if ( ! ($VagrantVersion -match '(^[0-9]+\.[0-9]+\.[0-9]+)') ) {
     Write-Error "Vagrant version does not look like a valid version (${VagrantVersion})"
+} else {
+    $VagrantVersionCompat = $Matches[0]
 }
 
 # Find required the WiX binaries. If these are not found
@@ -161,6 +163,7 @@ Write-Output "Starting Vagrant package installer build"
 Write-Output "  Using Vagrant substrate: ${Substrate}"
 Write-Output "  Using Vagrant installed: ${Installed}"
 Write-Output "  Using Vagrant version: ${VagrantVersion}"
+Write-Output "  Using Vagrant version compat: ${VagrantVersionCompat}"
 Write-Output "  Build directory: ${BuildDirectory}"
 Write-Output "  Work directory: ${WorkDirectory}"
 Write-Output ""
@@ -235,7 +238,7 @@ $ConfigContent = Get-Content -Path "${PackageDirectory}\support\windows\vagrant-
 # The configuration defines variables for the vagrant
 # version and the base directory (which is a reference
 # to the installer directory)
-$ConfigContent = $ConfigContent -replace "%VERSION_NUMBER%",$VagrantVersion
+$ConfigContent = $ConfigContent -replace "%VERSION_NUMBER%",$VagrantVersionCompat
 $ConfigContent = $ConfigContent -replace "%BASE_DIRECTORY%",$InstallerPath
 
 # Write config file with the updated content
