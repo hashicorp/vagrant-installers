@@ -1,0 +1,708 @@
+on:
+  workflow_call:
+    inputs:
+      vagrant_draft_name:
+        description: Name of the Vagrant repository draft release containing gem for build
+        required: false
+        type: string
+      vagrant_release_name:
+        description: Name of the Vagrant repository release containing gem for build
+        required: false
+        type: string
+    outputs:
+      msi-64-signed-id:
+        description: Cache identifier for Windows x86_64 msi package
+        value: ${{ jobs.info.outputs.msi-64-signed-id }}
+      msi-32-signed-id:
+        description: Cache identifier for Windows i686 msi package
+        value: ${{ jobs.info.outputs.msi-32-signed-id }}
+      vagrant-version:
+        description: Version of Vagrant package built
+        value: ${{ jobs.info.outputs.vagrant-version }}
+
+jobs:
+  info:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    outputs:
+      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      substrates-unsigned-id: ${{ steps.inspect.outputs.substrates-unsigned-id }}
+      substrates-unsigned-exists: ${{ steps.inspect.outputs.substrates-unsigned-exists }}
+      substrates-32-signed-id: ${{ steps.inspect.outputs.substrates-32-signed-id }}
+      substrates-32-signed-exists: ${{ steps.inspect.outputs.substrates-32-signed-exists }}
+      substrates-64-signed-id: ${{ steps.inspect.outputs.substrates-64-signed-id }}
+      substrates-64-signed-exists: ${{ steps.inspect.outputs.substrates-64-signed-exists }}
+      gems-32-unsigned-id: ${{ steps.inspect.outputs.gems-32-unsigned-id }}
+      gems-32-unsigned-exists: ${{ steps.inspect.outputs.gems-32-unsigned-exists }}
+      gems-32-signed-id: ${{ steps.inspect.outputs.gems-32-signed-id }}
+      gems-32-signed-exists: ${{ steps.inspect.outputs.gems-32-signed-exists }}
+      gems-64-unsigned-id: ${{ steps.inspect.outputs.gems-64-unsigned-id }}
+      gems-64-unsigned-exists: ${{ steps.inspect.outputs.gems-64-unsigned-exists }}
+      gems-64-signed-id: ${{ steps.inspect.outputs.gems-64-signed-id }}
+      gems-64-signed-exists: ${{ steps.inspect.outputs.gems-64-signed-exists }}
+      msi-32-unsigned-id: ${{ steps.inspect.outputs.msi-32-unsigned-id }}
+      msi-32-unsigned-exists: ${{ steps.inspect.outputs.msi-32-unsigned-exists }}
+      msi-32-signed-id: ${{ steps.inspect.outputs.msi-32-signed-id }}
+      msi-32-signed-exists: ${{ steps.inspect.outputs.msi-32-signed-exists }}
+      msi-64-unsigned-id: ${{ steps.inspect.outputs.msi-64-unsigned-id }}
+      msi-64-unsigned-exists: ${{ steps.inspect.outputs.msi-64-unsigned-exists }}
+      msi-64-signed-id: ${{ steps.inspect.outputs.msi-64-signed-id }}
+      msi-64-signed-exists: ${{ steps.inspect.outputs.msi-64-signed-exists }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot vagrant_token;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+      - name: Install Ruby
+        run: sudo apt-get install -yq ruby
+        env:
+          DEBIAN_FRONTEND: noninteractive
+      - name: Fetch Vagrant RubyGem
+        id: vagrant-gem
+        run: ./.ci/fetch-vagrant-rubygem
+        env:
+          VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
+          VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+      - name: Gather information
+        id: inspect
+        run: ./.ci/windows-build-information
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      - name: Store Vagrant RubyGem
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-rubygem
+          path: ./gem
+      - name: Build launchers
+        run: make bin/launcher/windows
+      - name: Store Launchers
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+  build-substrates:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-unsigned-exists != 'true' }}
+    runs-on: windows-latest
+    needs: [info]
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Launchers
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-launchers
+          path: ./bin
+      - name: Build Windows Substrates
+        run: powershell -File .\substrate\run.ps1 -OutputDir .\vagrant-substrates -LauncherDirectory .\bin
+      - name: Upload Substrates
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-substrates
+          path: ./vagrant-substrates
+  cache-substrates:
+    # Caching only happens when the build-substrates job completes
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [info, build-substrates]
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Download substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-substrates
+          path: ./vagrant-substrates
+      - name: Cache Substrates
+        run: ./.ci/create-cache "${CACHE_ID}" ./vagrant-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-unsigned-id }}
+  sign-32-substrate:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-32-signed-exists != 'true' && !cancelled() && !failure() }}
+    needs: [info, cache-substrates]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    outputs:
+      was_run: ${{ steps.final.outputs.was_run }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrates
+        run: ./.ci/restore-cache "${CACHE_ID}" ./vagrant-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-unsigned-id }}
+      - name: Sign 32 Bit Substrate
+        id: signer
+        run: ./.ci/auto-sign-zip ./vagrant-substrates/substrate_windows_386.zip
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+      - name: Prepare For Cache
+        run: |
+          mkdir -p ./signed-substrates || exit
+          mv -f "${SIGNED_SUBSTRATE}" ./signed-substrates
+        env:
+          SIGNED_SUBSTRATE: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+      - name: Store Substrate
+        run: ./.ci/create-cache "${CACHE_ID}" ./signed-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-32-signed-id }}
+      - name: Upload Substrates
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-substrates-32
+          path: ./signed-substrates
+      - name: Marked As Run
+        id: final
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
+  sign-64-substrate:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-64-signed-exists != 'true' && !cancelled() && !failure() }}
+    needs: [info, cache-substrates]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    outputs:
+      was_run: ${{ steps.final.outputs.was_run }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrates
+        run: ./.ci/restore-cache "${CACHE_ID}" ./vagrant-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-unsigned-id }}
+      - name: Sign 64 Bit Substrate
+        id: signer
+        run: ./.ci/auto-sign-zip ./vagrant-substrates/substrate_windows_x86_64.zip
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+      - name: Prepare For Cache
+        run: |
+          mkdir -p ./signed-substrates || exit
+          mv -f "${SIGNED_SUBSTRATE}" ./signed-substrates
+        env:
+          SIGNED_SUBSTRATE: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+      - name: Store Substrates
+        run: ./.ci/create-cache "${CACHE_ID}" ./signed-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-64-signed-id }}
+      - name: Upload Substrates
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-substrates-64
+          path: ./signed-substrates
+      - name: Marked As Run
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
+  upload-32-signed-substrate:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-32-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, sign-32-substrate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrates
+        run: ./.ci/restore-cache "${CACHE_ID}" ./signed-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-32-signed-id }}
+      - name: Upload Substrates
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-substrates-32
+          path: ./signed-substrates
+  upload-64-signed-substrate:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-64-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, sign-64-substrate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrates
+        run: ./.ci/restore-cache "${CACHE_ID}" ./signed-substrates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.substrates-64-signed-id }}
+      - name: Upload Substrates
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-substrates-64
+          path: ./signed-substrates
+  gems-vagrant-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, sign-32-substrate, upload-32-signed-substrate]
+    runs-on: windows-latest
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: signed-substrates-32
+          path: ./signed-substrates
+      - name: Fetch Vagrant RubyGem
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-rubygem
+          path: ./gem
+      - name: Install Vagrant RubyGem
+        run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
+      - name: Upload Installed Gems
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-gems-32
+          path: ./installed
+  cache-gems-vagrant-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, gems-vagrant-32]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Download substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-gems-32
+          path: ./installed
+      - name: Cache Unsigned Vagrant Gems 32 Bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./installed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-32-unsigned-id }}
+  gems-vagrant-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, sign-64-substrate, upload-64-signed-substrate]
+    runs-on: windows-latest
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: signed-substrates-64
+          path: ./signed-substrates
+      - name: Fetch Vagrant RubyGem
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-rubygem
+          path: ./gem
+      - name: Install Vagrant RubyGem
+        run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
+      - name: Upload Installed Gems
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-gems-64
+          path: ./installed
+  cache-gems-vagrant-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, gems-vagrant-64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Download substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-gems-64
+          path: ./installed
+      - name: Cache Unsigned Vagrant Gems 64 Bit
+        run: ./.ci/create-cache "${CACHE_ID}" ./installed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-64-unsigned-id }}
+  sign-gems-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-signed-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, cache-gems-vagrant-32]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch 32 Bit Installed Gems
+        run: ./.ci/restore-cache "${CACHE_ID}" ./installed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-32-unsigned-id }}
+      - name: Sign 32 Bit Installed Gems
+        id: signer
+        run: ./.ci/auto-sign-zip ./installed/installed_windows_386.zip
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+      - name: Store Signed 32 Bit Installed Gems
+        run: ./.ci/create-cache "${CACHE_ID}" "${ARTIFACT}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-32-signed-id }}
+          ARTIFACT: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+      - name: Move For Upload
+        run: mkdir -p ./signed-gems && mv "${SIGNED_GEMS}" ./signed-gems
+        env:
+          SIGNED_GEMS: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+      - name: Upload Signed 32 Bit Installed Gems
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-gems-32
+          path: ./signed-gems
+  sign-gems-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-signed-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, cache-gems-vagrant-64]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch 64 Bit Installed Gems
+        run: ./.ci/restore-cache "${CACHE_ID}" ./installed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-64-unsigned-id }}
+      - name: Sign 64 Bit Installed Gems
+        id: signer
+        run: ./.ci/auto-sign-zip ./installed/installed_windows_x86_64.zip
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+      - name: Store Signed 64 Bit Installed Gems
+        run: ./.ci/create-cache "${CACHE_ID}" "${ARTIFACT}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-64-signed-id }}
+          ARTIFACT: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+      - name: Move For Upload
+        run: mkdir -p ./signed-gems && mv "${SIGNED_GEMS}" ./signed-gems
+        env:
+          SIGNED_GEMS: ${{ steps.signer.outputs.signed-zip-artifact-path }}
+      - name: Upload Signed 64 Bit Installed Gems
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-gems-64
+          path: ./signed-gems
+      - name: Marked As Run
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
+  upload-gems-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-32.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, sign-gems-32]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Signed 32 Bit Installed Gems
+        run: ./.ci/restore-cache "${CACHE_ID}" ./signed-gems
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-32-signed-id }}
+      - name: Upload Signed 32 Bit Installed Gems
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-gems-32
+          path: ./signed-gems
+      - name: Marked As Run
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
+  upload-gems-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-64.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, sign-gems-64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Signed 64 Bit Installed Gems
+        run: ./.ci/restore-cache "${CACHE_ID}" ./signed-gems
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.gems-64-signed-id }}
+      - name: Upload Signed 64 Bit Installed Gems
+        uses: actions/upload-artifact@v3
+        with:
+          name: signed-gems-64
+          path: ./signed-gems
+  build-vagrant-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    runs-on: windows-latest
+    needs: [info, sign-32-substrate, upload-32-signed-substrate, upload-gems-32, sign-gems-32]
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: signed-substrates-32
+          path: ./signed-substrates
+      - name: Fetch Signed 32 Bit Installed Gems
+        uses: actions/download-artifact@v3
+        with:
+          name: signed-gems-32
+          path: ./signed-gems
+      - name: Build 32 Bit Windows MSI
+        run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -Installed .\signed-gems\installed_windows_386.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
+        env:
+          VagrantVersion: ${{ needs.info.outputs.vagrant-version }}
+      - name: Upload 32 Bit Vagrant MSI
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-msi-32
+          path: ./pkg
+  build-vagrant-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    runs-on: windows-latest
+    needs: [info, sign-64-substrate, upload-64-signed-substrate, upload-gems-64, sign-gems-64]
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Substrates
+        uses: actions/download-artifact@v3
+        with:
+          name: signed-substrates-64
+          path: ./signed-substrates
+      - name: Fetch Signed 64 Bit Installed Gems
+        uses: actions/download-artifact@v3
+        with:
+          name: signed-gems-64
+          path: ./signed-gems
+      - name: Build 64 Bit Windows MSI
+        run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -Installed .\signed-gems\installed_windows_x86_64.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
+        env:
+          VagrantVersion: ${{ needs.info.outputs.vagrant-version }}
+      - name: Upload 64 Bit Vagrant MSI
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-msi-64
+          path: ./pkg
+  cache-vagrant-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, build-vagrant-32]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Download 32 Bit Windows MSI
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-msi-32
+          path: ./pkg
+      - name: Cache 32 Bit Windows MSI
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.msi-32-unsigned-id }}
+  cache-vagrant-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, build-vagrant-64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Download 64 Bit Windows MSI
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-msi-64
+          path: ./pkg
+      - name: Cache 64 Bit Windows MSI
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.msi-64-unsigned-id }}
+  sign-vagrant-32:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-signed-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, cache-vagrant-32]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch 32 Bit Windows MSI
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.msi-32-unsigned-id }}
+      - name: Sign 32 Bit Windows MSI
+        id: signer
+        run: ./.ci/sign-file ./pkg/*.msi
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+      - name: Store Signed 32 Bit Windows MSI
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.msi-32-signed-id }}
+  sign-vagrant-64:
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-signed-exists != 'true' && !failure() && !cancelled() }}
+    needs: [info, cache-vagrant-64]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch 64 Bit Windows MSI
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.msi-64-unsigned-id }}
+      - name: Sign 64 Bit Windows MSI
+        id: signer
+        run: ./.ci/sign-file ./pkg/*.msi
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_windows_signer }}
+      - name: Store Signed 64 Bit Windows MSI
+        run: ./.ci/create-cache "${CACHE_ID}" ./pkg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CACHE_ID: ${{ needs.info.outputs.msi-64-signed-id }}

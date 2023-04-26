@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+# This script is used for patching the grpc rubygem
+# before its extensions are built. The extconf.rb
+# file adds the -static flag to the linker options
+# which causes linking to fail. There is no way to
+# disable this behavior, so this script is used to
+# modify the extconf.rb file before the extension
+# is built.
+
+# NOTE: If a proper grpc gem is available for the
+# current platform it will be used. However, at
+# the time of writing, pre-built rubygems are not
+# available for the specific version of Ruby in use.
+
+# The hook should provide the directory to the unpacked
+# grpc rubygem. If it does not, just fail.
+grpc_dir="${1?Path to grpc rubygem required}"
+
+# If the gem directory provided is for something other
+# than the grpc rubygem, just exit immediately
+if [[ "${grpc_dir}" != *"grpc"* ]]; then
+    printf "gem directory does not appear to be grpc (%s)\n" "${grpc_dir##*/}" >&2
+    exit 0
+fi
+
+# If the grpc gem installed is platform specific the
+# extensions won't be built so modification is not
+# required
+if [[ "${grpc_dir}" = *"mingw"* ]]; then
+    printf "grpc gem includes prebuilt extensions, ignoring (%s)\n" "${grpc_dir##*/}" >&2
+    exit 0
+fi
+
+printf "applying grpc rubygem extension build fix\n" >&2
+
+# Ensure that the path is absolute
+pushd "${grpc_dir}" > /dev/null || exit
+grpc_dir="$(pwd)"
+popd > /dev/null || exit
+
+# This is the relative path from the grpc gem root
+# directory to the extension directory
+rel_ext_dir="src/ruby/ext/grpc"
+full_ext_dir="${grpc_dir}/${rel_ext_dir}"
+
+if [ ! -d "${full_ext_dir}" ]; then
+    printf "extension directory not found within grpc gem (%s)\n" "${full_ext_dir}" >&2
+    exit 1
+fi
+
+pushd "${full_ext_dir}" > /dev/null || exit
+
+# The line in the extconf.rb file that needs to be
+# removed is:
+#
+# $LDFLAGS << ' -static' if windows
+extconf_orig="./extconf.rb"
+extconf_new="./extconf.rb.new"
+
+if [ ! -f "${extconf_orig}" ]; then
+    printf "extconf.rb file not found within grpc gem (%s)\n" "${full_ext_dir}/${extconf_orig}" >&2
+    exit 1
+fi
+
+# Scrub the new file if it happens to
+# already exist for some reason
+rm -f "${extconf_new}"
+# Create the new file
+touch "${extconf_new}" || exit
+
+# Scrub the offending line
+while read -r line; do
+    if [[ "${line}" = *'$LDFLAGS'* ]] && [[ "${line}" = *"-static"* ]] && [[ "${line}" = *"windows"* ]]; then
+        continue
+    fi
+    printf "%s\n" "${line}" >> "${extconf_new}"
+done < "${extconf_orig}"
+
+# Replace the extconf.rb file with the fixed version
+mv -f "${extconf_new}" "${extconf_orig}" || exit
+
+# The grpc gem will automatically build the ruby
+# grpc library but will not automatically build the
+# core grpc library. Building the grpc library manually
+# have resulted in failures due to argument list limitations.
+# To work around this the platform specific gem is fetched
+# and unpacked locally and the core library is extracted
+# from the gem and installed into the local gem directory.
+
+printf "fetching grpc core from pre-built gem\n" >&2
+
+# Create a temporary directory to operate within
+work_dir="$(mktemp -d grpc-platform.XXXXX)" || exit
+pushd "${work_dir}" > /dev/null || exit
+
+# Extract the version currently being installed
+grpc_version="${grpc_dir##*-}"
+# Get the platform
+platform="$(ruby -e 'puts Gem::Platform.local.to_s')" || exit
+# And get the arch
+if [[ "${platform}" = *"64"* ]]; then
+    arch="64"
+else
+    arch="32"
+fi
+# Grab the version for the platform being built and unpack
+gem fetch grpc --version "${grpc_version}" --platform "$(ruby -e 'puts Gem::Platform.local.to_s')" || exit
+gem unpack ./grpc*.gem || exit
+rm -f ./grpc*.gem
+pushd ./grpc* > /dev/null || exit
+
+# The core file will be in the format of: grpc_c.ARCHBITS-msvcrt.ruby
+core_library="grpc_c.${arch}-msvcrt.ruby"
+if [ ! -f "${core_library}" ]; then
+    printf "grpc core library file not found! (%s)" "${core_library}" >&2
+    exit 1
+fi
+
+# Move the core library into the local gem directory
+mv -f "${core_library}" "${grpc_dir}" || exit
+
+popd > /dev/null || exit # in work directory now
+popd > /dev/null || exit # out of work directory
+
+# Remove the work directory
+rm -rf "${work_dir}"
+
+# Modifications are complete
+printf "grpc rubygem modifications complete\n" >&2

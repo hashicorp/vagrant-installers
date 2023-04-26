@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+# Generate substrate information
+
+run_sha="$(git log --format=%h -1 ./substrate/run.ps1)" ||
+    failure "Could not generate commit sha for ./substrate/run.ps1"
+
+sub_cache_base="win-substrate-${run_sha}"
+
+sub_unsigned_id="${sub_cache_base}-unsigned"
+printf "substrates-unsigned-id=%s\n" "${sub_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub_unsigned_id}"; then
+    printf "substrates-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+sub32_signed_id="${sub_cache_base}-32-signed"
+printf "substrates-32-signed-id=%s\n" "${sub32_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub32_signed_id}"; then
+    printf "substrates-32-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+sub64_signed_id="${sub_cache_base}-64-signed"
+printf "substrates-64-signed-id=%s\n" "${sub64_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${sub64_signed_id}"; then
+    printf "substrates-64-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+# Generate package information
+
+pkg_sha="$(git log --format=%h -1 ./package/windows)" ||
+    failure "Could not generate commit sha for ./package/windows"
+pkg_support_sha="$(git log --format=%h -1 ./package/support/windows)" ||
+    failure "Could not generate commit sha for ./package/support/windows"
+
+pkg_cache_base="win-pkg-${VAGRANT_SHASUM:0:10}_${pkg_sha}+${pkg_support_sha}"
+
+gems32_unsigned_id="${pkg_cache_base}-gems-32-unsigned"
+printf "gems-32-unsigned-id=%s\n" "${gems32_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${gems32_unsigned_id}"; then
+    printf "gems-32-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+gems32_signed_id="${pkg_cache_base}-gems-32-signed"
+printf "gems-32-signed-id=%s\n" "${gems32_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${gems32_signed_id}"; then
+    printf "gems-32-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+gems64_unsigned_id="${pkg_cache_base}-gems-64-unsigned"
+printf "gems-64-unsigned-id=%s\n" "${gems64_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${gems64_unsigned_id}"; then
+    printf "gems-64-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+gems64_signed_id="${pkg_cache_base}-gems-64-signed"
+printf "gems-64-signed-id=%s\n" "${gems64_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${gems64_signed_id}"; then
+    printf "gems-64-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+msi32_unsigned_id="${pkg_cache_base}-msi-32-unsigned"
+printf "msi-32-unsigned-id=%s\n" "${msi32_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${msi32_unsigned_id}"; then
+    printf "msi-32-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+msi32_signed_id="${pkg_cache_base}-msi-32-signed"
+printf "msi-32-signed-id=%s\n" "${msi32_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${msi32_signed_id}"; then
+    printf "msi-32-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+
+msi64_unsigned_id="${pkg_cache_base}-msi-64-unsigned"
+printf "msi-64-unsigned-id=%s\n" "${msi64_unsigned_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${msi64_unsigned_id}"; then
+    printf "msi-64-unsigned-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
+msi64_signed_id="${pkg_cache_base}-msi-64-signed"
+printf "msi-64-signed-id=%s\n" "${msi64_signed_id}" >> "${GITHUB_OUTPUT}"
+if github_draft_release_exists "${repo_name}" "${msi64_signed_id}"; then
+    printf "msi-64-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
