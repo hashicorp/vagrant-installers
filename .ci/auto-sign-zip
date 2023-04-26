@@ -42,6 +42,77 @@ function is_entitled() {
     return 1
 }
 
+# Helper to take an array of file paths and sign them with
+# the provided signing command. The path will be appended
+# to the signing command arguments.
+#
+# NOTE: if the %FILE% value is detected in the signing command
+#       arguments it will be replaced with the base name of the
+#       file
+# $1: name of the array variable holding path list
+# $*: signing command
+function sign_collection() {
+    unset jobs
+    declare -A jobs
+    # provided variable name will be an array so
+    # format it to properly reference an array
+    local ref="${1}[@]"
+    local list=( "${!ref}" )
+    # this collects the rest of the arguments which
+    # are the actual signing command
+    local b_cmd=( "${@:2:$#}" )
+    local waited
+    local file
+    local pid
+    for file in "${list[@]}"; do
+        waited="$( background_jobs_limit "${max_jobs}" )" ||
+            failure "Unexpected error while waiting on background jobs"
+        local cmd=()
+        local i
+        for i in "${b_cmd[@]}"; do
+            if [ "${i}" = "%FILE%" ]; then
+                cmd+=( "${file##*/}" )
+                continue
+            fi
+            cmd+=( "${i}" )
+        done
+        "${cmd[@]}" "${file}" &
+        pid="${!}"
+        jobs["${pid}"]="${file}"
+        debug "signing file: %s (pid: %d)" "${file}" "${pid}"
+        # If we had to wait, we know there's a pid that can
+        # be reaped, so do that
+        if [ "${waited}" = "waited" ]; then
+            local reaped
+            for pid in "${!jobs[@]}"; do
+                debug "attempting to reap pid %d (signing %s)" "${pid}" "${jobs[$pid]}"
+                if ! reaped="$( reap_completed_background_job "${pid}" )"; then
+                    # If the output matches the given pid, it was the signing that failed
+                    if [ "${reaped}" = "${pid}" ]; then
+                        failure "Failed to sign file (%s)" "${jobs[$pid]}"
+                    fi
+                    # Otherwise the error was internal
+                    failure "Unexpected error while reaping background PID"
+                fi
+                if [ "${reaped}" = "${pid}" ]; then
+                    debug "successfully reaped pid %d (signing %s)" "${pid}" "${jobs[$pid]}"
+                    # If the output matches the given pid, and no error was encountered
+                    # then the pid can be removed
+                    unset "jobs[${pid}]"
+                fi
+            done
+        fi
+    done
+
+    # Now iterate through remaining jobs and reap processes
+    local pid
+    for pid in "${!jobs[@]}"; do
+        debug "waiting for pid (%d) to complete (siging %s)" "${pid}" "${jobs[$pid]}"
+        wait "${pid}" ||
+            failure "Failed to sign file (%s)" "${jobs[$pid]}"
+    done
+}
+
 zip_file="${1}"
 if [ ! -f "${zip_file}" ]; then
     failure "Invalid path provided for zip file (%s)" "${zip_file}"
@@ -132,67 +203,6 @@ for file in "${entries[@]}"; do
 
     debug "ignoring path which does not require signing: %s" "${file}"
 done
-
-function sign_collection() {
-    unset jobs
-    declare -A jobs
-    local ref="${1}[@]"
-    local list=( "${!ref}" )
-    local b_cmd=( "${@:2:$#}" )
-    local waited
-    local file
-    local pid
-    for file in "${list[@]}"; do
-        waited="$( background_jobs_limit "${max_jobs}" )" ||
-            failure "Unexpected error while waiting on background jobs"
-        local cmd=()
-        local i
-        for i in "${b_cmd[@]}"; do
-            if [ "${i}" = "%FILE%" ]; then
-                cmd+=( "${file##*/}" )
-                continue
-            fi
-            cmd+=( "${i}" )
-        done
-        "${cmd[@]}" "${file}" &
-        pid="${!}"
-        jobs["${pid}"]="${file}"
-        debug "signing file: %s (pid: %d)" "${file}" "${pid}"
-        # If we had to wait, we know there's a pid that can
-        # be reaped, so do that
-        if [ "${waited}" = "waited" ]; then
-            local reaped
-            for pid in "${!jobs[@]}"; do
-                debug "attempting to reap pid %d (signing %s)" "${pid}" "${jobs[$pid]}"
-                if ! reaped="$( reap_completed_background_job "${pid}" )"; then
-                    # If the output matches the given pid, it was the signing that failed
-                    if [ "${reaped}" = "${pid}" ]; then
-                        failure "Failed to sign file (%s)" "${jobs[$pid]}"
-                    fi
-                    # Otherwise the error was internal
-                    failure "Unexpected error while reaping background PID"
-                fi
-                if [ "${reaped}" = "${pid}" ]; then
-                    debug "successfully reaped pid %d (signing %s)" "${pid}" "${jobs[$pid]}"
-                    # If the output matches the given pid, and no error was encountered
-                    # then the pid can be removed
-                    unset "jobs[${pid}]"
-                fi
-            done
-        fi
-    done
-
-    # Now iterate through remaining jobs and reap processes
-    local pid
-    for pid in "${!jobs[@]}"; do
-        debug "waiting for pid (%d) to complete (siging %s)" "${pid}" "${jobs[$pid]}"
-        wait "${pid}" ||
-            failure "Failed to sign file (%s)" "${jobs[$pid]}"
-    done
-}
-
-# Store job information
-declare -A jobs
 
 # Now that files are separated into lists, cycle
 # through them and sign the files
