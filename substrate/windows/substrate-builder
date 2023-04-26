@@ -66,6 +66,8 @@ pushd "${work_dir}" > /dev/null || exit
 work_dir="$(pwd)" || exit
 
 # Grab styrene as it's what's building our substrate
+# NOTE: Forked repository is referenced simply for better
+#       control of the contents.
 printf "checking out styrene...\n"
 git clone https://github.com/chrisroberts/styrene ./styrene  || exit
 
