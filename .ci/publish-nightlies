@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+release_name="${1?Nightly release name required}"
+pkg_dir="${2?Packages directory path required}"
+
+# Resolve the path
+pushd "${pkg_dir}"
+pkg_dir="$(pwd)" ||
+    failure "Invalid package directory provided (%s)" "${pkg_dir}"
+popd
+
+# Create the release
+debug "creating nightly vagrant release - %s" "${release_name}"
+release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -p -m)" ||
+    failure "Could not create GitHub prerelease"
+debug "new release created: %s" "${release_output}"
+release_id="$(printf "%s" "${release_output}" | jq -r '.id')" ||
+    failure "Could not get release ID from release creation response"
+
+# Upload artifacts for the release
+debug "uploading artifacts for vagrant release '%s' (ID: %d)" "${release_name}" "${release_id}"
+github_upload_release_artifacts "vagrant" "${release_id}" "${pkg_dir}"

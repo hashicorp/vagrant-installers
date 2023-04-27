@@ -1,0 +1,179 @@
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  push:
+    branches:
+      - 'nightlies'
+  workflow_dispatch:
+
+jobs:
+  info:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      release-name: ${{ steps.generate.outputs.release-name }}
+      release-exists: ${{ steps.generate.outputs.release-exists }}
+      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot vagrant_token;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Install Ruby
+        run: sudo apt-get install -yq ruby
+        env:
+          DEBIAN_FRONTEND: noninteractive
+      - name: Fetch Vagrant RubyGem
+        id: vagrant-gem
+        run: ./.ci/fetch-vagrant-rubygem
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+      - name: Generate Nightly Information
+        id: generate
+        run: ./.ci/nightly-information "${VAGRANT_VERSION}" "${VAGRANT_SHA}"
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+          VAGRANT_VERSION: ${{ steps.vagrant-gem.outputs.vagrant-version }}
+          VAGRANT_SHA: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+  build-appimage-package:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Build appimage package
+    needs: [info]
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-appimage.yml
+    secrets: inherit
+  build-archlinux-package:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Build Arch Linux Package
+    needs: [info]
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-arch.yml
+    secrets: inherit
+  build-deb-packages:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Build deb packages
+    needs: [info]
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-debs.yml
+    secrets: inherit
+  build-macos-package:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Build macOS package
+    needs: [info]
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-macos.yml
+    secrets: inherit
+  build-rpm-packages:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Build rpm packages
+    needs: [info]
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-rpms.yml
+    secrets: inherit
+  build-windows-packages:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Build Windows Packages
+    needs: [info]
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/build-windows.yml
+    secrets: inherit
+  nightlies-release:
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    name: Nightly Release
+    needs: [info, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot vagrant_token;
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch appimage package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-appimage-package.outputs.appimage-package-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch Arch Linux package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-archlinux-package.outputs.arch-package-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch deb packages
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-deb-packages.outputs.deb-packages-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch macOS DMG
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-macos-package.outputs.dmg-cache-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch rpm packages
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-rpm-packages.outputs.rpm-packages-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch 32 Bit Windows Package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-32-signed-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch 64 Bit Windows Package
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate shasums
+        run: ./.ci/nightlies-shasums ./pkg "${VAGRANT_VERSION}"
+        env:
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_gpg_signer }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          VAGRANT_VERSION: ${{ needs.info.outputs.vagrant-version }}
+      - name: Publish Nightly Build
+        run: ./.ci/publish-nightlies "${RELEASE_NAME}" ./pkg
+        env:
+          RELEASE_NAME: ${{ needs.info.outputs.release-name }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
