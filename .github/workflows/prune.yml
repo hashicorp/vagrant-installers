@@ -6,15 +6,15 @@ on:
 jobs:
   prune-drafts:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Prune stale draft releases
+    name: Prune stale releases
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
-      - name: Prune
-        id: prune
+      - name: Prune Draft Releases
+        id: prune-draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -22,3 +22,12 @@ jobs:
 
           # Prune draft releases over 2 days old
           github_draft_release_prune "2"
+      - name: Prune Prereleases
+        id: prune-prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          . ./.ci/.ci-utility-files/common.sh
+
+          # Prune prereleases over 7 days old
+          github_prerelease_prune "7"
