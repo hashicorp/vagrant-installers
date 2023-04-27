@@ -16,7 +16,9 @@ jobs:
     outputs:
       release-name: ${{ steps.generate.outputs.release-name }}
       release-exists: ${{ steps.generate.outputs.release-exists }}
-      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
+      vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
+      vagrant-commit-id: ${{ steps.vagrant-artifacts.vagrant-repo-commit-id }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -36,9 +38,9 @@ jobs:
         run: sudo apt-get install -yq ruby
         env:
           DEBIAN_FRONTEND: noninteractive
-      - name: Fetch Vagrant RubyGem
-        id: vagrant-gem
-        run: ./.ci/fetch-vagrant-rubygem
+      - name: Fetch Vagrant Artifacts
+        id: vagrant-artifacts
+        run: ./.ci/fetch-vagrant-files
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
       - name: Generate Nightly Information
@@ -173,7 +175,8 @@ jobs:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
           VAGRANT_VERSION: ${{ needs.info.outputs.vagrant-version }}
       - name: Publish Nightly Build
-        run: ./.ci/publish-nightlies "${RELEASE_NAME}" ./pkg
+        run: ./.ci/publish-nightlies "${RELEASE_NAME}" "${COMMIT_ID}" ./pkg
         env:
+          COMMIT_ID: ${{ needs.info.outputs.vagrant-commit-id }}
           RELEASE_NAME: ${{ needs.info.outputs.release-name }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
