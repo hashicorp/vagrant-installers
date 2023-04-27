@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+artifact_directory="${1}"
+version="${2}"
+if [ -z "${artifact_directory}" ]; then
+    failure "Directory for shasum generation is required"
+fi
+
+if [ ! -d "${artifact_directory}" ]; then
+    failure "Path provided for shasum generation is not a directory (%s)" "${artifact_directory}"
+fi
+
+if [ -z "${version}" ]; then
+    failure "Release version is required for generating shasums"
+fi
+
+debug "generating shasum file for artifacts in %s" "${artifact_directory}"
+
+generate_shasums "${artifact_directory}" "vagrant" "${version}"
+
+sumfiles=( "./pkg/"*"SHA256SUMS" )
+sumfile="${sumfiles[0]}"
+if [ ! -f "${sumfile}" ]; then
+    failure "Failed to locate generated shasums file"
+fi
+
+debug "signing shasum file %s" "${sumfile}"
+gpg_sign_file "${sumfile}"

@@ -14,6 +14,7 @@ jobs:
     outputs:
       release-name: ${{ steps.generate.outputs.release-name }}
       release-exists: ${{ steps.generate.outputs.release-exists }}
+      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -120,6 +121,10 @@ jobs:
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Fetch appimage package
@@ -157,6 +162,14 @@ jobs:
         env:
           CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate shasums
+        run: ./.ci/nightlies-shasums ./pkg "${VAGRANT_VERSION}"
+        env:
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_gpg_signer }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          VAGRANT_VERSION: ${{ needs.info.outputs.vagrant-version }}
       - name: Publish Nightly Build
         run: ./.ci/publish-nightlies "${RELEASE_NAME}" ./pkg
         env:
