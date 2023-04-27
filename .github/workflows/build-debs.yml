@@ -51,11 +51,11 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: go.mod
       - name: Install Ruby
@@ -76,14 +76,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: vagrant-rubygem
           path: ./gem
       - name: Build launchers
         run: make bin/launcher/linux
       - name: Store Launchers
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: vagrant-launchers
           path: ./bin
@@ -95,9 +95,9 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Fetch Launchers
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: vagrant-launchers
           path: ./bin
@@ -125,14 +125,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Fetch Substrate
         run: ./.ci/restore-cache "${CACHE_ID}" ./substrates
         env:
           CACHE_ID: ${{ needs.info.outputs.deb-32-substrate-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch RubyGem
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: vagrant-rubygem
           path: ./gem
@@ -151,14 +151,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Fetch Substrate
         run: ./.ci/restore-cache "${CACHE_ID}" ./substrates
         env:
           CACHE_ID: ${{ needs.info.outputs.deb-64-substrate-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch RubyGem
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: vagrant-rubygem
           path: ./gem
@@ -177,7 +177,7 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Fetch Install 32-bit
         run: ./.ci/restore-cache "${CACHE_ID}" ./artifacts
         env:
@@ -189,7 +189,7 @@ jobs:
           CACHE_ID: ${{ needs.info.outputs.deb-64-install-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@55283cc23133118229fd3f97f9336ee23a179fcf # v1.146.0
         with:
           ruby-version: 3.1
       - name: Install fpm

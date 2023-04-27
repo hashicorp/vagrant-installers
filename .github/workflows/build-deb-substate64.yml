@@ -21,17 +21,17 @@ jobs:
       deb-64-substrate-exists: ${{ steps.inspect.outputs.deb-64-substrate-exists }}
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           go-version-file: go.mod
       - name: Build launchers
         run: make bin/launcher/linux-x86_64
       - name: Store Launchers
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: vagrant-launchers
           path: ./bin
@@ -48,9 +48,9 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Fetch Launchers
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: vagrant-launchers
           path: ./bin
