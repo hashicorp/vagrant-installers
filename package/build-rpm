@@ -11,14 +11,23 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/package/common-setup"
 
 installer_file="${1?Vagrant installed zip file required}"
-output_dir="${2?Package output directory required}"
-version="${3?Vagrant version is required}"
-release="${4}"
+vagrant_go="${2?Vagrant go binary file required}"
+output_dir="${3?Package output directory required}"
+version="${4?Vagrant version is required}"
+release="${5}"
 
 # Release isn't really supported now but in case it
 # ever is we allow it to be set
 if [ -z "${release}" ]; then
     release="1"
+fi
+
+if [ ! -f "${installer_file}" ]; then
+    error "Installer path is not a valid file (%s)" "${installer_file}"
+fi
+
+if [ ! -f "${vagrant_go}" ]; then
+    error "Vagrant go path is not a valid file (%s)" "${vagrant_go}"
 fi
 
 # Determine architecture based on file name
@@ -33,6 +42,7 @@ fi
 
 # Get full paths
 installer_file="$(file_directory "${installer_file}")/${installer_file##*/}"
+vagrant_go="$(file_directory "${vagrant_go}")/${vagrant_go##*/}"
 mkdir -p "${output_dir}" || exit
 pushd "${output_dir}" > /dev/null || exit
 output_dir="$(pwd)" || exit
@@ -65,6 +75,10 @@ mkdir -p "${package_dir}/opt/vagrant" || exit
 # Add content to the package
 mv "${install_dir}/bin" "${package_dir}/opt/vagrant" || exit
 mv "${install_dir}/embedded" "${package_dir}/opt/vagrant" || exit
+
+# Include the vagrant-go binary
+cp "${vagrant_go}" "${package_dir}/opt/vagrant/bin/vagrant-go" || exit
+chmod a+x "${package_dir}/opt/vagrant/bin/vagrant-go" || exit
 
 # Add helper scripts
 cp "${root}/package/support/rpm/vagrant" "${package_dir}/usr/bin" || exit

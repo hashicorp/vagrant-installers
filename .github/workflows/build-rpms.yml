@@ -16,6 +16,9 @@ on:
       vagrant-version:
         description: Version of Vagrant package built
         value: ${{ jobs.info.outputs.vagrant-version }}
+      vagrant-commit-id:
+        description: Commit ID on the Vagrant repository associated to this build
+        value: ${{ jobs.info.outputs.vagrant-commit-id }}
 
 jobs:
   info:
@@ -25,8 +28,9 @@ jobs:
       id-token: write
       contents: write
     outputs:
-      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
-      vagrant-shasum: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
+      vagrant-commit-id: ${{ steps.vagrant-artifacts.vagrant-repo-commit-id }}
       rpm-32-substrate-id: ${{ steps.inspect.outputs.rpm-32-substrate-id }}
       rpm-32-substrate-exists: ${{ steps.inspect.outputs.rpm-32-substrate-exists }}
       rpm-32-install-id: ${{ steps.inspect.outputs.rpm-32-install-id }}
@@ -62,9 +66,9 @@ jobs:
         run: sudo apt-get install -yq ruby
         env:
           RPMIAN_FRONTEND: noninteractive
-      - name: Fetch Vagrant RubyGem
-        id: vagrant-gem
-        run: ./.ci/fetch-vagrant-rubygem
+      - name: Fetch Vagrant Artifacts
+        id: vagrant-artifacts
+        run: ./.ci/fetch-vagrant-files
         env:
           VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
           VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
@@ -80,6 +84,11 @@ jobs:
         with:
           name: vagrant-rubygem
           path: ./gem
+      - name: Store Vagrant Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: vagrant-artifacts
+          path: ./vagrant-artifacts
       - name: Build launchers
         run: make bin/launcher/linux
       - name: Store Launchers
@@ -206,12 +215,17 @@ jobs:
           ruby-version: 3.1
       - name: Install fpm
         run: gem install --no-document fpm
+      - name: Fetch Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: vagrant-artifacts
+          path: ./vagrant-artifacts
       - name: Package 32-bit
-        run: ./package/build-rpm ./artifacts/installed_centos_386.zip ./pkgs "${VERSION}"
+        run: ./package/build-rpm ./artifacts/installed_centos_386.zip ./vagrant-artifacts/vagrant-go_linux_386 ./pkgs "${VERSION}"
         env:
           VERSION: ${{ needs.info.outputs.vagrant-version }}
       - name: Package 64-bit
-        run: ./package/build-rpm ./artifacts/installed_centos_x86_64.zip ./pkgs "${VERSION}"
+        run: ./package/build-rpm ./artifacts/installed_centos_x86_64.zip ./vagrant-artifacts/vagrant-go_linux_amd64 ./pkgs "${VERSION}"
         env:
           VERSION: ${{ needs.info.outputs.vagrant-version }}
       - name: Cache Vagrant rpms
