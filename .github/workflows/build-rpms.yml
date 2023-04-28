@@ -30,7 +30,7 @@ jobs:
     outputs:
       vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
       vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
-      vagrant-commit-id: ${{ steps.vagrant-artifacts.vagrant-repo-commit-id }}
+      vagrant-commit-id: ${{ steps.vagrant-artifacts.vagrant-commit-id }}
       rpm-32-substrate-id: ${{ steps.inspect.outputs.rpm-32-substrate-id }}
       rpm-32-substrate-exists: ${{ steps.inspect.outputs.rpm-32-substrate-exists }}
       rpm-32-install-id: ${{ steps.inspect.outputs.rpm-32-install-id }}
