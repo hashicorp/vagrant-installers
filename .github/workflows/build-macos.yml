@@ -97,17 +97,21 @@ jobs:
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
         uses: actions/upload-artifact@v3
+        if: ${{ steps.inspect.outputs.gems-unsigned-exists != 'true' }}
         with:
           name: vagrant-rubygem
           path: ./gem
       - name: Store Vagrant Artifacts
+        if: ${{ steps.inspect.outputs.core-pkg-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-artifacts
           path: ./vagrant-artifacts
       - name: Build launchers
+        if: ${{ steps.inspect.outputs.substrate-arm-unsigned-exists != 'true' || steps.inspect.outputs.substrate-x86-unsigned-exists != 'true' }}
         run: make bin/launcher/darwin
       - name: Store Launchers
+        if: ${{ steps.inspect.outputs.substrate-arm-unsigned-exists != 'true' || steps.inspect.outputs.substrate-x86-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-launchers
@@ -253,9 +257,9 @@ jobs:
           name: vagrant-artifacts
           path: ./vagrant-artifacts
       - name: Relocate Vagrant Go Binary
-        run: mv ./vagrant-artifacts/vagrant-go_darwin_amd64 ./vagrant-go
+        run: mkdir ./vagrant-go-signed && mv ./vagrant-artifacts/vagrant-go_darwin_amd64 ./vagrant-go-signed/vagrant-go
       - name: Sign Vagrant Go Binary
-        run: ./.ci/sign-file -b vagrant-go ./vagrant-go
+        run: ./.ci/sign-file -b vagrant-go ./vagrant-go-signed/vagrant-go
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
@@ -265,7 +269,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-go
-          path: ./vagrant-go
+          path: ./vagrant-go-signed
   sign-x86-substrate:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrate-x86-signed-exists != 'true' && !cancelled() && !failure() }}
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
@@ -435,9 +439,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: vagrant-go
-          path: ./vagrant-go
+          path: ./vagrant-go-signed
       - name: Build core package
-        run: ./package/darwin/build_core_pkg ./artifacts/substrate_darwin_universal.zip ./artifacts/vagrant-package-contents.zip ./vagrant-go "${VAGRANT_VERSION}"
+        run: ./package/darwin/build_core_pkg ./artifacts/substrate_darwin_universal.zip ./artifacts/vagrant-package-contents.zip ./vagrant-go-signed/vagrant-go "${VAGRANT_VERSION}"
         env:
           VAGRANT_VERSION: ${{ needs.info.outputs.vagrant-version }}
       - name: Store core package

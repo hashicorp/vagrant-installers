@@ -65,7 +65,7 @@ jobs:
       - name: Install Ruby
         run: sudo apt-get install -yq ruby
         env:
-          RPMIAN_FRONTEND: noninteractive
+          DEBIAN_FRONTEND: noninteractive
       - name: Fetch Vagrant Artifacts
         id: vagrant-artifacts
         run: ./.ci/fetch-vagrant-files
@@ -80,18 +80,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
+        if: ${{ steps.inspect.outputs.rpm-32-install-exists != 'true' || steps.inspect.outputs.rpm-64-install-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-rubygem
           path: ./gem
       - name: Store Vagrant Artifacts
+        if: ${{ steps.inspect.outputs.rpm-packages-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-artifacts
           path: ./vagrant-artifacts
       - name: Build launchers
+        if: ${{ steps.inspect.outputs.rpm-32-substrate-exists != 'true' || steps.inspect.outputs.rpm-64-substrate-exists != 'true' }}
         run: make bin/launcher/linux
       - name: Store Launchers
+        if: ${{ steps.inspect.outputs.rpm-32-substrate-exists != 'true' || steps.inspect.outputs.rpm-64-substrate-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-launchers

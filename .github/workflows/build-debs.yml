@@ -79,18 +79,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
+        if: ${{ steps.inspect.outputs.deb-32-install-exists != 'true' ||  steps.inspect.outputs.deb-64-install-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-rubygem
           path: ./gem
       - name: Store Vagrant Artifacts
+        if: ${{ steps.inspect.outputs.deb-packages-exist != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-artifacts
           path: ./vagrant-artifacts
       - name: Build launchers
+        if: ${{ steps.inspect.outputs.deb-32-substrate-exists != 'true' ||  steps.inspect.outputs.deb-64-substrate-exists != 'true' }}
         run: make bin/launcher/linux
       - name: Store Launchers
+        if: ${{ steps.inspect.outputs.deb-32-substrate-exists != 'true' ||  steps.inspect.outputs.deb-64-substrate-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-launchers

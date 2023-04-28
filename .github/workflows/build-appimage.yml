@@ -66,6 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
+        if: ${{ steps.inspect.outputs.appimage-package-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-rubygem

@@ -91,13 +91,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
+        if: ${{ steps.inspect.outputs.gems-32-unsigned-exists != 'true' || steps.inspect.outputs.gems-64-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-rubygem
           path: ./gem
       - name: Build launchers
+        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         run: make bin/launcher/windows
       - name: Store Launchers
+        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-launchers
