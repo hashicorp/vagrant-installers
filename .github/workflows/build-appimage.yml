@@ -25,8 +25,8 @@ jobs:
       id-token: write
       contents: write
     outputs:
-      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
-      vagrant-shasum: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
       deb-64-substrate-id: ${{ steps.inspect.outputs.deb-64-substrate-id }}
       deb-64-substrate-exists: ${{ steps.inspect.outputs.deb-64-substrate-exists }}
       appimage-package-id: ${{ steps.inspect.outputs.appimage-package-id }}
@@ -53,8 +53,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
       - name: Fetch Vagrant RubyGem
-        id: vagrant-gem
-        run: ./.ci/fetch-vagrant-rubygem
+        id: vagrant-artifacts
+        run: ./.ci/fetch-vagrant-files
         env:
           VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
           VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
