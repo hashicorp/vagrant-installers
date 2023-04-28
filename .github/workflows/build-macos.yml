@@ -75,6 +75,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Go
+        if: ${{ steps.inspect.outputs.substrate-arm-unsigned-exists != 'true' || steps.inspect.outputs.substrate-x86-unsigned-exists != 'true' }}
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod

@@ -60,6 +60,7 @@ jobs:
           fetch-depth: 0
       - name: Setup Go
         uses: actions/setup-go@v3
+        if: ${{ steps.inspect.outputs.rpm-32-install-exists != 'true' || steps.inspect.outputs.rpm-64-install-exists != 'true' }}
         with:
           go-version-file: go.mod
       - name: Install Ruby

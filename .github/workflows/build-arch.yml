@@ -55,6 +55,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Go
+        if: ${{ steps.inspect.outputs.arch-substrate-exists != 'true' }}
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
