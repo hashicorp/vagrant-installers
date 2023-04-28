@@ -16,9 +16,9 @@ jobs:
     outputs:
       release-name: ${{ steps.generate.outputs.release-name }}
       release-exists: ${{ steps.generate.outputs.release-exists }}
-      vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
-      vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
-      vagrant-commit-id: ${{ steps.vagrant-artifacts.vagrant-repo-commit-id }}
+      vagrant-version: ${{ steps.vagrant-info.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-info.outputs.vagrant-shasum }}
+      vagrant-commit-id: ${{ steps.vagrant-info.vagrant-commit-id }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -38,9 +38,9 @@ jobs:
         run: sudo apt-get install -yq ruby
         env:
           DEBIAN_FRONTEND: noninteractive
-      - name: Fetch Vagrant Artifacts
-        id: vagrant-artifacts
-        run: ./.ci/fetch-vagrant-files
+      - name: Fetch Vagrant Info
+        id: vagrant-info
+        run: ./.ci/fetch-vagrant-info
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
       - name: Generate Nightly Information
@@ -48,8 +48,8 @@ jobs:
         run: ./.ci/nightly-information "${VAGRANT_VERSION}" "${VAGRANT_SHA}"
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
-          VAGRANT_VERSION: ${{ steps.vagrant-gem.outputs.vagrant-version }}
-          VAGRANT_SHA: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+          VAGRANT_VERSION: ${{ steps.vagrant-info.outputs.vagrant-version }}
+          VAGRANT_SHA: ${{ steps.vagrant-info.outputs.vagrant-shasum }}
   build-appimage-package:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
     name: Build appimage package
