@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+pushd "${root}"
+
+# If both names are empty default to main
+# for draft release
+if [ -z "${VAGRANT_DRAFT_NAME}" ] && [ -z "${VAGRANT_RELEASE_NAME}" ]; then
+    debug "no release name provided via github event, defaulting to main draft"
+    VAGRANT_DRAFT_NAME="main"
+fi
+
+# Fetch files into 'vagrant-artifacts' directory
+# so they can be uploaded into the workflow
+mkdir -p ./vagrant-artifacts ||
+    failure "Could not create directory for vagrant artifact storage"
+
+pushd ./vagrant-artifacts
+
+if [ -n "${VAGRANT_RELEASE_NAME}" ]; then
+    debug "fetching vagrant artifacts from vagrant release %s" "${VAGRANT_RELEASE_NAME}"
+    github_release_assets "vagrant" "${VAGRANT_RELEASE_NAME}"
+fi
+
+if [ -n "${VAGRANT_DRAFT_NAME}" ]; then
+    debug "fetching vagrant artifacts from vagrant draft %s" "${VAGRANT_DRAFT_NAME}"
+    github_draft_release_assets "vagrant" "${VAGRANT_DRAFT_NAME}"
+fi
+
+# Unzip any archives (these will be the vagrant-go binaries)
+archives=( ./*.zip )
+for archive in "${archives[@]}"; do
+    unzip -q "${archive}" ||
+        failure "Unable to unpack archive file (%s)" "${archive}"
+    rm -f "${archive}"
+done
+
+popd
+
+mkdir -p ./gem ||
+    failure "Could not create directory for vagrant gem storage"
+
+gem_files=( ./vagrant-artifacts/*.gem )
+gem="${gem_files[0]}"
+if [ ! -f "${gem}" ]; then
+    failure "Could not locate gem in artifacts directory (%s)" "${gem_files[*]}"
+fi
+
+cp "${gem}" ./gem/vagrant.gem ||
+    failure "Could not copy vagrant rubygem into gem directory"
+
+# Get the Vagrant version from the gem
+spec_info="$(gem spec ./gem/vagrant.gem version)" ||
+    failure "Unable to read version information from Vagrant RubyGem"
+vagrant_version="${spec_info##*: }"
+# Generate the shasum of the gem
+sha_info="$(sha1sum ./gem/vagrant.gem)" ||
+    failure "Unable to generate shasum for Vagrant RubyGem"
+vagrant_sha="${sha_info%% *}"
+
+# Get the commit ID for these artifacts
+if [ ! -f "./vagrant-artifacts/commit-id.txt" ]; then
+    failure "Expected commit ID file missing from artifacts (./vagrant-artifacts/commit-id.txt)"
+fi
+commit_id="$( < ./vagrant-artifacts/commit-id.txt )"
+
+# Write the outputs
+printf "vagrant-version=%s\n" "${vagrant_version}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-shasum=%s\n" "${vagrant_sha}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-gem-dir=./gem\n" >> "${GITHUB_OUTPUT}"
+printf "vagrant-artifacts-dir=./vagrant-artifacts\n" >> "${GITHUB_OUTPUT}"

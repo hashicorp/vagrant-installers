@@ -12,8 +12,19 @@ if [ -z "${GITHUB_OUTPUT}" ]; then
     GITHUB_OUTPUT="/dev/stdout"
 fi
 
-release_name="${1?Nightly release name required}"
-pkg_dir="${2?Packages directory path required}"
+release_name="${1}"
+commitish="${2}"
+pkg_dir="${3}"
+
+if [ -z "${release_name}" ]; then
+    failure "Nightly release name required"
+fi
+if [ -z "${commitish}" ]; then
+    failure "Nightly release requires commitish value"
+fi
+if [ -z "${pkg_dir}" ]; then
+    failure "Package directory required for nightly release"
+fi
 
 # Resolve the path
 pushd "${pkg_dir}"
@@ -23,7 +34,7 @@ popd
 
 # Create the release
 debug "creating nightly vagrant release - %s" "${release_name}"
-release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -p -m)" ||
+release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -c "${commitish}" -b "Vagrant nightly release build" -p -m)" ||
     failure "Could not create GitHub prerelease"
 debug "new release created: %s" "${release_output}"
 release_id="$(printf "%s" "${release_output}" | jq -r '.id')" ||

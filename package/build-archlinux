@@ -11,9 +11,10 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/package/common-setup"
 
 installer_file="${1?Vagrant installed zip file required}"
-output_dir="${2?Package output directory required}"
-version="${3?Vagrant version is required}"
-release="${4}"
+vagrant_go="${2?Vagrant go binary path required}"
+output_dir="${3?Package output directory required}"
+version="${4?Vagrant version is required}"
+release="${5}"
 
 # Release isn't really supported now but in case it
 # ever is we allow it to be set
@@ -23,6 +24,7 @@ fi
 
 # Get full paths
 installer_file="$(file_directory "${installer_file}")/${installer_file##*/}"
+vagrant_go="$(file_directory "${vagrant_go}")/${vagrant_go##*/}"
 mkdir -p "${output_dir}" || exit
 pushd "${output_dir}" > /dev/null || exit
 output_dir="$(pwd)" || exit
@@ -38,6 +40,9 @@ install_dir="$(pwd)" || exit
 
 info "Expanding vagrant installation..."
 unzip -q "${installer_file}" || exit
+# Install the vagrant-go binary
+cp "${vagrant_go}" ./bin/vagrant-go || exit
+chmod a+x ./bin/vagrant-go || exit
 popd > /dev/null || exit
 
 # Create a working directory for building the package

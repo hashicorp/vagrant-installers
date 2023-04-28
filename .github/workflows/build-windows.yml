@@ -28,8 +28,8 @@ jobs:
       id-token: write
       contents: write
     outputs:
-      vagrant-version: ${{ steps.vagrant-gem.outputs.vagrant-version }}
-      vagrant-shasum: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
+      vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
       substrates-unsigned-id: ${{ steps.inspect.outputs.substrates-unsigned-id }}
       substrates-unsigned-exists: ${{ steps.inspect.outputs.substrates-unsigned-exists }}
       substrates-32-signed-id: ${{ steps.inspect.outputs.substrates-32-signed-id }}
@@ -70,6 +70,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Go
+        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
@@ -78,8 +79,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
       - name: Fetch Vagrant RubyGem
-        id: vagrant-gem
-        run: ./.ci/fetch-vagrant-rubygem
+        id: vagrant-artifacts
+        run: ./.ci/fetch-vagrant-files
         env:
           VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
           VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
@@ -91,13 +92,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
       - name: Store Vagrant RubyGem
+        if: ${{ steps.inspect.outputs.gems-32-unsigned-exists != 'true' || steps.inspect.outputs.gems-64-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-rubygem
           path: ./gem
       - name: Build launchers
+        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         run: make bin/launcher/windows
       - name: Store Launchers
+        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
           name: vagrant-launchers

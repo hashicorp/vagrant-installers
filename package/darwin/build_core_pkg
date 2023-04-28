@@ -6,8 +6,8 @@ root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
 
 . "${root}/package/common-setup"
 
-if [ "${#}" -ne 3 ]; then
-    printf "Usage: %s SUBSTRATE-FILE GEMS-PACKAGE-FILE VAGRANT-VERSION" "${0}" >&2
+if [ "${#}" -ne 4 ]; then
+    printf "Usage: %s SUBSTRATE-FILE GEMS-PACKAGE-FILE VAGRANT-GO-FILE VAGRANT-VERSION" "${0}" >&2
     exit 1
 fi
 
@@ -17,10 +17,12 @@ cwd="$(pwd)" || exit
 # Grab the parameter values
 substrate_file="${1}"
 gems_package_file="${2}"
-vagrant_version="${3}"
+vagrant_go="${3}"
+vagrant_version="${4}"
 
 substrate_file="$(file_directory "${substrate_file}")/${substrate_file##*/}"
 gems_package_file="$(file_directory "${gems_package_file}")/${gems_package_file##*/}"
+vagrant_go="$(file_directory "${vagrant_go}")/${vagrant_go##*/}"
 
 # Validate the provided values
 if [ ! -f "${substrate_file}" ]; then
@@ -54,6 +56,10 @@ unzip -q "${substrate_file}" || exit
 # Unpack the gems package
 info "Unpacking gems package..."
 unzip -q "${gems_package_file}" || exit
+
+# Install vagrant-go
+cp "${vagrant_go}" ./bin/vagrant-go || exit
+chmod a+x ./bin/vagrant-go || exit
 
 # Hop out of the substrate
 popd > /dev/null || exit

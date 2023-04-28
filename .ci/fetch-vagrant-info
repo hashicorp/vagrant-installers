@@ -19,32 +19,43 @@ if [ -z "${VAGRANT_DRAFT_NAME}" ] && [ -z "${VAGRANT_RELEASE_NAME}" ]; then
     VAGRANT_DRAFT_NAME="main"
 fi
 
-# Fetch the rubygem and store it in the ./gem directory
-# so it can be uploaded for later use in the workflow
-mkdir ./gem || failure "Could not create directory for Vagrant RubyGem"
-pushd ./gem
+mkdir -p ./vagrant-artifacts ||
+    failure "Could not create directory for Vagrant artifacts"
+
+pushd ./vagrant-artifacts
 if [ -n "${VAGRANT_RELEASE_NAME}" ]; then
     debug "fetching vagrant rubygem from vagrant release %s" "${VAGRANT_RELEASE_NAME}"
     github_release_assets "vagrant" "${VAGRANT_RELEASE_NAME}" ".gem"
+    github_release_assets "vagrant" "${VAGRANT_RELEASE_NAME}" ".txt"
 fi
 
 if [ -n "${VAGRANT_DRAFT_NAME}" ]; then
     debug "fetching vagrant rubygem from vagrant draft %s" "${VAGRANT_DRAFT_NAME}"
     github_draft_release_assets "vagrant" "${VAGRANT_DRAFT_NAME}" ".gem"
+    github_draft_release_assets "vagrant" "${VAGRANT_DRAFT_NAME}" ".txt"
 fi
-mv ./*.gem vagrant.gem ||
-    failure "Could not rename Vagrant RubyGem to vagrant.gem"
-popd
+
+g_files=( ./vagrant*.gem )
+gem_file="${g_files[0]}"
+if [ ! -f "${gem_file}" ]; then
+    failure "Failed to detect expected Vagrant RubyGem file (%s)" "${g_files[*]}"
+fi
 
 # Get the Vagrant version from the gem
-spec_info="$(gem spec ./gem/vagrant.gem version)" ||
+spec_info="$(gem spec "${gem_file}" version)" ||
     failure "Unable to read version information from Vagrant RubyGem"
 vagrant_version="${spec_info##*: }"
 # Generate the shasum of the gem
-sha_info="$(sha1sum ./gem/vagrant.gem)" ||
+sha_info="$(sha1sum "${gem_file}")" ||
     failure "Unable to generate shasum for Vagrant RubyGem"
 vagrant_sha="${sha_info%% *}"
+
+if [ ! -f "./commit-id.txt" ]; then
+    failure "Expected commit ID file missing from artifacts (./commit-id.txt)"
+fi
+commit_id="$( <./commit-id.txt )"
 
 # Write the outputs
 printf "vagrant-version=%s\n" "${vagrant_version}" >> "${GITHUB_OUTPUT}"
 printf "vagrant-shasum=%s\n" "${vagrant_sha}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
