@@ -80,7 +80,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
       - name: Fetch Vagrant RubyGem
         id: vagrant-artifacts
-        run: ./.ci/fetch-vagrant-artifacts
+        run: ./.ci/fetch-vagrant-files
         env:
           VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
           VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
