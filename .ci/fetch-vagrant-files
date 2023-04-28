@@ -76,6 +76,6 @@ commit_id="$( < ./vagrant-artifacts/commit-id.txt )"
 # Write the outputs
 printf "vagrant-version=%s\n" "${vagrant_version}" >> "${GITHUB_OUTPUT}"
 printf "vagrant-shasum=%s\n" "${vagrant_sha}" >> "${GITHUB_OUTPUT}"
-printf "vagrant-repo-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
 printf "vagrant-gem-dir=./gem\n" >> "${GITHUB_OUTPUT}"
 printf "vagrant-artifacts-dir=./vagrant-artifacts\n" >> "${GITHUB_OUTPUT}"
