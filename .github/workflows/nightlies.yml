@@ -18,7 +18,7 @@ jobs:
       release-exists: ${{ steps.generate.outputs.release-exists }}
       vagrant-version: ${{ steps.vagrant-info.outputs.vagrant-version }}
       vagrant-shasum: ${{ steps.vagrant-info.outputs.vagrant-shasum }}
-      vagrant-commit-id: ${{ steps.vagrant-info.vagrant-commit-id }}
+      vagrant-commit-id: ${{ steps.vagrant-info.outputs.vagrant-commit-id }}
     steps:
       - name: Authentication
         id: vault-auth

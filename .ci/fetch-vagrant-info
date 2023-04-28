@@ -51,7 +51,7 @@ sha_info="$(sha1sum "${gem_file}")" ||
 vagrant_sha="${sha_info%% *}"
 
 if [ ! -f "./commit-id.txt" ]; then
-    failure "Expected commit ID file missing from artifacts (./vagrant-artifacts/commit-id.txt)"
+    failure "Expected commit ID file missing from artifacts (./commit-id.txt)"
 fi
 commit_id="$( <./commit-id.txt )"
 
