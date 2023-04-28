@@ -12,8 +12,15 @@ if [ -z "${GITHUB_OUTPUT}" ]; then
     GITHUB_OUTPUT="/dev/stdout"
 fi
 
-version="${1?Vagrant version is required}"
-sha="${2?Vagrant RubyGem shasum is required}"
+version="${1}"
+sha="${2}"
+
+if [ -z "${version}" ]; then
+    failure "Vagrant version is required"
+fi
+if [ -z "${sha}" ]; then
+    failure "Vagrant RubyGem shasum is required"
+fi
 
 # Create the name for the nightly release
 nightly_name="${version}+${sha:0:7}"

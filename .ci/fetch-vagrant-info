@@ -42,7 +42,7 @@ if [ ! -f "${gem_file}" ]; then
 fi
 
 # Get the Vagrant version from the gem
-spec_info="$(gem spec "${gem_file}")" ||
+spec_info="$(gem spec "${gem_file}" version)" ||
     failure "Unable to read version information from Vagrant RubyGem"
 vagrant_version="${spec_info##*: }"
 # Generate the shasum of the gem
@@ -53,7 +53,7 @@ vagrant_sha="${sha_info%% *}"
 if [ ! -f "./commit-id.txt" ]; then
     failure "Expected commit ID file missing from artifacts (./vagrant-artifacts/commit-id.txt)"
 fi
-commit_id="$( <./vagrant-artifacts/commit-id.txt )"
+commit_id="$( <./commit-id.txt )"
 
 # Write the outputs
 printf "vagrant-version=%s\n" "${vagrant_version}" >> "${GITHUB_OUTPUT}"
