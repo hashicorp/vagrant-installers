@@ -80,7 +80,9 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Install Ruby
-        run: sudo apt-get install -yq ruby
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq ruby
         env:
           DEBIAN_FRONTEND: noninteractive
       - name: Fetch Vagrant Artifacts
