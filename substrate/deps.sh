@@ -8,8 +8,6 @@
 # a package manager and have more updates applied outside our
 # view. Update the date below to force a new substrate build
 # when no libraries need to be updated:
-#
-# FORCE REBUILD: 2022-08-11 16:52:43-07:00
 
 curl_version="7.87.0"
 libarchive_version="3.6.2"
@@ -31,3 +29,7 @@ zlib_version="1.2.13"
 
 # Only used for centos
 libxcrypt_version="4.4.18"
+
+# Only used for macOS
+macos_sdk_file="MacOSX10.9.sdk.tgz"
+macos_deployment_target="10.10"
