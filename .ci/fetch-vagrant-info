@@ -12,6 +12,10 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/.ci/load-ci.sh"
 pushd "${root}"
 
+if [ "${1}" == "--tag-required" ] && [ -z "${tag}" ]; then
+    failure "Tag is required but workflow was not triggered by a tag"
+fi
+
 # If both names are empty default to main
 # for draft release
 if [ -z "${VAGRANT_DRAFT_NAME}" ] && [ -z "${VAGRANT_RELEASE_NAME}" ]; then
@@ -59,3 +63,4 @@ commit_id="$( <./commit-id.txt )"
 printf "vagrant-version=%s\n" "${vagrant_version}" >> "${GITHUB_OUTPUT}"
 printf "vagrant-shasum=%s\n" "${vagrant_sha}" >> "${GITHUB_OUTPUT}"
 printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-tag=%s\n" "${tag}" >> "${GITHUB_OUTPUT}"
