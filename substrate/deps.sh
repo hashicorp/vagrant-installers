@@ -19,7 +19,7 @@ libiconv_version="1.17"
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_version="1.8.0"
 libxml2_version="2.10.3"
-libxslt_version="1.1.37"
+libxslt_version="1.1.38"
 libyaml_version="0.2.5"
 openssl_version="1.1.1s"
 readline_version="8.2"
