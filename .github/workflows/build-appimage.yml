@@ -49,7 +49,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install Ruby
-        run: sudo apt-get install -yq ruby
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq ruby
         env:
           DEBIAN_FRONTEND: noninteractive
       - name: Fetch Vagrant RubyGem
