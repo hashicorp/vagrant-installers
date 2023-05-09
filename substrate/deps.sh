@@ -31,5 +31,7 @@ zlib_version="1.2.13"
 libxcrypt_version="4.4.18"
 
 # Only used for macOS
-macos_sdk_file="MacOSX10.9.sdk.tgz"
-macos_deployment_target="10.10"
+# NOTE: The 10.12 SDK was the earliest version of the
+#       SDK which could properly build all the dependencies
+macos_sdk_file="MacOSX10.12.sdk.tgz"
+macos_deployment_target="10.12"

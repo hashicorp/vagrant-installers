@@ -319,10 +319,9 @@ if [[ "${target_os}" = "darwin" ]]; then
         fi
 
         if [ -z "${macos_deployment_target}" ]; then
-            # Defines the minimum version of macOS to target
-            # NOTE: Ruby depends on features only available starting with
-            #       10.13. Check if we can pull in the 10.9 sdk manually
-            #       and build with that.
+            # Defines the minimum version of macOS to target when not
+            # already set. Defaults to 10.13 as this will build correctly
+            # on latest
             macos_deployment_target="10.13"
         fi
         target_host="x86_64-apple-darwin"
