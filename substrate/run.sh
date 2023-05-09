@@ -299,11 +299,31 @@ if [[ "${target_os}" = "darwin" ]]; then
     else # By default we target x86_64
         info "   ** macOS build target architecture: x86_64"
 
-        # Defines the minimum version of macOS to target
-        # NOTE: Ruby depends on features only available starting with
-        #       10.13. Check if we can pull in the 10.9 sdk manually
-        #       and build with that.
-        macos_deployment_target="10.13"
+        if [ -n "${macos_sdk_file}" ]; then
+            info "   ** Custom SDK defined (%s), downloading..." "${macos_sdk_file}"
+            pushd "${cache_dir}" > /dev/null || exit
+            sdk_path="$(mktemp -d vagrant-substrate.XXXXX)" || exit
+            pushd "${sdk_path}" > /dev/null || exit
+            sdk_path="$(pwd)" || exit
+            curl -f -L -s -o sdk.tgz "${dep_cache}/${macos_sdk_file}" || exit
+            tar xf ./sdk.tgz || exit
+            files=( ./* )
+            for f in "${files[@]}"; do
+                if [ -d "${f}" ]; then
+                    pushd "${f}" || exit
+                    sdk_path="$(pwd)" || exit
+                    popd || exit
+                fi
+            done
+            popd > /dev/null || exit
+        fi
+
+        if [ -z "${macos_deployment_target}" ]; then
+            # Defines the minimum version of macOS to target when not
+            # already set. Defaults to 10.13 as this will build correctly
+            # on latest
+            macos_deployment_target="10.13"
+        fi
         target_host="x86_64-apple-darwin"
 
         # Modifications required to configure scripts for cross building
@@ -336,7 +356,9 @@ if [[ "${target_os}" = "darwin" ]]; then
         export ARCHFLAGS="-arch x86_64"
     fi
 
-    sdk_path="$(xcrun --sdk macosx --show-sdk-path)" || exit
+    if [ -z "${sdk_path}" ]; then
+        sdk_path="$(xcrun --sdk macosx --show-sdk-path)" || exit
+    fi
 
     export MACOSX_DEPLOYMENT_TARGET="${macos_deployment_target}"
     export SDKROOT="${sdk_path}"
