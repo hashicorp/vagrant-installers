@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# This script is used to check that all the expected
+# types of files associated with a release are found
+# in the provided directory.
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+expected=(
+    "x86_64.pkg.tar.zst"
+    "i686.rpm"
+    "x86_64.rpm"
+    "amd64.deb"
+    "i686.deb"
+    "darwin_amd64.dmg"
+    "darwin_arm64.dmg"
+    "linux_amd64.zip"
+    "windows_amd64.msi"
+    "windows_i686.msi"
+)
+
+check_dir="${1}"
+if [ -z "${check_dir}" ]; then
+    failure "Artifact directory is required"
+fi
+if [ ! -d "${check_dir}" ]; then
+    failure "Invalid path for artifact directory provided (%s)" "${check_dir}"
+fi
+
+pushd "${check_dir}"
+remaining=( "${expected[@]}" )
+
+i=0
+while [ "${i}" -lt "${#expected[@]}" ]; do
+    suffix="${expected[$i]}"
+    debug "checking release artifacts for suffix match - %s" "${suffix}"
+    matches=( *"${suffix}" )
+    debug "matched artifacts: %s" "${matches[*]}"
+    if [ -f "${matches[0]}" ]; then
+        debug "match has been detected for suffix '%s'" "${suffix}"
+        unset "remaining[$i]"
+    fi
+    (( i++ ))
+done
+
+remaining=( "${remaining[@]}" )
+debug "compacted list of unmatched suffix values: %s" "${remaining[*]}"
+
+if [ "${#remaining}" -ne 0 ]; then
+    failure "Missing expected files in artifact directory (%s)" "${remaining[*]}"
+fi
