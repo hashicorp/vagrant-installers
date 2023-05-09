@@ -307,6 +307,14 @@ if [[ "${target_os}" = "darwin" ]]; then
             sdk_path="$(pwd)" || exit
             curl -f -L -s -o sdk.tgz "${dep_cache}/${macos_sdk_file}" || exit
             tar xf ./sdk.tgz || exit
+            files=( ./* )
+            for f in "${files[@]}"; do
+                if [ -d "${f}" ]; then
+                    pushd "${f}" || exit
+                    sdk_path="$(pwd)" || exit
+                    popd || exit
+                fi
+            done
             popd > /dev/null || exit
         fi
 
