@@ -95,12 +95,13 @@ fpm -p "${output_path}" \
     --architecture "${arch}" \
     --rpm-auto-add-directories \
     --rpm-digest sha256 \
-    --maintainer "HashiCorp <support@hashicorp.com>" \
-    --url "https://www.vagrantup.com" \
-    --epoch "${release}" \
-    --url "https://www.vagrantup.com" \
     --license "MIT" \
     --description "Vagrant is a tool for building and distributing development environments." \
+    --vendor "HashiCorp" \
+    --maintainer "HashiCorp <support@hashicorp.com>" \
+    --url "https://www.vagrantup.com" \
+    --epoch 0 \
+    --iteration "${release}" \
     -C "${package_dir}" \
     . || exit
 
