@@ -100,9 +100,13 @@ fpm -p "${output_path}" \
     -t deb \
     --prefix '/' \
     --architecture "${arch}" \
+    --license "MIT" \
+    --description "Vagrant is a tool for building and distributing development environments." \
+    --vendor "HashiCorp" \
     --maintainer "HashiCorp <support@hashicorp.com>" \
     --url "https://www.vagrantup.com" \
-    --epoch "${release}" \
+    --epoch 0 \
+    --iteration "${release}" \
     --deb-user root \
     --deb-group root \
     -C "${package_dir}" \
