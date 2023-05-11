@@ -830,6 +830,7 @@ if [ "${target_os}" = "darwin" ]; then
     while read -r line; do
         # Always ignore the prefix and configure arguments entries
         if [[ "${line}" = *'CONFIG["prefix"]'* ]] || [[ "${line}" = *'CONFIG["configure_args"]'* ]]; then
+            printf "%s\n" "${line}" >> "${rbconfig_file_new}"
             continue
         fi
 
