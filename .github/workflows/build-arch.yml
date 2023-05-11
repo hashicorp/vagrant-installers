@@ -88,7 +88,7 @@ jobs:
         if: ${{ steps.inspect.outputs.arch-package-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-arch
           path: ./vagrant-artifacts
       - name: Build launchers
         if: ${{ steps.inspect.outputs.arch-substrate-exists != 'true' }}
@@ -167,7 +167,7 @@ jobs:
       - name: Fetch Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-arch
           path: ./vagrant-artifacts
       - name: Enable LXD
         run: sudo usermod -a -G lxd "${USER}"

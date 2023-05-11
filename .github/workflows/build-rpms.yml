@@ -92,7 +92,7 @@ jobs:
         if: ${{ steps.inspect.outputs.rpm-packages-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-rpms
           path: ./vagrant-artifacts
       - name: Build launchers
         if: ${{ steps.inspect.outputs.rpm-32-substrate-exists != 'true' || steps.inspect.outputs.rpm-64-substrate-exists != 'true' }}
@@ -225,7 +225,7 @@ jobs:
       - name: Fetch Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-rpms
           path: ./vagrant-artifacts
       - name: Package 32-bit
         run: ./package/build-rpm ./artifacts/installed_centos_386.zip ./vagrant-artifacts/vagrant-go_linux_386 ./pkgs "${VERSION}"

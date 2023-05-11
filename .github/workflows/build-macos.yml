@@ -108,7 +108,7 @@ jobs:
         if: ${{ steps.inspect.outputs.core-pkg-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-darwin
           path: ./vagrant-artifacts
       - name: Build launchers
         if: ${{ steps.inspect.outputs.substrate-arm-unsigned-exists != 'true' || steps.inspect.outputs.substrate-x86-unsigned-exists != 'true' }}
@@ -257,7 +257,7 @@ jobs:
       - name: Fetch Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-darwin
           path: ./vagrant-artifacts
       - name: Relocate Vagrant Go Binary
         run: mkdir ./vagrant-go-signed && mv ./vagrant-artifacts/vagrant-go_darwin_amd64 ./vagrant-go-signed/vagrant-go

@@ -91,7 +91,7 @@ jobs:
         if: ${{ steps.inspect.outputs.deb-packages-exist != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-debs
           path: ./vagrant-artifacts
       - name: Build launchers
         if: ${{ steps.inspect.outputs.deb-32-substrate-exists != 'true' ||  steps.inspect.outputs.deb-64-substrate-exists != 'true' }}
@@ -212,7 +212,7 @@ jobs:
       - name: Fetch Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-artifacts
+          name: vagrant-artifacts-debs
           path: ./vagrant-artifacts
       - name: Package 32-bit
         run: ./package/build-deb ./artifacts/installed_ubuntu_386.zip ./vagrant-artifacts/vagrant-go_linux_386 ./pkgs "${VERSION}"
