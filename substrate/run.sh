@@ -9,6 +9,9 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/substrate/deps.sh"
 
+# This is the default SDK path which should be used within the rbconfig file
+MACOS_DEFAULT_SDK_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+
 #### Software dependencies
 
 dep_cache="https://vagrant-public-cache.s3.amazonaws.com/installers/dependencies"
@@ -357,7 +360,7 @@ if [[ "${target_os}" = "darwin" ]]; then
     fi
 
     if [ -z "${sdk_path}" ]; then
-        sdk_path="$(xcrun --sdk macosx --show-sdk-path)" || exit
+        sdk_path="${MACOS_DEFAULT_SDK_PATH}"
     fi
 
     export MACOSX_DEPLOYMENT_TARGET="${macos_deployment_target}"
@@ -822,14 +825,29 @@ if [ "${target_os}" = "darwin" ]; then
     rm -f "${rbconfig_file_new}"
     # And make sure it exists
     touch "${rbconfig_file_new}" || exit
+    # Enable extended glob
+    shopt -s extglob || exit
     while read -r line; do
-        # Only adjust paths when not the prefix value or the
-        # original configure arguments
-        if [[ "${line}" != *'CONFIG["prefix"]'* ]] && [[ "${line}" != *'CONFIG["configure_args"]'* ]]; then
-            line="${line//"${embed_dir}"/\$(prefix)}"
+        # Always ignore the prefix and configure arguments entries
+        if [[ "${line}" = *'CONFIG["prefix"]'* ]] || [[ "${line}" = *'CONFIG["configure_args"]'* ]]; then
+            continue
+        fi
+
+        # Replace the embedded directory with the computed prefix value
+        line="${line//"${embed_dir}"/\$(prefix)}"
+
+        # Update the SDK paths that are defined if not using the
+        # default SDK path
+        if [[ "${line}" = *"MacOSX.sdk"* ]] && [[ "${line}" != *"${MACOS_DEFAULT_SDK_PATH}"* ]]; then
+            # NOTE: Quoting for string replacement is intentional to properly expand
+            #       the variable without adding quotes which can happen based on
+            #       inconsistent behavior in various bash versions
+            line=${line//-isysroot \/*([^[:space:]])MacOSX.sdk/-isysroot "${MACOS_DEFAULT_SDK_PATH}"}
         fi
         printf "%s\n" "${line}" >> "${rbconfig_file_new}"
     done < "${rbconfig_file}"
+    # Disable extended glob
+    shopt -u extglob
     mv -f "${rbconfig_file_new}" "${rbconfig_file}" || exit
 fi
 
