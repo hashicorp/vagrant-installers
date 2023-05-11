@@ -117,7 +117,7 @@ jobs:
         if: ${{ steps.inspect.outputs.substrate-arm-unsigned-exists != 'true' || steps.inspect.outputs.substrate-x86-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-darwin
           path: ./bin
   build-arm-substrate:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrate-arm-unsigned-exists != 'true' }}
@@ -141,7 +141,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-darwin
           path: ./bin
       - name: Build ARM substrate
         run: ./substrate/run.sh ./artifacts
@@ -174,7 +174,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-darwin
           path: ./bin
       - name: Build x86 substrate
         run: ./substrate/run.sh ./artifacts

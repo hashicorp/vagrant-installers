@@ -100,7 +100,7 @@ jobs:
         if: ${{ steps.inspect.outputs.deb-32-substrate-exists != 'true' ||  steps.inspect.outputs.deb-64-substrate-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-debs
           path: ./bin
   build-substrate-32:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-32-substrate-exists != 'true' }}
@@ -114,7 +114,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-debs
           path: ./bin
       - name: Build Substrate 32-bit
         run: sudo ./.ci/ubuntu-substrate 32 ./artifacts

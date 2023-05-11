@@ -106,7 +106,7 @@ jobs:
         if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-win
           path: ./bin
   build-substrates:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-unsigned-exists != 'true' }}
@@ -118,7 +118,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-win
           path: ./bin
       - name: Build Windows Substrates
         run: powershell -File .\substrate\run.ps1 -OutputDir .\vagrant-substrates -LauncherDirectory .\bin
