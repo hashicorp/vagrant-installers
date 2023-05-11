@@ -85,7 +85,7 @@ jobs:
         if: ${{ steps.inspect.outputs.deb-32-install-exists != 'true' ||  steps.inspect.outputs.deb-64-install-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-debs
           path: ./gem
       - name: Store Vagrant Artifacts
         if: ${{ steps.inspect.outputs.deb-packages-exist != 'true' }}
@@ -149,7 +149,7 @@ jobs:
       - name: Fetch RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-debs
           path: ./gem
       - name: Run install
         run: sudo ./.ci/ubuntu-install ./gem ./substrates ./artifacts
@@ -175,7 +175,7 @@ jobs:
       - name: Fetch RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-debs
           path: ./gem
       - name: Run install
         run: sudo ./.ci/ubuntu-install ./gem ./substrates ./artifacts

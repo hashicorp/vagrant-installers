@@ -102,7 +102,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ steps.inspect.outputs.gems-unsigned-exists != 'true' }}
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-darwin
           path: ./gem
       - name: Store Vagrant Artifacts
         if: ${{ steps.inspect.outputs.core-pkg-unsigned-exists != 'true' }}
@@ -364,7 +364,7 @@ jobs:
       - name: Fetch vagrant gem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-darwin
           path: ./gem
       - name: Install Vagrant
         run: ./package/darwin/generate_package_contents ./universal-substrate/substrate_darwin_universal.zip ./gem/vagrant.gem

@@ -71,7 +71,7 @@ jobs:
         if: ${{ steps.inspect.outputs.appimage-package-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-appimage
           path: ./gem
   build-substrate-64:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
@@ -97,7 +97,7 @@ jobs:
       - name: Fetch RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-appimage
           path: ./gem
       - name: Package appimage
         run: sudo ./.ci/build-appimage-in-chroot ./gem ./substrates ./pkgs

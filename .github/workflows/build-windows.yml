@@ -97,7 +97,7 @@ jobs:
         if: ${{ steps.inspect.outputs.gems-32-unsigned-exists != 'true' || steps.inspect.outputs.gems-64-unsigned-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-win
           path: ./gem
       - name: Build launchers
         if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
@@ -317,7 +317,7 @@ jobs:
       - name: Fetch Vagrant RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-win
           path: ./gem
       - name: Install Vagrant RubyGem
         run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
@@ -360,7 +360,7 @@ jobs:
       - name: Fetch Vagrant RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-win
           path: ./gem
       - name: Install Vagrant RubyGem
         run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed

@@ -82,7 +82,7 @@ jobs:
         if: ${{ steps.inspect.outputs.arch-install-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-arch
           path: ./gem
       - name: Store Vagrant Artifacts
         if: ${{ steps.inspect.outputs.arch-package-exists != 'true' }}
@@ -139,7 +139,7 @@ jobs:
       - name: Fetch vagrant gem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-arch
           path: ./gem
       - name: Enable LXD
         run: sudo usermod -a -G lxd "${USER}"

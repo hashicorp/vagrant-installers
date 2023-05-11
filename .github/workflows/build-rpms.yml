@@ -86,7 +86,7 @@ jobs:
         if: ${{ steps.inspect.outputs.rpm-32-install-exists != 'true' || steps.inspect.outputs.rpm-64-install-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-rpm
           path: ./gem
       - name: Store Vagrant Artifacts
         if: ${{ steps.inspect.outputs.rpm-packages-exists != 'true' }}
@@ -162,7 +162,7 @@ jobs:
       - name: Fetch RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-rpm
           path: ./gem
       - name: Run install
         run: sudo ./.ci/centos-install ./gem ./substrates ./artifacts
@@ -188,7 +188,7 @@ jobs:
       - name: Fetch RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem
+          name: vagrant-rubygem-rpm
           path: ./gem
       - name: Run install
         run: sudo ./.ci/centos-install ./gem ./substrates ./artifacts
