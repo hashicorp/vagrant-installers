@@ -101,7 +101,7 @@ jobs:
         if: ${{ steps.inspect.outputs.rpm-32-substrate-exists != 'true' || steps.inspect.outputs.rpm-64-substrate-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-rpm
           path: ./bin
   build-substrate-32:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-substrate-exists != 'true' }}
@@ -115,7 +115,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-rpm
           path: ./bin
       - name: Build Substrate 32-bit
         run: sudo ./.ci/centos-substrate 32 ./artifacts
@@ -136,7 +136,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-rpm
           path: ./bin
       - name: Build Substrate 64-bit
         run: sudo ./.ci/centos-substrate 64 ./artifacts

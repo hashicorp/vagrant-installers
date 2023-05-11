@@ -33,7 +33,7 @@ jobs:
       - name: Store Launchers
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-debsub
           path: ./bin
       - name: Gather information
         id: inspect
@@ -52,7 +52,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-debsub
           path: ./bin
       - name: Build Substrate 64-bit
         run: sudo ./.ci/ubuntu-substrate 64 ./artifacts

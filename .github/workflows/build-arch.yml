@@ -97,7 +97,7 @@ jobs:
         if: ${{ steps.inspect.outputs.arch-substrate-exists != 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-arch
           path: ./bin
   build-substrate:
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.arch-substrate-exists != 'true' }}
@@ -111,7 +111,7 @@ jobs:
       - name: Fetch Launchers
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-launchers
+          name: vagrant-launchers-arch
           path: ./bin
       - name: Enable LXD
         run: sudo usermod -a -G lxd "${USER}"
