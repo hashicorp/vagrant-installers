@@ -1,13 +1,29 @@
 on:
   workflow_call:
     inputs:
-      vagrant_draft_name:
-        description: Name of the Vagrant repository draft release containing gem for build
-        required: false
+      vagrant-artifacts-name:
+        description: Name of upload containing Vagrant build artifacts
+        required: true
         type: string
-      vagrant_release_name:
-        description: Name of the Vagrant repository release containing gem for build
-        required: false
+      vagrant-artifacts-path:
+        description: Path used for Vagrant build artifacts
+        required: true
+        type: string
+      vagrant-gem-name:
+        description: Name of upload containing the Vagrant RubyGem
+        required: true
+        type: string
+      vagrant-gem-path:
+        description: Path used for the Vagrant RubyGem (directory)
+        required: true
+        type: string
+      vagrant-version:
+        description: Version of Vagrant being built
+        required: true
+        type: string
+      vagrant-shasum:
+        description: The shasum of the Vagrant RubyGem
+        required: true
         type: string
     outputs:
       msi-64-signed-id:
@@ -16,9 +32,6 @@ on:
       msi-32-signed-id:
         description: Cache identifier for Windows i686 msi package
         value: ${{ jobs.info.outputs.msi-32-signed-id }}
-      vagrant-version:
-        description: Version of Vagrant package built
-        value: ${{ jobs.info.outputs.vagrant-version }}
 
 jobs:
   info:
@@ -28,8 +41,6 @@ jobs:
       id-token: write
       contents: write
     outputs:
-      vagrant-version: ${{ steps.vagrant-artifacts.outputs.vagrant-version }}
-      vagrant-shasum: ${{ steps.vagrant-artifacts.outputs.vagrant-shasum }}
       substrates-unsigned-id: ${{ steps.inspect.outputs.substrates-unsigned-id }}
       substrates-unsigned-exists: ${{ steps.inspect.outputs.substrates-unsigned-exists }}
       substrates-32-signed-id: ${{ steps.inspect.outputs.substrates-32-signed-id }}
@@ -74,31 +85,12 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - name: Install Ruby
-        run: |
-          sudo apt-get update
-          sudo apt-get install -yq ruby
-        env:
-          DEBIAN_FRONTEND: noninteractive
-      - name: Fetch Vagrant RubyGem
-        id: vagrant-artifacts
-        run: ./.ci/fetch-vagrant-files
-        env:
-          VAGRANT_DRAFT_NAME: ${{ inputs.draft_name }}
-          VAGRANT_RELEASE_NAME: ${{ inputs.release_name }}
-          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
       - name: Gather information
         id: inspect
         run: ./.ci/windows-build-information
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VAGRANT_SHASUM: ${{ steps.vagrant-gem.outputs.vagrant-shasum }}
-      - name: Store Vagrant RubyGem
-        if: ${{ steps.inspect.outputs.gems-32-unsigned-exists != 'true' || steps.inspect.outputs.gems-64-unsigned-exists != 'true' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: vagrant-rubygem-win
-          path: ./gem
+          VAGRANT_SHASUM: ${{ inputs.vagrant-shasum }}
       - name: Build launchers
         if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
         run: make bin/launcher/windows
@@ -317,8 +309,8 @@ jobs:
       - name: Fetch Vagrant RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem-win
-          path: ./gem
+          name: ${{ inputs.vagrant-gem-name }}
+          path: ${{ inputs.vagrant-gem-path }}
       - name: Install Vagrant RubyGem
         run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
@@ -360,8 +352,8 @@ jobs:
       - name: Fetch Vagrant RubyGem
         uses: actions/download-artifact@v3
         with:
-          name: vagrant-rubygem-win
-          path: ./gem
+          name: ${{ inputs.vagrant-gem-name }}
+          path: ${{ inputs.vagrant-gem-path }}
       - name: Install Vagrant RubyGem
         run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
@@ -556,7 +548,7 @@ jobs:
       - name: Build 32 Bit Windows MSI
         run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -Installed .\signed-gems\installed_windows_386.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
         env:
-          VagrantVersion: ${{ needs.info.outputs.vagrant-version }}
+          VagrantVersion: ${{ inputs.vagrant-version }}
       - name: Upload 32 Bit Vagrant MSI
         uses: actions/upload-artifact@v3
         with:
@@ -582,7 +574,7 @@ jobs:
       - name: Build 64 Bit Windows MSI
         run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -Installed .\signed-gems\installed_windows_x86_64.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
         env:
-          VagrantVersion: ${{ needs.info.outputs.vagrant-version }}
+          VagrantVersion: ${{ inputs.vagrant-version }}
       - name: Upload 64 Bit Vagrant MSI
         uses: actions/upload-artifact@v3
         with:

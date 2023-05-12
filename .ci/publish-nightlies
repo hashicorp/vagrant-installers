@@ -12,6 +12,11 @@ if [ -z "${GITHUB_OUTPUT}" ]; then
     GITHUB_OUTPUT="/dev/stdout"
 fi
 
+if [ "${#}" -ne 3 ]; then
+    printf "Usage: %s RELEASE_NAME COMMITISH ARTIFACT_DIR\n" "${0}" >&2
+    exit 1
+fi
+
 release_name="${1}"
 commitish="${2}"
 pkg_dir="${3}"
@@ -31,6 +36,11 @@ pushd "${pkg_dir}"
 pkg_dir="$(pwd)" ||
     failure "Invalid package directory provided (%s)" "${pkg_dir}"
 popd
+
+if github_release_exists "vagrant" "${release_name}"; then
+    warn "Vagrant release (%s) already exists, removing..." "${release_name}"
+    github_delete_release "${release_name}" "vagrant"
+fi
 
 # Create the release
 debug "creating nightly vagrant release - %s" "${release_name}"

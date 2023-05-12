@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Output to stdout if we aren't on a runner
+if [ -z "${GITHUB_OUTPUT}" ]; then
+    GITHUB_OUTPUT="/dev/stdout"
+fi
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "${#}" -ne 1 ]; then
+    printf "Usage: %s VAGRANT_SOURCE_DIR\n" "${0}" >&2
+    exit 1
+fi
+SOURCE_DIR="${1}"
+if [ ! -d "${SOURCE_DIR}" ]; then
+    failure "Invalid path provided for vagrant source directory (%s)" "${SOURCE_DIR}"
+fi
+
+pushd "${SOURCE_DIR}"
+
+# Get the commit ID for the vagrant source in use
+commit_id="$(git rev-parse HEAD)" ||
+    failure "Failed to get commit ID for Vagrant repository"
+
+printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
+
+# Check if the initial build artifacts have already been cached
+cache_id="vagrant-${commit_id}"
+printf "vagrant-cache-id=%s\n" "${cache_id}" >> "${GITHUB_OUTPUT}"
+
+if github_draft_release_exists "${repo_name}" "${cache_id}"; then
+    printf "vagrant-cache-exists=true\n" >> "${GITHUB_OUTPUT}"
+fi
