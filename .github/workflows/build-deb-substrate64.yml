@@ -5,10 +5,6 @@ on:
         description: Cache identifier for substrate artifact
         required: true
         type: string
-    outputs:
-      substrate-id:
-        description: Cache identifier for deb 64 substrate
-        value: ${{ jobs.info.outputs.deb-64-substrate-id }}
 
 # Since this workflow is used in multiple locations
 # only allow one of them to run at a time to prevent
@@ -16,10 +12,31 @@ on:
 concurrency: ${{ github.workflow }}
 
 jobs:
+  info:
+    name: Check Substrate Exists
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      deb-64-substrate-exists: ${{ steps.exists.outputs.substrate-exists }}
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Substrate Check
+        id: exists
+        run: |
+          . ./.ci/load-ci.sh
+          if github_draft_release_exists "${repo_name}" "${SUBSTRATE_ID}"; then
+            printf "deb-64-substrate-exists=true\n" >> "${GITHUB_OUTPUT}"
+          fi
+        env:
+          SUBSTRATE_ID: ${{ inputs.deb-64-substrate-id }}
   build-substrate-64:
     name: Build Debian 64 Substrate
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
     runs-on: ubuntu-latest
+    needs: [info]
     permissions:
       contents: write
     steps:

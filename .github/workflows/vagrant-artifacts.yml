@@ -91,7 +91,7 @@ jobs:
           go-version-file: go.mod
       - name: Build Vagrant Artifacts
         if: steps.commit.outputs.vagrant-cache-exists != 'true'
-        run: ./vagrant-source/.ci/build "${VAGANT_ARTIFACTS}"
+        run: ./vagrant-source/.ci/build "${VAGRANT_ARTIFACTS}"
         env:
           VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
       - name: Cache Vagrant Artifacts

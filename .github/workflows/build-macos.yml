@@ -144,7 +144,7 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Build Launcher
-        run: make bin/launcher/darwin-arm64
+        run: make bin/launcher/darwin-x86_64
       - name: Build x86 substrate
         run: ./substrate/run.sh ./artifacts
         env:
