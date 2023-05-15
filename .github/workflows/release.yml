@@ -20,6 +20,8 @@ jobs:
       vagrant-tag: ${{ steps.validate.outputs.vagrant-tag }}
       release-exists: ${{ steps.validate.outputs.release-exists }}
     steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
       - name: Validate
         id: validate
         run: |
