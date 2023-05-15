@@ -76,7 +76,7 @@ jobs:
         if: steps.commit.outputs.vagrant-cache-exists == 'true'
         run: ./.ci/restore-cache "${CACHE_ID}" "${VAGRANT_ARTIFACTS}"
         env:
-          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
           CACHE_ID: ${{ steps.commit.outputs.vagrant-cache-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Ruby
@@ -93,33 +93,33 @@ jobs:
         if: steps.commit.outputs.vagrant-cache-exists != 'true'
         run: ./vagrant-source/.ci/build "${VAGANT_ARTIFACTS}"
         env:
-          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
       - name: Cache Vagrant Artifacts
         if: steps.commit.outputs.vagrant-cache-exists != 'true'
         run: ./.ci/create-cache "${CACHE_ID}" "${VAGRANT_ARTIFACTS}"
         env:
-          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
           CACHE_ID: ${{ steps.commit.outputs.vagrant-cache-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract Vagrant Information
         id: info
         run: ./.ci/fetch-vagrant-info "${VAGRANT_ARTIFACTS}"
         env:
-          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
       - name: Upload Vagrant Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.name.outputs.artifacts-name }}
-          path: ${{ steps.name.outputs.artifacts-path }}
+          name: ${{ steps.names.outputs.artifacts-name }}
+          path: ${{ steps.names.outputs.artifacts-path }}
       - name: Isolate Vagrant RubyGem
         run: |
           mkdir gem
           cp "${VAGRANT_ARTIFACTS}/"vagrant*.gem "${VAGRANT_GEM_PATH}/vagrant.gem"
         env:
-          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
-          VAGRANT_GEM_PATH: ${{ steps.name.outputs.gem-path }}
+          VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
+          VAGRANT_GEM_PATH: ${{ steps.names.outputs.gem-path }}
       - name: Upload Vagrant RubyGem
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.name.outputs.gem-name }}
-          path: ${{ steps.name.outputs.gem-path }}
+          name: ${{ steps.names.outputs.gem-name }}
+          path: ${{ steps.names.outputs.gem-path }}
