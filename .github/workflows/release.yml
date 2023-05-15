@@ -1,116 +1,135 @@
 on:
-  push:
-    tags: 'v*'
+  repository_dispatch:
+    types:
+      - hashicorp-release
 
 jobs:
-  info:
+  vagrant-artifacts:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Generate info
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    name: Build Core Vagrant Artifacts
     permissions:
       contents: write
-      id-token: write
+    uses: ./.github/workflows/vagrant-artifacts.yml
+    with:
+      vagrant-commit-id: ${{ github.event.client_payload.commit_id }}
+  info:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Validate Release Tag
+    runs-on: ubuntu-latest
     outputs:
-      vagrant-version: ${{ steps.vagrant-info.outputs.vagrant-version }}
-      vagrant-shasum: ${{ steps.vagrant-info.outputs.vagrant-shasum }}
-      vagrant-commit-id: ${{ steps.vagrant-info.outputs.vagrant-commit-id }}
-      vagrant-tag: ${{ steps.vagrant-info.outputs.vagrant-tag }}
+      vagrant-tag: ${{ steps.validate.outputs.vagrant-tag }}
+      release-exists: ${{ steps.validate.outputs.release-exists }}
     steps:
-      - name: Authentication
-        id: vault-auth
-        run: vault-auth
-      - name: Secrets
-        id: secrets
-        uses: hashicorp/vault-action@v2
-        with:
-          url: ${{ steps.vault-auth.outputs.addr }}
-          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
-          token: ${{ steps.vault-auth.outputs.token }}
-          secrets:
-            kv/data/teams/vagrant/hashibot vagrant_token;
-      - name: Code Checkout
-        uses: actions/checkout@v3
-      - name: Install Ruby
+      - name: Validate
+        id: validate
         run: |
-          sudo apt-get update
-          sudo apt-get install -yq ruby
+          . ./.ci/load-ci.sh
+          if ! valid_release_version "${VAGRANT_TAG}"; then
+            failure "Invalid Vagrant release tag value (%s)" "${VAGRANT_TAG}"
+          fi
+          printf "vagrant-tag=%s\n" "${VAGRANT_TAG}"
         env:
-          DEBIAN_FRONTEND: noninteractive
-      - name: Fetch Vagrant Info
-        id: vagrant-info
-        run: ./.ci/fetch-vagrant-info --tag-required
-        env:
-          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+          VAGRANT_TAG: ${{ github.event.client_payload.tag }}
   build-appimage-package:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build appimage package
-    needs: [info]
+    needs: [info, vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-appimage.yml
     with:
-      vagrant_release_name: ${{ needs.info.outputs.vagrant-tag }}
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   build-archlinux-package:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Arch Linux Package
-    needs: [info]
+    needs: [info, vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-arch.yml
     with:
-      vagrant_release_name: ${{ needs.info.outputs.vagrant-tag }}
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   build-deb-packages:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build deb packages
-    needs: [info]
+    needs: [info, vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-debs.yml
     with:
-      vagrant_release_name: ${{ needs.info.outputs.vagrant-tag }}
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   build-macos-package:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build macOS package
-    needs: [info]
+    needs: [info, vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-macos.yml
     with:
-      vagrant_release_name: ${{ needs.info.outputs.vagrant-tag }}
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   build-rpm-packages:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build rpm packages
-    needs: [info]
+    needs: [info, vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-rpms.yml
     with:
-      vagrant_release_name: ${{ needs.info.outputs.vagrant-tag }}
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   build-windows-packages:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build Windows Packages
-    needs: [info]
+    needs: [info, vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-windows.yml
     with:
-      vagrant_release_name: ${{ needs.info.outputs.vagrant-tag }}
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   release:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Release
-    needs: [info, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
+    needs: [info, vagrant-artifacts, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
@@ -177,7 +196,7 @@ jobs:
         run: ./.ci/publish-release "${VAGRANT_VERSION}" ./pkg
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashicorp_release_github_token }}
-          VAGRANT_VERSION: ${{ needs.info.outputs.vagrant-version }}
+          VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
           SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_gpg_signer }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id  }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}

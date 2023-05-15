@@ -1,0 +1,111 @@
+on:
+  workflow_dispatch:
+    inputs:
+      vagrant-commit-id:
+        description: Vagrant repository commit ID
+        required: false
+        type: string
+    outputs:
+      artifacts-name: vagrant-build-artifacts
+      artifacts-path: ./vagrant-build-artifacts
+      gem-name: vagrant-build-rubygem
+      gem-path: ./gem
+      vagrant-shasum: ${{ jobs.build.outputs.vagrant-shasum }}
+      vagrant-version: ${{ jobs.build.outputs.vagrant-version }}
+      vagrant-commit-id: ${{ jobs.build.outputs.vagrant-commit-id }}
+
+jobs:
+  build:
+    name: Build Vagrant Artifacts
+    if: github.repository == 'hashicorp/vagrant-builders'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      artifacts-name: ${{ steps.names.outputs.artifacts-name }}
+      artifacts-path: ${{ steps.names.outputs.artifacts-path }}
+      gem-name: ${{ steps.names.outputs.gem-name }}
+      gem-path: ${{ steps.names.outputs.gem-path }}
+      vagrant-shasum: ${{ steps.info.outputs.vagrant-shasum }}
+      vagrant-version: ${{ steps.info.outputs.vagrant-version }}
+      vagrant-commit-id: ${{ steps.commit.outputs.vagrant-commit-id }}
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Set Names and Paths
+        id: names
+        run: |
+          printf "artifacts-name=vagrant-build-artifacts\n" >> "${GITHUB_OUTPUT}"
+          printf "artifacts-path=./vagrant-build-artifacts\n" >> "${GITHUB_OUTPUT}"
+          printf "gem-name=vagrant-build-rubygem\n" >> "${GITHUB_OUTPUT}"
+          printf "gem-path=./gem\n" >> "${GITHUB_OUTPUT}"
+      - name: Code Checkout Main
+        if: inputs.vagrant-commit-id == ''
+        uses: actions/checkout@v3
+        with:
+          repository: hashicorp/vagrant
+          ref: main
+          path: ./vagrant-source
+      - name: Code Checkout
+        if: inputs.vagrant-commit-id != ''
+        uses: actions/checkout@v3
+        with:
+          repository: hashicorp/vagrant
+          ref: ${{ inputs.vagrant-commit-id }}
+          path: ./vagrant-source
+      - name: Vagrant Commit ID
+        id: commit
+        run: ./.ci/fetch-vagrant-source-info ./vagrant-source
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch Cached Vagrant Artifacts
+        if: steps.commit.outputs.vagrant-cache-exists == 'true'
+        run: ./.ci/restore-cache "${CACHE_ID}" "${VAGRANT_ARTIFACTS}"
+        env:
+          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          CACHE_ID: ${{ steps.commit.outputs.vagrant-cache-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Ruby
+        if: steps.commit.outputs.vagrant-cache-exists != 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+      - name: Setup Go
+        if: steps.commit.outputs.vagrant-cache-exists != 'true'
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+      - name: Build Vagrant Artifacts
+        if: steps.commit.outputs.vagrant-cache-exists != 'true'
+        run: ./vagrant-source/.ci/build "${VAGANT_ARTIFACTS}"
+        env:
+          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+      - name: Cache Vagrant Artifacts
+        if: steps.commit.outputs.vagrant-cache-exists != 'true'
+        run: ./.ci/create-cache "${CACHE_ID}" "${VAGRANT_ARTIFACTS}"
+        env:
+          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          CACHE_ID: ${{ steps.commit.outputs.vagrant-cache-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Vagrant Information
+        id: info
+        run: ./.ci/fetch-vagrant-info "${VAGRANT_ARTIFACTS}"
+        env:
+          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+      - name: Upload Vagrant Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.name.outputs.artifacts-name }}
+          path: ${{ steps.name.outputs.artifacts-path }}
+      - name: Isolate Vagrant RubyGem
+        run: |
+          mkdir gem
+          cp "${VAGRANT_ARTIFACTS}/"vagrant*.gem "${VAGRANT_GEM_PATH}/vagrant.gem"
+        env:
+          VAGRANT_ARTIFACTS: ${{ steps.name.outputs.artifacts-path }}
+          VAGRANT_GEM_PATH: ${{ steps.name.outputs.gem-path }}
+      - name: Upload Vagrant RubyGem
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.name.outputs.gem-name }}
+          path: ${{ steps.name.outputs.gem-path }}

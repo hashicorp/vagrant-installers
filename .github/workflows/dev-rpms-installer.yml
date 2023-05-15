@@ -1,20 +1,40 @@
 on:
+  repository_dispatch:
+    types:
+      - build-rpms
   push:
     branches:
       - 'build-rpms-*'
+  workflow_dispatch:
 
 jobs:
+  vagrant-artifacts:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: Build Core Vagrant Artifacts
+    permissions:
+      contents: write
+    uses: ./.github/workflows/vagrant-artifacts.yml
+    with:
+      vagrant-commit-id: ${{ github.event.client_payload.commit_id }}
   build-rpm-packages:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build rpm packages
+    needs: [vagrant-artifacts]
     permissions:
       contents: write
       id-token: write
     uses: ./.github/workflows/build-rpms.yml
+    with:
+      vagrant-artifacts-name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+      vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
+      vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   publish:
     if: github.repository == 'hashicorp/vagrant-builders'
-    needs: [build-rpm-packages]
+    needs: [vagrant-artifacts, build-rpm-packages]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -30,4 +50,4 @@ jobs:
         run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VAGRANT_VERSION: ${{ needs.build-rpm-packages.outputs.vagrant-version }}
+          VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}

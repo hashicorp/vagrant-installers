@@ -10,34 +10,17 @@ while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
 root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/load-ci.sh"
-pushd "${root}"
 
-if [ "${1}" == "--tag-required" ] && [ -z "${tag}" ]; then
-    failure "Tag is required but workflow was not triggered by a tag"
+if [ "${#}" -ne 1 ]; then
+    printf "Usage: %s ARTIFACT_DIR\n" "${0}" >&2
+    exit 1
+fi
+ARTIFACT_DIR="${1}"
+if [ ! -d "${ARTIFACT_DIR}" ]; then
+    failure "Invalid path provided for artifact directory (%s)" "${ARTIFACT_DIR}"
 fi
 
-# If both names are empty default to main
-# for draft release
-if [ -z "${VAGRANT_DRAFT_NAME}" ] && [ -z "${VAGRANT_RELEASE_NAME}" ]; then
-    debug "no release name provided via github event, defaulting to main draft"
-    VAGRANT_DRAFT_NAME="main"
-fi
-
-mkdir -p ./vagrant-artifacts ||
-    failure "Could not create directory for Vagrant artifacts"
-
-pushd ./vagrant-artifacts
-if [ -n "${VAGRANT_RELEASE_NAME}" ]; then
-    debug "fetching vagrant rubygem from vagrant release %s" "${VAGRANT_RELEASE_NAME}"
-    github_release_assets "vagrant" "${VAGRANT_RELEASE_NAME}" ".gem"
-    github_release_assets "vagrant" "${VAGRANT_RELEASE_NAME}" ".txt"
-fi
-
-if [ -n "${VAGRANT_DRAFT_NAME}" ]; then
-    debug "fetching vagrant rubygem from vagrant draft %s" "${VAGRANT_DRAFT_NAME}"
-    github_draft_release_assets "vagrant" "${VAGRANT_DRAFT_NAME}" ".gem"
-    github_draft_release_assets "vagrant" "${VAGRANT_DRAFT_NAME}" ".txt"
-fi
+pushd "${ARTIFACT_DIR}"
 
 g_files=( ./vagrant*.gem )
 gem_file="${g_files[0]}"
@@ -54,13 +37,6 @@ sha_info="$(sha1sum "${gem_file}")" ||
     failure "Unable to generate shasum for Vagrant RubyGem"
 vagrant_sha="${sha_info%% *}"
 
-if [ ! -f "./commit-id.txt" ]; then
-    failure "Expected commit ID file missing from artifacts (./commit-id.txt)"
-fi
-commit_id="$( <./commit-id.txt )"
-
 # Write the outputs
 printf "vagrant-version=%s\n" "${vagrant_version}" >> "${GITHUB_OUTPUT}"
 printf "vagrant-shasum=%s\n" "${vagrant_sha}" >> "${GITHUB_OUTPUT}"
-printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
-printf "vagrant-tag=%s\n" "${tag}" >> "${GITHUB_OUTPUT}"
