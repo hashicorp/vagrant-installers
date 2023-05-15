@@ -6,13 +6,27 @@ on:
         required: false
         type: string
     outputs:
-      artifacts-name: vagrant-build-artifacts
-      artifacts-path: ./vagrant-build-artifacts
-      gem-name: vagrant-build-rubygem
-      gem-path: ./gem
-      vagrant-shasum: ${{ jobs.build.outputs.vagrant-shasum }}
-      vagrant-version: ${{ jobs.build.outputs.vagrant-version }}
-      vagrant-commit-id: ${{ jobs.build.outputs.vagrant-commit-id }}
+      artifacts-name:
+        description: Artifact name for Vagrant build artifacts
+        value: ${{ jobs.build.outputs.artifacts-name }}
+      artifacts-path:
+        description: Artifact path for Vagrant build artifacts
+        value: ${{ jobs.build.outputs.artifacts-path }}
+      gem-name:
+        description: Artifact name for Vagrant RubyGem build artifact
+        value: ${{ jobs.build.outputs.gem-name }}
+      gem-path:
+        description: Artifact path for Vagrant RubyGem build artifact
+        value: ${{ jobs.build.outputs.gem-path }}
+      vagrant-shasum:
+        description: SHASUM value used for Vagrant source identification
+        value: ${{ jobs.build.outputs.vagrant-shasum }}
+      vagrant-version:
+        description: Version of Vagrant being built
+        value: ${{ jobs.build.outputs.vagrant-version }}
+      vagrant-commit-id:
+        description: The commit ID (sha) for the Vagrant source being built
+        value: ${{ jobs.build.outputs.vagrant-commit-id }}
 
 jobs:
   build:
