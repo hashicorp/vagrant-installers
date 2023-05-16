@@ -80,7 +80,7 @@ if github_draft_release_exists "${repo_name}" "${corepkg_signed_id}"; then
     printf "core-pkg-signed-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
 
-inst_id="inst-${pkg_id}"
+inst_id="inst-${pkg_cache_base}"
 
 instpkg_unsigned_id="${inst_id}-pkg-unsigned"
 printf "installer-pkg-unsigned-id=%s\n" "${instpkg_unsigned_id}" >> "${GITHUB_OUTPUT}"
