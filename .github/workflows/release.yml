@@ -148,8 +148,7 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
-            kv/data/teams/vagrant/hashibot signore_token;
-
+            kv/data/github/hashicorp/vagrant-builders hashicorp_release_github_token
             kv/data/github/hashicorp/vagrant-builders releases_api_production_host;
             kv/data/github/hashicorp/vagrant-builders releases_api_production_key;
             kv/data/github/hashicorp/vagrant-builders releases_api_staging_host;
@@ -204,7 +203,7 @@ jobs:
       - name: Release Packages
         run: ./.ci/publish-release "${VAGRANT_VERSION}" ./pkg
         env:
-          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.hashicorp_release_github_token }}
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
           SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_gpg_signer }}
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id  }}
