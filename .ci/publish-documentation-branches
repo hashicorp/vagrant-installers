@@ -8,7 +8,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/load-ci.sh"
 
-if [ "${#}" -ne 2 ]; then
+if [ "${#}" -ne 3 ]; then
     printf "Usage: %s TAG_NAME VERSION VAGRANT_DIR\n" "${0}" >&2
     exit 1
 fi

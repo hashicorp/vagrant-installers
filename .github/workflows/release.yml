@@ -129,7 +129,7 @@ jobs:
       vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   release:
-    if: github.repository == 'hashicorp/vagrant-builders'
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
     name: HashiCorp Release
     needs: [info, vagrant-artifacts, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
@@ -218,7 +218,7 @@ jobs:
           HC_RELEASES_STAGING_KEY: ${{ steps.secrets.outputs.releases_api_staging_key }}
           HASHICORP_PUBLIC_GPG_KEY_ID: ${{ vars.HASHICORP_GPG_SIGNING_ID }}
   post-release-github-release:
-    if: github.repository == 'hashicorp/vagrant-builders'
+    if: github.repository == 'hashicorp/vagrant-builders' && !cancelled() && !failure()
     name: GitHub Release
     needs: [info, vagrant-artifacts, release]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
@@ -265,7 +265,7 @@ jobs:
           TAG_NAME: ${{ needs.info.outputs.vagrant-tag }}
           GITHUB_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
   post-release-branches:
-    if: github.repository == 'hashicorp/vagrant-builders'
+    if: github.repository == 'hashicorp/vagrant-builders' && !cancelled() && !failure()
     name: GitHub Branch Updates
     needs: [info, vagrant-artifacts, release]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
