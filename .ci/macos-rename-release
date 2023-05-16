@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+
+if [ "${#}" -ne 1 ]; then
+    printf "Usage: %s PKG_DIR\n" "${0}"
+    exit 1
+fi
+
+pkg_dir="${1}"
+
+if [ -z "${pkg_dir}" ]; then
+    failure "No package directory provided for macos rename"
+fi
+if [ ! -d "${pkg_dir}" ]; then
+    failure "Invalid directory path provided for macos rename (%s)" "${pkg_dir}"
+fi
+
+pushd "${pkg_dir}"
+universal_list=( ./*darwin_universal.dmg )
+universal_pkg="${universal_list[0]}"
+
+if [ ! -f "${universal_pkg}" ]; then
+    failure "Could not locate macos universal package (%s)" "${universal_list[*]}"
+fi
+
+
+x86_name="${universal_pkg%universal.dmg}amd64.dmg"
+arm_name="${universal_pkg%universal.dmg}arm64.dmg"
+
+debug "copying file %s to %s (x86_64 name)" "${universal_pkg}" "${x86_name}"
+cp "${universal_pkg}" "${x86_name}" ||
+    failure "Failed to create x86_64 copy of universal macOS build"
+debug "copying file %s to %s (arm64 name)" "${universal_pkg}" "${arm_name}"
+cp "${universal_pkg}" "${arm_name}" ||
+    failure "Failed to create arm64 copy of universal macOS build"
+
+debug "removing original universal package (%s)" "${universal_pkg}"
+rm -f "${universal_pkg}" ||
+    failure "Could not remove original macos universal package (%s)" "${universal_pkg}"
