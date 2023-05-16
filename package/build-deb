@@ -112,6 +112,17 @@ fpm -p "${output_path}" \
     -C "${package_dir}" \
     . || exit
 
+# Naming scheme requires 686 to be used for 32 bit so adjust
+# the generated name now
+list=( "${output_path}/vagrant"*i386.deb )
+file32="${list[0]}"
+if [ -f "${file32}" ]; then
+    printf "Failed to locate 32 bit build (%s)" "${list[*]}" >&2
+    exit 1
+fi
+new_name="${file32%i386.deb}i686.deb"
+mv "${file32}" "${new_name}" || exit
+
 # Clean up our working directories
 rm -rf "${install_dir}"
 rm -rf "${package_dir}"
