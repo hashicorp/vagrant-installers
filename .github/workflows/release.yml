@@ -29,7 +29,10 @@ jobs:
           if ! valid_release_version "${VAGRANT_TAG}"; then
             failure "Invalid Vagrant release tag value (%s)" "${VAGRANT_TAG}"
           fi
-          printf "vagrant-tag=%s\n" "${VAGRANT_TAG}"
+          printf "vagrant-tag=%s\n" "${VAGRANT_TAG}" >> "${GITHUB_OUTPUT}"
+          if hashicorp_releases_exists "vagrant" "${VAGRANT_TAG#v}"; then
+            printf "release-exists=true\n" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           VAGRANT_TAG: ${{ github.event.client_payload.tag }}
   build-appimage-package:
@@ -259,7 +262,7 @@ jobs:
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id  }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}
       - name: Publish GitHub Release
-        run: ./.ci/publish-github-release "${TAG_NAME}" "${VERSION}" "${ARTIFACT_DIR}"
+        run: ./.ci/publish-github-release "${TAG_NAME}" "${ARTIFACT_DIR}"
         env:
           ARTIFACT_DIR: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
           TAG_NAME: ${{ needs.info.outputs.vagrant-tag }}
