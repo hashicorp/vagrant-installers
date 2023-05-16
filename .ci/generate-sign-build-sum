@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "${#}" -ne 2 ]; then
+    printf "Usage: %s VERSION ARTIFACT_DIR\n" "${0}" >&2
+    exit 1
+fi
+
+version="${1}"
+artifact_dir="${2}"
+
+if [ -z "${version}" ]; then
+    failure "Version is required for github release"
+fi
+if [ -z "${artifact_dir}" ]; then
+    failure "Artifact directory is required for github release"
+fi
+if [ ! -d "${artifact_dir}" ]; then
+    failure "Invalid artifact directory provided for github release (%s)" "${artifact_dir}"
+fi
+
+debug "generating shasums file for build artifacts"
+generate_shasums "${artifact_dir}" "vagrant" "${version}"
+
+list=( "${artifact_dir}/"*_SHA256SUMS )
+shasum_file="${list[0]}"
+if [ ! -f "${shasum_file}" ]; then
+    failure "Could not locate generated shasums file (%s)" "${list[*]}"
+fi
+
+debug "signing shasums file - %s" "${shasum_file}"
+gpg_sign_file "${shasum_file}"

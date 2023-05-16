@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "${#}" -ne 2 ]; then
+    printf "Usage: %s TAG_NAME ARTIFACT_DIR\n" "${0}" >&2
+    exit 1
+fi
+
+tag_name="${1}"
+artifact_dir="${2}"
+
+if [ -z "${tag_name}" ]; then
+    failure "Tag name is required for github release"
+fi
+if [ -z "${artifact_dir}" ]; then
+    failure "Artifact directory is required for github release"
+fi
+if [ ! -d "${artifact_dir}" ]; then
+    failure "Invalid artifact directory provided for github release (%s)" "${artifact_dir}"
+fi
+
+# NOTE: If the release already exists in the Vagrant repository
+#       just print a warning and skip the publish
+if github_release_exists "vagrant" "${tag_name}"; then
+    warn "Vagrant release %s already exists, skipping publish"
+    exit
+fi
+
+artifact_files=( "${artifact_dir}/"* )
+
+debug "creating vagrant github release %s with artifacts: %s" "${tag_name}" "${artifact_files[*]}"
+
+body="CHANGELOG:\n\nhttps://github.com/hashicorp/vagrant/blob/${tag_name}/CHANGELOG.md"
+
+response="$(github_create_release -o "${repo_owner}" -r "vagrant" -t "${tag_name}" -n "${tag_name}" -b "${body}")" ||
+    failure "Failed to create GitHub release"
+release_id="$(printf "%s" "${response}" | jq -r '.id')" ||
+    failure "Failed to extract release ID from response for %s on %s/vagrant" "${tag_name}" "${repo_owner}"
+
+github_upload_release_artifacts "vagrant" "${release_id}" "${artifact_dir}"

@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
+
+. "${root}/.ci/load-ci.sh"
+
+if [ "${#}" -ne 2 ]; then
+    printf "Usage: %s TAG_NAME VERSION VAGRANT_DIR\n" "${0}" >&2
+    exit 1
+fi
+
+tag_name="${1}"
+vagrant_version="${2}"
+vagrant_dir="${3}"
+
+if [ -z "${tag_name}" ]; then
+    failure "Tag name is required for publishing documentation branches"
+fi
+if [ -z "${vagrant_version}" ]; then
+    failure "Vagrant version is required for publishing documentation branches"
+fi
+if [ -z "${vagrant_dir}" ]; then
+    failure "Vagrant repository directory is required for publishing documentation branches"
+fi
+if [ ! -d "${vagrant_dir}" ]; then
+    failure "Invalid Vagrant repository directory path provided (%s)" "${vagrant_dir}"
+fi
+
+pushd "${vagrant_dir}"
+
+debug "generating list of tags to determine previous release (current: %s)" "${vagrant_version}"
+mapfile -t tags < <(git tag -l --sort=-v:refname) # this provides tag list in ascending order
+for ((i=0; i < "${#tags[@]}"; i++))
+do
+    debug "testing current version %s against tag version %s" "${vagrant_version}" "${tags[i]#v}"
+    if [ "$("${root}/.ci/semver" "${vagrant_version}" "${tags[i]#v}")" -eq "1" ]; then
+        idx=$i
+        break
+    fi
+done
+
+if [ -z "${idx}" ]; then
+    fail "Failed to determine previous version from current release - ${vagrant_version}"
+fi
+
+previous_version="${tags[$idx]#v}"
+if [ -z "${previous_version}" ]; then
+    fail "Previous version detection did not provide valid result. (Current release: ${vagrant_version})"
+fi
+
+# Build the branch names for pushing the documentation for
+# the last release. The docs are pushed to two branches:
+#
+# 1. release/1.0.0 - The exact previous release
+# 2. release/1.0.x - The minor previous release
+#
+# The release tag will then be checked out and pushed to the `stable-website`
+# branch which is the "current" release.
+
+last_release_branch="release/${previous_version}"
+last_release_minor_branch="release/${previous_version%.*}.x"
+
+# If the last release branch already exists, skip this so we don't muck
+# up the various branches
+if ! git ls-remote --exit-code --heads origin "${last_release_branch}"; then
+    info "Creating a new %s branch..." "${last_release_branch}"
+
+    # Checkout the stable-website branch as it is the current for the
+    # last release
+    debug "checking out stable-website branch"
+    wrap git checkout stable-website \
+        "Failed to checkout stable-website branch"
+    debug "creating new %s branch" "${last_release_branch}"
+    wrap git checkout -b "${last_release_branch}" \
+        "Failed to create new branch: ${last_release_branch}"
+    debug "pushing new documentation branch - %s" "${last_release_branch}"
+    wrap git push origin "${last_release_branch}" \
+        "Failed to push new branch: ${last_release_branch}"
+
+    info "Creating a new %s branch..." "${last_release_minor_branch}"
+
+    debug "checking out stable-website branch"
+    wrap git checkout stable-website \
+        "Failed to checkout stable-website branch"
+    # The release minor branch will likely not exist locally but
+    # just be sure it's not there
+    debug "deleting minor release branch if it exists locally"
+    git branch -d "${last_release_minor_branch}" > /dev/null 2>&1
+
+    debug "creating new %s branch" "${last_release_minor_branch}"
+    wrap git checkout -b "${last_release_minor_branch}" \
+        "Failed to create new branch: ${last_release_minor_branch}"
+    debug "pushing new documentation branch - %s" "${last_release_minor_branch}"
+    # NOTE: force push the minor release branch since the content of the existing branch is not needed
+    wrap git push -f origin "${last_release_minor_branch}" \
+        "Failed to push new branch: ${last_release_minor_branch}"
+
+    info "Release branches created/updated - %s and %s" "${last_release_branch}" "${last_release_minor_branch}"
+else
+    warn "Skipping Vagrant repository release branch updates, %s already exists" "${last_release_branch}"
+fi
+
+# For the stable-website branch, always update the branch
+
+# start with checking out the current release tag
+debug "checking out current release tag %s" "${tag_name}"
+wrap git checkout "${tag_name}" \
+    "Failed to checkout tag ${tag_name}"
+# delete the stable-website branch if it exists locally
+debug "deleting local stable-website branch"
+git branch -d stable-website > /dev/null 2>&1
+# create a new stable-website branch from the release tag
+debug "creating new local stable-website branch"
+wrap git checkout -b stable-website \
+    "Failed to create new stable-website branch from release tag ${tag_name}"
+debug "pushing stable-website branch for current release"
+# NOTE: force push the stable-website since the content of the existing branch is not needed
+wrap git push -f origin stable-website \
+    "Failed to push stable-website branch with updated content from release tag ${tag_name}"
+
+info "Completed post release repository branch updates"

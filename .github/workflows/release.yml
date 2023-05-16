@@ -130,7 +130,7 @@ jobs:
     secrets: inherit
   release:
     if: github.repository == 'hashicorp/vagrant-builders'
-    name: Release
+    name: HashiCorp Release
     needs: [info, vagrant-artifacts, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -217,3 +217,85 @@ jobs:
           HC_RELEASES_STAGING_HOST: ${{ steps.secrets.outputs.releases_api_staging_host }}
           HC_RELEASES_STAGING_KEY: ${{ steps.secrets.outputs.releases_api_staging_key }}
           HASHICORP_PUBLIC_GPG_KEY_ID: ${{ vars.HASHICORP_GPG_SIGNING_ID }}
+  post-release-github-release:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: GitHub Release
+    needs: [info, vagrant-artifacts, release]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/teams/vagrant/hashibot signore_token;
+            kv/teams/vagrant/hashibot vagrant_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch Vagrant Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
+          path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+      - name: Checksum and Sign Vagrant Build Artifacts
+        run: ./.ci/generate-sign-build-sum "${VERSION}" "${ARTIFACT_DIR}"
+        env:
+          ARTIFACT_DIR: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+          VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+          GITHUB_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_gpg_signer }}
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id  }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_secret }}
+      - name: Publish GitHub Release
+        run: ./.ci/publish-github-release "${TAG_NAME}" "${VERSION}" "${ARTIFACT_DIR}"
+        env:
+          ARTIFACT_DIR: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
+          TAG_NAME: ${{ needs.info.outputs.vagrant-tag }}
+          GITHUB_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+  post-release-branches:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    name: GitHub Branch Updates
+    needs: [info, vagrant-artifacts, release]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/teams/vagrant/hashibot vagrant_token;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Vagrant Code Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: hashicorp/vagrant
+          path: ./vagrant-source
+          token: ${{ steps.secrets.outputs.vagrant_token }}
+          fetch-depth: 0
+      - name: Publish Documentation Branches
+        run: ./.ci/publish-documentation-branches "${TAG_NAME}" "${VERSION}" ./vagrant-source
+        env:
+          VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+          TAG_NAME: ${{ needs.info.outputs.vagrant-tag }}
