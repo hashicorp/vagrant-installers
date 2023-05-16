@@ -9,7 +9,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 release_version="${1}"
 release_dir="${2}"
 
-if [ -z "${release_versio}" ]; then
+if [ -z "${release_version}" ]; then
     failure "Version is required for release"
 fi
 if [ -z "${release_dir}" ]; then
