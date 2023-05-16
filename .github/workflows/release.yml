@@ -237,8 +237,8 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
-            kv/teams/vagrant/hashibot signore_token;
-            kv/teams/vagrant/hashibot vagrant_token;
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/teams/vagrant/hashibot vagrant_token;
             kv/data/github/hashicorp/vagrant-builders signore_client_id;
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
@@ -284,7 +284,7 @@ jobs:
           caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
           token: ${{ steps.vault-auth.outputs.token }}
           secrets:
-            kv/teams/vagrant/hashibot vagrant_token;
+            kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
         uses: actions/checkout@v3
       - name: Vagrant Code Checkout
