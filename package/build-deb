@@ -39,7 +39,8 @@ fi
 #       We have to to honor that convention in fpm for packages to install
 #       properly, and it makes sense to also match it in filenames too.
 if [[ "${installer_file}" = *"386"* ]]; then
-    arch="i386"
+    arch="i686"
+    fpm_arch="i386"
 elif [[ "${installer_file}" = *"x86_64"* ]]; then
     arch="amd64"
 else
@@ -99,7 +100,7 @@ fpm -p "${output_path}" \
     -s dir \
     -t deb \
     --prefix '/' \
-    --architecture "${arch}" \
+    --architecture "${fpm_arch}" \
     --license "MIT" \
     --description "Vagrant is a tool for building and distributing development environments." \
     --vendor "HashiCorp" \
@@ -111,17 +112,6 @@ fpm -p "${output_path}" \
     --deb-group root \
     -C "${package_dir}" \
     . || exit
-
-# Naming scheme requires 686 to be used for 32 bit so adjust
-# the generated name now
-list=( "${output_path}/vagrant"*i386.deb )
-file32="${list[0]}"
-if [ -f "${file32}" ]; then
-    printf "Failed to locate 32 bit build (%s)" "${list[*]}" >&2
-    exit 1
-fi
-new_name="${file32%i386.deb}i686.deb"
-mv "${file32}" "${new_name}" || exit
 
 # Clean up our working directories
 rm -rf "${install_dir}"
