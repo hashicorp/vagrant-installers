@@ -43,6 +43,7 @@ if [[ "${installer_file}" = *"386"* ]]; then
     fpm_arch="i386"
 elif [[ "${installer_file}" = *"x86_64"* ]]; then
     arch="amd64"
+    fpm_arch="amd64"
 else
     fail "Cannot determine architecture from installer path (%s)" \
         "${installer_file}"
