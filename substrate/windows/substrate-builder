@@ -314,6 +314,9 @@ mv -f "${systime_file_new}" "${systime_file}" || exit
 mkdir -p ./etc || exit
 cp "${root}/substrate/common/gemrc" ./etc/gemrc || exit
 
+# include a certificate bundle
+curl -o cacert.pem -SsLf https://curl.se/ca/cacert.pem || exit
+
 # clean out some leftover directories
 rm -rf ./_scripts ./tmp ./var
 
