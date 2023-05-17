@@ -229,7 +229,7 @@ jobs:
           name: ${{ inputs.vagrant-artifacts-name }}
           path: ${{ inputs.vagrant-artifacts-path }}
       - name: Relocate Vagrant Go Binary
-        run: mkdir ./vagrant-go-signed && mv "${VAGRANT_ARTIFACTS}/vagrant-go_darwin_amd64" ./vagrant-go-signed/vagrant-go
+        run: mkdir ./vagrant-go-signed && mv "${VAGRANT_ARTIFACTS}/vagrant-go_darwin_universal" ./vagrant-go-signed/vagrant-go
         env:
           VAGRANT_ARTIFACTS: ${{ inputs.vagrant-artifacts-path }}
       - name: Sign Vagrant Go Binary
