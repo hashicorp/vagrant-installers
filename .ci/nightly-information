@@ -12,8 +12,14 @@ if [ -z "${GITHUB_OUTPUT}" ]; then
     GITHUB_OUTPUT="/dev/stdout"
 fi
 
+if [ "${#}" -ne 3 ]; then
+    printf "Usage: %s VERSION GEM_SHA RUN_ID\n" "${0}" >&2
+    exit 1
+fi
+
 version="${1}"
 sha="${2}"
+run_id="${3}"
 
 if [ -z "${version}" ]; then
     failure "Vagrant version is required"
@@ -21,9 +27,12 @@ fi
 if [ -z "${sha}" ]; then
     failure "Vagrant RubyGem shasum is required"
 fi
+if [ -z "${run_id}" ]; then
+    failure "Run identifier is required"
+fi
 
 # Create the name for the nightly release
-nightly_name="${version}+${sha:0:7}"
+nightly_name="${version}+${run_id}-${sha:0:7}"
 debug "nightly release name: %s" "${nightly_name}"
 
 # Create the output for the release name
