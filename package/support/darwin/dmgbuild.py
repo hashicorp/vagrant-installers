@@ -9,7 +9,7 @@ import os.path
 # Default contents
 
 format = defines.get('format', 'UDZO')
-size = defines.get('size', '102400k')
+size = defines.get('size', '153600k')
 files_dir = defines.get('srcfolder', '.')
 files = [
     "{}/vagrant.pkg".format(files_dir),
