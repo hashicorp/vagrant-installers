@@ -48,7 +48,7 @@ jobs:
         run: ./.ci/nightly-information "${VAGRANT_VERSION}" "${VAGRANT_SHA}" "${RUN_ID}"
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
-          RUN_ID: ${{ github.run_id }}
+          RUN_NUMBER: ${{ github.run_number }}
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
           VAGRANT_SHA: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
   build-appimage-package:
