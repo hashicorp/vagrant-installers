@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Generate Nightly Information
         id: generate
-        run: ./.ci/nightly-information "${VAGRANT_VERSION}" "${VAGRANT_SHA}" "${RUN_ID}"
+        run: ./.ci/nightly-information "${VAGRANT_VERSION}" "${VAGRANT_SHA}" "${RUN_NUMBER}"
         env:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
           RUN_NUMBER: ${{ github.run_number }}
