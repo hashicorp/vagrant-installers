@@ -32,6 +32,7 @@ jobs:
           fi
         env:
           SUBSTRATE_ID: ${{ inputs.deb-64-substrate-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-substrate-64:
     name: Build Debian 64 Substrate
     if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
