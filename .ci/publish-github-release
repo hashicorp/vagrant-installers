@@ -37,7 +37,7 @@ debug "creating vagrant github release %s with artifacts: %s" "${tag_name}" "${a
 
 body="CHANGELOG:\n\nhttps://github.com/hashicorp/vagrant/blob/${tag_name}/CHANGELOG.md"
 
-response="$(github_create_release -o "${repo_owner}" -r "vagrant" -t "${tag_name}" -n "${tag_name}" -b "${body}")" ||
+response="$(github_create_release -m -o "${repo_owner}" -r "vagrant" -t "${tag_name}" -n "${tag_name}" -b "${body}")" ||
     failure "Failed to create GitHub release"
 release_id="$(printf "%s" "${response}" | jq -r '.id')" ||
     failure "Failed to extract release ID from response for %s on %s/vagrant" "${tag_name}" "${repo_owner}"
