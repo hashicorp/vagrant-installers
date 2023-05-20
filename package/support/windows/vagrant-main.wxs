@@ -20,7 +20,8 @@
              InstallerVersion="200"
              InstallPrivileges="elevated"
              InstallScope="perMachine"
-             Manufacturer="!(loc.ManufacturerName)" />
+             Manufacturer="!(loc.ManufacturerName)"
+             Platform="$(var.Platform)" />
 
     <!-- Disallow installing older versions until the new version is removed -->
     <!-- Note that this creates the RemoveExistingProducts action -->
@@ -63,39 +64,24 @@
     -->
     <Property Id="REINSTALLMODE" Value="amus" />
 
-
-    <!-- Get the proper system directory -->
-    <SetDirectory Id="WINDOWSVOLUME" Value="[WindowsVolume]" />
-
-    <PropertyRef Id="WIX_ACCOUNT_USERS" />
-    <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
-
     <!-- The directory where we'll install Vagrant -->
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="WINDOWSVOLUME">
-        <Directory Id="MANUFACTURERDIR" Name="HashiCorp">
-          <Directory Id="INSTALLDIR" Name="Vagrant">
-            <Component Id="VagrantBin"
-                       Guid="12a01bfc-ae9e-4543-8a32-47865cc03071">
-              <!--
-                  Add our bin dir to the PATH so people can use
-                  vagrant right away in the shell.
-              -->
-              <Environment Id="Environment"
-                           Name="PATH"
-                           Action="set"
-                           Part="last"
-                           System="yes"
-                           Value="[INSTALLDIR]bin" />
-
-              <!-- Because we are not in "Program Files" we inherit
-                   permissions that are not desirable. Force new permissions -->
-              <CreateFolder>
-                <Permission GenericAll="yes" User="[WIX_ACCOUNT_ADMINISTRATORS]" />
-                <Permission GenericRead="yes" GenericExecute="yes" User="[WIX_ACCOUNT_USERS]" />
-              </CreateFolder>
-            </Component>
-          </Directory>
+      <Directory Id="$(var.ProgramFilesInstallLocation)">
+        <Directory Id="INSTALLDIR" Name="Vagrant">
+          <Component Id="VagrantBin"
+                     Guid="12a01bfc-ae9e-4543-8a32-47865cc03071">
+            <CreateFolder />
+            <!--
+                Add our bin dir to the PATH so people can use
+                vagrant right away in the shell.
+            -->
+            <Environment Id="Environment"
+                         Name="PATH"
+                         Action="set"
+                         Part="last"
+                         System="yes"
+                         Value="[INSTALLDIR]bin" />
+          </Component>
         </Directory>
       </Directory>
     </Directory>

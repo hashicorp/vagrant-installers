@@ -323,6 +323,44 @@ rm -rf ./_scripts ./tmp ./var
 # and keep the tmp directory so bash doesn't complain
 mkdir -p ./tmp
 
+# final step that is only applied to the 64-bit build is searching for and
+# removing any 32-bit binary files that may have been included within the
+# substrate
+working_directory="$(pwd)"
+printf "locating any 32-bit binary files within '%s'\n" "${working_directory}"
+if ! shopt -s globstar; then
+    printf " !! Could not enable globstar bash option\n" >&2
+    exit 1
+fi
+
+entries=( "${working_directory}/"**/* )
+
+if ! shopt -u globstar; then
+    printf " !! Could not disable globstar bash option\n" >&2
+    exit 1
+fi
+
+for file in "${entries[@]}"; do
+    # If entry is not a file, skip
+    if [ ! -f "${file}" ]; then
+        continue
+    fi
+
+    # Get information on file
+    if ! info="$(file "${file}")" ; then
+        printf " !! Could not get file information (%s)\n" "${file}" >&2
+        exit 1
+    fi
+
+    # Start with check for Windows. If file is executable then
+    # it can be signed. DLL files will be listed as executable.
+    if [[ "${info}" = *"80386"* ]]; then
+        printf "Deleting 32-bit binary file: %s\n" "${file}"
+        rm -f "${file}"
+        continue
+    fi
+done
+
 popd > /dev/null || exit # back to the root of the substrate
 
 # repackage the substrate and save it to the output directory
