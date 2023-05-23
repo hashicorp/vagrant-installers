@@ -227,8 +227,10 @@ jobs:
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
       - name: Publish Nightly Build
-        run: ./.ci/publish-nightlies "${RELEASE_NAME}" "${COMMIT_ID:-main}" ./pkg
+        run: ./.ci/publish-nightlies "${RELEASE_NAME}" "${COMMIT_ID:-main}" "${BRANCH:-main}" "${RELEASE_TYPE}" ./pkg
         env:
           COMMIT_ID: ${{ needs.vagrant-artifacts.outputs.vagrant-commit-id }}
+          BRANCH: ${{ github.event.client_payload.vagrant-branch-name }}
           RELEASE_NAME: ${{ needs.info.outputs.release-name }}
+          RELEASE_TYPE: ${{ github.event.event_type }}
           HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}

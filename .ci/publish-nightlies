@@ -12,23 +12,34 @@ if [ -z "${GITHUB_OUTPUT}" ]; then
     GITHUB_OUTPUT="/dev/stdout"
 fi
 
-if [ "${#}" -ne 3 ]; then
-    printf "Usage: %s RELEASE_NAME COMMITISH ARTIFACT_DIR\n" "${0}" >&2
+if [ "${#}" -ne 5 ]; then
+    printf "Usage: %s RELEASE_NAME COMMITISH BRANCH RELEASE_TYPE ARTIFACT_DIR\n" "${0}" >&2
     exit 1
 fi
 
 release_name="${1}"
 commitish="${2}"
-pkg_dir="${3}"
+branch="${3}"
+release_type="${4}"
+pkg_dir="${5}"
 
 if [ -z "${release_name}" ]; then
-    failure "Nightly release name required"
+    failure "Nightly/build release name required"
 fi
 if [ -z "${commitish}" ]; then
-    failure "Nightly release requires commitish value"
+    failure "Nightly/build release requires commitish value"
 fi
+if [ -z "${branch}" ]; then
+    failure "Nightly/build release requires origin branch value"
+fi
+if [ -z "${release_type}" ]; then
+    failure "Nightly/build release requires release type value"
 if [ -z "${pkg_dir}" ]; then
-    failure "Package directory required for nightly release"
+    failure "Package directory required for nightly/build release"
+fi
+
+if [ "${release_type}" != "nightlies" ] && [ "${release_type}" != "build" ]; then
+    failure "Invalid release type for nightly/build release (%s). Value values: build or nightlies"
 fi
 
 # Resolve the path
@@ -42,9 +53,15 @@ if github_release_exists "vagrant" "${release_name}"; then
     github_delete_release "${release_name}" "vagrant"
 fi
 
+if [ "${release_type}" = "nightlies" ]; then
+    release_body="Vagrant nightly release build"
+else
+    release_body="Custom Vagrant build on [${branch}](https://github.com/hashicorp/vagrant/tree/${branch}) at [${commitish:0:7}](https://github.com/hashicorp/vagrant/commit/${commitish})"
+fi
+
 # Create the release
 debug "creating nightly vagrant release - %s" "${release_name}"
-release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -c "${commitish}" -b "Vagrant nightly release build" -p -m)" ||
+release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -c "${commitish}" -b "${release_body}" -p -m)" ||
     failure "Could not create GitHub prerelease"
 debug "new release created: %s" "${release_output}"
 release_id="$(printf "%s" "${release_output}" | jq -r '.id')" ||
