@@ -107,7 +107,6 @@ fpm -p "${output_path}" \
     --vendor "HashiCorp" \
     --maintainer "HashiCorp <support@hashicorp.com>" \
     --url "https://www.vagrantup.com" \
-    --epoch 0 \
     --iteration "${release}" \
     --deb-user root \
     --deb-group root \
