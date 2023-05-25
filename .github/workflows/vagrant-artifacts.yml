@@ -27,6 +27,10 @@ on:
       vagrant-commit-id:
         description: The commit ID (sha) for the Vagrant source being built
         value: ${{ jobs.build.outputs.vagrant-commit-id }}
+      vagrant-short-commit-id:
+        description: The short commit ID (sha) for the Vagrant source being built
+        value: ${{ jobs.build.outputs.vagrant-short-commit-id }}
+
 
 jobs:
   build:
@@ -43,6 +47,7 @@ jobs:
       vagrant-shasum: ${{ steps.info.outputs.vagrant-shasum }}
       vagrant-version: ${{ steps.info.outputs.vagrant-version }}
       vagrant-commit-id: ${{ steps.commit.outputs.vagrant-commit-id }}
+      vagrant-short-commit-id: ${{ steps.commit.outputs.vagrant-short-commit-id }}
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3

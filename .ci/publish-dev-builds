@@ -34,6 +34,7 @@ if [ -z "${branch}" ]; then
 fi
 if [ -z "${release_type}" ]; then
     failure "Nightly/build release requires release type value"
+fi
 if [ -z "${pkg_dir}" ]; then
     failure "Package directory required for nightly/build release"
 fi
@@ -55,12 +56,13 @@ fi
 
 if [ "${release_type}" = "nightlies" ]; then
     release_body="Vagrant nightly release build"
+    debug "creating nightly vagrant release - %s" "${release_name}"
 else
-    release_body="Custom Vagrant build on [${branch}](https://github.com/hashicorp/vagrant/tree/${branch}) at [${commitish:0:7}](https://github.com/hashicorp/vagrant/commit/${commitish})"
+    release_body="Custom Vagrant build on [${branch}](https://github.com/hashicorp/vagrant/tree/${branch}) at [${commitish:0:8}](https://github.com/hashicorp/vagrant/commit/${commitish})"
+    debug "creating dev build vagrant (branch: %s) release - %s" "${branch}" "${release_name}"
 fi
 
 # Create the release
-debug "creating nightly vagrant release - %s" "${release_name}"
 release_output="$(github_create_release -o "${repo_owner}" -r "vagrant" -n "${release_name}" -t "${release_name}" -c "${commitish}" -b "${release_body}" -p -m)" ||
     failure "Could not create GitHub prerelease"
 debug "new release created: %s" "${release_output}"
