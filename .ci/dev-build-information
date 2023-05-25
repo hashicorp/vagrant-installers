@@ -13,7 +13,7 @@ if [ -z "${GITHUB_OUTPUT}" ]; then
 fi
 
 if [ "${#}" -ne 3 ]; then
-    printf "Usage: %s VERSION GEM_SHA RUN_NUMBER\n" "${0}" >&2
+    printf "Usage: %s VERSION VAGRANT_COMMIT RUN_NUMBER\n" "${0}" >&2
     exit 1
 fi
 
@@ -25,7 +25,7 @@ if [ -z "${version}" ]; then
     failure "Vagrant version is required"
 fi
 if [ -z "${sha}" ]; then
-    failure "Vagrant RubyGem shasum is required"
+    failure "Vagrant commit ID is required"
 fi
 if [ -z "${run_number}" ]; then
     failure "Run number is required"
@@ -33,15 +33,15 @@ fi
 
 run_number="$(printf "%06d" "${run_number}")"
 
-# Create the name for the nightly release
-nightly_name="${version}+${run_number}-${sha:0:7}"
-debug "nightly release name: %s" "${nightly_name}"
+# Create the name for the dev build release
+release_name="${version}+${run_number}-${sha:0:8}"
+debug "release name: %s" "${release_name}"
 
 # Create the output for the release name
-printf "release-name=%s\n" "${nightly_name}" >> "${GITHUB_OUTPUT}"
+printf "release-name=%s\n" "${release_name}" >> "${GITHUB_OUTPUT}"
 
 # Check if the nightly already exists
-if github_release_exists "vagrant" "${nightly_name}"; then
-    debug "nightly release '%s' already exists" "${nightly_name}"
+if github_release_exists "vagrant" "${release_name}"; then
+    debug "nightly release '%s' already exists" "${release_name}"
     printf "release-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi

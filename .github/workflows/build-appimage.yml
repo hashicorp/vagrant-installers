@@ -22,7 +22,7 @@ on:
         required: true
         type: string
       vagrant-shasum:
-        description: The shasum of the Vagrant RubyGem
+        description: The shasum of the Vagrant RubyGem or commit
         required: true
         type: string
     outputs:

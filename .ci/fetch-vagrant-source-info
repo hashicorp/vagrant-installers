@@ -26,10 +26,14 @@ pushd "${SOURCE_DIR}"
 commit_id="$(git rev-parse HEAD)" ||
     failure "Failed to get commit ID for Vagrant repository"
 
+# Trim the commit ID
+short_commit_id="${commit_id:0:8}"
+
 printf "vagrant-commit-id=%s\n" "${commit_id}" >> "${GITHUB_OUTPUT}"
+printf "vagrant-short-commit-id=%s\n" "${short_commit_id}" >> "${GITHUB_OUTPUT}"
 
 # Check if the initial build artifacts have already been cached
-cache_id="vagrant-${commit_id}"
+cache_id="vagrant-${short_commit_id}"
 printf "vagrant-cache-id=%s\n" "${cache_id}" >> "${GITHUB_OUTPUT}"
 
 if github_draft_release_exists "${repo_name}" "${cache_id}"; then

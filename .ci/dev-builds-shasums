@@ -6,6 +6,11 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 . "${root}/.ci/load-ci.sh"
 
+if [ "${#}" -ne 2 ]; then
+    printf "Usage: %s ARTIFACT_DIR VERSION\n" "${0}" >&2
+    exit 1
+fi
+
 artifact_directory="${1}"
 version="${2}"
 if [ -z "${artifact_directory}" ]; then
@@ -24,7 +29,7 @@ debug "generating shasum file for artifacts in %s" "${artifact_directory}"
 
 generate_shasums "${artifact_directory}" "vagrant" "${version}"
 
-sumfiles=( "./pkg/"*"SHA256SUMS" )
+sumfiles=( "./${artifact_directory}/"*"SHA256SUMS" )
 sumfile="${sumfiles[0]}"
 if [ ! -f "${sumfile}" ]; then
     failure "Failed to locate generated shasums file"
