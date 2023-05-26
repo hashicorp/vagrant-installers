@@ -1,3 +1,4 @@
+name: Vagrant DMG Builder
 on:
   workflow_call:
     inputs:

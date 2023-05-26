@@ -1,3 +1,4 @@
+name: Repository Code Sync
 on:
   push:
     branches:

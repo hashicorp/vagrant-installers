@@ -1,3 +1,4 @@
+name: Vagrant Development Build (MSI)
 on:
   repository_dispatch:
     types:

@@ -1,3 +1,4 @@
+name: Vagrant Development Builds
 on:
   repository_dispatch:
     types:

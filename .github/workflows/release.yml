@@ -1,3 +1,4 @@
+name: Vagrant HashiCorp Release
 on:
   repository_dispatch:
     types:
