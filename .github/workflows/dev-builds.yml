@@ -219,7 +219,7 @@ jobs:
         env:
           VAGRANT_ARTIFACTS: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
       - name: Generate shasums
-        run: ./.ci/dev-build-shasums ./pkg "${VAGRANT_VERSION}"
+        run: ./.ci/dev-builds-shasums ./pkg "${VAGRANT_VERSION}"
         env:
           SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
