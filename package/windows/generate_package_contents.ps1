@@ -1,14 +1,11 @@
 <#
 .SYNOPSIS
-Packages a Vagrant installer from a substrate artifact and
-Vagrant Ruby Gem
+Installs the Vagrant RubyGem into a provided substrate. After
+installation is complete, the embedded gems are compressed
+into an artifact at the given destination.
 
 .DESCRIPTION
-Builds an Windows Installer package using a Vagrant substrate
-artifact and Vagrant Ruby Gem.
-
-This script requires administrative privileges which are required
-by MSI utilities invoked by WiX when running ICE modules.
+Create artifact of install Vagrant RubyGem and dependencies
 
 .PARAMETER Substrate
 Path to the substrate artifact file
@@ -17,7 +14,7 @@ Path to the substrate artifact file
 Path to the Vagrant Ruby Gem file
 
 .PARAMETER Destination
-Directory to write installer artifact into
+Destination zip file
 #>
 param(
     [Parameter(Mandatory=$True)]
