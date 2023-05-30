@@ -68,6 +68,7 @@ yum install -y \
     devtoolset-8-toolchain \
     gcc \
     rh-perl524 \
+    rh-perl524-perl-IPC-Cmd \
     rh-perl524-perl-open \
     rh-perl524-perl-Data-Dumper \
     rh-perl524-perl-Thread-Queue \
