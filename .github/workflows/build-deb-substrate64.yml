@@ -29,7 +29,7 @@ jobs:
         run: |
           . ./.ci/load-ci.sh
           if github_draft_release_exists "${repo_name}" "${SUBSTRATE_ID}"; then
-            printf "deb-64-substrate-exists=true\n" >> "${GITHUB_OUTPUT}"
+            printf "substrate-exists=true\n" >> "${GITHUB_OUTPUT}"
           fi
         env:
           SUBSTRATE_ID: ${{ inputs.deb-64-substrate-id }}
