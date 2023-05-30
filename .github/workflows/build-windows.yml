@@ -1,3 +1,4 @@
+name: Vagrant MSI Builder
 on:
   workflow_call:
     inputs:

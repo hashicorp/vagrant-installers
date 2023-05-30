@@ -1,3 +1,4 @@
+name: Vagrant Development Build (Arch Linux)
 on:
   repository_dispatch:
     types:

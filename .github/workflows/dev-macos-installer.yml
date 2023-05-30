@@ -1,3 +1,4 @@
+name: Vagrant Development Build (DMG)
 on:
   repository_dispatch:
     types:

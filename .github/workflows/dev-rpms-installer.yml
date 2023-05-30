@@ -1,3 +1,4 @@
+name: Vagrant Development Build (RPM)
 on:
   repository_dispatch:
     types:

@@ -1,3 +1,4 @@
+name: Vagrant Development Build (DEB)
 on:
   repository_dispatch:
     types:

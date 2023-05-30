@@ -1,3 +1,4 @@
+name: Vagrant Artifact Builder
 on:
   workflow_call:
     inputs:
