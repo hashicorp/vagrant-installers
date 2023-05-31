@@ -150,7 +150,7 @@ jobs:
     secrets: inherit
   build-release:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.release-exists != 'true'
-    name: Nightly Release
+    name: Vagrant GitHub Release
     needs: [vagrant-artifacts, info, build-appimage-package, build-archlinux-package, build-deb-packages, build-macos-package, build-rpm-packages, build-windows-packages]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:

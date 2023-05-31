@@ -33,8 +33,8 @@ jobs:
       vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
       vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
-  publish:
-    if: github.repository == 'hashicorp/vagrant-builders'
+  publish-local:
+    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action != 'build-macos'
     needs: [vagrant-artifacts, build-macos-package]
     runs-on: ubuntu-latest
     permissions:
@@ -52,3 +52,50 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+  publish-vagrant:
+    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action == 'build-macos'
+    needs: [vagrant-artifacts, build-macos-package]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot vagrant_token;
+            kv/data/teams/vagrant/hashibot signore_token;
+            kv/data/github/hashicorp/vagrant-builders signore_client_id;
+            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
+            kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Fetch macOS DMG
+        run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
+        env:
+          CACHE_ID: ${{ needs.build-macos-package.outputs.dmg-cache-id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate shasums
+        run: ./.ci/dev-builds-shasums ./pkg "${VAGRANT_VERSION}"
+        env:
+          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
+          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
+          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_gpg_signer }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
+          VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+      - name: Publish Dev Build
+        run: ./.ci/publish-dev-builds "${RELEASE_NAME}" "${COMMIT_ID:-main}" "${BRANCH:-main}" "${RELEASE_TYPE}" ./pkg
+        env:
+          COMMIT_ID: ${{ needs.vagrant-artifacts.outputs.vagrant-commit-id }}
+          BRANCH: ${{ github.event.client_payload.branch }}
+          RELEASE_NAME: ${{ needs.info.outputs.release-name }}
+          RELEASE_TYPE: ${{ github.event.action }}
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
