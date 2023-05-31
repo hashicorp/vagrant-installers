@@ -35,7 +35,7 @@ artifact_files=( "${artifact_dir}/"* )
 
 debug "creating vagrant github release %s with artifacts: %s" "${tag_name}" "${artifact_files[*]}"
 
-body="CHANGELOG:\n\nhttps://github.com/hashicorp/vagrant/blob/${tag_name}/CHANGELOG.md"
+body="$(printf "CHANGELOG:\n\nhttps://github.com/hashicorp/vagrant/blob/%s/CHANGELOG.md" "${tag_name}")"
 
 response="$(github_create_release -m -o "${repo_owner}" -r "vagrant" -t "${tag_name}" -n "${tag_name}" -b "${body}")" ||
     failure "Failed to create GitHub release"
