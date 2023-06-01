@@ -39,10 +39,6 @@ if [ -z "${pkg_dir}" ]; then
     failure "Package directory required for nightly/build release"
 fi
 
-if [ "${release_type}" != "nightlies" ] && [ "${release_type}" != "build" ]; then
-    failure "Invalid release type for nightly/build release (%s). Value values: build or nightlies"
-fi
-
 # Resolve the path
 pushd "${pkg_dir}"
 pkg_dir="$(pwd)" ||
