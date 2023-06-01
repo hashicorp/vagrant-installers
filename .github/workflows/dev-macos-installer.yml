@@ -19,7 +19,7 @@ jobs:
       vagrant-commit-id: ${{ github.event.client_payload.commit_id }}
   info:
     name: Generate Build Information
-    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action != 'build-macos'
+    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action == 'build-macos'
     needs: [vagrant-artifacts]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:

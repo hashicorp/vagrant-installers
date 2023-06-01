@@ -19,7 +19,7 @@ jobs:
       vagrant-commit-id: ${{ github.event.client_payload.commit_id }}
   info:
     name: Generate Build Information
-    if: github.repository == 'hashicorp/vagrant-builders'  && github.event.action == 'build-rpms'
+    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action == 'build-rpms'
     needs: [vagrant-artifacts]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -52,7 +52,7 @@ jobs:
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
           VAGRANT_SHORT_ID: ${{ needs.vagrant-artifacts.outputs.vagrant-short-commit-id }}
   build-rpm-packages:
-    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action != 'build-rpms'
+    if: github.repository == 'hashicorp/vagrant-builders'
     name: Build rpm packages
     needs: [vagrant-artifacts]
     permissions:
@@ -68,7 +68,7 @@ jobs:
       vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   publish-local:
-    if: github.repository == 'hashicorp/vagrant-builders'
+    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action != 'build-rpms'
     needs: [vagrant-artifacts, build-rpm-packages]
     runs-on: ubuntu-latest
     permissions:
