@@ -127,6 +127,16 @@ debug "unpacking x86 substrate"
 unzip -q "${x86_substrate}"
 popd
 
+# The arm embedded bin directory will contain a stub executable
+# which is used for generating fat files of standalone x86 files.
+# Build the path and verify it exists.
+arm_stub="${arm_dir}/embedded/bin/stub"
+if [ ! -f "${arm_stub}" ]; then
+    failure "Missing arm stub executable (%s)" "${arm_stub}"
+fi
+# Path where stub will be relocated
+universal_arm_stub="${universal_dir}/embedded/bin/stub"
+
 # We now need to create two lists of files. The first is the
 # list of executables and second is the list of libraries
 shopt -s globstar || fail "Could not enable globstar bash option"
@@ -242,11 +252,10 @@ for x86_path in "${x86_executable_files[@]}"; do
     mkdir -p "${universal_dirname}" ||
         fail "Could not create directory: %s" "${universal_dirname}"
 
-    debug "installing x86 only file: %s" "${x86_path}"
-    # And finally move the file
-    mv "${x86_path}" "${universal_path}" ||
-        fail "Failed to relocate file to universal path (source: %s dest: %s)" \
-                "${x86_path}" "${universal_path}"
+    debug "creating fat file of %s using arm stub and installing %s" "${partial_name}" "${universal_path}"
+    go run github.com/randall77/makefat "${universal_path}" "${x86_path}" "${arm_stub}" ||
+        failure "Could not create fat binary (source: %s dest: %s)" \
+            "${x86_path}" "${universal_path}"
 done
 
 # Now arm libraries
@@ -299,11 +308,10 @@ for x86_path in "${x86_library_files[@]}"; do
     mkdir -p "${universal_dirname}" ||
         fail "Could not create directory: %s" "${universal_dirname}"
 
-    debug "installing x86 only file: %s" "${x86_path}"
-    # And finally move the file
-    mv "${x86_path}" "${universal_path}" ||
-        fail "Failed to relocate x86 file to universal path (source: %s dest: %s)" \
-                "${x86_path}" "${universal_path}"
+    debug "creating fat file of %s using arm stub and installing %s" "${partial_name}" "${universal_path}"
+    go run github.com/randall77/makefat "${universal_path}" "${x86_path}" "${arm_stub}" ||
+        failure "Could not create fat binary (source: %s dest: %s)" \
+            "${x86_path}" "${universal_path}"
 done
 
 # Move any remaining arm64 files
@@ -349,6 +357,9 @@ for x86_path in "${x86_remaining_files[@]}"; do
         fail "Failed to relocate x86 file to universal path (source: %s dest: %s)" \
                 "${x86_path}" "${universal_path}"
 done
+
+# Remove the arm stub before generating artifact
+rm -f "${universal_arm_stub}"
 
 # Now that we have our new substrate constructed, pack
 # it up to be stored
