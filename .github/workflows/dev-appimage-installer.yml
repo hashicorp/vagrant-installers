@@ -17,6 +17,40 @@ jobs:
     uses: ./.github/workflows/vagrant-artifacts.yml
     with:
       vagrant-commit-id: ${{ github.event.client_payload.commit_id }}
+  info:
+    name: Generate Build Information
+    if: github.repository == 'hashicorp/vagrant-builders'  && github.event.action == 'build-appimage'
+    needs: [vagrant-artifacts]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      release-name: ${{ steps.generate.outputs.release-name }}
+      release-exists: ${{ steps.generate.outputs.release-exists }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot vagrant_token;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Generate Development Build Information
+        id: generate
+        run: ./.ci/dev-build-information "${VAGRANT_VERSION}" "${VAGRANT_SHORT_ID}" "${RUN_NUMBER}"
+        env:
+          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+          RUN_NUMBER: ${{ github.run_number }}
+          VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
+          VAGRANT_SHORT_ID: ${{ needs.vagrant-artifacts.outputs.vagrant-short-commit-id }}
   build-appimage-package:
     if: github.repository == 'hashicorp/vagrant-builders'
     name: Build appimage package
@@ -54,7 +88,7 @@ jobs:
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
   publish-vagrant:
     if: github.repository == 'hashicorp/vagrant-builders' && github.event.action == 'build-appimage'
-    needs: [vagrant-artifacts, build-appimage-package]
+    needs: [vagrant-artifacts, info, build-appimage-package]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
