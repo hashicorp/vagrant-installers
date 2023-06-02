@@ -862,27 +862,6 @@ if [ "${target_os}" = "darwin" ]; then
     done < <( find "${embed_libdir}" -name "*.bundle" )
 fi
 
-# For darwin builds, when the substrates are combined a
-# stub arm executable will be needed to combine with x86
-# files that do not have a matching arm path.
-if [ "${target_ident}" = "darwin_arm64" ]; then
-    stub_dir="$(mktemp -d vagrant-stub.XXXXX)" || exit
-    pushd "${stub_dir}" || exit
-    cat > main.c <<EOF
-#include <stdio.h>
-
-int main(void)
-{
-        puts("ERROR: This is a Vagrant stub that should not be executed!");
-        return 1;
-}
-EOF
-    gcc -o stub main.c || exit
-    mv ./stub "${embed_bindir}/stub" || exit
-    popd || exit
-    rm -rf "${stub_dir:?}" || exit
-fi
-
 # Install the launcher
 info "   -> Installing vagrant launcher..."
 cp "${launcher_path}" "${build_dir}/bin/vagrant" || exit

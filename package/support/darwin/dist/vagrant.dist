@@ -15,6 +15,11 @@
          components to install. -->
     <options customize="never" />
 
+    <!-- Mark this as package as supporting host architecture for
+         x86 and arm. This will prevent macOS from requiring rosetta
+         on arm hosts -->
+    <options hostArchitectures="x86_64,arm64" />
+
     <!-- The "choices" for things that can be installed, although the
          user has no actually choice, they're still required so that
          the installer knows what to install. -->
