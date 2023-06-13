@@ -420,7 +420,7 @@ if needs_build "${tracker_file}" "libffi"; then
     pushd libffi-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-static --enable-shared --disable-debug \
         --enable-portable-binary --disable-docs --disable-dependency-tracking \
-        --libdir="${embed_libdir}" "${cross_configure_libffi[@]}" \
+        --disable-multi-os-directory --libdir="${embed_libdir}" "${cross_configure_libffi[@]}" \
         "${cross_configure[@]}" || exit
     make || exit
     make install || exit
@@ -626,9 +626,27 @@ if needs_build "${tracker_file}" "openssl"; then
     if [ "${MACOS_TARGET}" = "arm64" ]; then
         ./Configure zlib no-asm no-tests shared --prefix="${embed_dir}" darwin64-arm64-cc || exit
     elif [ "${target_os}" = "linux" ] && [ "${target_arch}" = "386" ]; then
-        ./Configure zlib no-tests shared --prefix="${embed_dir}" linux-generic32 || exit
+        cat <<'EOF' > ./Configurations/99-vagrant.conf
+(
+    "linux-32" => {
+        inherit_from => [ 'linux-generic32' ],
+        shlib_variant => "-vagrant",
+    }
+);
+EOF
+        ./Configure zlib no-tests shared --prefix="${embed_dir}" --libdir=lib linux-32 || exit
+    elif [ "${target_os}" = "linux" ] && [ "${target_arch}" = "x86_64" ]; then
+        cat <<'EOF' > ./Configurations/99-vagrant.conf
+(
+    "linux-64" => {
+        inherit_from => [ 'linux-x86_64' ],
+        shlib_variant => "-vagrant",
+    }
+);
+EOF
+        ./Configure zlib no-tests shared --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" linux-64 || exit
     else
-        ./config --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" zlib shared || exit
+        ./Configure --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" zlib shared || exit
     fi
     make || exit
     make install_sw || exit
