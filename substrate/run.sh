@@ -634,7 +634,7 @@ if needs_build "${tracker_file}" "openssl"; then
     }
 );
 EOF
-        ./Configure zlib no-tests shared --prefix="${embed_dir}" linux-32 || exit
+        ./Configure zlib no-tests shared --prefix="${embed_dir}" --libdir=lib linux-32 || exit
     elif [ "${target_os}" = "linux" ] && [ "${target_arch}" = "x86_64" ]; then
         cat <<'EOF' > ./Configurations/99-vagrant.conf
 (
@@ -644,7 +644,7 @@ EOF
     }
 );
 EOF
-        ./Configure zlib no-tests shared --prefix="${embed_dir}" linux-64 || exit
+        ./Configure zlib no-tests shared --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" linux-64 || exit
     else
         ./Configure --prefix="${embed_dir}" --libdir=lib --openssldir="${embed_dir}" zlib shared || exit
     fi
