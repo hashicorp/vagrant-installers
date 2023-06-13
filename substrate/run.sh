@@ -420,7 +420,7 @@ if needs_build "${tracker_file}" "libffi"; then
     pushd libffi-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --disable-static --enable-shared --disable-debug \
         --enable-portable-binary --disable-docs --disable-dependency-tracking \
-        --libdir="${embed_libdir}" "${cross_configure_libffi[@]}" \
+        --disable-multi-os-directory --libdir="${embed_libdir}" "${cross_configure_libffi[@]}" \
         "${cross_configure[@]}" || exit
     make || exit
     make install || exit
