@@ -157,14 +157,15 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders releases_api_production_key;
             kv/data/github/hashicorp/vagrant-builders releases_api_staging_host;
             kv/data/github/hashicorp/vagrant-builders releases_api_staging_key;
-            kv/data/github/hashicorp/vagrant-builders releases_aws_access_key_id;
-            kv/data/github/hashicorp/vagrant-builders releases_aws_secret_access_key;
-            kv/data/github/hashicorp/vagrant-builders releases_aws_role_arn;
             kv/data/github/hashicorp/vagrant-builders signore_client_id;
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
       - name: Code Checkout
         uses: actions/checkout@v3
+      - name: Doormat Configuration
+        uses: hashicorp/doormat-action@v1
+        with:
+          aws-role-arn: ${{ vars.RELEASE_ROLE_ARN }}
       - name: Fetch appimage package
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
