@@ -1,0 +1,47 @@
+name: Development Build Notifier
+on:
+  workflow_run:
+    workflows:
+      - .github/workflows/dev-appimage-installer.yml
+      - .github/workflows/dev-archlinux-installer.yml
+      - .github/workflows/dev-builds.yml
+      - .github/workflows/dev-debs-installer.yml
+      - .github/workflows/dev-macos-installer.yml
+      - .github/workflows/dev-rpms-installer.yml
+      - .github/workflows/dev-windows-installer.yml
+    types:
+      - completed
+
+jobs:
+  failed:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/slack webhook;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Send Notification
+        run: |
+          . .ci/load-ci.sh || exit
+          slack -m "$(printf "Vagrant development build failed\n\n* [%s](%s)" "${WORKFLOW_NAME}" "${WORKFLOW_URL}")"
+        env:
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
+          SLACK_CHANNEL: '#feed-vagrant'
+          SLACK_USERNAME: Vagrant Builder
+          SLACK_TITLE: '⚠️ Vagrant Development Build ⚠️'
+          SLACK_STATE: error
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.url }}
