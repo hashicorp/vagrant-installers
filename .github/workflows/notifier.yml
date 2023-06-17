@@ -1,0 +1,71 @@
+name: Release Notifier
+on:
+  workflow_run:
+    workflows:
+      - .github/workflows/release.yml
+    types:
+      - completed
+
+jobs:
+  released:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/slack webhook;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Send Notification
+        run: |
+          . .ci/load-ci.sh || exit
+          slack -m "$(printf "[Vagrant release process](%s) has completed successfully 🎉\n\nUpdate [checkpoint](https://checkpoint.hashicorp.com/control) to finalize release." "${WORKFLOW_URL")"
+        env:
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
+          SLACK_CHANNEL: '#team-vagrant'
+          SLACK_USERNAME: Release Notification
+          SLACK_TITLE: Vagrant Release Process
+          SLACK_STATE: success
+          WORKFLOW_URL: ${{ github.event.workflow_run.url }}
+  failed:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      id-token: write
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/slack webhook;
+      - name: Code Checkout
+        uses: actions/checkout@v3
+      - name: Send Notification
+        run: |
+          . .ci/load-ci.sh || exit
+          slack -m "$(printf "[Vagrant release process](%s) has failed" "${WORKFLOW_URL}")"
+        env:
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
+          SLACK_CHANNEL: '#team-vagrant'
+          SLACK_TITLE: '⚠️ Vagrant Release Process⚠️'
+          SLACK_USERNAME: Vagrant Release Builder
+          SLACK_STATE: error
+          WORKFLOW_URL: ${{ github.event.workflow_run.url }}
