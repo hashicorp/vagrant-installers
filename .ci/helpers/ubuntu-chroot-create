@@ -23,6 +23,8 @@ popd
 
 debug "created chroot directory - %s" "${chroot_dir}"
 
+apt-get update -qy || failure "could not update apt"
+
 # Install required packages for chroot setup
 apt-get install -qy debootstrap ||
     failure "could not install required packages"
