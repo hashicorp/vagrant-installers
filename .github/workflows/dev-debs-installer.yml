@@ -68,7 +68,7 @@ jobs:
       vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-shasum }}
     secrets: inherit
   publish-local:
-    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action == 'build-debs'
+    if: github.repository == 'hashicorp/vagrant-builders' && github.event.action != 'build-debs'
     needs: [vagrant-artifacts, build-deb-packages]
     runs-on: ubuntu-latest
     permissions:
