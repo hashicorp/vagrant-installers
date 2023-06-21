@@ -37,7 +37,7 @@ jobs:
       - name: Send Notification
         run: |
           . .ci/load-ci.sh || exit
-          slack -m "$(printf "Vagrant development build failed\n\n* [%s](%s)" "${WORKFLOW_NAME}" "${WORKFLOW_URL}")"
+          slack -m "$(printf "Vagrant development build failed\n\n- <%s|%s>" "${WORKFLOW_URL}" "${WORKFLOW_NAME}")"
         env:
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
           SLACK_CHANNEL: '#feed-vagrant'
