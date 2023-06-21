@@ -2,7 +2,7 @@ name: Release Notifier
 on:
   workflow_run:
     workflows:
-      - .github/workflows/release.yml
+      - Vagrant HashiCorp Release
     types:
       - completed
 

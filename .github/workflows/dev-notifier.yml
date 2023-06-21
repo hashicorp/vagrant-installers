@@ -2,13 +2,13 @@ name: Development Build Notifier
 on:
   workflow_run:
     workflows:
-      - .github/workflows/dev-appimage-installer.yml
-      - .github/workflows/dev-archlinux-installer.yml
-      - .github/workflows/dev-builds.yml
-      - .github/workflows/dev-debs-installer.yml
-      - .github/workflows/dev-macos-installer.yml
-      - .github/workflows/dev-rpms-installer.yml
-      - .github/workflows/dev-windows-installer.yml
+      - Vagrant Development Build (AppImage)
+      - Vagrant Development Build (Arch Linux)
+      - Vagrant Development Builds
+      - Vagrant Development Build (DEB)
+      - Vagrant Development Build (DMG)
+      - Vagrant Development Build (RPM)
+      - Vagrant Development Build (MSI)
     types:
       - completed
 
