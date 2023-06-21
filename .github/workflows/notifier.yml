@@ -38,7 +38,7 @@ jobs:
           SLACK_USERNAME: Release Notification
           SLACK_TITLE: Vagrant Release Process
           SLACK_STATE: success
-          WORKFLOW_URL: ${{ github.event.workflow_run.url }}
+          WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
   failed:
     if: github.event.workflow_run.conclusion == 'failure'
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
@@ -69,4 +69,4 @@ jobs:
           SLACK_TITLE: '⚠️ Vagrant Release Process⚠️'
           SLACK_USERNAME: Vagrant Release Builder
           SLACK_STATE: error
-          WORKFLOW_URL: ${{ github.event.workflow_run.url }}
+          WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
