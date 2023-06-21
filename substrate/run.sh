@@ -829,32 +829,42 @@ fi
 # instead of static paths. This will allow for relocation
 # and let things like a `gem install` still function
 # correctly (This is macos only, at least for now)
-if [ "${target_os}" = "darwin" ]; then
-    rbconf_files=( "${embed_dir}/lib/ruby/3."*/*-darwin*/rbconfig.rb )
-    rbconfig_file="${rbconf_files[0]}"
+rbconf_files=( "${embed_dir}/lib/ruby/3."*/*-*/rbconfig.rb )
+rbconfig_file="${rbconf_files[0]}"
+if [ ! -f "${rbconfig_file}" ]; then
+    error "Failed to locate rbconfig.rb file for required modification"
+fi
 
-    if [ ! -f "${rbconfig_file}" ]; then
-        error "Failed to locate rbconfig.rb file for required modification"
+rbconfig_file_new="${cache_dir}/rbconfig.rb"
+# If the new file exists for some reason, remove it
+rm -f "${rbconfig_file_new}"
+# And make sure it exists
+touch "${rbconfig_file_new}" || exit
+
+info "Updating rbconfig.rb file"
+while read -r line; do
+    # Always ignore the prefix and configure arguments entries
+    if [[ "${line}" = *'CONFIG["prefix"]'* ]] || [[ "${line}" = *'CONFIG["configure_args"]'* ]]; then
+        printf "%s\n" "${line}" >> "${rbconfig_file_new}"
+        continue
     fi
 
-    info "Updating rbconfig.rb file"
-    rbconfig_file_new="${cache_dir}/rbconfig.rb"
-    # If the new file exists for some reason, remove it
+    # Replace the embedded directory with the computed prefix value
+    line="${line//"${embed_dir}"/\$(prefix)}"
+    printf "%s\n" "${line}" >> "${rbconfig_file_new}"
+done < "${rbconfig_file}"
+mv -f "${rbconfig_file_new}" "${rbconfig_file}" || exit
+
+# If we are on darwin, update the SDK paths
+if [ "${target_os}" = "darwin" ]; then
+    # If the new file still exists for some reason, remove it
     rm -f "${rbconfig_file_new}"
     # And make sure it exists
     touch "${rbconfig_file_new}" || exit
+
     # Enable extended glob
     shopt -s extglob || exit
     while read -r line; do
-        # Always ignore the prefix and configure arguments entries
-        if [[ "${line}" = *'CONFIG["prefix"]'* ]] || [[ "${line}" = *'CONFIG["configure_args"]'* ]]; then
-            printf "%s\n" "${line}" >> "${rbconfig_file_new}"
-            continue
-        fi
-
-        # Replace the embedded directory with the computed prefix value
-        line="${line//"${embed_dir}"/\$(prefix)}"
-
         # Update the SDK paths that are defined if not using the
         # default SDK path
         if [[ "${line}" = *"MacOSX.sdk"* ]] && [[ "${line}" != *"${MACOS_DEFAULT_SDK_PATH}"* ]]; then
