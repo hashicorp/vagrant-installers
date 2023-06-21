@@ -87,7 +87,7 @@ jobs:
           CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create prerelease
-        run: . .ci/load-ci.sh && prerelease "${VAGRANT_VERSION}" ./pkg
+        run: .ci/publish-local-dev-builds "${VAGRANT_VERSION}" ./pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_VERSION: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
