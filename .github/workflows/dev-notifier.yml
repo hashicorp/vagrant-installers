@@ -45,4 +45,4 @@ jobs:
           SLACK_TITLE: '⚠️ Vagrant Development Build ⚠️'
           SLACK_STATE: error
           WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
-          WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}
