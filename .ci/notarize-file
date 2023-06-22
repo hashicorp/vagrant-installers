@@ -33,8 +33,11 @@ function cleanup() {
     fi
 }
 
+# Decode the key
+decoded_key="$(base64 -d < <(printf "%s" "${NOTARIZE_KEY}"))"
+
 # Write the key contents
-printf "%s" "${NOTARIZE_KEY}" > "${key_file}"
+printf "%s" "${decoded_key}" > "${key_file}"
 
 # Now notarize the file
 notarize_file -m 3600 -j "${key_file}" "${input_file}"
