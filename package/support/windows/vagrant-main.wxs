@@ -1,3 +1,8 @@
+<!--
+ Copyright (c) HashiCorp, Inc.
+ SPDX-License-Identifier: MIT
+-->
+
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <!-- Include our wxi -->
   <?include "vagrant-config.wxi" ?>

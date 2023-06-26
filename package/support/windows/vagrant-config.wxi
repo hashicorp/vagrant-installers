@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+ Copyright (c) HashiCorp, Inc.
+ SPDX-License-Identifier: MIT
+-->
+
 <Include>
   <?define VersionNumber="%VERSION_NUMBER%" ?>
   <?define BaseDirectory="%BASE_DIRECTORY%" ?>

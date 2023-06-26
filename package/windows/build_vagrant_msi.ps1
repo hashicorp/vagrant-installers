@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 <#
 .SYNOPSIS
 Packages a Vagrant installer from a substrate artifact and
