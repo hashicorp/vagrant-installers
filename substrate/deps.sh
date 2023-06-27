@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # This file contains version information for all dependencies
 # required by the Vagrant substrates. Substrates are built

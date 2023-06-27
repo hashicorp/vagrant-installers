@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # NOTE: This script assumes that the architecture specific
 #       launcher has been created prior to running via `make`.
