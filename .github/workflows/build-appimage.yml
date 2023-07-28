@@ -56,7 +56,7 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
           fetch-depth: 0
       - name: Gather information
@@ -82,14 +82,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Fetch Substrate
         run: ./.ci/restore-cache "${CACHE_ID}" ./substrates
         env:
           CACHE_ID: ${{ needs.info.outputs.deb-64-substrate-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch Vagrant RubyGem
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}

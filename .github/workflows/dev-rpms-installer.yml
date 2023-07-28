@@ -42,7 +42,7 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Generate Development Build Information
         id: generate
         run: ./.ci/dev-build-information "${VAGRANT_VERSION}" "${VAGRANT_SHORT_ID}" "${RUN_NUMBER}"
@@ -75,7 +75,7 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Fetch rpm packages
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
@@ -111,7 +111,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Fetch rpm packages
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:

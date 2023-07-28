@@ -43,7 +43,7 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Generate Development Build Information
         id: generate
         run: ./.ci/dev-build-information "${VAGRANT_VERSION}" "${VAGRANT_SHORT_ID}" "${RUN_NUMBER}"
@@ -174,7 +174,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Fetch appimage package
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
@@ -211,7 +211,7 @@ jobs:
           CACHE_ID: ${{ needs.build-windows-packages.outputs.msi-64-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch Vagrant Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
           path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
