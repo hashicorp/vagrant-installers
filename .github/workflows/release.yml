@@ -22,7 +22,7 @@ jobs:
       release-exists: ${{ steps.validate.outputs.release-exists }}
     steps:
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Validate
         id: validate
         run: |
@@ -161,7 +161,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Doormat Configuration
         uses: hashicorp/doormat-action@v1
         with:
@@ -248,9 +248,9 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_gpg_signer;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Fetch Vagrant Build Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: ${{ needs.vagrant-artifacts.outputs.artifacts-name }}
           path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
@@ -291,9 +291,9 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       - name: Vagrant Code Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           repository: hashicorp/vagrant
           path: ./vagrant-source
