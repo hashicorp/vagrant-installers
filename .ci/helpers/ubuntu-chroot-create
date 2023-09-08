@@ -48,26 +48,21 @@ bootstrap_args+=(
 debootstrap "${bootstrap_args[@]}" ||
     failure "failed to create trusty chroot"
 
-# Copy in the sources.list from the host and update the code name
-# so we have proper access to all repositories
-debug "copying in sources.list"
-cp /etc/apt/sources.list /var/chroot/etc/apt/sources.list ||
-    failure "failed to install sources.list"
+# Write a new apt sources.list file to include all the things
+debug "writing new apt sources.list"
 
-. /etc/lsb-release ||
-    failure "Could not source lsb-release file"
-
-debug "updating sources.list distrib reference %s -> trusty" "${DISTRIB_CODENAME}"
-sed -i "s/${DISTRIB_CODENAME}/trusty/" /var/chroot/etc/apt/sources.list ||
-    failure "could not update apt sources file"
-
-debug "removing any https sources from source list"
-sed -i 's/.*https:.*//' /var/chroot/etc/apt/sources.list ||
-    failure "could not remove https sources from apt sources file"
-
-echo "*****"
-cat /var/chroot/etc/apt/sources.list
-echo "*****"
+cat <<EOF> /var/chroot/etc/apt/sources.list
+deb http://us.archive.ubuntu.com/ubuntu/ trusty main restricted
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main restricted
+deb http://us.archive.ubuntu.com/ubuntu/ trusty universe
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates universe
+deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu trusty-security main restricted
+deb http://security.ubuntu.com/ubuntu trusty-security universe
+deb http://security.ubuntu.com/ubuntu trusty-security multiverse
+EOF
 
 # Add a mount point for ourselves so the project is accessible
 debug "mounting project directory into chroot - %s" "${root}"
