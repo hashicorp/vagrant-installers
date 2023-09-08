@@ -65,6 +65,10 @@ debug "removing any https sources from source list"
 sed -i 's/.*https:.*//' /var/chroot/etc/apt/sources.list ||
     failure "could not remove https sources from apt sources file"
 
+echo "*****"
+cat /var/chroot/etc/apt/sources.list
+echo "*****"
+
 # Add a mount point for ourselves so the project is accessible
 debug "mounting project directory into chroot - %s" "${root}"
 project_name="${root##*/}"
