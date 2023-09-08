@@ -38,7 +38,13 @@ else
     debug "creating 64 bit ubuntu chroot"
     bootstrap_args=()
 fi
-bootstrap_args+=( "trusty" "/var/chroot" "http://archive.ubuntu.com/ubuntu/" )
+bootstrap_args+=(
+    "trusty"
+    "/var/chroot"
+    "http://archive.ubuntu.com/ubuntu/"
+    "--include"
+    "apt-transport-https,ca-certificates"
+)
 debootstrap "${bootstrap_args[@]}" ||
     failure "failed to create trusty chroot"
 
