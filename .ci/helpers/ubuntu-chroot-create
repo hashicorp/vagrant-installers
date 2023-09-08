@@ -52,8 +52,12 @@ cp /etc/apt/sources.list /var/chroot/etc/apt/sources.list ||
     failure "Could not source lsb-release file"
 
 debug "updating sources.list distrib reference %s -> trusty" "${DISTRIB_CODENAME}"
-sed -ibak "s/${DISTRIB_CODENAME}/trusty/" /var/chroot/etc/apt/sources.list ||
+sed -i "s/${DISTRIB_CODENAME}/trusty/" /var/chroot/etc/apt/sources.list ||
     failure "could not update apt sources file"
+
+debug "removing any https sources from source list"
+sed -i 's/.*https:.*//' /var/chroot/etc/apt/sources.list ||
+    failure "could not remove https sources from apt sources file"
 
 # Add a mount point for ourselves so the project is accessible
 debug "mounting project directory into chroot - %s" "${root}"
