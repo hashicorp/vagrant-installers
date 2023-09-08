@@ -39,8 +39,6 @@ else
     bootstrap_args=()
 fi
 bootstrap_args+=(
-    "--include"
-    "apt-transport-https,ca-certificates"
     "trusty"
     "/var/chroot"
     "http://archive.ubuntu.com/ubuntu/"
