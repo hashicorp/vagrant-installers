@@ -1,0 +1,18 @@
+name: Disable Pull Requests
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  closer:
+    name: Automatic Pull Request Closer
+    if: github.repository == 'hashicorp/vagrant-builders'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - run: |
+          gh pr close $PR -c "This repository is a mirror of hashicorp/vagrant-installers."
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
