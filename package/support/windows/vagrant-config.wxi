@@ -7,6 +7,8 @@
 <Include>
   <?define VersionNumber="%VERSION_NUMBER%" ?>
   <?define BaseDirectory="%BASE_DIRECTORY%" ?>
+  <?define ProgramFilesInstallLocation="%PROGRAM_FILES%" ?>
+  <?define Platform="%PLATFORM%" ?>
   <!--
       NOTE: This upgrade code should _NOT_ be changed. This is
       used to identify the Vagrant installer so upgrades are

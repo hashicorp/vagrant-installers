@@ -180,8 +180,10 @@ Expand-Zipfile -Path $Substrate -Destination $BuildPath
 # Detect the architecture based on available path
 if ( Test-Path -Path "${BuildPath}\embedded\mingw64" ) {
     $SubstrateArch = "64"
+    $CandleArch = "x64"
 } elseif ( Test-Path -Path "${BuildPath}\embedded\mingw32" ) {
     $SubstrateArch = "32"
+    $CandleArch = "x86"
 } else {
     Write-Error "Could not detect architecture from unpacked substrate"
 }
@@ -243,6 +245,15 @@ $ConfigContent = Get-Content -Path "${PackageDirectory}\support\windows\vagrant-
 # to the installer directory)
 $ConfigContent = $ConfigContent -replace "%VERSION_NUMBER%",$VagrantVersionCompat
 $ConfigContent = $ConfigContent -replace "%BASE_DIRECTORY%",$InstallerPath
+# When installing into Program Files, pick the correct Program Files
+# to install into based on the architecture
+if ( $SubstrateArch -eq "64" ) {
+    $ConfigContent = $ConfigContent -replace "%PLATFORM%","x64"
+    $ConfigContent = $ConfigContent -replace "%PROGRAM_FILES%","ProgramFiles64Folder"
+} else {
+    $ConfigContent = $ConfigContent -replace "%PLATFORM%","x86"
+    $ConfigContent = $ConfigContent -replace "%PROGRAM_FILES%","ProgramFilesFolder"
+}
 
 # Write config file with the updated content
 $ConfigContent | Out-File -Encoding ASCII -FilePath "${InstallerPath}\vagrant-config.wxi"
@@ -298,9 +309,10 @@ if ( $HeatProc.ExitCode -ne 0 ) {
 # Define arguments passed to candle
 $cargs = @(
     "-nologo",
+    "-arch", "${CandleArch}",
     "-I${InstallerDirectory}", # Defines include directory to search (allows vagrant-config.wxi to be found)
     "-dVagrantSourceDir=${BuildDirectory}", # Defines value for variable (which was used in heat)
-    "-out ${InstallerDirectory}\",
+    "-out", "${InstallerDirectory}\",
     "${InstallerDirectory}\vagrant-files.wxs",
     "${InstallerDirectory}\vagrant-main.wxs"
 )

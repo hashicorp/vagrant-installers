@@ -16,6 +16,10 @@ fi
 
 run_sha="$(git log --format=%h -1 ./substrate/run.ps1)" ||
     failure "Could not generate commit sha for ./substrate/run.ps1"
+run_sha_extra="$(git log --format=%h -1 ./substrate/windows)" ||
+    failure "Could not generate commit sha for ./substrate/windows"
+
+run_sha="${run_sha}+${run_sha_extra}"
 
 sub_cache_base="win-substrate-${run_sha}"
 
