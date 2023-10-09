@@ -113,6 +113,8 @@ jobs:
       vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
       vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
       vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-licenses-name: ${{ needs.vagrant-artifacts.outputs.licenses-name }}
+      vagrant-licenses-path: ${{ needs.vagrant-artifacts.outputs.licenses-path }}
       vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
       vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-short-commit-id }}
     secrets: inherit
@@ -145,6 +147,8 @@ jobs:
       vagrant-artifacts-path: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
       vagrant-gem-name: ${{ needs.vagrant-artifacts.outputs.gem-name }}
       vagrant-gem-path: ${{ needs.vagrant-artifacts.outputs.gem-path }}
+      vagrant-licenses-name: ${{ needs.vagrant-artifacts.outputs.licenses-name }}
+      vagrant-licenses-path: ${{ needs.vagrant-artifacts.outputs.licenses-path }}
       vagrant-version: ${{ needs.vagrant-artifacts.outputs.vagrant-version }}
       vagrant-shasum: ${{ needs.vagrant-artifacts.outputs.vagrant-short-commit-id }}
     secrets: inherit

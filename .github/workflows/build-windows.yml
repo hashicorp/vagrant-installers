@@ -18,6 +18,14 @@ on:
         description: Path used for the Vagrant RubyGem (directory)
         required: true
         type: string
+      vagrant-licenses-name:
+        description: Name of upload containing the Vagrant licenses
+        required: true
+        type: string
+      vagrant-licenses-path:
+        description: Path used for the Vagrant licenses (directory)
+        required: true
+        type: string
       vagrant-version:
         description: Version of Vagrant being built
         required: true
@@ -546,6 +554,15 @@ jobs:
         with:
           name: signed-gems-32
           path: ./signed-gems
+      - name: Fetch Licenses
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: ${{ inputs.vagrant-licenses-name }}
+          path: ${{ inputs.vagrant-licenses-path }}
+      - name: Install License for Build
+        run: mv "${LICENSE_DIR}/LICENSE.rtf" ./package/support/windows/license.rtf
+        env:
+          LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build 32 Bit Windows MSI
         run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -Installed .\signed-gems\installed_windows_386.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
         env:
@@ -572,6 +589,15 @@ jobs:
         with:
           name: signed-gems-64
           path: ./signed-gems
+      - name: Fetch Licenses
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: ${{ inputs.vagrant-licenses-name }}
+          path: ${{ inputs.vagrant-licenses-path }}
+      - name: Install License for Build
+        run: mv "${LICENSE_DIR}/LICENSE.rtf" ./package/support/windows/license.rtf
+        env:
+          LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build 64 Bit Windows MSI
         run: powershell -File .\package\windows\build_vagrant_msi.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -Installed .\signed-gems\installed_windows_x86_64.zip -VagrantVersion ${env:VagrantVersion} -Destination .\pkg
         env:

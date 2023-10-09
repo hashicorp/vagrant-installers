@@ -18,6 +18,14 @@ on:
         description: Path used for the Vagrant RubyGem (directory)
         required: true
         type: string
+      vagrant-licenses-name:
+        description: Name of upload containing the Vagrant licenses
+        required: true
+        type: string
+      vagrant-licenses-path:
+        description: Path used for the Vagrant licenses (directory)
+        required: true
+        type: string
       vagrant-version:
         description: Version of Vagrant being built
         required: true
@@ -417,6 +425,15 @@ jobs:
         with:
           name: vagrant-go
           path: ./vagrant-go-signed
+      - name: Fetch Licenses
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: ${{ inputs.vagrant-licenses-name }}
+          path: ${{ inputs.vagrant-licenses-path }}
+      - name: Install License for Build
+        run: mv "${LICENSE_DIR}/LICENSE.html" ./package/support/darwin/license.html
+        env:
+          LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build core package
         run: ./package/darwin/build_core_pkg ./artifacts/substrate_darwin_universal.zip ./artifacts/vagrant-package-contents.zip ./vagrant-go-signed/vagrant-go "${VAGRANT_VERSION}"
         env:
