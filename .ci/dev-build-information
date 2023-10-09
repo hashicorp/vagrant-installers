@@ -40,8 +40,10 @@ debug "release name: %s" "${release_name}"
 # Create the output for the release name
 printf "release-name=%s\n" "${release_name}" >> "${GITHUB_OUTPUT}"
 
+fuzzy_name="${version}+.*-${sha:0:8}"
+
 # Check if the nightly already exists
-if github_release_exists "vagrant" "${release_name}"; then
+if github_release_exists_fuzzy "vagrant" "${fuzzy_name}"; then
     debug "nightly release '%s' already exists" "${release_name}"
     printf "release-exists=true\n" >> "${GITHUB_OUTPUT}"
 fi
