@@ -44,7 +44,7 @@ on:
 
 jobs:
   info:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    if: github.repository == 'hashicorp/vagrant-builders'
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
@@ -90,7 +90,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup Go
-        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
+        if: steps.inspect.outputs.substrates-unsigned-exists != 'true'
         uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: go.mod
@@ -101,16 +101,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ inputs.vagrant-shasum }}
       - name: Build launchers
-        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
+        if: steps.inspect.outputs.substrates-unsigned-exists != 'true'
         run: make bin/launcher/windows
       - name: Store Launchers
-        if: ${{ steps.inspect.outputs.substrates-unsigned-exists != 'true' }}
+        if: steps.inspect.outputs.substrates-unsigned-exists != 'true'
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: vagrant-launchers-win
           path: ./bin
   build-substrates:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-unsigned-exists != 'true' }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-unsigned-exists != 'true'
     runs-on: windows-latest
     needs: [info]
     steps:
@@ -130,7 +130,7 @@ jobs:
           path: ./vagrant-substrates
   cache-substrates:
     # Caching only happens when the build-substrates job completes
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    if: github.repository == 'hashicorp/vagrant-builders'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -149,7 +149,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.substrates-unsigned-id }}
   sign-32-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-32-signed-exists != 'true' && !cancelled() && !failure() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-32-signed-exists != 'true' && !cancelled() && !failure()
     needs: [info, cache-substrates]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -208,7 +208,7 @@ jobs:
         id: final
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   sign-64-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-64-signed-exists != 'true' && !cancelled() && !failure() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-64-signed-exists != 'true' && !cancelled() && !failure()
     needs: [info, cache-substrates]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -266,7 +266,7 @@ jobs:
       - name: Marked As Run
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-32-signed-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-32-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-32-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, sign-32-substrate]
     runs-on: ubuntu-latest
     permissions:
@@ -285,7 +285,7 @@ jobs:
           name: signed-substrates-32
           path: ./signed-substrates
   upload-64-signed-substrate:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-64-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-64-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, sign-64-substrate]
     runs-on: ubuntu-latest
     permissions:
@@ -304,7 +304,7 @@ jobs:
           name: signed-substrates-64
           path: ./signed-substrates
   gems-vagrant-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, sign-32-substrate, upload-32-signed-substrate]
     runs-on: windows-latest
     steps:
@@ -328,7 +328,7 @@ jobs:
           name: vagrant-gems-32
           path: ./installed
   cache-gems-vagrant-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, gems-vagrant-32]
     runs-on: ubuntu-latest
     permissions:
@@ -347,7 +347,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.gems-32-unsigned-id }}
   gems-vagrant-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, sign-64-substrate, upload-64-signed-substrate]
     runs-on: windows-latest
     steps:
@@ -371,7 +371,7 @@ jobs:
           name: vagrant-gems-64
           path: ./installed
   cache-gems-vagrant-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, gems-vagrant-64]
     runs-on: ubuntu-latest
     permissions:
@@ -390,7 +390,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.gems-64-unsigned-id }}
   sign-gems-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-signed-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-32-signed-exists != 'true' && !failure() && !cancelled()
     needs: [info, cache-gems-vagrant-32]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -443,7 +443,7 @@ jobs:
           name: signed-gems-32
           path: ./signed-gems
   sign-gems-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-signed-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-signed-exists != 'true' && !failure() && !cancelled()
     needs: [info, cache-gems-vagrant-64]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -498,7 +498,7 @@ jobs:
       - name: Marked As Run
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-gems-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-32.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-32.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, sign-gems-32]
     runs-on: ubuntu-latest
     permissions:
@@ -519,7 +519,7 @@ jobs:
       - name: Marked As Run
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-gems-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-64.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-64.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, sign-gems-64]
     runs-on: ubuntu-latest
     permissions:
@@ -538,7 +538,7 @@ jobs:
           name: signed-gems-64
           path: ./signed-gems
   build-vagrant-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled()
     runs-on: windows-latest
     needs: [info, sign-32-substrate, upload-32-signed-substrate, upload-gems-32, sign-gems-32]
     steps:
@@ -575,7 +575,7 @@ jobs:
           name: vagrant-msi-32
           path: ./pkg
   build-vagrant-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled()
     runs-on: windows-latest
     needs: [info, sign-64-substrate, upload-64-signed-substrate, upload-gems-64, sign-gems-64]
     steps:
@@ -612,7 +612,7 @@ jobs:
           name: vagrant-msi-64
           path: ./pkg
   cache-vagrant-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, build-vagrant-32]
     runs-on: ubuntu-latest
     permissions:
@@ -631,7 +631,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.msi-32-unsigned-id }}
   cache-vagrant-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled()
     needs: [info, build-vagrant-64]
     runs-on: ubuntu-latest
     permissions:
@@ -650,7 +650,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.msi-64-unsigned-id }}
   sign-vagrant-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-signed-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-32-signed-exists != 'true' && !failure() && !cancelled()
     needs: [info, cache-vagrant-32]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
@@ -693,7 +693,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.msi-32-signed-id }}
   sign-vagrant-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-signed-exists != 'true' && !failure() && !cancelled() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.msi-64-signed-exists != 'true' && !failure() && !cancelled()
     needs: [info, cache-vagrant-64]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:

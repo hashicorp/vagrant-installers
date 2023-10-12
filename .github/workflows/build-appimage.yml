@@ -32,7 +32,7 @@ on:
         value: ${{ jobs.info.outputs.appimage-package-id }}
 jobs:
   info:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    if: github.repository == 'hashicorp/vagrant-builders'
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
@@ -66,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ inputs.vagrant-shasum }}
   build-substrate-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true'
     needs: [info]
     permissions:
       contents: write
@@ -75,7 +75,7 @@ jobs:
       deb-64-substrate-id: ${{ needs.info.outputs.deb-64-substrate-id }}
     secrets: inherit
   build-package:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.appimage-package-exists != 'true' && !cancelled() && !failure() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.appimage-package-exists != 'true' && !cancelled() && !failure()
     needs: [info, build-substrate-64]
     runs-on: ubuntu-latest
     permissions:

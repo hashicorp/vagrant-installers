@@ -15,7 +15,7 @@ concurrency: ${{ github.workflow }}
 jobs:
   info:
     name: Check Substrate Exists
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    if:  github.repository == 'hashicorp/vagrant-builders'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -36,7 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-substrate-64:
     name: Build Debian 64 Substrate
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true' }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.deb-64-substrate-exists != 'true'
     runs-on: ubuntu-latest
     needs: [info]
     permissions:

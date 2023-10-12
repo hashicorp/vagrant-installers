@@ -32,7 +32,7 @@ on:
         value: ${{ jobs.info.outputs.rpm-packages-id }}
 jobs:
   info:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' }}
+    if: github.repository == 'hashicorp/vagrant-builders'
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
       id-token: write
@@ -72,7 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VAGRANT_SHASUM: ${{ inputs.vagrant-shasum }}
   build-substrate-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-substrate-exists != 'true' }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-substrate-exists != 'true'
     needs: [info]
     runs-on: ubuntu-latest
     permissions:
@@ -94,7 +94,7 @@ jobs:
           CACHE_ID: ${{ needs.info.outputs.rpm-32-substrate-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-substrate-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-64-substrate-exists != 'true' }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-64-substrate-exists != 'true'
     needs: [info]
     runs-on: ubuntu-latest
     permissions:
@@ -116,7 +116,7 @@ jobs:
           CACHE_ID: ${{ needs.info.outputs.rpm-64-substrate-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-install-32:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-install-exists != 'true' && !cancelled() && !failure() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-32-install-exists != 'true' && !cancelled() && !failure()
     needs: [info, build-substrate-32]
     runs-on: ubuntu-latest
     permissions:
@@ -144,7 +144,7 @@ jobs:
           CACHE_ID: ${{ needs.info.outputs.rpm-32-install-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-install-64:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-64-install-exists != 'true' && !cancelled() && !failure() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-64-install-exists != 'true' && !cancelled() && !failure()
     needs: [info, build-substrate-64]
     runs-on: ubuntu-latest
     permissions:
@@ -172,7 +172,7 @@ jobs:
           CACHE_ID: ${{ needs.info.outputs.rpm-64-install-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-packages:
-    if: ${{ github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-packages-exists != 'true' && !cancelled() && !failure() }}
+    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.rpm-packages-exists != 'true' && !cancelled() && !failure()
     needs: [info, build-install-32, build-install-64]
     runs-on: ubuntu-latest
     permissions:
