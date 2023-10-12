@@ -94,13 +94,7 @@
       <ComponentRef Id="VagrantBin" />
     </Feature>
 
-    <!-- WixUI configuration so we can have a UI -->
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-
-    <UIRef Id="VagrantUI_InstallDir" />
-    <UI Id="VagrantUI_InstallDir">
-      <UIRef Id="WixUI_InstallDir" />
-    </UI>
+    <UIRef Id="WixUI_Minimal" />
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.BaseDirectory)\assets\license.rtf" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.BaseDirectory)\assets\bg_dialog.bmp" />
