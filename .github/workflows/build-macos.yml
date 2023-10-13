@@ -425,15 +425,6 @@ jobs:
         with:
           name: vagrant-go
           path: ./vagrant-go-signed
-      - name: Fetch Licenses
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: ${{ inputs.vagrant-licenses-name }}
-          path: ${{ inputs.vagrant-licenses-path }}
-      - name: Install License for Build
-        run: mv "${LICENSE_DIR}/LICENSE.html" ./package/support/darwin/dist/license.html
-        env:
-          LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build core package
         run: ./package/darwin/build_core_pkg ./artifacts/substrate_darwin_universal.zip ./artifacts/vagrant-package-contents.zip ./vagrant-go-signed/vagrant-go "${VAGRANT_VERSION}"
         env:
@@ -501,6 +492,15 @@ jobs:
         env:
           CACHE_NAME: ${{ needs.info.outputs.core-pkg-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch Licenses
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: ${{ inputs.vagrant-licenses-name }}
+          path: ${{ inputs.vagrant-licenses-path }}
+      - name: Install License for Build
+        run: mv "${LICENSE_DIR}/LICENSE.html" ./package/support/darwin/dist/license.html
+        env:
+          LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build installer package
         run: ./package/darwin/build_vagrant_pkg ./artifacts/core.pkg
       - name: Store install package
