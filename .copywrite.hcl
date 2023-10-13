@@ -4,6 +4,6 @@ project {
   license        = "MIT"
 
   header_ignore = [
-    "package/support/darwin/welcome.html",
+    "package/support/darwin/dist/welcome.html",
   ]
 }
