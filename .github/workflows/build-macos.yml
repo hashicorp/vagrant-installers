@@ -431,7 +431,7 @@ jobs:
           name: ${{ inputs.vagrant-licenses-name }}
           path: ${{ inputs.vagrant-licenses-path }}
       - name: Install License for Build
-        run: mv "${LICENSE_DIR}/LICENSE.html" ./package/support/darwin/license.html
+        run: mv "${LICENSE_DIR}/LICENSE.html" ./package/support/darwin/dist/license.html
         env:
           LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build core package
