@@ -560,9 +560,7 @@ jobs:
           name: ${{ inputs.vagrant-licenses-name }}
           path: ${{ inputs.vagrant-licenses-path }}
       - name: Install License for Build
-        run: |
-          Remove-Item ./package/support/windows/license.rtf
-          Move-Item "${Env:LICENSE_DIR}/LICENSE.rtf" ./package/support/windows/license.rtf
+        run: Move-Item "${Env:LICENSE_DIR}/LICENSE.rtf" ./package/support/windows/license.rtf
         env:
           LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build 32 Bit Windows MSI
@@ -597,9 +595,7 @@ jobs:
           name: ${{ inputs.vagrant-licenses-name }}
           path: ${{ inputs.vagrant-licenses-path }}
       - name: Install License for Build
-        run: |
-          Remove-Item ./package/support/windows/license.rtf
-          Move-Item "${Env:LICENSE_DIR}/LICENSE.rtf" ./package/support/windows/license.rtf
+        run: Move-Item "${Env:LICENSE_DIR}/LICENSE.rtf" ./package/support/windows/license.rtf
         env:
           LICENSE_DIR: ${{ inputs.vagrant-licenses-path }}
       - name: Build 64 Bit Windows MSI
