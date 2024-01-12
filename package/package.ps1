@@ -231,6 +231,11 @@ if ($UseCache -eq $false) {
             Write-Error "Failed to install Vagrant RubyGem into packaging substrate"
         }
 
+        & "${EmbeddedDir}\mingw${PackageArch}\bin\ruby.exe" "${EmbeddedDir}\mingw${PackageArch}\bin\gem" install pkg-config --no-document
+
+        if(!$?) {
+            Write-Error "Failed to install pkg-config gem into packaging substrate"
+        }
         $BundleDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
         [System.IO.Directory]::CreateDirectory($BundleDir) | Out-Null
 
