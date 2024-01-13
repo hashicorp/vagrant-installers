@@ -93,15 +93,15 @@ func main() {
 			mingwDir = "mingw32"
 			mingwArchDir = "i686-w64-mingw32"
 		}
-		cflags = "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
-			" -I" + filepath.Join(embeddedDir, mingwDir, "include") +
-			" -I" + filepath.Join(embeddedDir, "usr", "include")
-		cppflags = "-I" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") +
-			" -I" + filepath.Join(embeddedDir, mingwDir, "include") +
-			" -I" + filepath.Join(embeddedDir, "usr", "include")
-		ldflags = "-L" + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "lib") +
-			" -L" + filepath.Join(embeddedDir, mingwDir, "lib") +
-			" -L" + filepath.Join(embeddedDir, "usr", "lib")
+		cflags = "-I" + `"` + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") + `"` +
+			" -I" + `"` + filepath.Join(embeddedDir, mingwDir, "include") + `"` +
+			" -I" + `"` + filepath.Join(embeddedDir, "usr", "include") + `"`
+		cppflags = "-I" + `"` + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "include") + `"` +
+			" -I" + `"` + filepath.Join(embeddedDir, mingwDir, "include") + `"` +
+			" -I" + `"` + filepath.Join(embeddedDir, "usr", "include") + `"`
+		ldflags = "-L" + `"` + filepath.Join(embeddedDir, mingwDir, mingwArchDir, "lib") + `"` +
+			" -L" + `"` + filepath.Join(embeddedDir, mingwDir, "lib") + `"` +
+			" -L" + `"` + filepath.Join(embeddedDir, "usr", "lib") + `"`
 	} else {
 		cppflags = "-I" + filepath.Join(embeddedDir, "include") +
 			" -I" + filepath.Join(embeddedDir, "include", "libxml2")

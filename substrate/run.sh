@@ -616,6 +616,10 @@ if needs_build "${tracker_file}" "readline"; then
 fi
 
 # openssl
+#
+# NOTE: a variant is defined for linux to build a lib with a custom
+#       name (will result in libssl-vagrant.so in this case). this is
+#       done to prevent issues when attempting to load the library.
 if needs_build "${tracker_file}" "openssl"; then
     info "   -> Building openssl..."
     openssl_url="${dep_cache}/${openssl_file}"
