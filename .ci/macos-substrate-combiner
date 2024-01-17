@@ -62,6 +62,12 @@ function macho_binary_file() {
         return 0
     fi
 
+    # Check if file is a bundle, mark it as library
+    if [[ "${info}" = *"bundle"* ]]; then
+        printf "library"
+        return 0
+    fi
+
     # If we're still here, it's not a valid match
     return 1
 }
