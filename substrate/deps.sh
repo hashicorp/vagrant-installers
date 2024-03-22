@@ -12,23 +12,23 @@
 # view. Update the date below to force a new substrate build
 # when no libraries need to be updated:
 
-curl_version="8.4.0"
-libarchive_version="3.6.2"
-libffi_version="3.4.4"
-libgcrypt_version="1.10.1"
-libgmp_version="6.2.1"
-libgpg_error_version="1.46"
+curl_version="8.6.0"
+libarchive_version="3.7.2"
+libffi_version="3.4.6"
+libgcrypt_version="1.10.3"
+libgmp_version="6.3.0"
+libgpg_error_version="1.48"
 libiconv_version="1.17"
 # Need up update gcc version to use libssh2 1.9.0+
-libssh2_version="1.8.0"
-libxml2_version="2.10.3"
-libxslt_version="1.1.38"
+libssh2_version="1.11.0"
+libxml2_version="2.12.6"
+libxslt_version="1.1.39"
 libyaml_version="0.2.5"
-openssl_version="3.1.2"
+openssl_version="3.1.5"
 readline_version="8.2"
-ruby_version="3.1.4"
-xz_version="5.4.0"
-zlib_version="1.2.13"
+ruby_version="3.2.3"
+xz_version="5.6.1"
+zlib_version="1.3.1"
 
 # Only used for centos
 libxcrypt_version="4.4.18"
