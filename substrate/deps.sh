@@ -27,7 +27,7 @@ libyaml_version="0.2.5"
 openssl_version="3.1.5"
 readline_version="8.2"
 ruby_version="3.2.3"
-xz_version="5.6.1"
+xz_version="5.4.0"
 zlib_version="1.3.1"
 
 # Only used for centos
