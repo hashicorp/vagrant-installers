@@ -26,6 +26,14 @@ on:
         description: The shasum of the Vagrant RubyGem or commit
         required: true
         type: string
+      vagrant-licenses-name:
+        description: Name of upload containing the Vagrant licenses
+        required: true
+        type: string
+      vagrant-licenses-path:
+        description: Path used for the Vagrant licenses (directory)
+        required: true
+        type: string
     outputs:
       appimage-package-id:
         description: Cache identifier for appimage packages
@@ -93,10 +101,16 @@ jobs:
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
+      - name: Fetch Licenses
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: ${{ inputs.vagrant-licenses-name }}
+          path: ${{ inputs.vagrant-licenses-path }}
       - name: Package appimage
-        run: sudo ./.ci/build-appimage-in-chroot "${VAGRANT_GEM_PATH}" ./substrates ./pkgs
+        run: sudo ./.ci/build-appimage-in-chroot "${VAGRANT_GEM_PATH}" "${LICENSE_PATH}/LICENSE.txt" ./substrates ./pkgs
         env:
           VAGRANT_GEM_PATH: ${{ inputs.vagrant-gem-path }}
+          LICENSE_PATH: ${{ inputs.vagrant-licenses-path }}
       - name: Cache Vagrant appimage
         run: ./.ci/create-cache "${CACHE_ID}" ./pkgs
         env:
