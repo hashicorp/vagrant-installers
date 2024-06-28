@@ -95,7 +95,7 @@ fpm -p "${output_path}" \
     --architecture "${arch}" \
     --rpm-auto-add-directories \
     --rpm-digest sha256 \
-    --license "MIT" \
+    --license "BUSL-1.1" \
     --description "Vagrant is a tool for building and distributing development environments." \
     --vendor "HashiCorp" \
     --maintainer "HashiCorp <support@hashicorp.com>" \
