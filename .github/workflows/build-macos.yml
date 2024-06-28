@@ -86,7 +86,7 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
       - name: Gather information
@@ -113,9 +113,9 @@ jobs:
           sudo mkdir -p /opt/vagrant || exit
           sudo chown "${username}" /opt/vagrant || exit
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Setup Go
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       - name: Build Launcher
@@ -147,9 +147,9 @@ jobs:
           sudo mkdir -p /opt/vagrant || exit
           sudo chown "${username}" /opt/vagrant || exit
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Setup Go
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       - name: Build Launcher
@@ -187,7 +187,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch substrate
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -231,9 +231,9 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Vagrant Artifacts
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-artifacts-name }}
           path: ${{ inputs.vagrant-artifacts-path }}
@@ -249,7 +249,7 @@ jobs:
           SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
           SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_macos_binary_signer }}
       - name: Store Vagrant Go Binary
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-go
           path: ./vagrant-go-signed
@@ -277,7 +277,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch substrate
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -305,7 +305,7 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch arm substrate
         run: ./.ci/restore-cache "${CACHE_NAME}" ./substrates
         env:
@@ -335,14 +335,14 @@ jobs:
       - name: Upgrade bash
         run: brew install bash
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch substrate
         run: ./.ci/restore-cache "${CACHE_NAME}" ./universal-substrate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_NAME: ${{ needs.info.outputs.substrate-universal-id }}
       - name: Fetch Vagrant RubyGem
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
@@ -379,7 +379,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Vagrant install
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -409,7 +409,7 @@ jobs:
       - name: Upgrade bash
         run: brew install bash
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch substrate
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -421,7 +421,7 @@ jobs:
           CACHE_NAME: ${{ needs.info.outputs.gems-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch Vagrant Go Binary
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-go
           path: ./vagrant-go-signed
@@ -458,7 +458,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_installer_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch core.pkg
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -486,14 +486,14 @@ jobs:
       - name: Upgrade bash
         run: brew install bash
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch core.pkg
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
           CACHE_NAME: ${{ needs.info.outputs.core-pkg-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch Licenses
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-licenses-name }}
           path: ${{ inputs.vagrant-licenses-path }}
@@ -532,7 +532,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_installer_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch installer package
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -562,7 +562,7 @@ jobs:
       - name: Install dmgbuild
         run: pip3 install dmgbuild && pip3 install biplist
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Vagrant installer
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
@@ -602,7 +602,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch installer dmg
         run: ./.ci/restore-cache "${CACHE_NAME}" ./artifacts
         env:
