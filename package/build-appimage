@@ -18,13 +18,14 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/.ci/load-ci.sh"
 
 # Verify arguments
-if [ "$#" -ne "3" ]; then
-  failure "Expected three args: SUBSTRATE-FILE GEM-FILE OUTPUT-DIR"
+if [ "$#" -ne "4" ]; then
+  failure "Expected three args: SUBSTRATE-FILE GEM-FILE LICENSE-FILE OUTPUT-DIR"
 fi
 
 substrate_file="${1?Substrate file is required}"
 gem_file="${2?Gem file is required}"
-output_dir="${3?Directory for output file required}"
+license_file="${3?License file is required}"
+output_dir="${4?Directory for output file required}"
 
 # If the script isn't being run as root, fail
 debug "performing root user check"
@@ -39,6 +40,10 @@ fi
 
 if [ ! -f "${gem_file}" ]; then
     error "Invalid path for vagrant gem file (%s)" "${gem_file}"
+fi
+
+if [ ! -f "${license_file}" ]; then
+    error "Invalid path for license file (%s)" "${license_file}"
 fi
 
 mkdir -p "${output_dir}" ||
@@ -131,8 +136,11 @@ export VAGRANT_DEB_FILE
 
 # Create the release asset
 mkdir release-asset
+# Move in the app image
 mv out/* release-asset/vagrant ||
     failure "Failed to relocate Vagrant appimage for compression"
+mv "${license_file}" release-asset/LICENSE.txt ||
+    failure "Failed to relocate license file for compression"
 zip -j "vagrant_${VAGRANT_VERSION}_linux_amd64.zip" release-asset/* ||
     failure "Failed to create final Vagrant appimage asset"
 

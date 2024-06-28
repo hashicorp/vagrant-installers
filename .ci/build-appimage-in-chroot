@@ -16,6 +16,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/.ci/load-ci.sh"
 
 gem_dir="${1?Directory of gem file required}"
+license_file="${2?License file is required}"
 substrate_dir="${2?Directory of substrate file required}"
 output_dir="${3?Directory for output file required}"
 
@@ -45,6 +46,13 @@ if [ -z "${gem_file}" ]; then
 fi
 
 debug "gem file for appimage - %s" "${gem_file}"
+
+if [ ! -f "${license_file}" ]; then
+    failure "Invalid path provided for license file (%s)" \
+        "${license_file}"
+fi
+
+debug "license file for appimage - %s" "${license_file}"
 
 if [ ! -d "${substrate_dir}" ]; then
     failure "Invalid path provided for substrate directory (%s)" \
