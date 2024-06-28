@@ -59,7 +59,7 @@ jobs:
       vagrant-short-commit-id: ${{ steps.commit.outputs.vagrant-short-commit-id }}
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Set Names and Paths
         id: names
         run: |
@@ -71,14 +71,14 @@ jobs:
           printf "licenses-path=./generated-licenses\n" >> "${GITHUB_OUTPUT}"
       - name: Code Checkout Main
         if: inputs.vagrant-commit-id == ''
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: hashicorp/vagrant
           ref: main
           path: ./vagrant-source
       - name: Code Checkout
         if: inputs.vagrant-commit-id != ''
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: hashicorp/vagrant
           ref: ${{ inputs.vagrant-commit-id }}
@@ -97,12 +97,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Ruby
         if: steps.commit.outputs.vagrant-cache-exists != 'true'
-        uses: ruby/setup-ruby@250fcd6a742febb1123a77a841497ccaa8b9e939 # v1.152.0
+        uses: ruby/setup-ruby@3783f195e29b74ae398d7caca108814bbafde90e # v1.180.1
         with:
           ruby-version: '3.1'
       - name: Setup Go
         if: steps.commit.outputs.vagrant-cache-exists != 'true'
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       - name: Build Vagrant Artifacts
@@ -127,7 +127,7 @@ jobs:
         env:
           VAGRANT_LICENSES: ${{ steps.names.outputs.licenses-path }}
       - name: Upload Vagrant Artifacts
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: ${{ steps.names.outputs.artifacts-name }}
           path: ${{ steps.names.outputs.artifacts-path }}
@@ -139,12 +139,12 @@ jobs:
           VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
           VAGRANT_GEM_PATH: ${{ steps.names.outputs.gem-path }}
       - name: Upload Vagrant RubyGem
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: ${{ steps.names.outputs.gem-name }}
           path: ${{ steps.names.outputs.gem-path }}
       - name: Upload Vagrant Licenses
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: ${{ steps.names.outputs.licenses-name }}
           path: ${{ steps.names.outputs.licenses-path }}

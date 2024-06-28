@@ -86,12 +86,12 @@ jobs:
           secrets:
             kv/data/teams/vagrant/hashibot vagrant_token;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
       - name: Setup Go
         if: steps.inspect.outputs.substrates-unsigned-exists != 'true'
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       - name: Gather information
@@ -105,7 +105,7 @@ jobs:
         run: make bin/launcher/windows
       - name: Store Launchers
         if: steps.inspect.outputs.substrates-unsigned-exists != 'true'
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-launchers-win
           path: ./bin
@@ -115,16 +115,16 @@ jobs:
     needs: [info]
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Launchers
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-launchers-win
           path: ./bin
       - name: Build Windows Substrates
         run: powershell -File .\substrate\run.ps1 -OutputDir .\vagrant-substrates -LauncherDirectory .\bin
       - name: Upload Substrates
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-substrates
           path: ./vagrant-substrates
@@ -137,9 +137,9 @@ jobs:
     needs: [info, build-substrates]
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Download substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-substrates
           path: ./vagrant-substrates
@@ -174,7 +174,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Substrates
         run: ./.ci/restore-cache "${CACHE_ID}" ./vagrant-substrates
         env:
@@ -200,7 +200,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.substrates-32-signed-id }}
       - name: Upload Substrates
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-substrates-32
           path: ./signed-substrates
@@ -233,7 +233,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Substrates
         run: ./.ci/restore-cache "${CACHE_ID}" ./vagrant-substrates
         env:
@@ -259,7 +259,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.substrates-64-signed-id }}
       - name: Upload Substrates
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-substrates-64
           path: ./signed-substrates
@@ -273,14 +273,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Substrates
         run: ./.ci/restore-cache "${CACHE_ID}" ./signed-substrates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.substrates-32-signed-id }}
       - name: Upload Substrates
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-substrates-32
           path: ./signed-substrates
@@ -292,14 +292,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Substrates
         run: ./.ci/restore-cache "${CACHE_ID}" ./signed-substrates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.substrates-64-signed-id }}
       - name: Upload Substrates
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-substrates-64
           path: ./signed-substrates
@@ -309,21 +309,21 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signed-substrates-32
           path: ./signed-substrates
       - name: Fetch Vagrant RubyGem
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
       - name: Install Vagrant RubyGem
         run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-gems-32
           path: ./installed
@@ -335,9 +335,9 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Download substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-gems-32
           path: ./installed
@@ -352,21 +352,21 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signed-substrates-64
           path: ./signed-substrates
       - name: Fetch Vagrant RubyGem
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
       - name: Install Vagrant RubyGem
         run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-gems-64
           path: ./installed
@@ -378,9 +378,9 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Download substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-gems-64
           path: ./installed
@@ -413,7 +413,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch 32 Bit Installed Gems
         run: ./.ci/restore-cache "${CACHE_ID}" ./installed
         env:
@@ -438,7 +438,7 @@ jobs:
         env:
           SIGNED_GEMS: ${{ steps.signer.outputs.signed-zip-artifact-path }}
       - name: Upload Signed 32 Bit Installed Gems
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-gems-32
           path: ./signed-gems
@@ -466,7 +466,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch 64 Bit Installed Gems
         run: ./.ci/restore-cache "${CACHE_ID}" ./installed
         env:
@@ -491,7 +491,7 @@ jobs:
         env:
           SIGNED_GEMS: ${{ steps.signer.outputs.signed-zip-artifact-path }}
       - name: Upload Signed 64 Bit Installed Gems
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-gems-64
           path: ./signed-gems
@@ -505,14 +505,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Signed 32 Bit Installed Gems
         run: ./.ci/restore-cache "${CACHE_ID}" ./signed-gems
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.gems-32-signed-id }}
       - name: Upload Signed 32 Bit Installed Gems
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-gems-32
           path: ./signed-gems
@@ -526,14 +526,14 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Signed 64 Bit Installed Gems
         run: ./.ci/restore-cache "${CACHE_ID}" ./signed-gems
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CACHE_ID: ${{ needs.info.outputs.gems-64-signed-id }}
       - name: Upload Signed 64 Bit Installed Gems
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: signed-gems-64
           path: ./signed-gems
@@ -543,19 +543,19 @@ jobs:
     needs: [info, sign-32-substrate, upload-32-signed-substrate, upload-gems-32, sign-gems-32]
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signed-substrates-32
           path: ./signed-substrates
       - name: Fetch Signed 32 Bit Installed Gems
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signed-gems-32
           path: ./signed-gems
       - name: Fetch Licenses
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-licenses-name }}
           path: ${{ inputs.vagrant-licenses-path }}
@@ -568,7 +568,7 @@ jobs:
         env:
           VagrantVersion: ${{ inputs.vagrant-version }}
       - name: Upload 32 Bit Vagrant MSI
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-msi-32
           path: ./pkg
@@ -578,19 +578,19 @@ jobs:
     needs: [info, sign-64-substrate, upload-64-signed-substrate, upload-gems-64, sign-gems-64]
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Substrates
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signed-substrates-64
           path: ./signed-substrates
       - name: Fetch Signed 64 Bit Installed Gems
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signed-gems-64
           path: ./signed-gems
       - name: Fetch Licenses
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-licenses-name }}
           path: ${{ inputs.vagrant-licenses-path }}
@@ -603,7 +603,7 @@ jobs:
         env:
           VagrantVersion: ${{ inputs.vagrant-version }}
       - name: Upload 64 Bit Vagrant MSI
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: vagrant-msi-64
           path: ./pkg
@@ -615,9 +615,9 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Download 32 Bit Windows MSI
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-msi-32
           path: ./pkg
@@ -634,9 +634,9 @@ jobs:
       contents: write
     steps:
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Download 64 Bit Windows MSI
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: vagrant-msi-64
           path: ./pkg
@@ -669,7 +669,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch 32 Bit Windows MSI
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
@@ -712,7 +712,7 @@ jobs:
             kv/data/github/hashicorp/vagrant-builders signore_client_secret;
             kv/data/github/hashicorp/vagrant-builders signore_windows_signer;
       - name: Code Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch 64 Bit Windows MSI
         run: ./.ci/restore-cache "${CACHE_ID}" ./pkg
         env:
