@@ -30,8 +30,11 @@ libgcrypt_file="libgcrypt-${libgcrypt_version}.tar.bz2"      # https://gnupg.org
 libgmp_file="gmp-${libgmp_version}.tar.bz2"               # https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2
 libgpg_error_file="libgpg-error-${libgpg_error_version}.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
 libiconv_file="libiconv-${libiconv_version}.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
+libidn2_file="libidn2-${libidn2_version}.tar.gz" # https://ftp.gnu.org/gnu/libidn/
+libpsl_file="libpsl-${libpsl_version}.tar.gz"             # https://github.com/rockdaboot/libpsl/releases/tag/
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_file="libssh2-${libssh2_version}.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
+libunistring_file="libunistring-${libunistring_version}.tar.gz" # https://ftp.gnu.org/gnu/libunistring/
 libxml2_file="libxml2-${libxml2_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.14/libxml2-v2.9.14.tar.gz ftp://xmlsoft.org/libxml2/libxml2-${libxml2_version}.tar.gz
 libxslt_file="libxslt-${libxslt_version}.tar.xz"          # https://gitlab.gnome.org/GNOME/libxslt/-/archive/${libxslt_version}/libxslt-v${libxslt_version}.tar.gz ftp://xmlsoft.org/libxml2/libxslt-${libxslt_version}.tar.gz
 libyaml_file="yaml-${libyaml_version}.tar.gz"              # http://pyyaml.org/download/libyaml/yaml-${libyaml_version}.tar.gz
@@ -612,6 +615,54 @@ if needs_build "${tracker_file}" "readline"; then
     if [[ "${linux_os}" = "archlinux" ]]; then
         export LDFLAGS="${CURRENT_LDFLAGS}"
     fi
+    popd > /dev/null || exit
+fi
+
+# libunistring
+if needs_build "${tracker_file}" "libunistring"; then
+    info "   -> Building libunistring..."
+    libunistring_url="${dep_cache}/${libunistring_file}"
+    curl -f -L -s -o libunistring.tar.gz "${libunistring_url}" ||
+        error "libunistring download error encountered"
+    tar -xzf libunistring.tar.gz || exit
+    pushd libunistring-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
+        "${cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libunistring"
+    popd > /dev/null || exit
+fi
+
+# libidn2
+if needs_build "${tracker_file}" "libidn2"; then
+    info "   -> Building libidn2..."
+    libidn2_url="${dep_cache}/${libidn2_file}"
+    curl -f -L -s -o libidn2.tar.gz "${libidn2_url}" ||
+        error "libidn2 download error encountered"
+    tar -xzf libidn2.tar.gz || exit
+    pushd libidn2-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
+        --disable-doc "${cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libidn2"
+    popd > /dev/null || exit
+fi
+
+# libpsql
+if needs_build "${tracker_file}" "libpsl"; then
+    info "   -> Building libpsl..."
+    libpsl_url="${dep_cache}/${libpsl_file}"
+    curl -f -L -s -o libpsl.tar.gz "${libpsl_url}" ||
+        error "libpsl download error encountered"
+    tar -xzf libpsl.tar.gz || exit
+    pushd libpsl-* > /dev/null || exit
+    ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
+        --disable-man --disable-gtk-doc-html "${cross_configure[@]}" || exit
+    make || exit
+    make install || exit
+    mark_build "${tracker_file}" "libpsl"
     popd > /dev/null || exit
 fi
 
