@@ -187,6 +187,19 @@ $env:TMP = $env:TEMP
 # Set the path to the SSL certificate bundle for rubygems to use
 $env:SSL_CERT_FILE = "${EmbeddedDirectory}\cert.pem"
 
+# Install the pkg-config gem
+$PkgCfgProc = Start-Process `
+  -File $RubyCmdPath `
+  -ArgumentList $GemCmdPath,"install","pkg-config" `
+  -NoNewWindow `
+  -PassThru
+$junkhandle = $PkgCfgProc.Handle
+$PkgCfgProc.WaitForExit()
+
+if ( $PkgCfgProc.ExitCode -ne 0 ) {
+    Write-Error "Failed to install pkg-config gem"
+}
+
 # The grpc rubygem needs to be modified before its extension is
 # built. Set the script to do that.
 $env:RUBYGEMS_POST_EXTRACT_HOOK = "${ScriptDirectory}\grpc-extconf-fix"
