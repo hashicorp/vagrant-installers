@@ -641,7 +641,7 @@ if needs_build "${tracker_file}" "libicu"; then
     curl -f -L -s -o libicu.tar.gz "${libicu_url}" ||
         error "libicu download error encountered"
     tar -xzf libicu.tar.gz || exit
-    pushd icu* > /dev/null || exit
+    pushd icu > /dev/null || exit
     ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
         "${cross_configure[@]}" || exit
     make || exit
