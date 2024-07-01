@@ -19,7 +19,7 @@ libgcrypt_version="1.10.3"
 libgmp_version="6.3.0"
 libgpg_error_version="1.48"
 libiconv_version="1.17"
-libidn2_version="2.3.7"
+libicu_version="74_2"
 libpsl_version="0.21.5"
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_version="1.11.0"
