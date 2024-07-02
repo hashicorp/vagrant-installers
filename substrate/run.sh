@@ -30,7 +30,7 @@ libgcrypt_file="libgcrypt-${libgcrypt_version}.tar.bz2"      # https://gnupg.org
 libgmp_file="gmp-${libgmp_version}.tar.bz2"               # https://ftp.gnu.org/gnu/gmp/gmp-${libgmp_version}.tar.bz2
 libgpg_error_file="libgpg-error-${libgpg_error_version}.tar.bz2" # https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${libgpg_error_version}.tar.bz2
 libiconv_file="libiconv-${libiconv_version}.tar.gz"          # https://mirrors.kernel.org/gnu/libiconv/libiconv-${libiconv_version}.tar.gz
-libicu_file="icu4c-${libicu_version}-src.tgz" # https://github.com/unicode-org/icu/releases
+libidn2_file="libidn2-${libidn2_version}.tar.gz" # https://ftp.gnu.org/gnu/libidn/
 libpsl_file="libpsl-${libpsl_version}.tar.gz"             # https://github.com/rockdaboot/libpsl/releases/tag/
 # Need up update gcc version to use libssh2 1.9.0+
 libssh2_file="libssh2-${libssh2_version}.tar.gz"           # https://www.libssh2.org/download/libssh2-${libssh2_version}.tar.gz
@@ -634,23 +634,23 @@ if needs_build "${tracker_file}" "libunistring"; then
     popd > /dev/null || exit
 fi
 
-# libicu
-if needs_build "${tracker_file}" "libicu"; then
-    info "   -> Building libcu..."
-    libicu_url="${dep_cache}/${libicu_file}"
-    curl -f -L -s -o libicu.tar.gz "${libicu_url}" ||
-        error "libicu download error encountered"
-    tar -xzf libicu.tar.gz || exit
-    pushd icu/source > /dev/null || exit
+# libidn2
+if needs_build "${tracker_file}" "libidn2"; then
+    info "   -> Building libidn2..."
+    libidn2_url="${dep_cache}/${libidn2_file}"
+    curl -f -L -s -o libidn2.tar.gz "${libidn2_url}" ||
+        error "libidn2 download error encountered"
+    tar -xzf libidn2.tar.gz || exit
+    pushd libidn2-* > /dev/null || exit
     ./configure --prefix="${embed_dir}" --enable-shared --disable-static \
-        "${cross_configure[@]}" || exit
+        --disable-doc "${cross_configure[@]}" || exit
     make || exit
     make install || exit
-    mark_build "${tracker_file}" "libicu"
+    mark_build "${tracker_file}" "libidn2"
     popd > /dev/null || exit
 fi
 
-# libpsql
+# libpsl
 if needs_build "${tracker_file}" "libpsl"; then
     info "   -> Building libpsl..."
     libpsl_url="${dep_cache}/${libpsl_file}"
