@@ -25,7 +25,7 @@ apt-get update
 
 debug "installing required packages"
 apt-get install -yq build-essential pkg-config autoconf automake chrpath \
-    libtool libpython-dev gcc-9 g++-9 curl zip unzip || exit
+    libtool libpython-dev gcc-9 g++-9 curl zip unzip python || exit
 
 debug "updating gcc and g++ to use newer versions"
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100 \
