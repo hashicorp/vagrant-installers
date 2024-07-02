@@ -72,6 +72,7 @@ yum install -y \
     rh-perl524-perl-open \
     rh-perl524-perl-Data-Dumper \
     rh-perl524-perl-Thread-Queue \
+    python27 \
     glibc-*.i686 \
     libgcc-*.i686 \
     libstdc++-*.i686 || exit
@@ -79,7 +80,9 @@ yum install -y \
 # Enable the updated versions
 echo '. /opt/rh/devtoolset-8/enable' >> /etc/profile
 echo '. /opt/rh/rh-perl524/enable' >> /etc/profile
+echo '. /opt/rh/python27/enable' >> /etc/profile
 
 debug "enabling new dev tools for auto builds"
 . /opt/rh/devtoolset-8/enable
 . /opt/rh/rh-perl524/enable
+. /opt/rh/python27/enable
