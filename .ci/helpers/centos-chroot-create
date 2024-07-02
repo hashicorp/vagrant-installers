@@ -55,6 +55,11 @@ else
     )
 fi
 
+# NOTE: rinse command will fail unpacking the udev package due to a missing
+# directory. To workaround this, we just create the directory first
+
+mkdir -p "${chroot_dir}/usr/lib/ConsoleKit/run-seat.d" || exit
+
 debug "executing rinse with: %s" "${rinse_args[*]}"
 
 rinse "${rinse_args[@]}" || exit
