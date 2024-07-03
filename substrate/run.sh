@@ -308,6 +308,8 @@ if [[ "${target_os}" = "darwin" ]]; then
     else # By default we target x86_64
         info "   ** macOS build target architecture: x86_64"
 
+        MACOS_TARGET="x86_64"
+
         if [ -n "${macos_sdk_file}" ]; then
             info "   ** Custom SDK defined (%s), downloading..." "${macos_sdk_file}"
             pushd "${cache_dir}" > /dev/null || exit
@@ -683,6 +685,8 @@ if needs_build "${tracker_file}" "openssl"; then
     #       https://github.com/openssl/openssl/issues/8823
     if [ "${MACOS_TARGET}" = "arm64" ]; then
         ./Configure zlib no-asm no-tests shared --prefix="${embed_dir}" darwin64-arm64-cc || exit
+    elif [ "${MACOS_TARGET}" = "x86_64" ]; then
+        ./Configure zlib no-asm no-tests shared --prefix="${embed_dir}" darwin64-x86_64-cc || exit
     elif [ "${target_os}" = "linux" ] && [ "${target_arch}" = "386" ]; then
         cat <<'EOF' > ./Configurations/99-vagrant.conf
 (
