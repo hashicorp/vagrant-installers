@@ -864,8 +864,8 @@ if needs_build "${tracker_file}" "ruby"; then
     unset CFLAGS
     unset CPPFLAGS
     unset CXXFLAGS
-    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc --disable-install-rdoc \
-        --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
+    ./configure --prefix="${embed_dir}" --disable-debug --disable-install-doc --disable-install-rdoc \
+        --disable-install-capi --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
         --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
         "${cross_configure[@]}" "${cross_configure_ruby[@]}" || exit
     make miniruby || exit
