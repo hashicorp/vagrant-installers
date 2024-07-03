@@ -35,11 +35,6 @@ if [ ! -f "${vagrant_gem}" ]; then
     error "Invalid path provided for Vagrant gem (%s)" "${vagrant_gem}"
 fi
 
-# Make sure the go modules are installed
-pushd "${root}" > /dev/null || exit
-go mod download || exit
-popd > /dev/null || exit
-
 # Create a working directory for unpacking
 # the substrate
 substrate_dir="$(mktemp -d vagrant-substrate.XXXXXX)" || exit

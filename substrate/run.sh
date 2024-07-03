@@ -232,7 +232,6 @@ if [ "${target_os}" = "linux" ] && [ -n "${forced_arch}" ]; then
     if [ "${target_arch}" = "386" ]; then
         export CFLAGS="${CFLAGS} -m32 -march=${forced_arch}"
         export LDFLAGS="${LDFLAGS} -m32"
-
     fi
 
     info "  ** Build host: %s" "${build_host}"
@@ -263,7 +262,6 @@ if [[ "${target_os}" = "darwin" ]]; then
         "--includedir=${embed_dir}/include"
         "--oldincludedir=${embed_dir}/include"
         "--enable-rpath"
-        "--enable-rb_cv_function_name_string=__func__"
     )
 
     # Set the host system value
@@ -864,8 +862,8 @@ if needs_build "${tracker_file}" "ruby"; then
     unset CFLAGS
     unset CPPFLAGS
     unset CXXFLAGS
-    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc --disable-install-rdoc \
-        --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
+    ./configure --prefix="${embed_dir}" --disable-debug --disable-install-doc --disable-install-rdoc \
+        --disable-install-capi --enable-shared --disable-static --enable-load-relative --with-sitedir=no \
         --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
         "${cross_configure[@]}" "${cross_configure_ruby[@]}" || exit
     make miniruby || exit

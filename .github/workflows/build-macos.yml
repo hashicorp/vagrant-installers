@@ -132,7 +132,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-x86-substrate:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrate-x86-unsigned-exists != 'true'
-    runs-on: macos-13
+    runs-on: macos-latest
     permissions:
       contents: write
     needs: [info]
@@ -561,7 +561,7 @@ jobs:
       - name: Upgrade bash
         run: brew install bash
       - name: Install dmgbuild
-        run: pip3 install dmgbuild && pip3 install biplist
+        run: pip3 install --break-system-packages dmgbuild && pip3 install --break-system-packages biplist
       - name: Code Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Fetch Vagrant installer
