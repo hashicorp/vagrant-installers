@@ -263,6 +263,7 @@ if [[ "${target_os}" = "darwin" ]]; then
         "--includedir=${embed_dir}/include"
         "--oldincludedir=${embed_dir}/include"
         "--enable-rpath"
+        "--enable-rb_cv_function_name_string=__func__"
     )
 
     # Set the host system value
@@ -863,7 +864,7 @@ if needs_build "${tracker_file}" "ruby"; then
     unset CFLAGS
     unset CPPFLAGS
     unset CXXFLAGS
-    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc --disable-install-rdoc\
+    ./configure --prefix="${embed_dir}" --disable-debug --disable-dependency-tracking --disable-install-doc --disable-install-rdoc \
         --enable-shared --disable-static --with-opt-dir="${embed_dir}" --enable-load-relative --with-sitedir=no \
         --with-vendordir=no --with-sitearchdir=no --with-vendorarchdir=no --with-openssl-dir="${embed_dir}" \
         "${cross_configure[@]}" "${cross_configure_ruby[@]}" || exit
