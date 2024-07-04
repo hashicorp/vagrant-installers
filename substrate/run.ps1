@@ -50,7 +50,7 @@ $build_proc = Start-Process `
 $handle = $build_proc.Handle
 
 # Define a reasonably long time for the process to complete
-$build_timeout = New-TimeSpan -Hours 1
+$build_timeout = New-TimeSpan -Hours 2
 
 # Now wait for it to complete
 Wait-Process -Timeout $build_timeout.TotalSeconds -Id $build_proc.Id

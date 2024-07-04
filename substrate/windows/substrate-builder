@@ -65,10 +65,35 @@ work_dir="$(mktemp -d vagrant-substrate.XXXXX)" || exit
 pushd "${work_dir}" > /dev/null || exit
 work_dir="$(pwd)" || exit
 
+# Install base packages that are needed
+pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-nsis mingw-w64-x86_64-binutils dos2unix base-devel || exit
+pacman -S --noconfirm mingw-w64-i686-gcc mingw-w64-i686-nsis mingw-w64-i686-binutils || exit
+
+# Create a directory to hold our custom packages (curl in this case)
+mkdir ./pkgs || exit
+pkgs_dir="${work_dir}/pkgs"
+
+# Build the curl packages
+if ! "${root}/substrate/windows/curl-builder" "${pkgs_dir}"; then
+    printf "ERROR: failed to build required curl package\n"
+    exit 1
+fi
+
+# Build the ruby packages
+if ! "${root}/substrate/windows/ruby-builder" "${pkgs_dir}"; then
+    printf "ERROR: failed to build required ruby packages\n"
+    exit 1
+fi
+
+printf "Contents packages directory after custom builds:\n"
+ls -l "${pkgs_dir}"
+
 # Grab styrene as it's what's building our substrate
 # NOTE: Forked repository is referenced simply for better
 #       control of the contents.
 printf "checking out styrene...\n"
+# NOTE: Disable git from converting new lines
+git config --global core.autocrlf false
 git clone https://github.com/chrisroberts/styrene ./styrene  || exit
 
 # Move into styrene so we can build
@@ -78,11 +103,11 @@ sty_dir="$(pwd)" || exit
 # Copy in our configuration for building the substrate
 cp "${root}/substrate/windows/vagrant.cfg" ./vagrant.cfg || exit
 
-pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-nsis mingw-w64-x86_64-binutils || exit
-pacman -S --noconfirm mingw-w64-i686-gcc mingw-w64-i686-nsis mingw-w64-i686-binutils || exit
+# Make sure the line endings are clean
+dos2unix ./vagrant.cfg
 
 printf "building the substrate internals...\n"
-./styrene.sh --output-dir=./output --no-exe --color=no ./vagrant.cfg || exit
+./styrene.sh --pkg-dir="${pkgs_dir}" --output-dir=./output --no-exe --color=no ./vagrant.cfg || exit
 
 # Get paths for the generated substrate internals so
 # we can build the full substrates

@@ -12,7 +12,7 @@
 # view. Update the date below to force a new substrate build
 # when no libraries need to be updated:
 
-curl_version="8.6.0"
+curl_version="8.10.1"
 libarchive_version="3.7.2"
 libffi_version="3.4.6"
 libgcrypt_version="1.10.3"
@@ -29,7 +29,7 @@ libxslt_version="1.1.39"
 libyaml_version="0.2.5"
 openssl_version="3.1.5"
 readline_version="8.2"
-ruby_version="3.2.3"
+ruby_version="3.3.5"
 xz_version="5.4.0"
 zlib_version="1.3.1"
 

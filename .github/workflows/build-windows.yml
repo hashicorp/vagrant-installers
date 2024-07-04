@@ -109,6 +109,29 @@ jobs:
         with:
           name: vagrant-launchers-win
           path: ./bin
+  build-fixed-wdm:
+    if: github.repository == 'hashicorp/vagrant-builders'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@3783f195e29b74ae398d7caca108814bbafde90e # v1.180.1
+        with:
+          ruby-version: 3.2
+      - name: Gem Repo Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          repository: chrisroberts/wdm
+          ref: build-fixes
+      - name: Build gem
+        run: |
+          mkdir ./wdm-build || exit
+          gem build wdm.gemspec || exit
+          mv ./*.gem ./wdm-build/wdm.gem || exit
+      - name: Store Gem
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: wdm-gem
+          path: ./wdm-build
   build-substrates:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrates-unsigned-exists != 'true'
     runs-on: windows-latest
@@ -264,6 +287,7 @@ jobs:
           name: signed-substrates-64
           path: ./signed-substrates
       - name: Marked As Run
+        id: final
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-32-signed-substrate:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-32-substrate.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled()
@@ -315,13 +339,18 @@ jobs:
         with:
           name: signed-substrates-32
           path: ./signed-substrates
+      - name: Fetch wdm gem
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: wdm-gem
+          path: ./wdm-build
       - name: Fetch Vagrant RubyGem
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
       - name: Install Vagrant RubyGem
-        run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
+        run: powershell -File .\package\windows\generate_package_contents.ps1 -WdmGem .\wdm-build\wdm.gem -Substrate .\signed-substrates\substrate_windows_386.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
@@ -358,13 +387,18 @@ jobs:
         with:
           name: signed-substrates-64
           path: ./signed-substrates
+      - name: Fetch wdm gem
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
+        with:
+          name: wdm-gem
+          path: ./wdm-build
       - name: Fetch Vagrant RubyGem
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
       - name: Install Vagrant RubyGem
-        run: powershell -File .\package\windows\generate_package_contents.ps1 -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
+        run: powershell -File .\package\windows\generate_package_contents.ps1 -WdmGem .\wdm-build\wdm.gem -Substrate .\signed-substrates\substrate_windows_x86_64.zip -VagrantGem .\gem\vagrant.gem -Destination .\installed
       - name: Upload Installed Gems
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
@@ -396,6 +430,8 @@ jobs:
     permissions:
       id-token: write
       contents: write
+    outputs:
+      was_run: ${{ steps.final.outputs.was_run }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -442,6 +478,9 @@ jobs:
         with:
           name: signed-gems-32
           path: ./signed-gems
+      - name: Marked As Run
+        id: final
+        run: echo "was_run=true" >> $GITHUB_OUTPUT
   sign-gems-64:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.gems-64-signed-exists != 'true' && !failure() && !cancelled()
     needs: [info, cache-gems-vagrant-64]
@@ -449,6 +488,8 @@ jobs:
     permissions:
       id-token: write
       contents: write
+    outputs:
+      was_run: ${{ steps.final.outputs.was_run }}
     steps:
       - name: Authentication
         id: vault-auth
@@ -496,6 +537,7 @@ jobs:
           name: signed-gems-64
           path: ./signed-gems
       - name: Marked As Run
+        id: final
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-gems-32:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-32.outputs.was_run != 'true' && needs.info.outputs.msi-32-unsigned-exists != 'true' && !failure() && !cancelled()
@@ -503,6 +545,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      was_run: ${{ steps.final.outputs.was_run }}
     steps:
       - name: Code Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -517,6 +561,7 @@ jobs:
           name: signed-gems-32
           path: ./signed-gems
       - name: Marked As Run
+        id: final
         run: echo "was_run=true" >> $GITHUB_OUTPUT
   upload-gems-64:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.sign-gems-64.outputs.was_run != 'true' && needs.info.outputs.msi-64-unsigned-exists != 'true' && !failure() && !cancelled()
