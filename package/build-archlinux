@@ -82,6 +82,9 @@ else
     makepkg --syncdeps --force --noconfirm || exit
 fi
 
+# Remove the debug package if it exists
+rm -f ./*-debug-*.zst
+
 # Move the package to the destination path
 mv ./*.zst "${output_path}" || exit
 

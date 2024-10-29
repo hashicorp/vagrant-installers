@@ -77,5 +77,5 @@ sleep 2
 
 # Install required tools
 debug "installing build tools"
-lxc exec "${ctn_name}" -- pacman -Sy --noconfirm curl base-devel unzip zip ||
+lxc exec "${ctn_name}" -- pacman -Sy --noconfirm curl base-devel unzip zip python ||
     failure "Could not install required build tools"
