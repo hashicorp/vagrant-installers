@@ -17,8 +17,8 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 gem_dir="${1?Directory of gem file required}"
 license_file="${2?License file is required}"
-substrate_dir="${2?Directory of substrate file required}"
-output_dir="${3?Directory for output file required}"
+substrate_dir="${3?Directory of substrate file required}"
+output_dir="${4?Directory for output file required}"
 
 if [ ! -d "${gem_dir}" ]; then
     failure "Invalid path provided for gem directory (%s)" \
@@ -131,9 +131,17 @@ debug "copying substrate %s -> %s" "${substrate_file}" "${chroot_substrate_path}
 cp "${substrate_file}" "${chroot_substrate_path}" ||
     failure "Could not copy substrate into chroot"
 
+# Copy in the license
+chroot_license="LICENSE.txt"
+chroot_license_path="${chroot_dir}/${chroot_license}"
+# Add the license into the chroot
+debug "copying gem %s -> %s" "${license_file}" "${chroot_license_path}"
+cp "${license_file}" "${chroot_license_path}" ||
+    failure "Could not copy license into chroot"
+
 debug "running vagrant appimage build"
 chroot "${chroot_dir}" "${project_name}/package/build-appimage" "/${chroot_substrate}" \
-    "/${chroot_gem}" "/${chroot_output}" ||
+    "/${chroot_gem}" /"${chroot_license}" "/${chroot_output}" ||
     failure "Failed to install vagrant gem into substrate"
 
 debug "install build is complete, moving artifacts - %s -> %s" \

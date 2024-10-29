@@ -19,7 +19,7 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 
 # Verify arguments
 if [ "$#" -ne "4" ]; then
-  failure "Expected three args: SUBSTRATE-FILE GEM-FILE LICENSE-FILE OUTPUT-DIR"
+  failure "Expected four args: SUBSTRATE-FILE GEM-FILE LICENSE-FILE OUTPUT-DIR"
 fi
 
 substrate_file="${1?Substrate file is required}"
