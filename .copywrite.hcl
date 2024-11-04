@@ -8,5 +8,6 @@ project {
 
   header_ignore = [
     "package/support/darwin/dist/welcome.html",
+    "substrate/windows/**",
   ]
 }
