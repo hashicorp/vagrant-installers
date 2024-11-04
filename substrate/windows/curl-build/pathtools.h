@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MIT
+ */
+
+/*
       .Some useful path tools.
         .ASCII only for now.
    .Written by Ray Donnelly in 2014.
