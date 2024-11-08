@@ -29,7 +29,7 @@ libxslt_version="1.1.39"
 libyaml_version="0.2.5"
 openssl_version="3.1.5"
 readline_version="8.2"
-ruby_version="3.3.5"
+ruby_version="3.3.6"
 xz_version="5.4.0"
 zlib_version="1.3.1"
 
