@@ -39,9 +39,8 @@ chroot_dir="/var/chroot/centos"
 project_name="${root##*/}"
 
 # Create the chroot
-# NOTE: We always create 64 bit chroot for centos
 debug "creating centos chroot"
-"${root}/.ci/helpers/centos-chroot-create" "64" "${chroot_dir}" ||
+"${root}/.ci/helpers/centos-chroot-create" "${chroot_dir}" ||
     failure "Could not create centos chroot environment"
 
 # The initial chroot is created. Now we need to get it prepared

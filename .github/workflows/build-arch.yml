@@ -82,6 +82,8 @@ jobs:
           go-version-file: go.mod
       - name: Build Launchers
         run: make bin/launcher/linux-x86_64
+      - name: Trigger LXD install
+        run: sudo lxd
       - name: Enable LXD
         run: sudo usermod -a -G lxd "${USER}"
       - name: Build Substrate
