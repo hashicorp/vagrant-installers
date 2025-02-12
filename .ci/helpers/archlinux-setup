@@ -12,43 +12,25 @@ root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
 
 ctn_name="${1?Container name required}"
 
-# Start by setting up LXD
-# NOTE: It's okay if LXD has already had init run,
+# Only add these rules if we are on a github runner
+debug "flushing nft"
+nft flush ruleset
+
+# Start by setting up incus
+# NOTE: It's okay if incus has already had init run,
 #       this will just end up being a no-op
-debug "initializing LXD"
-lxd init --auto ||
-    failure "Unable to setup LXD"
+debug "initializing incus"
+incus admin init --auto ||
+    failure "Unable to setup incus"
 
 # NOTE: It's fine to run this if the bridge is already
 #       in an up state, it's just a no-op
-debug "attempting to place lxdbr0 bridge in up state"
-sudo networkctl up lxdbr0 ||
-    failure "Could not bring lxdbr0 up"
-
-# Only add these rules if we are on a github runner
-if [ -n "${GITHUB_ACTIONS}" ]; then
-    debug "adding iptables rules for lxdbr0 traffic"
-    # NOTE: These rules a duplicate of defined rules for docker on the public
-    #       ubuntu-latest runners (22.04 as of now)
-    sudo iptables -N LXD
-    sudo iptables -N LXD-ISOLATION-STAGE-1
-    sudo iptables -N LXD-ISOLATION-STAGE-2
-    sudo iptables -N LXD-USER
-    sudo iptables -A FORWARD -j LXD-USER
-    sudo iptables -A FORWARD -j LXD-ISOLATION-STAGE-1
-    sudo iptables -A FORWARD -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-    sudo iptables -A FORWARD -o lxdbr0 -j LXD
-    sudo iptables -A FORWARD -i lxdbr0 ! -o lxdbr0 -j ACCEPT
-    sudo iptables -A FORWARD -i lxdbr0 -o lxdbr0 -j ACCEPT
-    sudo iptables -A LXD-ISOLATION-STAGE-1 -i lxdbr0 ! -o lxdbr0 -j LXD-ISOLATION-STAGE-2
-    sudo iptables -A LXD-ISOLATION-STAGE-1 -j RETURN
-    sudo iptables -A LXD-ISOLATION-STAGE-2 -o lxdbr0 -j DROP
-    sudo iptables -A LXD-ISOLATION-STAGE-2 -j RETURN
-    sudo iptables -A LXD-USER -j RETURN
-fi
+debug "attempting to place incusbr0 bridge in up state"
+sudo networkctl up incusbr0 ||
+    failure "Could not bring incusbr0 up"
 
 debug "launching archlinux container named '%s'" "${ctn_name}"
-lxc launch --ephemeral images:archlinux "${ctn_name}" ||
+incus launch --ephemeral images:archlinux "${ctn_name}" ||
     failure "Unable to launch archlinux container"
 
 # Now mount our project directory into the container
@@ -57,18 +39,18 @@ proj_name="${root##*/}"
 debug "mounting directory into container %s -> %s" \
     "${root}" "/${proj_name}"
 
-lxc config device add "${ctn_name}" "${proj_name}" \
+incus config device add "${ctn_name}" "${proj_name}" \
     disk source="${root}" path="/${proj_name}" ||
     failure "Unable to mount project directory into container"
 
 # Wait for network to be ready before we attempt to install
 # any required packages
-status="$(lxc exec "${ctn_name}" -- networkctl status --json short | jq -r '.Interfaces[] | select(.Name == "eth0") | .AddressState' 2> /dev/null)"
+status="$(incus exec "${ctn_name}" -- networkctl status --json short | jq -r '.Interfaces[] | select(.Name == "eth0") | .AddressState' 2> /dev/null)"
 while [ "${status}" != "routable" ]; do
     debug "sleeping for a moment while we wait for networking to setup (status: %s)" \
         "${status}"
     sleep 2
-    status="$(lxc exec "${ctn_name}" -- networkctl status --json short | jq -r '.Interfaces[] | select(.Name == "eth0") | .AddressState')"
+    status="$(incus exec "${ctn_name}" -- networkctl status --json short | jq -r '.Interfaces[] | select(.Name == "eth0") | .AddressState')"
 done
 
 # Once ready do a final pause to ensure
@@ -77,5 +59,5 @@ sleep 2
 
 # Install required tools
 debug "installing build tools"
-lxc exec "${ctn_name}" -- pacman -Sy --noconfirm curl base-devel unzip zip python ||
+incus exec "${ctn_name}" -- pacman -Sy --noconfirm curl base-devel unzip zip python ||
     failure "Could not install required build tools"

@@ -144,6 +144,10 @@ jobs:
         with:
           name: vagrant-launchers-win
           path: ./bin
+      - name: msys2 update core
+        run: C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -Syuu'
+      - name: msys2 update packages
+        run: C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -Syuu'
       - name: Build Windows Substrates
         run: powershell -File .\substrate\run.ps1 -OutputDir .\vagrant-substrates -LauncherDirectory .\bin
       - name: Upload Substrates

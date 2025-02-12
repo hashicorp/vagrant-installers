@@ -37,11 +37,10 @@ apt-get install -qy rinse ||
 rinse_args=(
     "--distribution" "centos-7"
     "--directory" "${chroot_dir}"
-    "--post-install" "${root}/.ci/helpers/centos-chroot-post-install"
     "--before-post-install" "${root}/.ci/helpers/centos-chroot-repo-configure"
     "--after-post-install" "${root}/.ci/helpers/centos-chroot-repo-finalize"
     "--arch" "amd64"
-    "--mirror" "http://archive.kernel.org/centos-vault/7/os/x86_64/Packages/"
+    "--mirror" "http://archive.kernel.org/centos-vault/centos/7/os/x86_64/Packages/"
 )
 
 # NOTE: rinse command will fail unpacking the udev package due to a missing
@@ -52,9 +51,6 @@ mkdir -p "${chroot_dir}/usr/lib/ConsoleKit/run-seat.d" || exit
 debug "executing rinse with: %s" "${rinse_args[*]}"
 
 rinse "${rinse_args[@]}" || exit
-
-debug "installing ca certificates package"
-chroot "${chroot_dir}" yum install -y "ca-certificates" || exit
 
 debug "updating ca certificates"
 cert_dir="$(mktemp -d vagrant-cert.XXXXX)" || exit
@@ -73,6 +69,7 @@ if [ "${check_sum}" != "${cacert_sum}" ]; then
 fi
 
 debug "installing new ca certificates"
+mkdir -p "${chroot_dir}/etc/ssl/certs" || exit
 mv -f ./cacert.pem "${chroot_dir}/etc/ssl/certs/ca-bundle.crt" || exit
 popd
 rm -rf "${cert_dir}"
