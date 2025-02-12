@@ -21,8 +21,7 @@ if [ "$(id -u)" != "0" ]; then
     failure "Script must be run as root"
 fi
 
-substrate_arch="${1?Chroot architecture required}"
-chroot_dir="${2?Path to chroot is required}"
+chroot_dir="${1?Path to chroot is required}"
 mkdir -p "${chroot_dir}" || exit
 pushd "${chroot_dir}"
 chroot_dir="$(pwd)" || exit
@@ -36,24 +35,14 @@ apt-get install -qy rinse ||
 
 # Collect arguments for passing to rinse
 rinse_args=(
-    "--distribution" "centos-6"
+    "--distribution" "centos-7"
     "--directory" "${chroot_dir}"
     "--post-install" "${root}/.ci/helpers/centos-chroot-post-install"
     "--before-post-install" "${root}/.ci/helpers/centos-chroot-repo-configure"
     "--after-post-install" "${root}/.ci/helpers/centos-chroot-repo-finalize"
+    "--arch" "amd64"
+    "--mirror" "http://archive.kernel.org/centos-vault/7/os/x86_64/Packages/"
 )
-
-if [ "${substrate_arch}" = "64" ]; then
-    rinse_args+=(
-        "--arch" "amd64"
-        "--mirror" "http://archive.kernel.org/centos-vault/6.10/os/x86_64/Packages/"
-    )
-else
-    rinse_args+=(
-        "--arch" "i386"
-        "--mirror" "http://archive.kernel.org/centos-vault/6.10/os/i386/Packages/"
-    )
-fi
 
 # NOTE: rinse command will fail unpacking the udev package due to a missing
 # directory. To workaround this, we just create the directory first

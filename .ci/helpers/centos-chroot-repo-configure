@@ -6,13 +6,49 @@ prefix="${1?Prefix required}"
 /usr/lib/rinse/common/15-mount-proc.sh "${prefix}" || exit
 /usr/lib/rinse/common/20-dev-zero.sh "${prefix}" || exit
 
-sed -i 's/$releasever/6.10/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
-#sed -i 's/\/centos//' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
-sed -i 's/mirror.centos/vault.centos/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
-sed -i 's/^#baseurl/baseurl/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
-sed -i 's/^mirrorlist/#mirrorlist/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+pushd "${prefix}/etc/yum.repos.d" || exit
 
-sed -i 's/vault.centos.org/archive.kernel.org\/centos-vault/' \
-    "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+# Delete all the repo configurations
+rm -f ./*.repo
 
-sed -i 's/https:/http:/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+# Install custom configuration
+cat <<-EOF EOF > centos.repo
+name=CentOS-7 - Base
+baseurl=http://archive.kernel.org/centos-vault/centos/7/os/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=1
+
+name=CentOS-7 - Updates
+baseurl=http://archive.kernel.org/centos-vault/centos/7/updates/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=1
+
+name=CentOS-7 - Extras
+baseurl=http://archive.kernel.org/centos-vault/centos/7/extras/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=1
+
+name=CentOS-7 - CentOSPlus
+baseurl=http://archive.kernel.org/centos-vault/centos/7/centosplus/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=1
+
+name=CentOS-7 - Fasttrack
+baseurl=http://archive.kernel.org/centos-vault/centos/7/fasttrack/\$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=1
+
+name=CentOS-7 - SCLo rh
+baseurl=http://archive.kernel.org/centos-vault/centos/7/sclo/\$basearch/rh
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+enabled=1
+
+EOF
+
+popd || exit

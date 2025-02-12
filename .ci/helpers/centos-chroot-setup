@@ -14,36 +14,6 @@ if [ "$(id -u)" != "0" ]; then
     failure "Script must be run as root"
 fi
 
-if [ -f /.is-32-bit ]; then
-    arch="i386"
-else
-    arch="x86_64"
-fi
-
-debug "installing scl repository for updated build tools"
-setarch "${arch}" yum install -y -q centos-release-scl || exit
-
-debug "updating scl repo list"
-sed -i 's/\/centos//' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-sed -i 's/mirror.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-sed -i 's/buildlogs.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-sed -i 's/debuginfo.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-sed -i 's/^# *baseurl/baseurl/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-
-sed -i 's/\/centos//' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-sed -i 's/mirror.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-sed -i 's/buildlogs.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-sed -i 's/debuginfo.centos/vault.centos/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-sed -i 's/^# *baseurl/baseurl/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-
-debug "updating scl to kernel.org repo"
-sed -i 's/vault.centos.org/archive.kernel.org\/centos-vault\/centos/' \
-    /etc/yum.repos.d/CentOS-SCLo-scl.repo || exit
-sed -i 's/vault.centos.org/archive.kernel.org\/centos-vault\/centos/' \
-    /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo || exit
-
 # Now do an intial update
 debug "running system update"
 yum update -y

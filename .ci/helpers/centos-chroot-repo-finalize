@@ -2,5 +2,10 @@
 
 prefix="${1?Prefix required}"
 
-chroot "${prefix}" yum install -y -q ca-certificates || exit
-sed -i 's/http:/https:/' "${prefix}/etc/yum.repos.d/CentOS-Base.repo" || exit
+# Update and reinstall packages that are broken due to missing dependencies
+# on initial bootstrap
+
+chroot "${prefix}" yum update -y -q binutils coreutils gawk initscripts krb5-libs \
+    libcurl ncurses openldap util-linux yum elfutils-libs glib2 yum-utils rpm
+
+chroot "${prefix}" yum reinstall -y -q crontabs ncurses-libs neon openssl-libs pam pygpgme
