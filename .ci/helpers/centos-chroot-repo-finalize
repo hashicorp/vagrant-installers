@@ -5,7 +5,13 @@ prefix="${1?Prefix required}"
 # Update and reinstall packages that are broken due to missing dependencies
 # on initial bootstrap
 
-chroot "${prefix}" yum update -y -q binutils coreutils gawk initscripts krb5-libs \
-    libcurl ncurses openldap util-linux yum elfutils-libs glib2 yum-utils rpm
+chroot "${prefix}" yum update -y binutils coreutils gawk initscripts krb5-libs \
+    libcurl ncurses openldap util-linux glib2 rpm
 
-chroot "${prefix}" yum reinstall -y -q crontabs ncurses-libs neon openssl-libs pam pygpgme
+chroot "${prefix}" yum reinstall -y crontabs ncurses-libs neon openssl-libs pam pygpgme \
+    yum yum-utils elfutils-libs
+
+chroot "${prefix}" yum check
+
+chroot "${prefix}" yum install -y centos-release-scl-rh
+chroot "${prefix}" rm /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo

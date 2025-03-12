@@ -75,7 +75,7 @@ cp "${vagrant_go}" "${root}/install-file" ||
     failure "Could not copy vagrant go binary into directory holder"
 
 debug "starting package build"
-lxc exec "${ctn_name}" -- "/${proj_name}/package/build-archlinux" \
+incus exec "${ctn_name}" -- "/${proj_name}/package/build-archlinux" \
     "/${proj_name}/install-file/${install_file##*/}" \
     "/${proj_name}/install-file/${vagrant_go##*/}" \
     "${o_ctnpath}" \
@@ -83,14 +83,14 @@ lxc exec "${ctn_name}" -- "/${proj_name}/package/build-archlinux" \
     failure "Failed to build the arch linux package"
 
 debug "extracting package artifact from container"
-lxc file pull --recursive "${ctn_name}${o_ctnpath}" "${root}" ||
+incus file pull --recursive "${ctn_name}${o_ctnpath}" "${root}" ||
     failure "Unable to extract package artifact from container"
 
 # Stop the container
 # NOTE: We don't error since we don't really
 #       care if it stops or not
 debug "stopping the archlinux container"
-lxc stop "${ctn_name}"
+incus stop "${ctn_name}"
 
 contents=( "${o_fullpath}"/* )
 debug "output of package build: ${contents[*]}"

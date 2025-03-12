@@ -107,10 +107,8 @@ project_name="${root##*/}"
 
 
 # Create the chroot environment
-# NOTE: Always create 64 bit as 32 bit doesn't have recent
-#       enough build toos available
 debug "creating centos chroot"
-"${root}/.ci/helpers/centos-chroot-create" "64" "${chroot_dir}" ||
+"${root}/.ci/helpers/centos-chroot-create" "${chroot_dir}" ||
     failure "Could not create centos chroot environment"
 
 # Setup the chroot

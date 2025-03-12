@@ -15,8 +15,8 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Now do an intial update
-debug "running system update"
-yum update -y
+# debug "running system update"
+# yum update -y
 
 # Install base tooling
 debug "installing base tools"

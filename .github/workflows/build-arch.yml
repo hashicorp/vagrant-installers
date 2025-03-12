@@ -82,12 +82,10 @@ jobs:
           go-version-file: go.mod
       - name: Build Launchers
         run: make bin/launcher/linux-x86_64
-      - name: Trigger LXD install
-        run: sudo lxd
-      - name: Enable LXD
-        run: sudo usermod -a -G lxd "${USER}"
+      - name: Install incus
+        run: sudo apt-get install -yq incus
       - name: Build Substrate
-        run: sg lxd "./.ci/arch-substrate ./substrates"
+        run: sudo ./.ci/arch-substrate ./substrates
       - name: Cache Substrate
         run: ./.ci/create-cache "${CACHE_ID}" ./substrates
         env:
@@ -112,10 +110,10 @@ jobs:
         with:
           name: ${{ inputs.vagrant-gem-name }}
           path: ${{ inputs.vagrant-gem-path }}
-      - name: Enable LXD
-        run: sudo usermod -a -G lxd "${USER}"
+      - name: Install incus
+        run: sudo apt-get install -yq incus
       - name: Install Vagrant
-        run: sg lxd "./.ci/arch-install '${VAGRANT_GEM_PATH}' ./substrates ./artifacts"
+        run: sudo ./.ci/arch-install "${VAGRANT_GEM_PATH}" ./substrates ./artifacts
         env:
           VAGRANT_GEM_PATH: ${{ inputs.vagrant-gem-path }}
       - name: Cache Install
@@ -142,10 +140,10 @@ jobs:
         with:
           name: ${{ inputs.vagrant-artifacts-name }}
           path: ${{ inputs.vagrant-artifacts-path }}
-      - name: Enable LXD
-        run: sudo usermod -a -G lxd "${USER}"
+      - name: Install incus
+        run: sudo apt-get install -yq incus
       - name: Build package
-        run: sg lxd "./.ci/arch-package ./artifacts/vagrant-installed.zip '${VAGRANT_ARTIFACTS}/vagrant-go_linux_amd64' ./pkgs ${VERSION}"
+        run: sudo ./.ci/arch-package ./artifacts/vagrant-installed.zip "${VAGRANT_ARTIFACTS}/vagrant-go_linux_amd64" ./pkgs "${VERSION}"
         env:
           VAGRANT_ARTIFACTS: ${{ inputs.vagrant-artifacts-path }}
           VERSION: ${{ inputs.vagrant-version }}

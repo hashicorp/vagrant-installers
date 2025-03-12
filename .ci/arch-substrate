@@ -38,18 +38,18 @@ o_fullpath="${root}/${o_dirname}"
 o_ctnpath="/tmp/${o_dirname}"
 
 debug "starting building substrate"
-lxc exec "${ctn_name}" -- "/${proj_name}/substrate/run.sh" "${o_ctnpath}" ||
+incus exec "${ctn_name}" -- "/${proj_name}/substrate/run.sh" "${o_ctnpath}" ||
     failure "Failed to build the arch linux substrate"
 
 debug "extracting substrate artifact from container"
-lxc file pull --recursive "${ctn_name}${o_ctnpath}" "${root}" ||
+incus file pull --recursive "${ctn_name}${o_ctnpath}" "${root}" ||
     failure "Unable to extract substrate artifact from container"
 
 # Stop the container
 # NOTE: We don't error since we don't really
 #       care if it stops or not
 debug "stopping the archlinux container"
-lxc stop "${ctn_name}"
+incus stop "${ctn_name}"
 
 contents=( "${o_fullpath}"/* )
 debug "output of substrate build: ${contents[*]}"

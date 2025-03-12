@@ -96,19 +96,19 @@ debug "setting up archlinux"
 "${root}/.ci/helpers/archlinux-setup" "${ctn_name}"
 
 debug "installing vagrant into substrate"
-lxc exec "${ctn_name}" -- "/${proj_name}/package/install-vagrant" \
+incus exec "${ctn_name}" -- "/${proj_name}/package/install-vagrant" \
     "/${proj_name}/install-requirements/substrate/${substrate_file##*/}" \
     "/${proj_name}/install-requirements/gem/${gem_file##*/}" \
     "/tmp/vagrant-install" ||
     fail "Failed to install vagrant into substrate"
 
 debug "extracting install artifact from container -> %s" "${root}"
-lxc file pull --recursive --verbose "${ctn_name}/tmp/vagrant-install" "${root}" ||
+incus file pull --recursive --verbose "${ctn_name}/tmp/vagrant-install" "${root}" ||
     failure "Unable to extract install artifact from container"
 
 # NOTE: we don't care if the stop fails
 debug "stopping the archlinux container"
-#lxc stop "${ctn_name}"
+incus stop "${ctn_name}"
 
 # Move contents to output directory
 mv "${root}/vagrant-install/"* "${output_dir}/" ||
