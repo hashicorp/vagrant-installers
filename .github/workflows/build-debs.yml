@@ -191,12 +191,12 @@ jobs:
           name: ${{ inputs.vagrant-artifacts-name }}
           path: ${{ inputs.vagrant-artifacts-path }}
       - name: Package 32-bit
-        run: ./package/build-deb ./artifacts/installed_ubuntu_386.zip "${ARTIFACTS_PATH}/vagrant-go_linux_386" ./pkgs "${VERSION}"
+        run: ./package/build-deb ./artifacts/installed_ubuntu_386.zip ./pkgs "${VERSION}"
         env:
           ARTIFACTS_PATH: ${{ inputs.vagrant-artifacts-path }}
           VERSION: ${{ inputs.vagrant-version }}
       - name: Package 64-bit
-        run: ./package/build-deb ./artifacts/installed_ubuntu_x86_64.zip "${ARTIFACTS_PATH}/vagrant-go_linux_amd64" ./pkgs "${VERSION}"
+        run: ./package/build-deb ./artifacts/installed_ubuntu_x86_64.zip ./pkgs "${VERSION}"
         env:
           ARTIFACTS_PATH: ${{ inputs.vagrant-artifacts-path }}
           VERSION: ${{ inputs.vagrant-version }}

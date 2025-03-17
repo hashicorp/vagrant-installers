@@ -123,7 +123,11 @@ jobs:
         env:
           VAGRANT_ARTIFACTS: ${{ steps.names.outputs.artifacts-path }}
       - name: Generate Package License Files
-        run: ./vagrant-source/.ci/generate-licenses "${VAGRANT_LICENSES}"
+        run: |
+          mkdir -p "${VAGRANT_LICENSES}" || exit 1
+          cp ./vagrant-source/templates/license/license.tmpl "${VAGRANT_LICENSES}/LICENSE.txt" || exit 1
+          cp ./vagrant-source/templates/license/license.html.tmpl "${VAGRANT_LICENSES}/LICENSE.html" || exit 1
+          cp ./vagrant-source/templates/license/license.rtf.tmpl "${VAGRANT_LICENSES}/LICENSE.rtf" || exit 1
         env:
           VAGRANT_LICENSES: ${{ steps.names.outputs.licenses-path }}
       - name: Upload Vagrant Artifacts

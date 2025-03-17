@@ -208,52 +208,6 @@ jobs:
           CACHE_NAME: ${{ needs.info.outputs.substrate-arm-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGNED_SUBSTRATE: ${{ steps.signer.outputs.signed-zip-artifact-path }}
-  sign-vagrant-go:
-    if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.core-pkg-unsigned-exists != 'true' && !cancelled() && !failure()
-    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
-    needs: [info]
-    permissions:
-      id-token: write
-      contents: write
-    steps:
-      - name: Authentication
-        id: vault-auth
-        run: vault-auth
-      - name: Secrets
-        id: secrets
-        uses: hashicorp/vault-action@v2
-        with:
-          url: ${{ steps.vault-auth.outputs.addr }}
-          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
-          token: ${{ steps.vault-auth.outputs.token }}
-          secrets:
-            kv/data/teams/vagrant/hashibot signore_token;
-            kv/data/github/hashicorp/vagrant-builders signore_client_id;
-            kv/data/github/hashicorp/vagrant-builders signore_client_secret;
-            kv/data/github/hashicorp/vagrant-builders signore_macos_binary_signer;
-      - name: Code Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - name: Fetch Vagrant Artifacts
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
-        with:
-          name: ${{ inputs.vagrant-artifacts-name }}
-          path: ${{ inputs.vagrant-artifacts-path }}
-      - name: Relocate Vagrant Go Binary
-        run: mkdir ./vagrant-go-signed && mv "${VAGRANT_ARTIFACTS}/vagrant-go_darwin_universal" ./vagrant-go-signed/vagrant-go
-        env:
-          VAGRANT_ARTIFACTS: ${{ inputs.vagrant-artifacts-path }}
-      - name: Sign Vagrant Go Binary
-        run: ./.ci/sign-file -b vagrant-go ./vagrant-go-signed/vagrant-go
-        env:
-          HASHIBOT_TOKEN: ${{ steps.secrets.outputs.signore_token }}
-          SIGNORE_CLIENT_ID: ${{ steps.secrets.outputs.signore_client_id }}
-          SIGNORE_CLIENT_SECRET: ${{ steps.secrets.outputs.signore_client_SECRET }}
-          SIGNORE_SIGNER: ${{ steps.secrets.outputs.signore_macos_binary_signer }}
-      - name: Store Vagrant Go Binary
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
-        with:
-          name: vagrant-go
-          path: ./vagrant-go-signed
   sign-x86-substrate:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.substrate-x86-signed-exists != 'true' && !cancelled() && !failure()
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
@@ -403,7 +357,7 @@ jobs:
   core-pkg:
     if: github.repository == 'hashicorp/vagrant-builders' && needs.info.outputs.core-pkg-unsigned-exists != 'true' && !cancelled() && !failure()
     runs-on: macos-latest
-    needs: [info, sign-vagrant-install, sign-vagrant-go]
+    needs: [info, sign-vagrant-install]
     permissions:
       contents: write
     steps:
@@ -421,13 +375,8 @@ jobs:
         env:
           CACHE_NAME: ${{ needs.info.outputs.gems-signed-id }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Fetch Vagrant Go Binary
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
-        with:
-          name: vagrant-go
-          path: ./vagrant-go-signed
       - name: Build core package
-        run: ./package/darwin/build_core_pkg ./artifacts/substrate_darwin_universal.zip ./artifacts/vagrant-package-contents.zip ./vagrant-go-signed/vagrant-go "${VAGRANT_VERSION}"
+        run: ./package/darwin/build_core_pkg ./artifacts/substrate_darwin_universal.zip ./artifacts/vagrant-package-contents.zip "${VAGRANT_VERSION}"
         env:
           VAGRANT_VERSION: ${{ inputs.vagrant-version }}
       - name: Store core package

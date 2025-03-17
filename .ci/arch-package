@@ -10,9 +10,8 @@ root="$( cd -P "$( dirname "$csource" )/../" && pwd )"
 . "${root}/.ci/load-ci.sh"
 
 install_file="${1}"
-vagrant_go="${2}"
-output_dir="${3}"
-version="${4}"
+output_dir="${2}"
+version="${3}"
 
 if [ -z "${install_file}" ]; then
     failure "Install file artifact is required"
@@ -24,17 +23,6 @@ fi
 
 install_file="$(realpath "${install_file}")" ||
     failure "Could not determine full path of install file artifact"
-
-if [ -z "${vagrant_go}" ]; then
-    failure "Vagrant go binary is required"
-fi
-
-if [ ! -f "${vagrant_go}" ]; then
-    failure "Vagrant go binary path provided is not a file (%s)" "${vagrant_go}"
-fi
-
-vagrant_go="$(realpath "${vagrant_go}")" ||
-    failure "Could not determine full path of vagrant go binary"
 
 if [ -z "${output_dir}" ]; then
     failure "Output directory path is required"
@@ -71,13 +59,10 @@ mkdir -p "${root}/install-file" ||
     failure "Could not create directory holder for install file"
 cp "${install_file}" "${root}/install-file" ||
     failure "Could not copy install file into directory holder"
-cp "${vagrant_go}" "${root}/install-file" ||
-    failure "Could not copy vagrant go binary into directory holder"
 
 debug "starting package build"
 incus exec "${ctn_name}" -- "/${proj_name}/package/build-archlinux" \
     "/${proj_name}/install-file/${install_file##*/}" \
-    "/${proj_name}/install-file/${vagrant_go##*/}" \
     "${o_ctnpath}" \
     "${version}" ||
     failure "Failed to build the arch linux package"
