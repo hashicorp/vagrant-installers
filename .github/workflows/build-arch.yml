@@ -143,7 +143,7 @@ jobs:
       - name: Install incus
         run: sudo apt-get install -yq incus
       - name: Build package
-        run: sudo ./.ci/arch-package ./artifacts/vagrant-installed.zip "${VAGRANT_ARTIFACTS}/vagrant-go_linux_amd64" ./pkgs "${VERSION}"
+        run: sudo ./.ci/arch-package ./artifacts/vagrant-installed.zip ./pkgs "${VERSION}"
         env:
           VAGRANT_ARTIFACTS: ${{ inputs.vagrant-artifacts-path }}
           VERSION: ${{ inputs.vagrant-version }}

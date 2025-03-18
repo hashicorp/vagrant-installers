@@ -202,12 +202,12 @@ jobs:
           name: ${{ inputs.vagrant-artifacts-name }}
           path: ${{ inputs.vagrant-artifacts-path }}
       - name: Package 32-bit
-        run: ./package/build-rpm ./artifacts/installed_centos_386.zip "${VAGRANT_ARTIFACTS}/vagrant-go_linux_386" ./pkgs "${VERSION}"
+        run: ./package/build-rpm ./artifacts/installed_centos_386.zip ./pkgs "${VERSION}"
         env:
           VAGRANT_ARTIFACTS: ${{ inputs.vagrant-artifacts-path }}
           VERSION: ${{ inputs.vagrant-version }}
       - name: Package 64-bit
-        run: ./package/build-rpm ./artifacts/installed_centos_x86_64.zip "${VAGRANT_ARTIFACTS}/vagrant-go_linux_amd64" ./pkgs "${VERSION}"
+        run: ./package/build-rpm ./artifacts/installed_centos_x86_64.zip ./pkgs "${VERSION}"
         env:
           VAGRANT_ARTIFACTS: ${{ inputs.vagrant-artifacts-path }}
           VERSION: ${{ inputs.vagrant-version }}
