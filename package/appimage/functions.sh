@@ -205,6 +205,10 @@ generate_type2_appimage()
     # if [ -z "$URL" ] ; then
     #   URL=$(wget -q "https://s3.amazonaws.com/archive.travis-ci.org/jobs/$((ID+2))/log.txt" -O - | grep "https://transfer.sh/.*/appimagetool" | tail -n 1 | sed -e 's|\r||g')
     # fi
+
+    URL="https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
+    wget -c "$URL" -O runtime-x86_64
+
     URL="https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${SYSTEM_ARCH}.AppImage"
     wget -c "$URL" -O appimagetool
     chmod a+x ./appimagetool
@@ -237,9 +241,9 @@ generate_type2_appimage()
         tar xf data.tar.gz
         sudo chown -R $USER .gnu*
         mv $HOME/.gnu* $HOME/.gnu_old ; mv .gnu* $HOME/
-        VERSION=$VERSION_EXPANDED "$appimagetool" $@ -n -s --bintray-user $BINTRAY_USER --bintray-repo $BINTRAY_REPO -v ./$APP.AppDir/
+        VERSION=$VERSION_EXPANDED "$appimagetool" $@ -n -s --bintray-user $BINTRAY_USER --bintray-repo $BINTRAY_REPO -v ./$APP.AppDir/ --runtime-file runtime-x86_64
     else
-        VERSION=$VERSION_EXPANDED "$appimagetool" $@ -n --bintray-user $BINTRAY_USER --bintray-repo $BINTRAY_REPO -v ./$APP.AppDir/
+        VERSION=$VERSION_EXPANDED "$appimagetool" $@ -n --bintray-user $BINTRAY_USER --bintray-repo $BINTRAY_REPO -v ./$APP.AppDir/ --runtime-file runtime-x86_64
     fi
     set -x
     mkdir -p ../out/ || true
