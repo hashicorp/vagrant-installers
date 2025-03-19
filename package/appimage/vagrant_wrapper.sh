@@ -2,7 +2,6 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MIT
 
-
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -100,20 +99,51 @@ else
     export PATH="${DIR}:${PATH}"
 fi
 
-new_ld_library_path="${LD_LIBRARY_PATH}"
+# Do some library path modifications to make things play nice. This
+# is mainly for executing external commands so dynamic links aren't
+# resolved to libraries within the AppImage by default.
+original_ld_library_path="${LD_LIBRARY_PATH}"
+unset LD_LIBRARY_PATH
 
-if command -v ldconfig > /dev/null; then
-    extra_ld_path=$(ldconfig -N -X -v 2>&1 | grep "^/.*:$" | tr -d ":" | tr "\n" ":")
-else
-    extra_ld_path="/lib:/lib64:/usr/lib:/usr/lib64"
+# Attempt to find the linker path
+lds=("/lib64/ld-linux-"*)
+ld="${lds[0]}"
+
+# Variable to store extra paths
+extra_ld_path=""
+
+# Check if the linker was found
+if [ -x "${ld}" ]; then
+    # Enable globbing extension if available
+    if shopt -s extglob; then
+        # Grab help information which will include search directories
+        if ld_info="$("${ld}" --help 2>&1)"; then
+            # Extract the library paths
+            while IFS= read -rd $'\n' line; do
+                if [[ "${line}" = *" /"*"("* ]]; then
+                    line="${line#*/}"
+                    line="/${line% (*}"
+                    extra_ld_path+=":${line}"
+                fi
+            done <<< "${ld_info}"
+            # Remove prefixed : character
+            extra_ld_path="${line:1}"
+        fi
+    fi
 fi
 
-if [ "${extra_ld_path}" != "" ]; then
-    new_ld_library_path="${new_ld_library_path}:${extra_ld_path}"
+# If no library paths were found, just use a default list
+if [ -z "${extra_ld_path}" ]; then
+    extra_ld_path="/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib:/usr/lib:/lib64:/usr/lib64"
 fi
 
-export VAGRANT_APPIMAGE_HOST_LD_LIBRARY_PATH="${extra_ld_path}:${LD_LIBRARY_PATH}"
-export VAGRANT_APPIMAGE_LD_LIBRARY_PATH="${new_ld_library_path}"
+# Set custom variables to be used for swapping paths when
+# calling executables from vagrant.
+export VAGRANT_APPIMAGE_HOST_LD_LIBRARY_PATH="${extra_ld_path}:${original_ld_library_path}"
+export VAGRANT_APPIMAGE_LD_LIBRARY_PATH="${original_ld_library_path}:${extra_ld_path}"
+
+# Reset the variable
+export LD_LIBRARY_PATH="${original_ld_library_path}"
 
 # Python variables will be set but we don't want them
 unset PYTHONHOME
@@ -133,14 +163,6 @@ if [ ! -x "$(command -v ssh)" ]; then
     echo "  Vagrant relies on the 'ssh' command for connecting to"
     echo "  guests. Please ensure that 'ssh' has been installed to"
     echo "  prevent error when Vagrant attempts to connect to guests."
-fi
-
-if [ ! -x "$(command -v bsdtar)" ]; then
-    echo "WARNING: Failed to locate 'bsdtar' executable"
-    echo "  Vagrant relies on the 'bsdtar' command for packing and"
-    echo "  unpacking Vagrant boxes. Please ensure that 'bsdtar' has"
-    echo "  been installed to prevent errors when Vagrant attempts to"
-    echo "  unpack or package a box."
 fi
 
 "${VAGRANT_USR_DIR}/bin/ruby" -- "${GEM_PATH}/bin/vagrant" "$@"
