@@ -3,11 +3,11 @@
 _realname=curl
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-winssl")
-pkgver=8.10.1
-pkgrel=10
+pkgver=8.12.1
+pkgrel=1
 pkgdesc="Command line tool and library for transferring data with URLs (mingw-w64)"
 arch=('any')
-mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32' 'clangarm64')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clangarm64')
 url="https://curl.se/"
 msys2_repository_url="https://github.com/curl/curl"
 msys2_changelog_url="https://curl.se/changes.html"
@@ -25,7 +25,10 @@ _openssl_depends=("${MINGW_PACKAGE_PREFIX}-openssl"
                   "${MINGW_PACKAGE_PREFIX}-nghttp2"
                   $([[ ${CARCH} == i686 ]] || echo "${MINGW_PACKAGE_PREFIX}-nghttp3"))
 _gnutls_depends=("${MINGW_PACKAGE_PREFIX}-rtmpdump"
-                 "${MINGW_PACKAGE_PREFIX}-gnutls")
+                 "${MINGW_PACKAGE_PREFIX}-gnutls"
+                 "${MINGW_PACKAGE_PREFIX}-nghttp2"
+                 "${MINGW_PACKAGE_PREFIX}-nghttp3"
+                 "${MINGW_PACKAGE_PREFIX}-ngtcp2")
 makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja"
@@ -42,8 +45,9 @@ depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
 source=("https://github.com/curl/curl/releases/download/${_realname}-${pkgver//./_}/${_realname}-${pkgver}.tar.xz"{,.asc}
         "pathtools.c"
         "pathtools.h"
-        "0001-Make-cURL-relocatable.patch")
-sha256sums=('73a4b0e99596a09fa5924a4fb7e4b995a85fda0d18a2c02ab9cf134bebce04ee'
+        "0001-Make-cURL-relocatable.patch"
+        )
+sha256sums=('0341f1ed97a26c811abaebd37d62b833956792b7607ea3f15d001613c76de202'
             'SKIP'
             'SKIP'
             'SKIP'
@@ -97,8 +101,9 @@ do_build() {
   elif [ "${_variant}" = "-gnutls" ]; then
     _variant_config+=("-DCURL_DEFAULT_SSL_BACKEND=gnutls")
     _variant_config+=("-DCURL_USE_GNUTLS=ON")
-    _variant_config+=("-DCURL_USE_SCHANNEL=ON")
-    _variant_config+=('-DUSE_NGHTTP2=OFF')
+    _variant_config+=('-DUSE_NGHTTP2=ON')
+    _variant_config+=('-DUSE_NGTCP2=ON')
+    _variant_config+=('-DUSE_NGHTTP3=ON')
     _variant_config+=("-DCURL_CA_BUNDLE=${MINGW_PREFIX}/etc/ssl/certs/ca-bundle.crt")
     _variant_config+=("-DUSE_LIBRTMP=ON")
   elif [ "${_variant}" = "-openssl" ]; then
@@ -115,14 +120,13 @@ do_build() {
   msg2 "Building static library for curl${_variant}"
   mkdir -p "${_destdir}-static" && cd "${_destdir}-static"
 
-  CFLAGS+=" -DNGHTTP2_STATICLIB -DNGHTTP3_STATICLIB" \
-  CXXFLAGS+=" -DNGHTTP2_STATICLIB -DNGHTTP3_STATICLIB" \
+  CFLAGS+=" -DNGHTTP2_STATICLIB -DNGHTTP3_STATICLIB -DNGTCP2_STATICLIB" \
+  CXXFLAGS+=" -DNGHTTP2_STATICLIB -DNGHTTP3_STATICLIB -DNGTCP2_STATICLIB" \
   LDFLAGS+=" -static" \
   MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=;-DCURL_CA_BUNDLE=" \
     "${MINGW_PREFIX}"/bin/cmake.exe \
       -GNinja \
       -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
-      -DCMAKE_FIND_STATIC_LIBRARIES=ON \
       -DCMAKE_UNITY_BUILD=ON \
       "${_extra_config[@]}" \
       "${_variant_config[@]}" \
@@ -173,8 +177,8 @@ do_package() {
   DESTDIR="${pkgdir}" ${MINGW_PREFIX}/bin/cmake --install .
 
   local PREFIX_DEPS=$(cygpath -am ${MINGW_PREFIX})
-  sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i ${pkgdir}${MINGW_PREFIX}/bin/curl-config
-  sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i ${pkgdir}${MINGW_PREFIX}/lib/pkgconfig/libcurl.pc
+  sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/bin/curl-config
+  sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/pkgconfig/libcurl.pc
 
   install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
 }
@@ -207,12 +211,8 @@ package_curl-gnutls() {
   do_package -gnutls
 }
 
-package() {
-  package_curl-winssl
-}
-
-# # template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
-# # vim: set ft=bash :
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
 
 # # generate wrappers
 # for _name in "${pkgname[@]}"; do
@@ -221,3 +221,7 @@ package() {
 #   eval "${_func/#${_short}/package_${_name}}"
 # done
 # # template end;
+
+package() {
+  package_curl-winssl
+}

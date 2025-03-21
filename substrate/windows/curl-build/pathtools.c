@@ -638,4 +638,3 @@ msys2_get_relocated_path_list(char const * paths)
   free ((void*)arr);
   return result;
 }
-

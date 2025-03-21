@@ -43,9 +43,9 @@ readline_file="readline-${readline_version}.tar.gz"           # https://ftpmirro
 ruby_file="ruby-${ruby_version}.zip"                    # https://cache.ruby-lang.org/pub/ruby/${ruby_short_version}/ruby-${ruby_version}.zip
 xz_file="xz-${xz_version}.tar.gz"                     # https://tukaani.org/xz/xz-${xz_version}.tar.gz
 zlib_file="zlib-${zlib_version}.tar.gz"                # http://zlib.net/zlib-${zlib_version}.tar.gz
-
+cacert_file="cacert-${cacert_version}.pem"
 # Used for centos builds
-libxcrypt_file="libxcrypt-4.4.33.tar.xz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.xz
+libxcrypt_file="libxcrypt-${libxcrypt_version}.tar.xz" # https://github.com/besser82/libxcrypt/archive/v${VERSION}.tar.xz
 
 function info() {
     local msg_template="${1}\n"
@@ -84,6 +84,37 @@ function mark_build() {
     local package="${2}"
 
     printf "%s\n" "${package}" >> "${tracker}"
+}
+
+function fetch() {
+    local local_file="${1?Local file is required}"
+    local remote_file="${2?Remote file is required}"
+    local checksum="${3}"
+
+    curl -f -L -s -o "${local_file}" "${dep_cache}/${remote_file}" ||
+        error "Failed to download remote file (%s)" "${remote_file}"
+
+    if [ -n "${checksum}" ]; then
+        validate "${local_file}" "${checksum}"
+    fi
+}
+
+function validate() {
+    local path="${1?File path is required}"
+    local checksum="${2?Checksum value is required}"
+    local computed=""
+
+    if [ ! -f "${path}" ]; then
+        error "Invalid path provided for validation (%s)" "${path}"
+    fi
+
+    computed="$(shasum -a 256 "${path}")" ||
+        error "Failed to generate checksum (%s)" "${path}"
+    computed="${computed%% *}"
+
+    if [ "${computed}" != "${checksum}" ]; then
+        error "Invalid checksum for %s - expected: %s actual: %s" "${path}" "${checksum}" "${computed}"
+    fi
 }
 
 # Verify arguments
@@ -315,7 +346,7 @@ if [[ "${target_os}" = "darwin" ]]; then
             sdk_path="$(mktemp -d vagrant-substrate.XXXXX)" || exit
             pushd "${sdk_path}" > /dev/null || exit
             sdk_path="$(pwd)" || exit
-            curl -f -L -s -o sdk.tgz "${dep_cache}/${macos_sdk_file}" || exit
+            fetch sdk.tgz "${macos_sdk_file}" || exit
             tar xf ./sdk.tgz || exit
             files=( ./* )
             for f in "${files[@]}"; do
@@ -403,7 +434,7 @@ if [ "${linux_os}" = "centos" ]; then
     if [ "${target_arch}" != "386" ]; then
         if needs_build "${tracker_file}" "libxcrypt"; then
             info "   -> Installing libxcrypt-compat..."
-            curl -f -L -s -o libxcrypt.tar.gz "${dep_cache}/${libxcrypt_file}" ||
+            fetch libxcrypt.tar.gz "${libxcrypt_file}" "${libxcrypt_shasum}" ||
                 error "libxcrypt download error encountered"
             tar xf libxcrypt.tar.gz || exit
             pushd libxcrypt* > /dev/null || exit
@@ -420,8 +451,7 @@ fi
 # libffi
 if needs_build "${tracker_file}" "libffi"; then
     info "   -> Building libffi..."
-    libffi_url="${dep_cache}/${libffi_file}"
-    curl -f -L -s -o libffi.tar.gz "${libffi_url}" ||
+    fetch libffi.tar.gz "${libffi_file}" "${libffi_shasum}" ||
         error "libffi download error encountered"
     tar -xzf libffi.tar.gz || exit
     pushd libffi-* > /dev/null || exit
@@ -438,8 +468,7 @@ fi
 # libiconv
 if needs_build "${tracker_file}" "libiconv"; then
     info "   -> Building libiconv..."
-    libiconv_url="${dep_cache}/${libiconv_file}"
-    curl -f -L -s -o libiconv.tar.gz "${libiconv_url}" ||
+    fetch libiconv.tar.gz "${libiconv_file}" "${libiconv_shasum}" ||
         error "libiconv download error encountered"
     tar -xzf libiconv.tar.gz || exit
     pushd libiconv-* > /dev/null || exit
@@ -456,8 +485,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
     if needs_build "${tracker_file}" "libgmp"; then
         info "   -> Building libgmp..."
-        libgmp_url="${dep_cache}/${libgmp_file}"
-        curl -f -L -s -o libgmp.tar.bz2 "${libgmp_url}" ||
+        fetch libgmp.tar.bz2 "${libgmp_file}" "${libgmp_shasum}" ||
             error "libgmp download error encountered"
         tar -xjf libgmp.tar.bz2 || exit
         pushd gmp-* > /dev/null || exit
@@ -476,8 +504,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgpg_error
     if needs_build "${tracker_file}" "libgpg_error"; then
         info "   -> Building libgpg_error..."
-        libgpg_error_url="${dep_cache}/${libgpg_error_file}"
-        curl -f -L -s -o libgpg-error.tar.bz2 "${libgpg_error_url}" ||
+        fetch libgpg-error.tar.bz2 "${libgpg_error_file}" "${libgpg_error_shasum}" ||
             error "libgpg-error download error encountered"
         tar -xjf libgpg-error.tar.bz2 || exit
         pushd libgpg-error-* > /dev/null || exit
@@ -492,8 +519,7 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgcrypt
     if needs_build "${tracker_file}" "libgcrypt"; then
         info "   -> Building libgcrypt..."
-        libgcrypt_url="${dep_cache}/${libgcrypt_file}"
-        curl -f -L -s -o libgcrypt.tar.bz2 "${libgcrypt_url}" ||
+        fetch libgcrypt.tar.bz2 "${libgcrypt_file}" "${libgcrypt_shasum}" ||
             error "libgcrypt download error encountered"
         tar -xjf libgcrypt.tar.bz2 || exit
         pushd libgcrypt-* > /dev/null || exit
@@ -510,8 +536,7 @@ fi
 # xz
 if needs_build "${tracker_file}" "xz"; then
     info "   -> Building xz..."
-    xz_url="${dep_cache}/${xz_file}"
-    curl -f -L -s -o xz.tar.gz "${xz_url}" ||
+    fetch xz.tar.gz "${xz_file}" "${xz_shasum}" ||
         error "xz download error encountered"
     tar -xzf xz.tar.gz || exit
     pushd xz-* > /dev/null || exit
@@ -527,8 +552,7 @@ fi
 # zlib
 if needs_build "${tracker_file}" "zlib"; then
     info "   -> Building zlib..."
-    zlib_url="${dep_cache}/${zlib_file}"
-    curl -f -L -s -o zlib.tar.gz "${zlib_url}" ||
+    fetch zlib.tar.gz "${zlib_file}" "${zlib_shasum}" ||
         error "zlib download error encountered"
     tar -xzf zlib.tar.gz || exit
     pushd zlib-* > /dev/null || exit
@@ -543,8 +567,7 @@ fi
 # libxml2
 if needs_build "${tracker_file}" "libxml2"; then
     info "   -> Building libxml2..."
-    libxml2_url="${dep_cache}/${libxml2_file}"
-    curl -f -L -s -o libxml2.tar.xz "${libxml2_url}" ||
+    fetch libxml2.tar.xz "${libxml2_file}" "${libxml2_shasum}" ||
         error "libxml2 download error encountered"
     tar -xf libxml2.tar.xz || exit
     pushd libxml2-* > /dev/null || exit
@@ -560,8 +583,7 @@ fi
 # libxslt
 if needs_build "${tracker_file}" "libxslt"; then
     info "   -> Building libxslt..."
-    libxslt_url="${dep_cache}/${libxslt_file}"
-    curl -f -L -s -o libxslt.tar.xz "${libxslt_url}" ||
+    fetch libxslt.tar.xz "${libxslt_file}" "${libxslt_shasum}" ||
         error "libxslt download error encountered"
     tar -xf libxslt.tar.xz || exit
     pushd libxslt-* > /dev/null || exit
@@ -581,8 +603,7 @@ fi
 # libyaml
 if needs_build "${tracker_file}" "libyaml"; then
     info "   -> Building libyaml..."
-    libyaml_url="${dep_cache}/${libyaml_file}"
-    curl -f -L -s -o libyaml.tar.gz "${libyaml_url}" ||
+    fetch libyaml.tar.gz "${libyaml_file}" "${libyaml_shasum}" ||
         error "libyaml download error encountered"
     tar -xzf libyaml.tar.gz || exit
     pushd yaml-* > /dev/null || exit
@@ -599,8 +620,7 @@ fi
 # readline
 if needs_build "${tracker_file}" "readline"; then
     info "   -> Building readline..."
-    readline_url="${dep_cache}/${readline_file}"
-    curl -f -L -s -o readline.tar.gz "${readline_url}" ||
+    fetch readline.tar.gz "${readline_file}" "${readline_shasum}" ||
         error "readlin download error encountered"
     tar -xzf readline.tar.gz || exit
     pushd readline-* > /dev/null || exit
@@ -622,8 +642,7 @@ fi
 # libunistring
 if needs_build "${tracker_file}" "libunistring"; then
     info "   -> Building libunistring..."
-    libunistring_url="${dep_cache}/${libunistring_file}"
-    curl -f -L -s -o libunistring.tar.gz "${libunistring_url}" ||
+    fetch libunistring.tar.gz "${libunistring_file}" "${libunistring_shasum}" ||
         error "libunistring download error encountered"
     tar -xzf libunistring.tar.gz || exit
     pushd libunistring-* > /dev/null || exit
@@ -638,8 +657,7 @@ fi
 # libidn2
 if needs_build "${tracker_file}" "libidn2"; then
     info "   -> Building libidn2..."
-    libidn2_url="${dep_cache}/${libidn2_file}"
-    curl -f -L -s -o libidn2.tar.gz "${libidn2_url}" ||
+    fetch libidn2.tar.gz "${libidn2_file}" "${libidn2_shasum}" ||
         error "libidn2 download error encountered"
     tar -xzf libidn2.tar.gz || exit
     pushd libidn2-* > /dev/null || exit
@@ -654,8 +672,7 @@ fi
 # libpsl
 if needs_build "${tracker_file}" "libpsl"; then
     info "   -> Building libpsl..."
-    libpsl_url="${dep_cache}/${libpsl_file}"
-    curl -f -L -s -o libpsl.tar.gz "${libpsl_url}" ||
+    fetch libpsl.tar.gz "${libpsl_file}" "${libpsl_shasum}" ||
         error "libpsl download error encountered"
     tar -xzf libpsl.tar.gz || exit
     pushd libpsl-* > /dev/null || exit
@@ -674,8 +691,7 @@ fi
 #       done to prevent issues when attempting to load the library.
 if needs_build "${tracker_file}" "openssl"; then
     info "   -> Building openssl..."
-    openssl_url="${dep_cache}/${openssl_file}"
-    curl -f -L -f -s -o openssl.tar.gz "${openssl_url}" ||
+    fetch openssl.tar.gz "${openssl_file}" "${openssl_shasum}" ||
         error "openssl download error encountered"
     tar -xzf openssl.tar.gz || exit
     pushd openssl-* > /dev/null || exit
@@ -718,8 +734,7 @@ fi
 # libssh2
 if needs_build "${tracker_file}" "libssh2"; then
     info "   -> Building libssh2..."
-    libssh2_url="${dep_cache}/${libssh2_file}"
-    curl -f -L -s -o libssh2.tar.gz "${libssh2_url}" ||
+    fetch libssh2.tar.gz "${libssh2_file}" "${libssh2_shasum}" ||
         error "libssh2 download error encountered"
     tar -xzf libssh2.tar.gz || exit
     pushd libssh2-* > /dev/null || exit
@@ -736,8 +751,7 @@ fi
 # bsdtar / libarchive
 if needs_build "${tracker_file}" "libarchive"; then
     info "   -> Building bsdtar / libarchive..."
-    libarchive_url="${dep_cache}/${libarchive_file}"
-    curl -f -L -s -o libarchive.tar.gz "${libarchive_url}" ||
+    fetch libarchive.tar.gz "${libarchive_file}" "${libarchive_shasum}" ||
         error "libarchive download error encountered"
     tar -xzf libarchive.tar.gz || exit
     pushd libarchive-* > /dev/null || exit
@@ -770,8 +784,7 @@ fi
 # curl
 if needs_build "${tracker_file}" "curl"; then
     info "   -> Building curl..."
-    curl_url="${dep_cache}/${curl_file}"
-    curl -f -L -s -o curl.tar.gz "${curl_url}" ||
+    fetch curl.tar.gz "${curl_file}" "${curl_shasum}" ||
         error "curl download error encountered"
     tar -xzf curl.tar.gz || exit
     pushd curl-* > /dev/null || exit
@@ -831,8 +844,7 @@ fi
 # ruby
 if needs_build "${tracker_file}" "ruby"; then
     info "   -> Building ruby..."
-    ruby_url="${dep_cache}/${ruby_file}"
-    curl -f -L -s -o ruby.zip "${ruby_url}" ||
+    fetch ruby.zip "${ruby_file}" "${ruby_shasum}" ||
         error "ruby download error encountered"
     unzip -q ruby.zip || exit
     pushd ruby-* > /dev/null || exit
@@ -964,7 +976,7 @@ cp "${root}/substrate/common/gemrc" "${embed_dir}/etc/gemrc" || exit
 
 # cacert
 info " -> Writing cacert.pem..."
-curl -f -s --time-cond /vagrant/cacert.pem -o ./cacert.pem "${dep_cache}/cacert.pem" ||
+fetch ./cacert.pem "${cacert_file}" "${cacert_shasum}" ||
     error "cacert.pem download error encountered"
 mv ./cacert.pem "${embed_dir}/cacert.pem" || exit
 
