@@ -63,4 +63,3 @@ char * msys2_get_relocated_path_list(char const * paths);
 #endif
 
 #endif /* PATHTOOLS_H */
-
