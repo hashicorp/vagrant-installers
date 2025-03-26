@@ -72,7 +72,6 @@ mv "${install_dir}/embedded" "${package_dir}/opt/vagrant" || exit
 
 # Add helper scripts
 cp "${root}/package/support/rpm/vagrant" "${package_dir}/usr/bin" || exit
-cp "${root}/package/support/rpm/vagrant-go" "${package_dir}/usr/bin" || exit
 
 info "Building package..."
 
