@@ -10,9 +10,6 @@ into an artifact at the given destination.
 .DESCRIPTION
 Create artifact of install Vagrant RubyGem and dependencies
 
-.PARAMETER WdmGem
-Path to the wdm Gem file
-
 .PARAMETER Substrate
 Path to the substrate artifact file
 
@@ -23,8 +20,6 @@ Path to the Vagrant Ruby Gem file
 Destination zip file
 #>
 param(
-    [Parameter(Mandatory=$True)]
-    [string]$WdmGem,
     [Parameter(Mandatory=$True)]
     [string]$Substrate,
     [Parameter(Mandatory=$True)]
@@ -109,7 +104,6 @@ $ProjectPath = $ProjectDirectory.FullName
 
 # Get the full path to the substrate and gem. If the paths
 # are invalid, this will error
-$WdmGem = Resolve-Path $WdmGem
 $Substrate = Resolve-Path $Substrate
 $VagrantGem = Resolve-Path $VagrantGem
 
@@ -192,15 +186,6 @@ $env:TMP = $env:TEMP
 
 # Set the path to the SSL certificate bundle for rubygems to use
 $env:SSL_CERT_FILE = "${EmbeddedDirectory}\cert.pem"
-
-# Install the wdm gem
-$WdmProc = Start-Process `
-  -File $RubyCmdPath `
-  -ArgumentList $GemCmdPath,"install",$WdmGem `
-  -NoNewWindow `
-  -PassThru
-$junkhandle = $WdmProc.Handle
-$WdmProc.WaitForExit()
 
 # Install the pkg-config gem
 $PkgCfgProc = Start-Process `

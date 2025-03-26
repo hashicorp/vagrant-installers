@@ -2,7 +2,7 @@
 
 # This script takes a compressed artifact of a
 # vagrant install directory, unpacks it, and
-# creates an installer deb
+# creates an installer arch package
 
 csource="${BASH_SOURCE[0]}"
 while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done

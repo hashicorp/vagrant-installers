@@ -66,11 +66,6 @@ fi
 info "Installing Vagrant RubyGem..."
 gem install "${gem_file}" || exit
 
-# In case the GRPC gem is installed with the ruby platform,
-# make sure any intermediate build files are removed.
-rm -rf "${embed_dir}/gems/gems/grpc-"*/src/ruby/ext/grpc/libs
-rm -rf "${embed_dir}/gems/gems/grpc-"*/src/ruby/ext/grpc/objs
-
 output_file="${output_dir}/vagrant-installed.zip"
 
 info "Packing Vagrant gem installation..."
