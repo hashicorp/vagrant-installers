@@ -110,7 +110,7 @@ function validate() {
 
     local shasum_cmd=("shasum" "-a" "256")
     if ! command -v shasum > /dev/null 2>&1 ; then
-        shasum_cmd=("shasum256")
+        shasum_cmd=("sha256sum")
     fi
     shasum_cmd+=("${path}")
     computed="$("${shasum_cmd[@]}")" ||
