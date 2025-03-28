@@ -108,7 +108,12 @@ function validate() {
         error "Invalid path provided for validation (%s)" "${path}"
     fi
 
-    computed="$(shasum -a 256 "${path}")" ||
+    local shasum_cmd=("shasum" "-a" "256")
+    if ! command -v shasum > /dev/null 2>&1 ; then
+        shasum_cmd=("shasum256")
+    fi
+    shasum_cmd+=("${path}")
+    computed="$("${shasum_cmd[@]}")" ||
         error "Failed to generate checksum (%s)" "${path}"
     computed="${computed%% *}"
 
