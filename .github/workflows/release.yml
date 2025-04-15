@@ -275,6 +275,35 @@ jobs:
           ARTIFACT_DIR: ${{ needs.vagrant-artifacts.outputs.artifacts-path }}
           TAG_NAME: ${{ needs.info.outputs.vagrant-tag }}
           GITHUB_TOKEN: ${{ steps.secrets.outputs.vagrant_token }}
+  trigger-rubygem-publish:
+    if: github.repository == 'hashicorp/vagrant-builders' && !cancelled() && !failure()
+    name: Trigger RubyGem Publish
+    needs: [info, post-release-github-release]
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    permissions:
+      contents: read
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot publish_token;
+      - name: Code Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Trigger Publish
+        run: |
+          . .ci/load-ci.sh || exit
+
+          github_release_dispatch "vagrant-publisher" "publish-rubygem" "repository_name=vagrant" "release_name=${RELEASE_NAME}"
+        env:
+          RELEASE_NAME: ${{ needs.info.outputs.vagrant-tag }}
   post-release-branches:
     if: github.repository == 'hashicorp/vagrant-builders' && !cancelled() && !failure()
     name: GitHub Branch Updates
