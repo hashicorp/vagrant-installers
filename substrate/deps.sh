@@ -77,8 +77,8 @@ readline_version="8.2"
 readline_shasum="3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35"
 
 # ruby (.zip) - https://cache.ruby-lang.org/pub/ruby/
-ruby_version="3.3.7"
-ruby_shasum="9c6b1d13a03d8423391e070e324b1380a597d3ac9eb5d8ea40bc4fd5226556a5"
+ruby_version="3.3.8"
+ruby_shasum="389b8deae02849e769855dea892c921d3387b6548209189837a00f1cdf353797"
 
 # xz (.tar.gz) - https://tukaani.org/xz/#_stable
 xz_version="5.6.4"
