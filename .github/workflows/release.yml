@@ -281,6 +281,7 @@ jobs:
     needs: [info, post-release-github-release]
     runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
     permissions:
+      id-token: write
       contents: read
     steps:
       - name: Authentication
