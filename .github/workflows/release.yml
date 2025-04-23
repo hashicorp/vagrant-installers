@@ -302,7 +302,7 @@ jobs:
         run: |
           . .ci/load-ci.sh || exit
 
-          github_release_dispatch "vagrant-publisher" "publish-rubygem" "repository_name=vagrant" "release_name=${RELEASE_NAME}"
+          github_repository_dispatch "vagrant-publisher" "publish-rubygem" "repository_name=vagrant" "release_name=${RELEASE_NAME}"
         env:
           RELEASE_NAME: ${{ needs.info.outputs.vagrant-tag }}
   post-release-branches:
