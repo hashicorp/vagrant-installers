@@ -63,6 +63,16 @@ if [ -f "${embed_dir}/cacert.pem" ]; then
     export SSL_CERT_FILE="${embed_dir}/cacert.pem"
 fi
 
+# Downgrade the gcc standard if needed. Newer versions
+# of gcc (>= 15) use the c23 standard which currently
+# causes install error. It can be removed at some point
+# in the future as dependencies are updated to support
+# it.
+
+if gcc --help=c | grep "std=c23 " > /dev/null; then
+    export CFLAGS="${CFLAGS} -std=c17"
+fi
+
 info "Installing Vagrant RubyGem..."
 gem install "${gem_file}" || exit
 
