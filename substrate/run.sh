@@ -489,6 +489,15 @@ fi
 if [[ "$(uname -a)" = *"Linux"* ]]; then
     # libgmp
     if needs_build "${tracker_file}" "libgmp"; then
+        # Current version of libgmp (6.3.0) fails during configure
+        # on gcc versions >= 15 due to gcc defaulting to -std=c23.
+        # Force to c17 while configuring and revert once done. This
+        # can likely be removed on the next update of libgmp.
+        if gcc --help=c | grep "std=c23 " > /dev/null; then
+            orig_cflags="${CFLAGS}"
+            export CFLAGS="${CFLAGS} -std=c17"
+        fi
+
         info "   -> Building libgmp..."
         fetch libgmp.tar.bz2 "${libgmp_file}" "${libgmp_shasum}" ||
             error "libgmp download error encountered"
@@ -499,19 +508,15 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
         else
             ABI=64
         fi
-        # Current version of libgmp (6.3.0) fails during configure
-        # on gcc versions >= 15 due to gcc defaulting to -std=c23.
-        # Force to c17 while configuring and revert once done.
-        PRELIBGMP_CFLAGS="${CFLAGS}"
-        export CFLAGS="${CFLAGS} -std=c17"
 
         ./configure --prefix="${embed_dir}" ABI="${ABI}" || exit
-
-        export CFLAGS="${PRELIBGMP_CFLAGS}"
 
         make || exit
         make install || exit
         mark_build "${tracker_file}" "libgmp"
+
+        export CFLAGS="${orig_cflags}"
+
         popd > /dev/null || exit
     fi
 
@@ -862,6 +867,15 @@ if needs_build "${tracker_file}" "ruby"; then
         error "ruby download error encountered"
     unzip -q ruby.zip || exit
     pushd ruby-* > /dev/null || exit
+
+    # When ruby is built with the c23 standard, it results in issues
+    # with gem installations later. To prevent this, the standard
+    # is downgraded to c17.
+    if gcc --help=c | grep "std=c23 " > /dev/null; then
+        orig_cflags="${CFLAGS}"
+        export CFLAGS="${CFLAGS} -std=c17"
+    fi
+
     # If we are building on centos and the target architecture doesn't
     # match the host we need to build a ruby for the host architecture
     # as it's required for doing a cross compilation
@@ -896,6 +910,9 @@ if needs_build "${tracker_file}" "ruby"; then
     make || exit
     make install || exit
     mark_build "${tracker_file}" "ruby"
+
+    export CFLAGS="${orig_cflags}"
+
     popd > /dev/null || exit
 fi
 
