@@ -499,7 +499,16 @@ if [[ "$(uname -a)" = *"Linux"* ]]; then
         else
             ABI=64
         fi
+        # Current version of libgmp (6.3.0) fails during configure
+        # on gcc versions >= 15 due to gcc defaulting to -std=c23.
+        # Force to c17 while configuring and revert once done.
+        PRELIBGMP_CFLAGS="${CFLAGS}"
+        export CFLAGS="${CFLAGS} -std=c17"
+
         ./configure --prefix="${embed_dir}" ABI="${ABI}" || exit
+
+        export CFLAGS="${PRELIBGMP_CFLAGS}"
+
         make || exit
         make install || exit
         mark_build "${tracker_file}" "libgmp"
