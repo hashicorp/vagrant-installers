@@ -48,7 +48,7 @@ build() {
 
   # NOTE: builds currently fail with gcc 15 which sets
   # -std=23. reverting it to -std=17 resolves the issue.
-  CFLAGS+=" -std=17"
+  CFLAGS+=" -std=c17"
 
   ../${_realname}-${pkgver}/configure \
     --prefix=${MINGW_PREFIX} \
