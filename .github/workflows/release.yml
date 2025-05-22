@@ -305,6 +305,7 @@ jobs:
           github_repository_dispatch "vagrant-publisher" "publish-rubygem" "repository_name=vagrant" "release_name=${RELEASE_NAME}"
         env:
           RELEASE_NAME: ${{ needs.info.outputs.vagrant-tag }}
+          GITHUB_TOKEN: ${{ steps.secrets.outputs.publish_token }}
   post-release-branches:
     if: github.repository == 'hashicorp/vagrant-builders' && !cancelled() && !failure()
     name: GitHub Branch Updates
