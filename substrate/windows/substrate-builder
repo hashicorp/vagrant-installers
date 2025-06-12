@@ -85,6 +85,12 @@ if ! "${root}/substrate/windows/ruby-builder" "${pkgs_dir}"; then
     exit 1
 fi
 
+# Build the grep packages
+if ! "${root}/substrate/windows/grep-builder" "${pkgs_dir}"; then
+    printf "ERROR: failed to build required grep packages\n"
+    exit 1
+fi
+
 printf "Contents packages directory after custom builds:\n"
 ls -l "${pkgs_dir}"
 

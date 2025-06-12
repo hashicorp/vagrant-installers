@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Determine the root directory of the repository
+csource="${BASH_SOURCE[0]}"
+while [ -h "$csource" ] ; do csource="$(readlink "$csource")"; done
+root="$( cd -P "$( dirname "$csource" )/../../" && pwd )"
+
+build_dir="${root}/substrate/windows/grep-build"
+
+# Move into the directory with the required build files
+if ! pushd "${build_dir}"  > /dev/null 2>&1; then
+    printf "ERROR: Cannot access directory at - %s\n" "${build_dir}"
+    exit 1
+fi
+
+# Validate the destination for the packages was provided
+# and that it exists
+pkgs_dir="${1?Packages directory is required}"
+if [ ! -d "${pkgs_dir}" ]; then
+    mkdir -p "${pkgs_dir}" || exit
+fi
+
+# The PKGBUILD file will end up with windows style line endings
+# from git. Force them back to proper new lines.
+dos2unix ./PKGBUILD || exit
+
+# Build the 32 bit package
+if ! MINGW_ARCH="mingw32" PKGEXT=".pkg.tar.xz" PKGDEST="${pkgs_dir}" makepkg-mingw --skippgpcheck --syncdeps --force --noconfirm; then
+    printf "ERROR: Failed to build 32-bit grep package\n"
+    exit 1
+fi
+
+# Build the 64 bit package
+if ! MINGW_ARCH="mingw64" PKGEXT=".pkg.tar.xz" PKGDEST="${pkgs_dir}" makepkg-mingw --skippgpcheck --syncdeps --force --noconfirm; then
+    printf "ERROR: Failed to build 64-bit grep package\n"
+    exit 1
+fi
+
+popd > /dev/null 2>&1 || exit
+
+printf "Build of grep package is complete\n"
