@@ -31,7 +31,7 @@ jobs:
       - name: Send Notification
         run: |
           . .ci/load-ci.sh || exit
-          slack -m "$(printf "<%s|Vagrant release process> has completed successfully 🎉\n\nUpdate <https://checkpoint.hashicorp.com/control|checkpoint> to finalize release." "${WORKFLOW_URL")"
+          slack -m "$(printf "<%s|Vagrant release process> has completed successfully 🎉\n\nUpdate <https://checkpoint.hashicorp.com/control|checkpoint> to finalize release." "${WORKFLOW_URL}")"
         env:
           SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
           SLACK_CHANNEL: '#team-vagrant'
