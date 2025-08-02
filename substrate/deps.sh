@@ -73,8 +73,8 @@ openssl_version="3.1.8"
 openssl_shasum="d319da6aecde3aa6f426b44bbf997406d95275c5c59ab6f6ef53caaa079f456f"
 
 # readline (.tar.gz) - https://ftp.gnu.org/gnu/readline/
-readline_version="8.2"
-readline_shasum="3feb7171f16a84ee82ca18a36d7b9be109a52c04f492a053331d7d1095007c35"
+readline_version="8.3"
+readline_shasum="fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc"
 
 # ruby (.zip) - https://cache.ruby-lang.org/pub/ruby/
 ruby_version="3.3.8"
