@@ -13,8 +13,8 @@
 # when no libraries need to be updated:
 
 # curl (.tar.gz) - https://curl.se/download.html
-curl_version="8.10.1"
-curl_shasum="d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0"
+curl_version="8.15.0"
+curl_shasum="d85cfc79dc505ff800cb1d321a320183035011fa08cb301356425d86be8fc53c"
 
 # libarchive (.tar.gz) - https://github.com/libarchive/libarchive/releases
 libarchive_version="3.7.8"
