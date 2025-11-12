@@ -1,0 +1,70 @@
+name: Update Unified Documentation
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 15 5 * * *
+      
+env:
+  DOCS_BRANCH: vagrant/2.x
+    
+jobs:
+  sync-docs:
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    if: github.repository == 'hashicorp/vagrant-builders'
+    continue-on-error: true
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot unified_docs_token;
+      - name: Checkout unified docs
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          repository: hashicorp/web-unified-docs
+          token: ${{ steps.secrets.outputs.unified_docs_token }}
+      - name: Update docs branch
+        run: |
+          git checkout "${DOCS_BRANCH}" || exit
+          git rebase main || exit
+          git push origin --force
+  failure:
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && failure() }}
+    needs: [sync-docs]
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot webhook;
+      - name: Code Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Send Notification
+        run: |
+          . .ci/load-ci.sh || exit
+          slack -m "$(printf "Vagrant unified doc sync failed\n\n- <%s|%s>" "${WORKFLOW_URL}" "${WORKFLOW_NAME}")"          
+        env:
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
+          SLACK_CHANNEL: '#feed-vagrant'
+          SLACK_USERNAME: Vagrant Bot
+          SLACK_TITLE: Vagrant Unified Documentation
+          SLACK_STATE: error
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}          
+          
+  
