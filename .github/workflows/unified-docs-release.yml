@@ -1,0 +1,129 @@
+name: Generate Unified Docs PR
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Vagrant documentation branch
+        type: string
+        default: vagrant/2.x
+        required: true
+      target:
+        description: Target for PR
+        type: string
+        default: main
+        required: true
+      release-tag:
+        description: Tag for Vagrant release
+        type: string
+        required: true
+      version:
+        description: Version for Vagrant release
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      branch:
+        description: Vagrant documentation branch
+        type: string
+        default: vagrant/2.x
+        required: true
+      target:
+        description: Target for PR
+        type: string
+        default: main
+        required: true
+      release-tag:
+        description: Tag for Vagrant release
+        type: string
+        required: true
+      version:
+        description: Version for Vagrant release
+        type: string
+        required: true
+    outputs:
+      pr-url:
+        description: URL of unified docs PR
+        value: ${{ jobs.create-pr.outputs.url }}
+
+jobs:
+  create-pr:
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    if: github.repository == 'hashicorp/vagrant-builders'
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      url: ${{ steps.pr.outputs.url }}
+    steps:
+      - name: Authentication
+        id: vault-auth
+        run: vault-auth
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot unified_docs_token;
+      - name: Checkout unified docs
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          repository: hashicorp/web-unified-docs
+          token: ${{ steps.secrets.outputs.unified_docs_token }}
+      - name: Release branch
+        env:
+          BRANCH: ${{ inputs.branch }}
+          RELEASE_BRANCH: release/vagrant-${{ inputs.release-tag }}
+        run: |
+          test "origin/${RELEASE_BRANCH}" = "$(git branch -r --list "origin/${RELEASE_BRANCH}" --format "%(refname:short)")" && exit
+          git checkout "${BRANCH}" || exit
+          git checkout -b "${RELEASE_BRANCH}"
+      - name: Create PR
+        id: pr
+        env:
+          GITHUB_TOKEN: ${{ steps.secrets.outputs.unified_docs_token }}
+          head: release/vagrant-${{ inputs.release-tag }}
+          base: ${{ inputs.target }}
+          title: "[PUBLISH] Vagrant release ${{ inputs.release-tag }}"
+          body: |
+            Vagrant release documentation publication.
+
+            **Vagrant tag**: \`${{ inputs.release-tag }}\`
+            **Vagrant version**: \`${{ inputs.version }}\`
+        run: |
+          pr_url="$(gh pr create --base "${base}" --head "${head}" --title "${title}" --body "${body") || exit
+          printf "url=%s\n" "${pr_url}" >> "${GITHUB_OUTPUT}"
+          printf "PR: %s\n" "${pr_url}"
+  notify:
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    if: github.repository == 'hashicorp/vagrant-builders'
+    needs: [create-pr]
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/slack webhook;
+      - name: Code Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Send Notification
+        run: |
+          . .ci/load-ci.sh || exit
+          slack -m "$(printf "Vagrant unified documentation pull request generated (@vagrant)\n\n- <%s|Approve and merge>" "${PR_URL}")"
+        env:
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
+          SLACK_CHANNEL: '#feed-vagrant'
+          SLACK_USERNAME: Vagrant Release Process
+          SLACK_TITLE: Vagrant Unified Documentation
+          SLACK_STATE: warn
+          PR_URL: ${{ needs.create-pr.outputs.url }}
+          

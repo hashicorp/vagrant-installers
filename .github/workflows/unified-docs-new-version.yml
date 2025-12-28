@@ -1,0 +1,129 @@
+name: New Unified Docs Version
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: Vagrant documentation branch
+        type: string
+        default: vagrant/2.x
+        required: true
+      new-version:
+        description: New Vagrant version
+        type: string
+        required: true
+      previous-version:
+        description: Previous Vagrant version
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Vagrant documentation branch
+        type: string
+        default: vagrant/2.x
+        required: true
+      new-version:
+        description: New Vagrant version
+        type: string
+        required: true
+      previous-version:
+        description: Previous Vagrant version
+        type: string
+        required: true
+
+jobs:
+  create-new-version:
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    if: github.repository == 'hashicorp/vagrant-builders'
+    continue-on-error: true
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot unified_docs_token;
+      - name: Checkout local
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          path: local
+      - name: Checkout unified docs
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          repository: hashicorp/web-unified-docs
+          token: ${{ steps.secrets.outputs.unified_docs_token }}
+          path: docs
+      - name: Create directory
+        env:
+          VERSION: ${{ inputs.new-version }}
+          PREVIOUS_VERSION: ${{ inputs.previous-version }}
+          BRANCH: ${{ inputs.branch }}
+          GITHUB_TOKEN: ${{ steps.secrets.outputs.unified_docs_token }}
+          HASHIBOT_USERNAME: ${{ vars.HASHIBOT_USERNAME }}
+          HASHIBOT_EMAIL: ${{ vars.HASHIBOT_EMAIL }}
+        run: |
+          source local/.ci/load.sh
+          pushd docs || exit
+          export repository="hashicorp/web-unified-docs
+          hashibot_git
+
+          # Ensure versions have a v prefix
+          test "${VERSION:0:1}" != "v" && VERSION="v${VERSION}"
+          test "${PREVIOUS_VERSION:0:1}" != "v" && PREVIOUS_VERSION="v${PREVIOUS_VERSION}"
+
+          git checkout "${BRANCH}" || exit 
+          pushd content/vagrant || exit
+          
+          # If the version directory already exists, do nothing
+          if ls "${VERSION}" > /dev/null 2>&1; then
+            echo "Directory already exists, stopping"
+            exit
+          fi
+          
+          mkdir "${VERSION}" || exit
+          cp -r "./${PREVIOUS_VERSION}/." "./${VERSION}/." || exit
+          
+          git add "./${VERSION}" || exit
+          git status
+          git commit -m "Add Vagrant version ${VERSION}" || exit
+          git push origin
+  failure:
+    runs-on: ['self-hosted', 'ondemand', 'linux', 'type=t3.small']
+    if: ${{ github.repository == 'hashicorp/vagrant-builders' && failure() }}
+    needs: [create-new-version]
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ steps.vault-auth.outputs.addr }}
+          caCertificate: ${{ steps.vault-auth.outputs.ca_certificate }}
+          token: ${{ steps.vault-auth.outputs.token }}
+          secrets:
+            kv/data/teams/vagrant/hashibot webhook;
+      - name: Code Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Send Notification
+        run: |
+          . .ci/load-ci.sh || exit
+          slack -m "$(printf "Vagrant unified doc new version creation failed\n\n- <%s|%s>" "${WORKFLOW_URL}" "${WORKFLOW_NAME}")"          
+        env:
+          SLACK_WEBHOOK: ${{ steps.secrets.outputs.webhook }}
+          SLACK_CHANNEL: '#feed-vagrant'
+          SLACK_USERNAME: Vagrant Bot
+          SLACK_TITLE: Vagrant Unified Documentation
+          SLACK_STATE: error
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url }}          
+          
+  
+          
