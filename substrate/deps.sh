@@ -13,8 +13,8 @@
 # when no libraries need to be updated:
 
 # curl (.tar.gz) - https://curl.se/download.html
-curl_version="8.10.1"
-curl_shasum="d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0"
+curl_version="8.15.0"
+curl_shasum="d85cfc79dc505ff800cb1d321a320183035011fa08cb301356425d86be8fc53c"
 
 # libarchive (.tar.gz) - https://github.com/libarchive/libarchive/releases
 libarchive_version="3.7.8"
@@ -93,8 +93,8 @@ libxcrypt_version="4.4.38"
 libxcrypt_shasum="80304b9c306ea799327f01d9a7549bdb28317789182631f1b54f4511b4206dd6"
 
 # cacert (.pem) - https://curl.se/docs/sslcerts.html
-cacert_version="2025-02-25"
-cacert_shasum="50a6277ec69113f00c5fd45f09e8b97a4b3e32daa35d3a95ab30137a55386cef"
+cacert_version="2025-08-12"
+cacert_shasum="64dfd5b1026700e0a0a324964749da9adc69ae5e51e899bf16ff47d6fd0e9a5e"
 
 # Only used for macOS
 # NOTE: The 10.12 SDK was the earliest version of the
